@@ -8,10 +8,13 @@ interface BottomNavBarProps {
 }
 
 const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0 }: BottomNavBarProps) => {
+  // Only show badge if there are unread messages (> 0)
+  const messageBadge = unreadCount > 0 ? unreadCount : undefined;
+  
   const tabs = [
     { id: 'home' as const, icon: Home, label: 'Accueil' },
     { id: 'groups' as const, icon: Users, label: 'Groupes' },
-    { id: 'messages' as const, icon: MessageCircle, label: 'Messages', badge: unreadCount },
+    { id: 'messages' as const, icon: MessageCircle, label: 'Messages', badge: messageBadge },
     { id: 'profile' as const, icon: User, label: 'Profil' },
   ];
 
@@ -43,23 +46,23 @@ const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0 }: BottomNavBarP
                     <div className="absolute inset-1 bg-primary/10 rounded-lg" />
                   )}
                   
-                  <div className="relative z-10">
+                  <div className="relative z-10 flex items-center justify-center">
                     <Icon className={cn(
                       "w-5 h-5 transition-transform duration-200",
                       isActive && "scale-110"
                     )} />
                     
-                    {/* Badge */}
-                    {tab.badge && tab.badge > 0 && (
-                      <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold flex items-center justify-center shadow-lg">
+                    {/* Badge - only show when there are unread messages */}
+                    {tab.badge !== undefined && tab.badge > 0 && (
+                      <span className="absolute -top-2 -right-3 min-w-[16px] h-[16px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center shadow-md">
                         {tab.badge > 99 ? '99+' : tab.badge}
                       </span>
                     )}
                   </div>
                   
                   <span className={cn(
-                    "relative z-10 text-[10px] font-medium transition-colors",
-                    isActive && "text-primary"
+                    "relative z-10 text-[10px] font-medium leading-tight mt-0.5",
+                    isActive ? "text-primary" : "text-muted-foreground"
                   )}>
                     {tab.label}
                   </span>

@@ -8,8 +8,9 @@ import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import { useChatRooms, useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
-import { LogOut, User, MessageCircle, Users } from 'lucide-react';
+import { LogOut, User, MessageCircle, Users, Shield } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type AppView = 'landing' | 'regions' | 'chat' | 'private';
@@ -20,6 +21,7 @@ const Index = () => {
   const [selectedPrivateUserId, setSelectedPrivateUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'groups' | 'private'>('groups');
   const { user, profile, signOut } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
   const { data: rooms } = useChatRooms();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
   const { getOrCreateConversation } = usePrivateConversations();
@@ -111,6 +113,19 @@ const Index = () => {
             <h1 className="font-display text-xl font-bold gradient-text">GayConnect</h1>
             
             <div className="flex items-center gap-3">
+              {/* Admin button */}
+              {isAdmin && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate('/admin')}
+                  className="gap-2"
+                >
+                  <Shield className="w-4 h-4" />
+                  Admin
+                </Button>
+              )}
+              
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-semibold">
                   {profile?.username?.charAt(0).toUpperCase() || <User className="w-4 h-4" />}

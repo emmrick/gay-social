@@ -1,8 +1,10 @@
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import { MessageCircle } from 'lucide-react';
 
 interface PrivateChatListProps {
@@ -12,6 +14,7 @@ interface PrivateChatListProps {
 
 const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatListProps) => {
   const { conversations, isLoading } = usePrivateConversations();
+  const { getUnreadCount } = useUnreadMessages();
 
   if (isLoading) {
     return (
@@ -80,16 +83,27 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatLi
                 <h3 className="font-medium text-foreground truncate">
                   {conv.otherUser.username}
                 </h3>
-                {conv.lastMessage && (
-                  <span className="text-xs text-muted-foreground flex-shrink-0">
-                    {formatDistanceToNow(new Date(conv.lastMessage.created_at), {
-                      addSuffix: false,
-                      locale: fr,
-                    })}
-                  </span>
-                )}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {getUnreadCount(conv.otherUser.user_id) > 0 && (
+                    <Badge className="h-5 min-w-5 px-1.5 flex items-center justify-center text-xs">
+                      {getUnreadCount(conv.otherUser.user_id)}
+                    </Badge>
+                  )}
+                  {conv.lastMessage && (
+                    <span className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(conv.lastMessage.created_at), {
+                        addSuffix: false,
+                        locale: fr,
+                      })}
+                    </span>
+                  )}
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground truncate">
+              <p className={`text-sm truncate ${
+                getUnreadCount(conv.otherUser.user_id) > 0 
+                  ? 'text-foreground font-medium' 
+                  : 'text-muted-foreground'
+              }`}>
                 {conv.lastMessage
                   ? conv.lastMessage.message_type === 'text'
                     ? conv.lastMessage.content

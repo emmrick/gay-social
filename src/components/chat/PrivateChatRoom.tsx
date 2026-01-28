@@ -4,6 +4,7 @@ import { fr } from 'date-fns/locale';
 import { ArrowLeft, MoreVertical, Flag } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -27,8 +28,16 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { user } = useAuth();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
   const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
+  const { markAsRead } = useUnreadMessages();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
+
+  // Mark messages as read when entering the conversation
+  useEffect(() => {
+    if (otherUserId) {
+      markAsRead.mutate(otherUserId);
+    }
+  }, [otherUserId]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {

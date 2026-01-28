@@ -7,9 +7,11 @@ import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import { useChatRooms, useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { LogOut, User, MessageCircle, Users, Shield } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -25,6 +27,7 @@ const Index = () => {
   const { data: rooms } = useChatRooms();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
   const { getOrCreateConversation } = usePrivateConversations();
+  const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
@@ -68,6 +71,8 @@ const Index = () => {
   // Select conversation from private chat list
   const handleSelectConversation = (userId: string) => {
     setSelectedPrivateUserId(userId);
+    // Mark messages as read when opening conversation
+    markAsRead.mutate(userId);
   };
 
   const handleBackFromPrivateChat = () => {
@@ -156,9 +161,14 @@ const Index = () => {
                 <Users className="w-4 h-4" />
                 Groupes
               </TabsTrigger>
-              <TabsTrigger value="private" className="flex items-center gap-2">
+              <TabsTrigger value="private" className="flex items-center gap-2 relative">
                 <MessageCircle className="w-4 h-4" />
                 Messages
+                {getTotalUnreadCount() > 0 && (
+                  <Badge className="h-5 min-w-5 px-1.5 flex items-center justify-center text-xs ml-1">
+                    {getTotalUnreadCount()}
+                  </Badge>
+                )}
               </TabsTrigger>
             </TabsList>
 

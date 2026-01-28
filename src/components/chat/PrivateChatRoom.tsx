@@ -1,15 +1,22 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import ChatInput from './ChatInput';
 import EphemeralMessage from './EphemeralMessage';
+import ReportUserDialog from './ReportUserDialog';
 
 interface PrivateChatRoomProps {
   otherUserId: string;
@@ -21,6 +28,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
   const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -85,10 +93,33 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           </>
         )}
 
-        <Button variant="ghost" size="icon">
-          <MoreVertical className="w-5 h-5" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem 
+              className="text-destructive focus:text-destructive"
+              onClick={() => setShowReportDialog(true)}
+            >
+              <Flag className="w-4 h-4 mr-2" />
+              Signaler {otherUserProfile?.username}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+
+      {/* Report Dialog */}
+      {otherUserProfile && (
+        <ReportUserDialog
+          open={showReportDialog}
+          onOpenChange={setShowReportDialog}
+          userId={otherUserId}
+          username={otherUserProfile.username}
+        />
+      )}
 
       {/* Messages */}
       <ScrollArea className="flex-1 p-4">

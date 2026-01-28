@@ -1,11 +1,19 @@
+import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { MessageCircle, MoreVertical } from 'lucide-react';
+import { MessageCircle, Flag, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useProfilesByRegion } from '@/hooks/useProfiles';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tables } from '@/integrations/supabase/types';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import ReportUserDialog from './ReportUserDialog';
 
 type Profile = Tables<'profiles'>;
 
@@ -70,53 +78,77 @@ const MemberCard = ({
   profile: Profile;
   onStartChat: () => void;
 }) => {
+  const [showReportDialog, setShowReportDialog] = useState(false);
+
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-card hover:bg-secondary/50 transition-colors group">
-      {/* Avatar */}
-      <div className="relative">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold overflow-hidden">
-          {profile.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt={profile.username}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            profile.username.charAt(0).toUpperCase()
+    <>
+      <div className="flex items-center gap-3 p-3 rounded-xl bg-card hover:bg-secondary/50 transition-colors group">
+        {/* Avatar */}
+        <div className="relative">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold overflow-hidden">
+            {profile.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={profile.username}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              profile.username.charAt(0).toUpperCase()
+            )}
+          </div>
+          {profile.is_online && (
+            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-card" />
           )}
         </div>
-        {profile.is_online && (
-          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-card" />
-        )}
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-foreground truncate">{profile.username}</h3>
+          <p className="text-sm text-muted-foreground">
+            {profile.is_online ? (
+              <span className="text-green-500">En ligne</span>
+            ) : profile.last_seen ? (
+              `Vu ${formatDistanceToNow(new Date(profile.last_seen), {
+                addSuffix: true,
+                locale: fr,
+              })}`
+            ) : (
+              'Hors ligne'
+            )}
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button variant="ghost" size="icon" onClick={onStartChat}>
+            <MessageCircle className="w-5 h-5 text-primary" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem 
+                className="text-destructive focus:text-destructive"
+                onClick={() => setShowReportDialog(true)}
+              >
+                <Flag className="w-4 h-4 mr-2" />
+                Signaler
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-foreground truncate">{profile.username}</h3>
-        <p className="text-sm text-muted-foreground">
-          {profile.is_online ? (
-            <span className="text-green-500">En ligne</span>
-          ) : profile.last_seen ? (
-            `Vu ${formatDistanceToNow(new Date(profile.last_seen), {
-              addSuffix: true,
-              locale: fr,
-            })}`
-          ) : (
-            'Hors ligne'
-          )}
-        </p>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button variant="ghost" size="icon" onClick={onStartChat}>
-          <MessageCircle className="w-5 h-5 text-primary" />
-        </Button>
-        <Button variant="ghost" size="icon">
-          <MoreVertical className="w-5 h-5" />
-        </Button>
-      </div>
-    </div>
+      <ReportUserDialog
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        userId={profile.user_id}
+        username={profile.username}
+      />
+    </>
   );
 };
 

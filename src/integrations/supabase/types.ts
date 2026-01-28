@@ -263,6 +263,36 @@ export type Database = {
           },
         ]
       }
+      user_blocks: {
+        Row: {
+          blocked_at: string
+          blocked_by: string
+          id: string
+          is_active: boolean
+          reason: string | null
+          unblocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          blocked_at?: string
+          blocked_by: string
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          unblocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          blocked_at?: string
+          blocked_by?: string
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          unblocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -303,6 +333,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_user_blocked: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

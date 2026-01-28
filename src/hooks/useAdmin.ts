@@ -27,6 +27,20 @@ export interface ReportWithProfiles {
   };
 }
 
+export interface UserBlock {
+  id: string;
+  user_id: string;
+  blocked_by: string;
+  reason: string | null;
+  blocked_at: string;
+  unblocked_at: string | null;
+  is_active: boolean;
+  user?: {
+    username: string;
+    avatar_url: string | null;
+  };
+}
+
 export const useIsAdmin = () => {
   const { user } = useAuth();
 
@@ -166,5 +180,154 @@ export const useReportStats = () => {
       return stats;
     },
     enabled: isAdmin === true,
+  });
+};
+
+// ========== USER BLOCKING ==========
+
+export const useIsUserBlocked = (userId: string) => {
+  return useQuery({
+    queryKey: ['user-blocked', userId],
+    queryFn: async () => {
+      if (!userId) return false;
+
+      const { data, error } = await supabase.rpc('is_user_blocked', {
+        _user_id: userId,
+      });
+
+      if (error) {
+        console.error('Error checking block status:', error);
+        return false;
+      }
+
+      return data === true;
+    },
+    enabled: !!userId,
+  });
+};
+
+export const useBlockedUsers = () => {
+  const { data: isAdmin } = useIsAdmin();
+
+  return useQuery({
+    queryKey: ['blocked-users'],
+    queryFn: async (): Promise<UserBlock[]> => {
+      const { data: blocks, error } = await supabase
+        .from('user_blocks')
+        .select('*')
+        .eq('is_active', true)
+        .order('blocked_at', { ascending: false });
+
+      if (error) throw error;
+      if (!blocks) return [];
+
+      // Fetch profiles for blocked users
+      const userIds = blocks.map(b => b.user_id);
+
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url')
+        .in('user_id', userIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      return blocks.map(block => ({
+        ...block,
+        user: profileMap.get(block.user_id),
+      }));
+    },
+    enabled: isAdmin === true,
+  });
+};
+
+export const useBlockUser = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      userId, 
+      reason 
+    }: { 
+      userId: string; 
+      reason?: string;
+    }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      // Check if user is already blocked
+      const { data: existing } = await supabase
+        .from('user_blocks')
+        .select('id, is_active')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existing && existing.is_active) {
+        throw new Error('User is already blocked');
+      }
+
+      if (existing) {
+        // Reactivate existing block
+        const { error } = await supabase
+          .from('user_blocks')
+          .update({
+            is_active: true,
+            blocked_by: user.id,
+            blocked_at: new Date().toISOString(),
+            reason: reason || null,
+            unblocked_at: null,
+          })
+          .eq('id', existing.id);
+
+        if (error) throw error;
+      } else {
+        // Create new block
+        const { error } = await supabase
+          .from('user_blocks')
+          .insert({
+            user_id: userId,
+            blocked_by: user.id,
+            reason: reason || null,
+          });
+
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blocked-users'] });
+      queryClient.invalidateQueries({ queryKey: ['user-blocked'] });
+      toast.success('Utilisateur bloqué');
+    },
+    onError: (error) => {
+      console.error('Error blocking user:', error);
+      toast.error('Erreur lors du blocage');
+    },
+  });
+};
+
+export const useUnblockUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from('user_blocks')
+        .update({
+          is_active: false,
+          unblocked_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blocked-users'] });
+      queryClient.invalidateQueries({ queryKey: ['user-blocked'] });
+      toast.success('Utilisateur débloqué');
+    },
+    onError: (error) => {
+      console.error('Error unblocking user:', error);
+      toast.error('Erreur lors du déblocage');
+    },
   });
 };

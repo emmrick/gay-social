@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { 
-  User, 
   Flag, 
   Calendar, 
   MessageSquare, 
   CheckCircle, 
   XCircle, 
   Eye,
-  Loader2
+  Loader2,
+  Ban,
+  ShieldOff
 } from 'lucide-react';
 import {
   Dialog,
@@ -22,7 +23,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ReportWithProfiles, ReportStatus, useUpdateReportStatus } from '@/hooks/useAdmin';
+import { 
+  ReportWithProfiles, 
+  ReportStatus, 
+  useUpdateReportStatus,
+  useBlockUser,
+  useIsUserBlocked,
+  useUnblockUser
+} from '@/hooks/useAdmin';
 import { reportReasonLabels, reportReasonDescriptions } from '@/hooks/useReports';
 
 interface ReportDetailDialogProps {
@@ -40,7 +48,11 @@ const statusLabels: Record<ReportStatus, string> = {
 
 const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogProps) => {
   const [resolutionNotes, setResolutionNotes] = useState(report.resolution_notes || '');
+  const [blockReason, setBlockReason] = useState('');
   const updateStatus = useUpdateReportStatus();
+  const blockUser = useBlockUser();
+  const unblockUser = useUnblockUser();
+  const { data: isBlocked, isLoading: checkingBlock } = useIsUserBlocked(report.reported_user_id);
 
   const handleUpdateStatus = async (status: ReportStatus) => {
     await updateStatus.mutateAsync({
@@ -49,6 +61,18 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
       resolutionNotes: resolutionNotes.trim() || undefined,
     });
     onOpenChange(false);
+  };
+
+  const handleBlockUser = async () => {
+    await blockUser.mutateAsync({
+      userId: report.reported_user_id,
+      reason: blockReason.trim() || `Signalement: ${report.reason}`,
+    });
+    setBlockReason('');
+  };
+
+  const handleUnblockUser = async () => {
+    await unblockUser.mutateAsync(report.reported_user_id);
   };
 
   const reasonLabel = reportReasonLabels[report.reason as keyof typeof reportReasonLabels] || report.reason;
@@ -70,6 +94,12 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
             <Badge variant={report.status === 'pending' ? 'destructive' : 'secondary'}>
               {statusLabels[report.status]}
             </Badge>
+            {isBlocked && (
+              <Badge variant="destructive" className="bg-red-600">
+                <Ban className="w-3 h-3 mr-1" />
+                Bloqué
+              </Badge>
+            )}
           </div>
 
           {/* Reported User */}
@@ -89,10 +119,47 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
                   report.reported_user?.username?.charAt(0).toUpperCase() || '?'
                 )}
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="font-medium">{report.reported_user?.username || 'Utilisateur inconnu'}</p>
                 <p className="text-xs text-muted-foreground">ID: {report.reported_user_id.slice(0, 8)}...</p>
               </div>
+              
+              {/* Block/Unblock button */}
+              {checkingBlock ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isBlocked ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUnblockUser}
+                  disabled={unblockUser.isPending}
+                >
+                  {unblockUser.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <ShieldOff className="w-4 h-4 mr-1" />
+                      Débloquer
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBlockUser}
+                  disabled={blockUser.isPending}
+                >
+                  {blockUser.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Ban className="w-4 h-4 mr-1" />
+                      Bloquer
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
 

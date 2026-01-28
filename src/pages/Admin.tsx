@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { 
   Shield, 
@@ -11,16 +11,21 @@ import {
   Eye,
   ArrowLeft,
   Loader2,
-  Filter
+  Filter,
+  Ban,
+  Users,
+  ShieldOff
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   useIsAdmin, 
   useAdminReports, 
-  useUpdateReportStatus, 
   useReportStats,
+  useBlockedUsers,
+  useUnblockUser,
   ReportStatus,
-  ReportWithProfiles
+  ReportWithProfiles,
+  UserBlock
 } from '@/hooks/useAdmin';
 import { reportReasonLabels } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
@@ -42,6 +47,8 @@ const Admin = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats, isLoading: statsLoading } = useReportStats();
+  const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
+  const [activeSection, setActiveSection] = useState<'reports' | 'blocked'>('reports');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
@@ -105,9 +112,9 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {statsLoading ? (
-            Array.from({ length: 5 }).map((_, i) => (
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+          {statsLoading || blockedLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-24 rounded-xl" />
             ))
           ) : (
@@ -142,58 +149,112 @@ const Admin = () => {
                 icon={XCircle}
                 color="text-gray-500"
               />
+              <StatsCard
+                title="Bloqués"
+                value={blockedUsers?.length || 0}
+                icon={Ban}
+                color="text-red-500"
+              />
             </>
           )}
         </div>
 
-        {/* Reports List */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="w-5 h-5" />
-                Signalements
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as ReportStatus | 'all')}>
-              <TabsList className="grid grid-cols-5 mb-4">
-                <TabsTrigger value="pending">En attente</TabsTrigger>
-                <TabsTrigger value="reviewed">En cours</TabsTrigger>
-                <TabsTrigger value="resolved">Résolus</TabsTrigger>
-                <TabsTrigger value="dismissed">Rejetés</TabsTrigger>
-                <TabsTrigger value="all">Tous</TabsTrigger>
-              </TabsList>
+        {/* Section Tabs */}
+        <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as 'reports' | 'blocked')}>
+          <TabsList className="grid grid-cols-2 w-fit">
+            <TabsTrigger value="reports" className="gap-2">
+              <Filter className="w-4 h-4" />
+              Signalements
+            </TabsTrigger>
+            <TabsTrigger value="blocked" className="gap-2">
+              <Ban className="w-4 h-4" />
+              Utilisateurs bloqués
+            </TabsTrigger>
+          </TabsList>
 
-              <TabsContent value={selectedStatus} className="mt-0">
+          {/* Reports Section */}
+          <TabsContent value="reports">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="w-5 h-5" />
+                  Signalements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as ReportStatus | 'all')}>
+                  <TabsList className="grid grid-cols-5 mb-4">
+                    <TabsTrigger value="pending">En attente</TabsTrigger>
+                    <TabsTrigger value="reviewed">En cours</TabsTrigger>
+                    <TabsTrigger value="resolved">Résolus</TabsTrigger>
+                    <TabsTrigger value="dismissed">Rejetés</TabsTrigger>
+                    <TabsTrigger value="all">Tous</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value={selectedStatus} className="mt-0">
+                    <ScrollArea className="h-[500px]">
+                      {reportsLoading ? (
+                        <div className="space-y-3">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Skeleton key={i} className="h-20 rounded-lg" />
+                          ))}
+                        </div>
+                      ) : reports?.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                          Aucun signalement {selectedStatus !== 'all' && `avec le statut "${statusConfig[selectedStatus as ReportStatus]?.label}"`}
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {reports?.map((report) => (
+                            <ReportCard
+                              key={report.id}
+                              report={report}
+                              onClick={() => setSelectedReport(report)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Blocked Users Section */}
+          <TabsContent value="blocked">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Ban className="w-5 h-5" />
+                  Utilisateurs bloqués ({blockedUsers?.length || 0})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <ScrollArea className="h-[500px]">
-                  {reportsLoading ? (
+                  {blockedLoading ? (
                     <div className="space-y-3">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Skeleton key={i} className="h-20 rounded-lg" />
                       ))}
                     </div>
-                  ) : reports?.length === 0 ? (
+                  ) : blockedUsers?.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground">
-                      Aucun signalement {selectedStatus !== 'all' && `avec le statut "${statusConfig[selectedStatus as ReportStatus]?.label}"`}
+                      <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>Aucun utilisateur bloqué</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {reports?.map((report) => (
-                        <ReportCard
-                          key={report.id}
-                          report={report}
-                          onClick={() => setSelectedReport(report)}
-                        />
+                      {blockedUsers?.map((block) => (
+                        <BlockedUserCard key={block.id} block={block} />
                       ))}
                     </div>
                   )}
                 </ScrollArea>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Report Detail Dialog */}
@@ -282,6 +343,60 @@ const ReportCard = ({
             locale: fr 
           })}
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Blocked User Card Component
+const BlockedUserCard = ({ block }: { block: UserBlock }) => {
+  const unblockUser = useUnblockUser();
+
+  return (
+    <div className="p-4 rounded-lg border border-destructive/30 bg-destructive/5">
+      <div className="flex items-center gap-4">
+        {/* Avatar */}
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-destructive to-destructive/60 flex items-center justify-center text-white font-semibold flex-shrink-0">
+          {block.user?.avatar_url ? (
+            <img
+              src={block.user.avatar_url}
+              alt={block.user.username}
+              className="w-full h-full rounded-full object-cover"
+            />
+          ) : (
+            block.user?.username?.charAt(0).toUpperCase() || '?'
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="font-medium">{block.user?.username || 'Utilisateur inconnu'}</p>
+          <p className="text-sm text-muted-foreground">
+            Bloqué le {format(new Date(block.blocked_at), 'dd MMM yyyy à HH:mm', { locale: fr })}
+          </p>
+          {block.reason && (
+            <p className="text-sm text-destructive mt-1 truncate">
+              Raison: {block.reason}
+            </p>
+          )}
+        </div>
+
+        {/* Unblock button */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => unblockUser.mutate(block.user_id)}
+          disabled={unblockUser.isPending}
+        >
+          {unblockUser.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <ShieldOff className="w-4 h-4 mr-1" />
+              Débloquer
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );

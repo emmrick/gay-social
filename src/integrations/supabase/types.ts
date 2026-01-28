@@ -233,36 +233,48 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age: number | null
           avatar_url: string | null
           bio: string | null
           created_at: string
           id: string
           is_online: boolean | null
           last_seen: string | null
+          latitude: number | null
+          location_updated_at: string | null
+          longitude: number | null
           region: string
           updated_at: string
           user_id: string
           username: string
         }
         Insert: {
+          age?: number | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           id?: string
           is_online?: boolean | null
           last_seen?: string | null
+          latitude?: number | null
+          location_updated_at?: string | null
+          longitude?: number | null
           region: string
           updated_at?: string
           user_id: string
           username: string
         }
         Update: {
+          age?: number | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           id?: string
           is_online?: boolean | null
           last_seen?: string | null
+          latitude?: number | null
+          location_updated_at?: string | null
+          longitude?: number | null
           region?: string
           updated_at?: string
           user_id?: string
@@ -444,6 +456,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_distance: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
+      get_nearby_profiles: {
+        Args: {
+          limit_count?: number
+          max_distance_km?: number
+          user_lat: number
+          user_lon: number
+        }
+        Returns: {
+          age: number
+          avatar_url: string
+          bio: string
+          distance_km: number
+          id: string
+          is_online: boolean
+          last_seen: string
+          region: string
+          user_id: string
+          username: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

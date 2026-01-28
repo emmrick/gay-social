@@ -2,17 +2,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOnlineMemberCounts } from '@/hooks/useOnlineMemberCounts';
 import { useChatRooms } from '@/hooks/useChatRooms';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
-import { Users, MessageCircle, MapPin, Sparkles, ChevronRight, Zap, Heart, Camera } from 'lucide-react';
+import { Users, MessageCircle, MapPin, Sparkles, Zap, Heart, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import NearbyMembersGrid from './NearbyMembersGrid';
 
 interface HomeViewProps {
   onNavigateToGroups: () => void;
   onNavigateToMessages: () => void;
   onSelectRegion: (regionCode: string) => void;
+  onViewProfile?: (userId: string) => void;
+  onStartPrivateChat?: (userId: string) => void;
 }
 
-const HomeView = ({ onNavigateToGroups, onNavigateToMessages, onSelectRegion }: HomeViewProps) => {
+const HomeView = ({ 
+  onNavigateToGroups, 
+  onNavigateToMessages, 
+  onSelectRegion,
+  onViewProfile,
+  onStartPrivateChat 
+}: HomeViewProps) => {
   const { profile } = useAuth();
   const { data: rooms } = useChatRooms();
   const { data: onlineCounts } = useOnlineMemberCounts();
@@ -20,25 +29,20 @@ const HomeView = ({ onNavigateToGroups, onNavigateToMessages, onSelectRegion }: 
 
   // Get total online users
   const totalOnline = Object.values(onlineCounts || {}).reduce((sum, count) => sum + count, 0);
-  
-  // Get user's region room
-  const userRegionRoom = rooms?.find(room => room.region_code === profile?.region);
-  const userRegionOnline = profile?.region ? (onlineCounts?.[profile.region] || 0) : 0;
-
-  // Get top 4 active regions
-  const topRegions = rooms
-    ?.map(room => ({
-      ...room,
-      onlineCount: onlineCounts?.[room.region_code] || 0
-    }))
-    .sort((a, b) => b.onlineCount - a.onlineCount)
-    .slice(0, 4) || [];
 
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Bonjour';
     if (hour < 18) return 'Bon après-midi';
     return 'Bonsoir';
+  };
+
+  const handleViewProfile = (userId: string) => {
+    onViewProfile?.(userId);
+  };
+
+  const handleStartChat = (userId: string) => {
+    onStartPrivateChat?.(userId);
   };
 
   return (
@@ -93,7 +97,7 @@ const HomeView = ({ onNavigateToGroups, onNavigateToMessages, onSelectRegion }: 
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                   <span className="text-sm font-medium text-foreground">{totalOnline} membres en ligne</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Rejoins la communauté maintenant</p>
+                <p className="text-xs text-muted-foreground">Découvre qui est autour de toi</p>
               </div>
             </div>
           </div>
@@ -109,6 +113,7 @@ const HomeView = ({ onNavigateToGroups, onNavigateToMessages, onSelectRegion }: 
             value={rooms?.length || 0}
             label="Groupes"
             color="primary"
+            onClick={onNavigateToGroups}
           />
           <StatCard 
             icon={<Heart className="w-4 h-4" />}
@@ -125,93 +130,27 @@ const HomeView = ({ onNavigateToGroups, onNavigateToMessages, onSelectRegion }: 
           />
         </div>
 
-        {/* User's Region Card */}
-        {userRegionRoom && (
-          <div className="space-y-3 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" />
-              <h2 className="font-display font-semibold text-foreground text-sm">Ta région</h2>
-            </div>
-            <button
-              onClick={() => onSelectRegion(userRegionRoom.region_code)}
-              className="w-full group relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-primary/10 via-card to-accent/10 p-5 text-left transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10"
-            >
-              {/* Animated background glow */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-2xl" />
-              </div>
-              
-              <div className="relative flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white text-xl shadow-xl shadow-primary/30 group-hover:scale-105 transition-transform duration-300">
-                    {userRegionRoom.region_code}
-                  </div>
-                  <div>
-                    <h3 className="font-display font-semibold text-foreground text-lg mb-1">
-                      {userRegionRoom.region_name}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      {userRegionOnline > 0 ? (
-                        <>
-                          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                          <span className="text-sm text-muted-foreground">{userRegionOnline} en ligne</span>
-                        </>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Rejoindre le groupe</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
-                  <ChevronRight className="w-5 h-5 text-primary group-hover:translate-x-0.5 transition-transform" />
-                </div>
-              </div>
-            </button>
-          </div>
-        )}
-
-        {/* Active Regions */}
-        <div className="space-y-3 animate-fade-in" style={{ animationDelay: '0.25s' }}>
+        {/* Nearby Members Section - Like Grindr */}
+        <div className="space-y-3 animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-accent" />
-              <h2 className="font-display font-semibold text-foreground text-sm">Régions populaires</h2>
+              <h2 className="font-display font-semibold text-foreground text-sm">Membres à proximité</h2>
             </div>
-            <button 
-              onClick={onNavigateToGroups}
-              className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
-            >
-              Tout voir →
-            </button>
           </div>
           
-          <div className="grid grid-cols-2 gap-3">
-            {topRegions.map((room, index) => (
-              <RegionCard
-                key={room.id}
-                regionCode={room.region_code}
-                regionName={room.region_name}
-                onlineCount={room.onlineCount}
-                onClick={() => onSelectRegion(room.region_code)}
-                delay={index * 0.05}
-              />
-            ))}
-          </div>
-          
-          {topRegions.length === 0 && (
-            <div className="text-center py-8 rounded-2xl bg-secondary/30">
-              <Users className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Aucune région active</p>
-            </div>
-          )}
+          <NearbyMembersGrid 
+            onViewProfile={handleViewProfile}
+            onStartChat={handleStartChat}
+          />
         </div>
 
         {/* Action Cards */}
         <div className="grid grid-cols-2 gap-3 animate-fade-in" style={{ animationDelay: '0.3s' }}>
           <ActionCard
             icon={<Users className="w-6 h-6" />}
-            title="Explorer"
-            subtitle="Tous les groupes"
+            title="Groupes"
+            subtitle="Par région"
             onClick={onNavigateToGroups}
             gradient="from-primary/80 to-primary"
           />
@@ -261,34 +200,6 @@ const StatCard = ({ icon, value, label, color, onClick }: StatCardProps) => {
     </button>
   );
 };
-
-// Region Card Component
-interface RegionCardProps {
-  regionCode: string;
-  regionName: string;
-  onlineCount: number;
-  onClick: () => void;
-  delay: number;
-}
-
-const RegionCard = ({ regionCode, regionName, onlineCount, onClick, delay }: RegionCardProps) => (
-  <button
-    onClick={onClick}
-    className="group flex flex-col items-center p-4 rounded-xl bg-secondary/50 border border-border/30 hover:border-primary/50 hover:bg-secondary/80 transition-all duration-300 animate-fade-in"
-    style={{ animationDelay: `${delay}s` }}
-  >
-    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white text-sm shadow-lg group-hover:scale-105 transition-transform duration-300 mb-3">
-      {regionCode}
-    </div>
-    <h3 className="font-medium text-foreground text-sm text-center line-clamp-1 mb-1">{regionName}</h3>
-    <div className="flex items-center gap-1.5">
-      {onlineCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />}
-      <span className="text-[10px] text-muted-foreground">
-        {onlineCount > 0 ? `${onlineCount} en ligne` : 'Hors ligne'}
-      </span>
-    </div>
-  </button>
-);
 
 // Action Card Component
 interface ActionCardProps {

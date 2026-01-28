@@ -10,10 +10,13 @@ import {
   Send, 
   Clock,
   Loader2,
-  SwitchCamera
+  SwitchCamera,
+  ShieldAlert,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEphemeralMediaUpload } from '@/hooks/useEphemeralMediaUpload';
+import { useCameraPermission } from '@/hooks/useCameraPermission';
 import { toast } from 'sonner';
 
 interface CameraCaptureProps {
@@ -42,6 +45,7 @@ const CameraCapture = ({
   const [viewDuration, setViewDuration] = useState(10);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -51,13 +55,15 @@ const CameraCapture = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   const { uploadEphemeralMedia, isUploading, progress } = useEphemeralMediaUpload();
+  const { permissions, isCameraDenied, needsPermission, requestCameraAccess } = useCameraPermission();
 
   const durations = [5, 10, 15, 30];
 
-  // Start camera
+  // Start camera with permission handling
   const startCamera = useCallback(async () => {
     try {
       setCameraError(null);
+      setIsInitializing(true);
       
       // Stop existing stream
       if (streamRef.current) {
@@ -80,9 +86,22 @@ const CameraCapture = ({
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
-    } catch (err) {
+      
+      setIsInitializing(false);
+    } catch (err: unknown) {
       console.error('Camera error:', err);
-      setCameraError('Impossible d\'accéder à la caméra. Vérifie les permissions.');
+      const error = err as { name?: string };
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        setCameraError('permission_denied');
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        setCameraError('Aucune caméra détectée sur cet appareil');
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        setCameraError('La caméra est utilisée par une autre application');
+      } else {
+        setCameraError('Impossible d\'accéder à la caméra');
+      }
+      setIsInitializing(false);
     }
   }, [facingMode, mode]);
 
@@ -287,19 +306,63 @@ const CameraCapture = ({
           </Button>
         </div>
 
-        {/* Camera error state */}
-        {cameraError && !capturedMedia && (
+        {/* Permission request state */}
+        {isInitializing && !cameraError && !capturedMedia && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+            <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+            <p className="text-white text-lg">Initialisation de la caméra...</p>
+          </div>
+        )}
+
+        {/* Camera permission denied state */}
+        {cameraError === 'permission_denied' && !capturedMedia && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-gradient-to-b from-black to-gray-900">
+            <div className="w-20 h-20 rounded-full bg-destructive/20 flex items-center justify-center mb-6">
+              <ShieldAlert className="w-10 h-10 text-destructive" />
+            </div>
+            <h2 className="text-white text-xl font-semibold mb-2">
+              Accès à la caméra refusé
+            </h2>
+            <p className="text-white/70 text-sm mb-6 max-w-xs">
+              Pour prendre des photos et vidéos, tu dois autoriser l'accès à la caméra dans les paramètres de ton navigateur.
+            </p>
+            <div className="flex flex-col gap-3 w-full max-w-xs">
+              <Button 
+                variant="default" 
+                onClick={startCamera}
+                className="w-full bg-primary hover:bg-primary/90"
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                Réessayer
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleClose}
+                className="w-full border-white/20 text-white hover:bg-white/10"
+              >
+                Annuler
+              </Button>
+            </div>
+            <p className="text-white/50 text-xs mt-6 flex items-center gap-1">
+              <Settings className="w-3 h-3" />
+              Paramètres → Site → Caméra → Autoriser
+            </p>
+          </div>
+        )}
+
+        {/* Other camera errors */}
+        {cameraError && cameraError !== 'permission_denied' && !capturedMedia && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-gradient-to-b from-black to-gray-900">
             <Camera className="w-16 h-16 text-muted-foreground mb-4" />
             <p className="text-white text-lg mb-4">{cameraError}</p>
-            <Button variant="outline" onClick={startCamera}>
+            <Button variant="outline" onClick={startCamera} className="border-white/20 text-white hover:bg-white/10">
               Réessayer
             </Button>
           </div>
         )}
 
         {/* Camera preview */}
-        {!capturedMedia && !cameraError && (
+        {!capturedMedia && !cameraError && !isInitializing && (
           <>
             <video
               ref={videoRef}

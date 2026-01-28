@@ -255,6 +255,8 @@ const Index = () => {
                 onNavigateToGroups={() => handleTabChange('groups')}
                 onNavigateToMessages={() => handleTabChange('messages')}
                 onSelectRegion={handleSelectRegion}
+                onViewProfile={(userId) => handleStartPrivateChat(userId)}
+                onStartPrivateChat={handleStartPrivateChat}
               />
             </ScrollArea>
           </motion.div>

@@ -1,6 +1,5 @@
 import { Users, MessageCircle, User, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 
 interface BottomNavBarProps {
   activeTab: 'home' | 'groups' | 'messages' | 'profile';
@@ -17,43 +16,62 @@ const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0 }: BottomNavBarP
   ];
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50">
-      <nav className="bg-secondary/95 backdrop-blur-lg border border-border rounded-2xl shadow-lg shadow-black/20">
-        <div className="flex items-center justify-around h-16 px-2">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            
-            return (
-              <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 relative",
-                  isActive
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                )}
-              >
-                <div className="relative">
-                  <Icon className={cn("w-5 h-5", isActive && "scale-110")} />
-                  {tab.badge && tab.badge > 0 && (
-                    <Badge 
-                      className="absolute -top-2 -right-2 h-4 min-w-4 px-1 flex items-center justify-center text-[10px] bg-accent text-accent-foreground"
-                    >
-                      {tab.badge > 99 ? '99+' : tab.badge}
-                    </Badge>
+    <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2 pointer-events-none">
+      {/* Gradient fade for content behind */}
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
+      
+      <nav className="relative pointer-events-auto mx-auto max-w-md">
+        <div className="bg-secondary/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl shadow-black/30">
+          <div className="flex items-center justify-around h-16 px-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => onTabChange(tab.id)}
+                  className={cn(
+                    "relative flex flex-col items-center justify-center gap-0.5 w-16 h-14 rounded-xl transition-all duration-200",
+                    isActive
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
-                </div>
-                <span className={cn(
-                  "text-[10px] font-medium",
-                  isActive && "text-primary"
-                )}>
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
+                >
+                  {/* Active background indicator */}
+                  {isActive && (
+                    <div className="absolute inset-1 bg-primary/10 rounded-lg" />
+                  )}
+                  
+                  <div className="relative z-10">
+                    <Icon className={cn(
+                      "w-5 h-5 transition-transform duration-200",
+                      isActive && "scale-110"
+                    )} />
+                    
+                    {/* Badge */}
+                    {tab.badge && tab.badge > 0 && (
+                      <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold flex items-center justify-center shadow-lg">
+                        {tab.badge > 99 ? '99+' : tab.badge}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <span className={cn(
+                    "relative z-10 text-[10px] font-medium transition-colors",
+                    isActive && "text-primary"
+                  )}>
+                    {tab.label}
+                  </span>
+                  
+                  {/* Active dot indicator */}
+                  {isActive && (
+                    <span className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-primary" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </nav>
     </div>

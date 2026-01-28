@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import Hero from '@/components/landing/Hero';
 import RegionSelector from '@/components/landing/RegionSelector';
 import HomeView from '@/components/home/HomeView';
@@ -20,8 +21,40 @@ import { cn } from '@/lib/utils';
 type AppView = 'landing' | 'home' | 'groups' | 'messages' | 'profile' | 'chat' | 'private';
 type NavTab = 'home' | 'groups' | 'messages' | 'profile';
 
+// Tab order for determining animation direction
+const tabOrder: NavTab[] = ['home', 'groups', 'messages', 'profile'];
+
+// Animation variants for page transitions
+const pageVariants = {
+  initial: (direction: number) => ({
+    x: direction > 0 ? 60 : -60,
+    opacity: 0,
+  }),
+  animate: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => ({
+    x: direction > 0 ? -60 : 60,
+    opacity: 0,
+  }),
+};
+
+const fadeVariants = {
+  initial: { opacity: 0, scale: 0.98 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.98 },
+};
+
+const slideUpVariants = {
+  initial: { opacity: 0, y: 40 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
+
 const Index = () => {
   const [currentView, setCurrentView] = useState<AppView>('landing');
+  const [previousTab, setPreviousTab] = useState<NavTab>('home');
   const [activeTab, setActiveTab] = useState<NavTab>('home');
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedPrivateUserId, setSelectedPrivateUserId] = useState<string | null>(null);
@@ -31,6 +64,13 @@ const Index = () => {
   const { getOrCreateConversation } = usePrivateConversations();
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
   const navigate = useNavigate();
+
+  // Calculate animation direction based on tab order
+  const direction = useMemo(() => {
+    const prevIndex = tabOrder.indexOf(previousTab);
+    const currIndex = tabOrder.indexOf(activeTab);
+    return currIndex > prevIndex ? 1 : -1;
+  }, [previousTab, activeTab]);
 
   // Redirect to home if user is logged in and on landing
   useEffect(() => {
@@ -45,10 +85,20 @@ const Index = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <motion.div 
+          className="flex flex-col items-center gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          >
+            <Loader2 className="w-8 h-8 text-primary" />
+          </motion.div>
           <p className="text-muted-foreground">Chargement...</p>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -63,6 +113,7 @@ const Index = () => {
   };
 
   const handleTabChange = (tab: NavTab) => {
+    setPreviousTab(activeTab);
     setActiveTab(tab);
     if (tab === 'profile') {
       setCurrentView('profile');
@@ -124,72 +175,153 @@ const Index = () => {
     return 100;
   };
 
-  // Render private chat view
+  // Render private chat view with slide animation
   if (currentView === 'private' && selectedPrivateUserId) {
     return (
-      <PrivateChatRoom
-        otherUserId={selectedPrivateUserId}
-        onBack={handleBackFromPrivateChat}
-      />
+      <motion.div
+        initial={{ x: '100%', opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: '100%', opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="min-h-screen"
+      >
+        <PrivateChatRoom
+          otherUserId={selectedPrivateUserId}
+          onBack={handleBackFromPrivateChat}
+        />
+      </motion.div>
     );
   }
 
-  // Render group chat view
+  // Render group chat view with slide animation
   if (currentView === 'chat' && selectedRegion && selectedRoomData) {
     return (
-      <ChatRoom
-        roomId={selectedRoomData.id}
-        regionCode={selectedRegion}
-        regionName={selectedRoomData.region_name}
-        memberCount={getMemberCount()}
-        onBack={handleBackToRegions}
-        onStartPrivateChat={handleStartPrivateChat}
-      />
+      <motion.div
+        initial={{ x: '100%', opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: '100%', opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="min-h-screen"
+      >
+        <ChatRoom
+          roomId={selectedRoomData.id}
+          regionCode={selectedRegion}
+          regionName={selectedRoomData.region_name}
+          memberCount={getMemberCount()}
+          onBack={handleBackToRegions}
+          onStartPrivateChat={handleStartPrivateChat}
+        />
+      </motion.div>
     );
   }
 
   const showBottomNav = user && currentView !== 'landing' && currentView !== 'chat' && currentView !== 'private';
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Content */}
-      <main className={cn(
-        "flex-1 flex flex-col",
-        showBottomNav && "pb-20"
-      )}>
-        {/* Landing page */}
-        {currentView === 'landing' && (
-          <Hero onGetStarted={handleGetStarted} />
-        )}
-        
-        {/* Home view */}
-        {currentView === 'home' && user && (
-          <ScrollArea className="flex-1">
-            <HomeView
-              onNavigateToGroups={() => handleTabChange('groups')}
-              onNavigateToMessages={() => handleTabChange('messages')}
-              onSelectRegion={handleSelectRegion}
-            />
-          </ScrollArea>
-        )}
+  // Get current view content
+  const renderContent = () => {
+    switch (currentView) {
+      case 'landing':
+        return (
+          <motion.div
+            key="landing"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.4 }}
+            className="flex-1"
+          >
+            <Hero onGetStarted={handleGetStarted} />
+          </motion.div>
+        );
+      
+      case 'home':
+        return user ? (
+          <motion.div
+            key="home"
+            custom={direction}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
+            className="flex-1"
+          >
+            <ScrollArea className="h-full">
+              <HomeView
+                onNavigateToGroups={() => handleTabChange('groups')}
+                onNavigateToMessages={() => handleTabChange('messages')}
+                onSelectRegion={handleSelectRegion}
+              />
+            </ScrollArea>
+          </motion.div>
+        ) : null;
 
-        {/* Groups view */}
-        {currentView === 'groups' && (
-          <ScrollArea className="flex-1">
-            <div className="px-4 py-4">
-              <h2 className="font-display text-xl font-bold text-foreground mb-1">Groupes</h2>
-              <p className="text-sm text-muted-foreground">Choisis ta région pour discuter</p>
-            </div>
-            <RegionSelector onSelectRegion={handleSelectRegion} />
-          </ScrollArea>
-        )}
+      case 'groups':
+        return (
+          <motion.div
+            key="groups"
+            custom={direction}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
+            className="flex-1"
+          >
+            <ScrollArea className="h-full">
+              <div className="px-5 py-5">
+                <motion.h2 
+                  className="font-display text-2xl font-bold text-foreground mb-1"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  Groupes
+                </motion.h2>
+                <motion.p 
+                  className="text-sm text-muted-foreground"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  Choisis ta région pour discuter
+                </motion.p>
+              </div>
+              <RegionSelector onSelectRegion={handleSelectRegion} />
+            </ScrollArea>
+          </motion.div>
+        );
 
-        {/* Messages view */}
-        {currentView === 'messages' && (
-          <div className="flex-1 flex flex-col animate-fade-in">
-            <div className="px-4 py-4 border-b border-border/50">
-              <h2 className="font-display text-xl font-bold text-foreground mb-1">Messages</h2>
-              <p className="text-sm text-muted-foreground">Tes conversations privées</p>
+      case 'messages':
+        return (
+          <motion.div
+            key="messages"
+            custom={direction}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
+            className="flex-1 flex flex-col"
+          >
+            <div className="px-5 py-5 border-b border-border/50">
+              <motion.h2 
+                className="font-display text-2xl font-bold text-foreground mb-1"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                Messages
+              </motion.h2>
+              <motion.p 
+                className="text-sm text-muted-foreground"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.15 }}
+              >
+                Tes conversations privées
+              </motion.p>
             </div>
             <ScrollArea className="flex-1">
               <PrivateChatList
@@ -197,29 +329,65 @@ const Index = () => {
                 selectedUserId={null}
               />
             </ScrollArea>
-          </div>
-        )}
+          </motion.div>
+        );
 
-        {/* Profile view */}
-        {currentView === 'profile' && user && (
-          <ScrollArea className="flex-1">
-            <ProfileView 
-              onSignOut={handleSignOut}
-              onNavigateToAdmin={() => navigate('/admin')}
-              isAdmin={isAdmin}
-            />
-          </ScrollArea>
-        )}
+      case 'profile':
+        return user ? (
+          <motion.div
+            key="profile"
+            custom={direction}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
+            className="flex-1"
+          >
+            <ScrollArea className="h-full">
+              <ProfileView 
+                onSignOut={handleSignOut}
+                onNavigateToAdmin={() => navigate('/admin')}
+                isAdmin={isAdmin}
+              />
+            </ScrollArea>
+          </motion.div>
+        ) : null;
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col overflow-hidden">
+      {/* Content with AnimatePresence for transitions */}
+      <main className={cn(
+        "flex-1 flex flex-col overflow-hidden",
+        showBottomNav && "pb-20"
+      )}>
+        <AnimatePresence mode="wait" custom={direction}>
+          {renderContent()}
+        </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation Bar */}
-      {showBottomNav && (
-        <BottomNavBar
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          unreadCount={getTotalUnreadCount()}
-        />
-      )}
+      {/* Bottom Navigation Bar with fade animation */}
+      <AnimatePresence>
+        {showBottomNav && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          >
+            <BottomNavBar
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              unreadCount={getTotalUnreadCount()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

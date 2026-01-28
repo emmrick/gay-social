@@ -14,7 +14,213 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_rooms: {
+        Row: {
+          created_at: string
+          id: string
+          region_code: string
+          region_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          region_code: string
+          region_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          region_code?: string
+          region_name?: string
+        }
+        Relationships: []
+      }
+      ephemeral_media: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_viewed: boolean | null
+          media_type: string
+          media_url: string
+          message_id: string
+          view_duration: number
+          viewed_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_viewed?: boolean | null
+          media_type: string
+          media_url: string
+          message_id: string
+          view_duration?: number
+          viewed_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_viewed?: boolean | null
+          media_type?: string
+          media_url?: string
+          message_id?: string
+          view_duration?: number
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ephemeral_media_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          chat_room_id: string | null
+          content: string | null
+          created_at: string
+          id: string
+          is_private: boolean | null
+          message_type: string
+          recipient_id: string | null
+          sender_id: string
+        }
+        Insert: {
+          chat_room_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_private?: boolean | null
+          message_type?: string
+          recipient_id?: string | null
+          sender_id: string
+        }
+        Update: {
+          chat_room_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_private?: boolean | null
+          message_type?: string
+          recipient_id?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_room_id_fkey"
+            columns: ["chat_room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      private_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          id: string
+          is_online: boolean | null
+          last_seen: string | null
+          region: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          is_online?: boolean | null
+          last_seen?: string | null
+          region: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          is_online?: boolean | null
+          last_seen?: string | null
+          region?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      screenshot_violations: {
+        Row: {
+          created_at: string
+          id: string
+          last_violation_at: string | null
+          media_id: string | null
+          suspended_until: string | null
+          updated_at: string
+          user_id: string
+          violation_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_violation_at?: string | null
+          media_id?: string | null
+          suspended_until?: string | null
+          updated_at?: string
+          user_id: string
+          violation_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_violation_at?: string | null
+          media_id?: string | null
+          suspended_until?: string | null
+          updated_at?: string
+          user_id?: string
+          violation_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screenshot_violations_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "ephemeral_media"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

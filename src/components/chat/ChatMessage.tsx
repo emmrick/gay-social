@@ -1,6 +1,7 @@
 import { Message } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import EphemeralMessage from './EphemeralMessage';
 
 interface ChatMessageProps {
   message: Message;
@@ -8,6 +9,8 @@ interface ChatMessageProps {
 }
 
 const ChatMessage = ({ message, isOwn }: ChatMessageProps) => {
+  const isEphemeral = message.type === 'image' || message.type === 'video';
+
   return (
     <div className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : 'flex-row'} animate-slide-up`}>
       {/* Avatar */}
@@ -25,18 +28,19 @@ const ChatMessage = ({ message, isOwn }: ChatMessageProps) => {
           </span>
         )}
         
-        {/* Message bubble */}
-        <div className={`message-bubble ${isOwn ? 'message-bubble-sent' : 'message-bubble-received'}`}>
-          {message.type === 'image' && message.imageUrl ? (
-            <img 
-              src={message.imageUrl} 
-              alt="Shared image" 
-              className="rounded-lg max-w-[280px] max-h-[280px] object-cover"
-            />
-          ) : (
+        {/* Message content */}
+        {isEphemeral ? (
+          <EphemeralMessage
+            messageId={message.id}
+            messageType={message.type as 'image' | 'video'}
+            senderName={message.senderName}
+            isOwn={isOwn}
+          />
+        ) : (
+          <div className={`message-bubble ${isOwn ? 'message-bubble-sent' : 'message-bubble-received'}`}>
             <p className="text-sm leading-relaxed">{message.content}</p>
-          )}
-        </div>
+          </div>
+        )}
         
         {/* Timestamp */}
         <span className="text-[10px] text-muted-foreground mt-1 px-1">

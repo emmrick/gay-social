@@ -42,13 +42,9 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
     }
   }, [messages]);
 
-  const handleSendMessage = async (content: string, type: 'text' | 'image' | 'video', file?: File, duration?: number) => {
-    if (type === 'text' && content.trim()) {
+  const handleSendMessage = async (content: string) => {
+    if (content.trim()) {
       sendMessage.mutate({ content, messageType: 'text' });
-    } else if (file) {
-      // TODO: Upload file to storage and create ephemeral media
-      const mediaContent = `📸 ${type === 'image' ? 'Photo' : 'Vidéo'} éphémère (${duration}s)`;
-      sendMessage.mutate({ content: mediaContent, messageType: type });
     }
   };
 
@@ -172,7 +168,11 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
       </ScrollArea>
       
       {/* Input */}
-      <ChatInput onSendMessage={handleSendMessage} />
+      <ChatInput 
+        onSendMessage={handleSendMessage} 
+        chatRoomId={roomId}
+        isPrivate={false}
+      />
     </div>
   );
 };

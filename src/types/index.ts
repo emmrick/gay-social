@@ -14,7 +14,7 @@ export interface Message {
   senderName: string;
   senderAvatar?: string;
   timestamp: Date;
-  type: 'text' | 'image';
+  type: 'text' | 'image' | 'video';
   imageUrl?: string;
 }
 

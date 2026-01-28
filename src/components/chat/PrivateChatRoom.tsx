@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import ChatInput from './ChatInput';
+import EphemeralMessage from './EphemeralMessage';
 
 interface PrivateChatRoomProps {
   otherUserId: string;
@@ -28,9 +29,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   }, [messages]);
 
-  const handleSendMessage = async (content: string, type: 'text' | 'image' | 'video') => {
-    if (type === 'text' && content.trim()) {
-      await sendMessage.mutateAsync({ content, messageType: type });
+  const handleSendMessage = async (content: string) => {
+    if (content.trim()) {
+      await sendMessage.mutateAsync({ content, messageType: 'text' });
     }
   };
 
@@ -110,6 +111,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           <div className="space-y-4">
             {messages.map((message) => {
               const isOwn = message.sender_id === user?.id;
+              const isEphemeral = message.message_type === 'image' || message.message_type === 'video';
 
               return (
                 <div
@@ -132,22 +134,23 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                   )}
 
                   <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
-                    {/* Message bubble */}
-                    <div
-                      className={`message-bubble ${
-                        isOwn ? 'message-bubble-sent' : 'message-bubble-received'
-                      }`}
-                    >
-                      {message.message_type === 'image' && message.content ? (
-                        <img
-                          src={message.content}
-                          alt="Shared image"
-                          className="rounded-lg max-w-[280px] max-h-[280px] object-cover"
-                        />
-                      ) : (
+                    {/* Message content */}
+                    {isEphemeral ? (
+                      <EphemeralMessage
+                        messageId={message.id}
+                        messageType={message.message_type as 'image' | 'video'}
+                        senderName={message.senderUsername}
+                        isOwn={isOwn}
+                      />
+                    ) : (
+                      <div
+                        className={`message-bubble ${
+                          isOwn ? 'message-bubble-sent' : 'message-bubble-received'
+                        }`}
+                      >
                         <p className="text-sm leading-relaxed">{message.content}</p>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Timestamp */}
                     <span className="text-[10px] text-muted-foreground mt-1 px-1">
@@ -163,7 +166,11 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
       </ScrollArea>
 
       {/* Input */}
-      <ChatInput onSendMessage={handleSendMessage} />
+      <ChatInput 
+        onSendMessage={handleSendMessage} 
+        recipientId={otherUserId}
+        isPrivate={true}
+      />
     </div>
   );
 };

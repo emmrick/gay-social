@@ -5,15 +5,18 @@ import { Send, Smile } from 'lucide-react';
 import MediaUploadButton from './MediaUploadButton';
 
 interface ChatInputProps {
-  onSendMessage: (content: string, type: 'text' | 'image' | 'video', file?: File, duration?: number) => void;
+  onSendMessage: (content: string) => void;
+  chatRoomId?: string;
+  recipientId?: string;
+  isPrivate?: boolean;
 }
 
-const ChatInput = ({ onSendMessage }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false }: ChatInputProps) => {
   const [message, setMessage] = useState('');
 
   const handleSend = () => {
     if (message.trim()) {
-      onSendMessage(message.trim(), 'text');
+      onSendMessage(message.trim());
       setMessage('');
     }
   };
@@ -25,15 +28,15 @@ const ChatInput = ({ onSendMessage }: ChatInputProps) => {
     }
   };
 
-  const handleMediaSelect = (file: File, type: 'image' | 'video', duration: number) => {
-    onSendMessage('', type, file, duration);
-  };
-
   return (
     <div className="p-4 border-t border-border bg-card/50 backdrop-blur-lg">
       <div className="flex items-center gap-3">
         {/* Media upload button */}
-        <MediaUploadButton onMediaSelect={handleMediaSelect} />
+        <MediaUploadButton 
+          chatRoomId={chatRoomId}
+          recipientId={recipientId}
+          isPrivate={isPrivate}
+        />
         
         {/* Emoji button */}
         <Button 

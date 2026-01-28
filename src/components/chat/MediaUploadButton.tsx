@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Image, Video, Camera, X, Send, Clock } from 'lucide-react';
+import { Image, Video, Camera, X, Send, Clock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -7,32 +7,57 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useEphemeralMediaUpload } from '@/hooks/useEphemeralMediaUpload';
+import { toast } from 'sonner';
 
 interface MediaUploadButtonProps {
-  onMediaSelect: (file: File, type: 'image' | 'video', duration: number) => void;
+  chatRoomId?: string;
+  recipientId?: string;
+  isPrivate: boolean;
 }
 
-const MediaUploadButton = ({ onMediaSelect }: MediaUploadButtonProps) => {
+const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadButtonProps) => {
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [viewDuration, setViewDuration] = useState(10);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const { uploadEphemeralMedia, isUploading, progress } = useEphemeralMediaUpload();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (max 50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error('Le fichier est trop volumineux (max 50 Mo)');
+        return;
+      }
       setPreviewFile(file);
       setPreviewUrl(URL.createObjectURL(file));
       setMediaType(type);
     }
+    // Reset input
+    e.target.value = '';
   };
 
-  const handleSend = () => {
-    if (previewFile) {
-      onMediaSelect(previewFile, mediaType, viewDuration);
+  const handleSend = async () => {
+    if (!previewFile) return;
+
+    try {
+      await uploadEphemeralMedia.mutateAsync({
+        file: previewFile,
+        messageType: mediaType,
+        viewDuration,
+        chatRoomId,
+        recipientId,
+        isPrivate,
+      });
+      toast.success('Média envoyé !');
       handleCancel();
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error("Erreur lors de l'envoi du média");
     }
   };
 
@@ -51,10 +76,12 @@ const MediaUploadButton = ({ onMediaSelect }: MediaUploadButtonProps) => {
       <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-lg flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <Button variant="ghost" size="icon" onClick={handleCancel}>
+          <Button variant="ghost" size="icon" onClick={handleCancel} disabled={isUploading}>
             <X className="w-6 h-6" />
           </Button>
-          <span className="font-display font-semibold">Envoyer {mediaType === 'image' ? 'une photo' : 'une vidéo'}</span>
+          <span className="font-display font-semibold">
+            Envoyer {mediaType === 'image' ? 'une photo' : 'une vidéo'}
+          </span>
           <div className="w-10" />
         </div>
         
@@ -86,20 +113,51 @@ const MediaUploadButton = ({ onMediaSelect }: MediaUploadButtonProps) => {
               <button
                 key={d}
                 onClick={() => setViewDuration(d)}
+                disabled={isUploading}
                 className={`flex-1 py-2 rounded-lg font-medium transition-all ${
                   viewDuration === d 
                     ? 'bg-primary text-primary-foreground' 
                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                }`}
+                } disabled:opacity-50`}
               >
                 {d}s
               </button>
             ))}
           </div>
+
+          {/* Progress bar */}
+          {isUploading && (
+            <div className="mb-4">
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 text-center">
+                Envoi en cours... {progress}%
+              </p>
+            </div>
+          )}
           
-          <Button variant="hero" size="lg" className="w-full" onClick={handleSend}>
-            <Send className="w-5 h-5" />
-            Envoyer
+          <Button 
+            variant="hero" 
+            size="lg" 
+            className="w-full" 
+            onClick={handleSend}
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Envoi...
+              </>
+            ) : (
+              <>
+                <Send className="w-5 h-5" />
+                Envoyer
+              </>
+            )}
           </Button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import BlockedUserGuard from "@/components/BlockedUserGuard";
+import InstallPWAPrompt from "@/components/pwa/InstallPWAPrompt";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+          <InstallPWAPrompt />
         </TooltipProvider>
       </BlockedUserGuard>
     </AuthProvider>

@@ -1,4 +1,5 @@
 import { useChatRooms } from '@/hooks/useChatRooms';
+import { useOnlineMemberCounts } from '@/hooks/useOnlineMemberCounts';
 import { useState } from 'react';
 import { MapPin, Users, ArrowRight, Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ interface RegionSelectorProps {
 const RegionSelector = ({ onSelectRegion }: RegionSelectorProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: rooms, isLoading } = useChatRooms();
+  const { data: onlineCounts } = useOnlineMemberCounts();
   
   const filteredRegions = rooms?.filter(room => 
     room.region_code.includes(searchQuery) || 
@@ -66,7 +68,11 @@ const RegionSelector = ({ onSelectRegion }: RegionSelectorProps) => {
               <h3 className="font-semibold text-foreground mb-1 line-clamp-1">{room.region_name}</h3>
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Users className="w-4 h-4" />
-                <span>Rejoindre</span>
+                <span>
+                  {onlineCounts?.[room.region_code] 
+                    ? `${onlineCounts[room.region_code]} en ligne`
+                    : 'Rejoindre'}
+                </span>
               </div>
             </button>
           ))}

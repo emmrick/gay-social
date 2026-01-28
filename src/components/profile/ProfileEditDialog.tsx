@@ -28,6 +28,7 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
   
   const [username, setUsername] = useState(profile?.username || '');
   const [bio, setBio] = useState(profile?.bio || '');
+  const [age, setAge] = useState<string>(profile?.age?.toString() || '');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(profile?.avatar_url || null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -38,6 +39,7 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
     if (isOpen) {
       setUsername(profile?.username || '');
       setBio(profile?.bio || '');
+      setAge(profile?.age?.toString() || '');
       setAvatarPreview(profile?.avatar_url || null);
       setAvatarFile(null);
     }
@@ -150,6 +152,16 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
       return;
     }
 
+    const ageNum = age ? parseInt(age, 10) : null;
+    if (age && (isNaN(ageNum!) || ageNum! < 18 || ageNum! > 99)) {
+      toast({
+        title: 'Erreur',
+        description: 'L\'âge doit être compris entre 18 et 99 ans',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       // Upload avatar if changed
@@ -159,9 +171,11 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
       }
 
       // Update profile
+      const ageValue = age ? parseInt(age, 10) : null;
       const { error } = await updateProfile({
         username: username.trim(),
         bio: bio.trim() || null,
+        age: ageValue,
         avatar_url: avatarUrl,
       });
 
@@ -247,6 +261,23 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
             />
             <p className="text-xs text-muted-foreground text-right">
               {username.length}/30
+            </p>
+          </div>
+
+          {/* Age */}
+          <div className="space-y-2">
+            <Label htmlFor="age">Âge</Label>
+            <Input
+              id="age"
+              type="number"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              placeholder="Votre âge"
+              min={18}
+              max={99}
+            />
+            <p className="text-xs text-muted-foreground">
+              Minimum 18 ans
             </p>
           </div>
 

@@ -6,15 +6,15 @@ import HomeView from '@/components/home/HomeView';
 import ChatRoom from '@/components/chat/ChatRoom';
 import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
-import ProfileEditDialog from '@/components/profile/ProfileEditDialog';
+import ProfileView from '@/components/profile/ProfileView';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
-import { Button } from '@/components/ui/button';
-import { LogOut, Shield, ChevronLeft } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type AppView = 'landing' | 'home' | 'groups' | 'messages' | 'profile' | 'chat' | 'private';
@@ -25,8 +25,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('home');
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedPrivateUserId, setSelectedPrivateUserId] = useState<string | null>(null);
-  const [showProfileEdit, setShowProfileEdit] = useState(false);
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, isLoading: authLoading, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
   const { getOrCreateConversation } = usePrivateConversations();
@@ -37,8 +36,22 @@ const Index = () => {
   useEffect(() => {
     if (user && currentView === 'landing') {
       setCurrentView('home');
+    } else if (!user && !authLoading && currentView !== 'landing') {
+      setCurrentView('landing');
     }
-  }, [user, currentView]);
+  }, [user, authLoading, currentView]);
+
+  // Show loading while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleGetStarted = () => {
     if (!user) {
@@ -52,7 +65,7 @@ const Index = () => {
   const handleTabChange = (tab: NavTab) => {
     setActiveTab(tab);
     if (tab === 'profile') {
-      setShowProfileEdit(true);
+      setCurrentView('profile');
     } else if (tab === 'messages') {
       setSelectedPrivateUserId(null);
       setCurrentView('messages');
@@ -136,64 +149,12 @@ const Index = () => {
   }
 
   const showBottomNav = user && currentView !== 'landing' && currentView !== 'chat' && currentView !== 'private';
-  const showHeader = user && currentView !== 'landing';
-
-  // Get page title based on current view
-  const getPageTitle = () => {
-    switch (currentView) {
-      case 'home': return 'Accueil';
-      case 'groups': return 'Groupes';
-      case 'messages': return 'Messages';
-      default: return '';
-    }
-  };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header for authenticated users */}
-      {showHeader && (
-        <header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-          <div className="flex items-center justify-between h-14 px-4">
-            {/* Left side */}
-            <div className="flex items-center gap-3">
-              <h1 className="font-display text-lg font-bold gradient-text">
-                GayConnect
-              </h1>
-            </div>
-            
-            {/* Right side */}
-            <div className="flex items-center gap-2">
-              {isAdmin && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate('/admin')}
-                  className="gap-1.5 text-xs h-8"
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                  Admin
-                </Button>
-              )}
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleSignOut}
-                className="h-8 w-8"
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </header>
-      )}
-
-      {/* Profile Edit Dialog */}
-      <ProfileEditDialog open={showProfileEdit} onOpenChange={setShowProfileEdit} />
-
-      {/* Content with smooth transitions */}
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Content */}
       <main className={cn(
-        "transition-opacity duration-200",
+        "flex-1 flex flex-col",
         showBottomNav && "pb-20"
       )}>
         {/* Landing page */}
@@ -203,30 +164,51 @@ const Index = () => {
         
         {/* Home view */}
         {currentView === 'home' && user && (
-          <HomeView
-            onNavigateToGroups={() => handleTabChange('groups')}
-            onNavigateToMessages={() => handleTabChange('messages')}
-            onSelectRegion={handleSelectRegion}
-          />
+          <ScrollArea className="flex-1">
+            <HomeView
+              onNavigateToGroups={() => handleTabChange('groups')}
+              onNavigateToMessages={() => handleTabChange('messages')}
+              onSelectRegion={handleSelectRegion}
+            />
+          </ScrollArea>
         )}
 
         {/* Groups view */}
         {currentView === 'groups' && (
-          <RegionSelector onSelectRegion={handleSelectRegion} />
+          <ScrollArea className="flex-1">
+            <div className="px-4 py-4">
+              <h2 className="font-display text-xl font-bold text-foreground mb-1">Groupes</h2>
+              <p className="text-sm text-muted-foreground">Choisis ta région pour discuter</p>
+            </div>
+            <RegionSelector onSelectRegion={handleSelectRegion} />
+          </ScrollArea>
         )}
 
         {/* Messages view */}
         {currentView === 'messages' && (
-          <div className="animate-fade-in">
-            <div className="px-4 py-4">
+          <div className="flex-1 flex flex-col animate-fade-in">
+            <div className="px-4 py-4 border-b border-border/50">
               <h2 className="font-display text-xl font-bold text-foreground mb-1">Messages</h2>
               <p className="text-sm text-muted-foreground">Tes conversations privées</p>
             </div>
-            <PrivateChatList
-              onSelectConversation={handleSelectConversation}
-              selectedUserId={null}
-            />
+            <ScrollArea className="flex-1">
+              <PrivateChatList
+                onSelectConversation={handleSelectConversation}
+                selectedUserId={null}
+              />
+            </ScrollArea>
           </div>
+        )}
+
+        {/* Profile view */}
+        {currentView === 'profile' && user && (
+          <ScrollArea className="flex-1">
+            <ProfileView 
+              onSignOut={handleSignOut}
+              onNavigateToAdmin={() => navigate('/admin')}
+              isAdmin={isAdmin}
+            />
+          </ScrollArea>
         )}
       </main>
 

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageCircle, Eye, MapPin, Calendar, User } from 'lucide-react';
+import { X, MessageCircle, Eye, MapPin, Calendar, User, Ruler, Weight, Heart, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -13,6 +13,48 @@ interface MemberProfileCardProps {
   onViewProfile: () => void;
 }
 
+// Labels for profile fields
+const POSITION_LABELS: Record<string, string> = {
+  'actif': '🔝 Actif (Top)',
+  'passif': '🔽 Passif (Bottom)',
+  'versatile': '↕️ Versatile',
+  'vers_top': '↕️🔝 Versatile Top',
+  'vers_bottom': '↕️🔽 Versatile Bottom',
+  'side': '🤝 Side',
+};
+
+const BODY_TYPE_LABELS: Record<string, string> = {
+  'mince': 'Mince',
+  'moyen': 'Moyen',
+  'muscle': 'Musclé',
+  'costaud': 'Costaud',
+  'gros': 'Gros',
+  'sportif': 'Sportif',
+};
+
+const LOOKING_FOR_LABELS: Record<string, string> = {
+  'plan_cul': 'Plan cul',
+  'plan_regulier': 'Plan régulier',
+  'relation': 'Relation',
+  'amitie': 'Amitié',
+  'discussion': 'Discussion',
+  'webcam': 'Webcam',
+  'groupe': 'Plan à plusieurs',
+};
+
+const TRIBE_LABELS: Record<string, string> = {
+  'bear': '🐻 Bear',
+  'twink': '✨ Twink',
+  'otter': '🦦 Otter',
+  'daddy': '👔 Daddy',
+  'jock': '💪 Jock',
+  'cub': '🧸 Cub',
+  'chub': '🤗 Chub',
+  'geek': '🤓 Geek',
+  'leather': '🖤 Leather',
+  'drag': '👠 Drag',
+};
+
 const MemberProfileCard = ({ 
   userId, 
   isOpen, 
@@ -21,6 +63,8 @@ const MemberProfileCard = ({
   onViewProfile 
 }: MemberProfileCardProps) => {
   const { data: profile, isLoading } = useProfile(userId);
+
+  const extendedProfile = profile as any;
 
   const getLastSeenText = () => {
     if (profile?.is_online) return 'En ligne maintenant';
@@ -56,11 +100,11 @@ const MemberProfileCard = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-w-lg mx-auto"
+            className="fixed bottom-0 left-0 right-0 z-50 max-w-lg mx-auto max-h-[85vh] overflow-y-auto"
           >
             <div className="bg-card rounded-t-3xl border-t border-x border-border shadow-2xl overflow-hidden">
               {/* Header with photo */}
-              <div className="relative h-48 bg-gradient-to-br from-primary/30 to-accent/30">
+              <div className="relative h-56 bg-gradient-to-br from-primary/30 to-accent/30">
                 {isLoading ? (
                   <Skeleton className="w-full h-full" />
                 ) : profile?.avatar_url ? (
@@ -97,6 +141,15 @@ const MemberProfileCard = ({
                     En ligne
                   </div>
                 )}
+
+                {/* Position badge */}
+                {extendedProfile?.sexual_position && POSITION_LABELS[extendedProfile.sexual_position] && (
+                  <div className="absolute bottom-4 left-4">
+                    <Badge variant="secondary" className="bg-black/50 text-white border-0">
+                      {POSITION_LABELS[extendedProfile.sexual_position]}
+                    </Badge>
+                  </div>
+                )}
               </div>
 
               {/* Content */}
@@ -114,9 +167,9 @@ const MemberProfileCard = ({
                       <h2 className="font-display text-2xl font-bold text-foreground">
                         {profile.username}
                       </h2>
-                      {(profile as unknown as { age?: number }).age && (
+                      {extendedProfile?.age && (
                         <span className="text-lg text-muted-foreground">
-                          {(profile as unknown as { age: number }).age} ans
+                          {extendedProfile.age} ans
                         </span>
                       )}
                     </div>
@@ -126,19 +179,65 @@ const MemberProfileCard = ({
                       {getLastSeenText()}
                     </p>
 
-                    {/* Info grid */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin className="w-4 h-4 text-primary" />
+                    {/* Quick info pills */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-sm">
+                        <MapPin className="w-3.5 h-3.5 text-primary" />
                         <span>{profile.region}</span>
                       </div>
-                      {(profile as unknown as { age?: number }).age && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="w-4 h-4 text-primary" />
-                          <span>{(profile as unknown as { age: number }).age} ans</span>
+                      
+                      {extendedProfile?.height && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-sm">
+                          <Ruler className="w-3.5 h-3.5 text-primary" />
+                          <span>{extendedProfile.height} cm</span>
+                        </div>
+                      )}
+                      
+                      {extendedProfile?.weight && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-sm">
+                          <Weight className="w-3.5 h-3.5 text-primary" />
+                          <span>{extendedProfile.weight} kg</span>
+                        </div>
+                      )}
+                      
+                      {extendedProfile?.body_type && BODY_TYPE_LABELS[extendedProfile.body_type] && (
+                        <div className="px-3 py-1.5 rounded-full bg-secondary text-sm">
+                          {BODY_TYPE_LABELS[extendedProfile.body_type]}
                         </div>
                       )}
                     </div>
+
+                    {/* Tribes */}
+                    {extendedProfile?.tribes && extendedProfile.tribes.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {extendedProfile.tribes.map((tribe: string) => (
+                          <Badge key={tribe} variant="outline" className="text-xs">
+                            {TRIBE_LABELS[tribe] || tribe}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Looking for */}
+                    {extendedProfile?.looking_for && extendedProfile.looking_for.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                          <Heart className="w-3 h-3" />
+                          Recherche
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {extendedProfile.looking_for.map((item: string) => (
+                            <Badge 
+                              key={item} 
+                              variant="secondary" 
+                              className="bg-primary/10 text-primary border-primary/20 text-xs"
+                            >
+                              {LOOKING_FOR_LABELS[item] || item}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Bio */}
                     {profile.bio && (

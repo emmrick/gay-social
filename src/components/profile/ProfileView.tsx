@@ -12,6 +12,30 @@ import { fr } from 'date-fns/locale';
 import ProfileEditDialog from './ProfileEditDialog';
 import SettingsDialog from './SettingsDialog';
 
+// Labels
+const POSITION_LABELS: Record<string, string> = {
+  'actif': '🔝 Actif (Top)',
+  'passif': '🔽 Passif (Bottom)',
+  'versatile': '↕️ Versatile',
+  'vers_top': '↕️🔝 Versatile Top',
+  'vers_bottom': '↕️🔽 Versatile Bottom',
+  'side': '🤝 Side',
+  'no_answer': 'Non précisé',
+};
+
+const LOOKING_FOR_LABELS: Record<string, string> = {
+  'plan_cul': '🔥 Plan cul',
+  'plan_regulier': '🔄 Plan régulier',
+  'relation': '❤️ Relation',
+  'amitie': '🤝 Amitié',
+  'discussion': '💬 Discussion',
+  'webcam': '📹 Webcam',
+  'groupe': '👥 Plan à plusieurs',
+};
+
+const getPositionLabel = (position: string) => POSITION_LABELS[position] || position;
+const getLookingForLabel = (item: string) => LOOKING_FOR_LABELS[item] || item;
+
 interface ProfileViewProps {
   onSignOut: () => void;
   onNavigateToAdmin?: () => void;
@@ -84,10 +108,28 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
                 {profile.username}
                 {profile.age && <span className="text-muted-foreground font-normal">, {profile.age} ans</span>}
               </h1>
+              
+              {/* Position badge */}
+              {(profile as any).sexual_position && (
+                <Badge variant="secondary" className="mt-2">
+                  {getPositionLabel((profile as any).sexual_position)}
+                </Badge>
+              )}
+              
               <div className="flex items-center justify-center gap-2 mt-2 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
                 <span className="text-sm">{profile.region}</span>
               </div>
+              
+              {/* Physical stats */}
+              {((profile as any).height || (profile as any).weight) && (
+                <div className="flex items-center justify-center gap-3 mt-1 text-muted-foreground text-sm">
+                  {(profile as any).height && <span>{(profile as any).height} cm</span>}
+                  {(profile as any).height && (profile as any).weight && <span>•</span>}
+                  {(profile as any).weight && <span>{(profile as any).weight} kg</span>}
+                </div>
+              )}
+              
               {profile.created_at && (
                 <div className="flex items-center justify-center gap-2 mt-1 text-muted-foreground">
                   <Calendar className="w-4 h-4" />
@@ -97,6 +139,17 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
                 </div>
               )}
             </div>
+
+            {/* Looking for badges */}
+            {(profile as any).looking_for && (profile as any).looking_for.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-1.5 mt-3">
+                {(profile as any).looking_for.map((item: string) => (
+                  <Badge key={item} variant="outline" className="text-xs">
+                    {getLookingForLabel(item)}
+                  </Badge>
+                ))}
+              </div>
+            )}
 
             {/* Bio */}
             {profile.bio && (

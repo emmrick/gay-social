@@ -233,52 +233,91 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accepts_nsfw: boolean | null
           age: number | null
           avatar_url: string | null
           bio: string | null
+          body_type: string | null
           created_at: string
+          endowment: string | null
+          ethnicity: string | null
+          height: number | null
+          hiv_status: string | null
           id: string
           is_online: boolean | null
           last_seen: string | null
           latitude: number | null
           location_updated_at: string | null
           longitude: number | null
+          looking_for: string[] | null
+          position_detail: string | null
           region: string
+          relationship_status: string | null
+          sexual_position: string | null
+          show_face: boolean | null
+          tribes: string[] | null
           updated_at: string
           user_id: string
           username: string
+          weight: number | null
         }
         Insert: {
+          accepts_nsfw?: boolean | null
           age?: number | null
           avatar_url?: string | null
           bio?: string | null
+          body_type?: string | null
           created_at?: string
+          endowment?: string | null
+          ethnicity?: string | null
+          height?: number | null
+          hiv_status?: string | null
           id?: string
           is_online?: boolean | null
           last_seen?: string | null
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null
+          looking_for?: string[] | null
+          position_detail?: string | null
           region: string
+          relationship_status?: string | null
+          sexual_position?: string | null
+          show_face?: boolean | null
+          tribes?: string[] | null
           updated_at?: string
           user_id: string
           username: string
+          weight?: number | null
         }
         Update: {
+          accepts_nsfw?: boolean | null
           age?: number | null
           avatar_url?: string | null
           bio?: string | null
+          body_type?: string | null
           created_at?: string
+          endowment?: string | null
+          ethnicity?: string | null
+          height?: number | null
+          hiv_status?: string | null
           id?: string
           is_online?: boolean | null
           last_seen?: string | null
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null
+          looking_for?: string[] | null
+          position_detail?: string | null
           region?: string
+          relationship_status?: string | null
+          sexual_position?: string | null
+          show_face?: boolean | null
+          tribes?: string[] | null
           updated_at?: string
           user_id?: string
           username?: string
+          weight?: number | null
         }
         Relationships: []
       }

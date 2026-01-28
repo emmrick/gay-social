@@ -1,19 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Hero from '@/components/landing/Hero';
 import RegionSelector from '@/components/landing/RegionSelector';
+import HomeView from '@/components/home/HomeView';
 import ChatRoom from '@/components/chat/ChatRoom';
 import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import ProfileEditDialog from '@/components/profile/ProfileEditDialog';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
-import { useChatRooms, useChatRoom } from '@/hooks/useChatRooms';
+import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
-import { LogOut, User, Shield } from 'lucide-react';
+import { LogOut, Shield, ChevronLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type AppView = 'landing' | 'home' | 'groups' | 'messages' | 'profile' | 'chat' | 'private';
 type NavTab = 'home' | 'groups' | 'messages' | 'profile';
@@ -26,11 +28,17 @@ const Index = () => {
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const { user, profile, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
-  const { data: rooms } = useChatRooms();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
   const { getOrCreateConversation } = usePrivateConversations();
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
   const navigate = useNavigate();
+
+  // Redirect to home if user is logged in and on landing
+  useEffect(() => {
+    if (user && currentView === 'landing') {
+      setCurrentView('home');
+    }
+  }, [user, currentView]);
 
   const handleGetStarted = () => {
     if (!user) {
@@ -76,7 +84,6 @@ const Index = () => {
     setActiveTab('home');
   };
 
-  // Start private chat from member list in group chat
   const handleStartPrivateChat = async (userId: string) => {
     try {
       await getOrCreateConversation.mutateAsync(userId);
@@ -88,11 +95,10 @@ const Index = () => {
     }
   };
 
-  // Select conversation from private chat list
   const handleSelectConversation = (userId: string) => {
     setSelectedPrivateUserId(userId);
-    // Mark messages as read when opening conversation
     markAsRead.mutate(userId);
+    setCurrentView('private');
   };
 
   const handleBackFromPrivateChat = () => {
@@ -100,7 +106,6 @@ const Index = () => {
     setCurrentView('messages');
   };
 
-  // Get member count from database
   const getMemberCount = () => {
     if (!selectedRoomData) return 0;
     return 100;
@@ -131,31 +136,52 @@ const Index = () => {
   }
 
   const showBottomNav = user && currentView !== 'landing' && currentView !== 'chat' && currentView !== 'private';
+  const showHeader = user && currentView !== 'landing';
+
+  // Get page title based on current view
+  const getPageTitle = () => {
+    switch (currentView) {
+      case 'home': return 'Accueil';
+      case 'groups': return 'Groupes';
+      case 'messages': return 'Messages';
+      default: return '';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header for authenticated users */}
-      {user && currentView !== 'landing' && (
-        <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
-          <div className="container flex items-center justify-between h-16 px-4">
-            <h1 className="font-display text-xl font-bold gradient-text">GayConnect</h1>
-            
+      {showHeader && (
+        <header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+          <div className="flex items-center justify-between h-14 px-4">
+            {/* Left side */}
             <div className="flex items-center gap-3">
-              {/* Admin button */}
+              <h1 className="font-display text-lg font-bold gradient-text">
+                GayConnect
+              </h1>
+            </div>
+            
+            {/* Right side */}
+            <div className="flex items-center gap-2">
               {isAdmin && (
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   size="sm" 
                   onClick={() => navigate('/admin')}
-                  className="gap-2"
+                  className="gap-1.5 text-xs h-8"
                 >
-                  <Shield className="w-4 h-4" />
+                  <Shield className="w-3.5 h-3.5" />
                   Admin
                 </Button>
               )}
               
-              <Button variant="ghost" size="icon" onClick={handleSignOut}>
-                <LogOut className="w-5 h-5" />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleSignOut}
+                className="h-8 w-8"
+              >
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -165,31 +191,44 @@ const Index = () => {
       {/* Profile Edit Dialog */}
       <ProfileEditDialog open={showProfileEdit} onOpenChange={setShowProfileEdit} />
 
-      {/* Landing page */}
-      {currentView === 'landing' && (
-        <Hero onGetStarted={handleGetStarted} />
-      )}
-      
-      {/* Home view */}
-      {(currentView === 'home' || currentView === 'groups') && (
-        <div className="pb-24">
-          <RegionSelector onSelectRegion={handleSelectRegion} />
-        </div>
-      )}
-
-      {/* Messages view */}
-      {currentView === 'messages' && (
-        <div className="h-[calc(100vh-4rem)] pb-24">
-          <PrivateChatList
-            onSelectConversation={(userId) => {
-              handleSelectConversation(userId);
-              setSelectedPrivateUserId(userId);
-              setCurrentView('private');
-            }}
-            selectedUserId={null}
+      {/* Content with smooth transitions */}
+      <main className={cn(
+        "transition-opacity duration-200",
+        showBottomNav && "pb-20"
+      )}>
+        {/* Landing page */}
+        {currentView === 'landing' && (
+          <Hero onGetStarted={handleGetStarted} />
+        )}
+        
+        {/* Home view */}
+        {currentView === 'home' && user && (
+          <HomeView
+            onNavigateToGroups={() => handleTabChange('groups')}
+            onNavigateToMessages={() => handleTabChange('messages')}
+            onSelectRegion={handleSelectRegion}
           />
-        </div>
-      )}
+        )}
+
+        {/* Groups view */}
+        {currentView === 'groups' && (
+          <RegionSelector onSelectRegion={handleSelectRegion} />
+        )}
+
+        {/* Messages view */}
+        {currentView === 'messages' && (
+          <div className="animate-fade-in">
+            <div className="px-4 py-4">
+              <h2 className="font-display text-xl font-bold text-foreground mb-1">Messages</h2>
+              <p className="text-sm text-muted-foreground">Tes conversations privées</p>
+            </div>
+            <PrivateChatList
+              onSelectConversation={handleSelectConversation}
+              selectedUserId={null}
+            />
+          </div>
+        )}
+      </main>
 
       {/* Bottom Navigation Bar */}
       {showBottomNav && (

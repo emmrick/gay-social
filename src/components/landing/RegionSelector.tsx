@@ -1,7 +1,9 @@
 import { useChatRooms } from '@/hooks/useChatRooms';
 import { useOnlineMemberCounts } from '@/hooks/useOnlineMemberCounts';
+import { useFavoriteRegions } from '@/hooks/useFavoriteRegions';
 import { useState } from 'react';
-import { MapPin, Users, ArrowRight, Search, Loader2, X } from 'lucide-react';
+import { MapPin, Users, ArrowRight, Search, Loader2, X, Star } from 'lucide-react';
+import FavoriteRegions from './FavoriteRegions';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +15,7 @@ const RegionSelector = ({ onSelectRegion }: RegionSelectorProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: rooms, isLoading } = useChatRooms();
   const { data: onlineCounts } = useOnlineMemberCounts();
+  const { toggleFavorite, isFavorite } = useFavoriteRegions();
   
   const filteredRegions = rooms?.filter(room => 
     room.region_code.includes(searchQuery) || 
@@ -69,27 +72,61 @@ const RegionSelector = ({ onSelectRegion }: RegionSelectorProps) => {
             {filteredRegions.length} résultat{filteredRegions.length !== 1 ? 's' : ''}
           </p>
         )}
+
+        {/* Favorites section */}
+        {!searchQuery && (
+          <FavoriteRegions onSelectRegion={onSelectRegion} />
+        )}
+        
+        {/* All regions label */}
+        {!searchQuery && (
+          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-primary" />
+            Toutes les régions
+          </h3>
+        )}
         
         {/* Regions grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {filteredRegions.map((room, index) => {
             const onlineCount = onlineCounts?.[room.region_code] || 0;
             return (
-              <button
+              <div
                 key={room.id}
-                onClick={() => onSelectRegion(room.region_code)}
                 className={cn(
                   "relative overflow-hidden rounded-xl p-4 text-left transition-all duration-300 group",
                   "bg-secondary/50 border border-border/50",
                   "hover:bg-secondary hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
-                  "active:scale-[0.98]",
-                  "animate-fade-in"
+                  "animate-fade-in",
+                  isFavorite(room.region_code) && "border-yellow-500/30 bg-yellow-500/5"
                 )}
                 style={{ animationDelay: `${Math.min(index * 0.03, 0.5)}s` }}
               >
+                {/* Favorite button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(room.region_code);
+                  }}
+                  className={cn(
+                    "absolute top-3 right-3 p-1.5 rounded-full transition-all z-10",
+                    "hover:bg-yellow-500/20",
+                    isFavorite(room.region_code) 
+                      ? "text-yellow-500" 
+                      : "text-muted-foreground hover:text-yellow-500"
+                  )}
+                >
+                  <Star 
+                    className={cn(
+                      "w-4 h-4 transition-all",
+                      isFavorite(room.region_code) && "fill-yellow-500"
+                    )} 
+                  />
+                </button>
+
                 {/* Online indicator */}
                 {onlineCount > 0 && (
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-3 right-10">
                     <span className="flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
@@ -97,30 +134,35 @@ const RegionSelector = ({ onSelectRegion }: RegionSelectorProps) => {
                   </div>
                 )}
 
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white text-sm shadow-md">
-                    {room.region_code}
+                <button
+                  onClick={() => onSelectRegion(room.region_code)}
+                  className="w-full text-left active:scale-[0.98] transition-transform"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white text-sm shadow-md">
+                      {room.region_code}
+                    </div>
                   </div>
-                </div>
-                
-                <h3 className="font-semibold text-foreground mb-1.5 text-sm line-clamp-1 group-hover:text-primary transition-colors">
-                  {room.region_name}
-                </h3>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Users className="w-3.5 h-3.5" />
-                    <span>
-                      {onlineCount > 0 ? (
-                        <span className="text-green-500 font-medium">{onlineCount} en ligne</span>
-                      ) : (
-                        'Rejoindre'
-                      )}
-                    </span>
+                  
+                  <h3 className="font-semibold text-foreground mb-1.5 text-sm line-clamp-1 group-hover:text-primary transition-colors">
+                    {room.region_name}
+                  </h3>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Users className="w-3.5 h-3.5" />
+                      <span>
+                        {onlineCount > 0 ? (
+                          <span className="text-green-500 font-medium">{onlineCount} en ligne</span>
+                        ) : (
+                          'Rejoindre'
+                        )}
+                      </span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                   </div>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                </div>
-              </button>
+                </button>
+              </div>
             );
           })}
         </div>

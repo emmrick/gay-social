@@ -79,6 +79,27 @@ export type Database = {
           },
         ]
       }
+      favorite_regions: {
+        Row: {
+          created_at: string
+          id: string
+          region_code: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          region_code: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          region_code?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       message_reactions: {
         Row: {
           created_at: string

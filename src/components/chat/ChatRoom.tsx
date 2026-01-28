@@ -4,10 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import EphemeralMedia from './EphemeralMedia';
-import { ArrowLeft, Users, MoreVertical, Image, Loader2 } from 'lucide-react';
+import MembersList from './MembersList';
+import { ArrowLeft, Users, MoreVertical, Image, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface EphemeralMediaData {
   type: 'image' | 'video';
@@ -22,12 +24,14 @@ interface ChatRoomProps {
   regionName: string;
   memberCount: number;
   onBack: () => void;
+  onStartPrivateChat: (userId: string) => void;
 }
 
-const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack }: ChatRoomProps) => {
+const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStartPrivateChat }: ChatRoomProps) => {
   const { messages, isLoading, sendMessage } = useMessages(roomId);
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
+  const [showMembers, setShowMembers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { isSuspended, getSuspensionTimeLeft } = useScreenshotProtection();
 
@@ -46,6 +50,11 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack }: ChatR
       const mediaContent = `📸 ${type === 'image' ? 'Photo' : 'Vidéo'} éphémère (${duration}s)`;
       sendMessage.mutate({ content: mediaContent, messageType: type });
     }
+  };
+
+  const handleStartPrivateChat = (userId: string) => {
+    setShowMembers(false);
+    onStartPrivateChat(userId);
   };
 
   return (
@@ -91,6 +100,28 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack }: ChatR
           </div>
         </div>
         
+        <Sheet open={showMembers} onOpenChange={setShowMembers}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Users className="w-5 h-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="p-0 w-80">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h2 className="font-semibold">Membres</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowMembers(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <ScrollArea className="h-[calc(100vh-5rem)]">
+              <MembersList
+                regionCode={regionCode}
+                onStartPrivateChat={handleStartPrivateChat}
+              />
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
+
         <Button variant="ghost" size="icon">
           <Image className="w-5 h-5" />
         </Button>

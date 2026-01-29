@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useChatRooms } from '@/hooks/useChatRooms';
-import { ArrowLeft, Mail, Lock, User, MapPin, Loader2, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, User, MapPin, Loader2, Eye, EyeOff, ChevronDown, AlertTriangle, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +15,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
+  const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp } = useAuth();
@@ -32,12 +33,18 @@ const Auth = () => {
         toast.success('Connexion réussie !');
         navigate('/');
       } else {
-        if (!username || !region) {
+        if (!username || !region || !age) {
           toast.error('Veuillez remplir tous les champs');
           setIsLoading(false);
           return;
         }
-        const { error } = await signUp(email, password, username, region);
+        const ageNum = parseInt(age);
+        if (isNaN(ageNum) || ageNum < 18 || ageNum > 99) {
+          toast.error('Vous devez avoir au moins 18 ans pour vous inscrire');
+          setIsLoading(false);
+          return;
+        }
+        const { error } = await signUp(email, password, username, region, ageNum);
         if (error) throw error;
         toast.success('Compte créé avec succès !');
         navigate('/');
@@ -51,6 +58,19 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* 18+ Warning Banner */}
+      <div className="bg-destructive/90 text-destructive-foreground py-3 px-4 text-center">
+        <div className="container mx-auto flex items-center justify-center gap-2 flex-wrap">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+          <span className="font-semibold text-sm">
+            Site réservé aux adultes (+18 ans) • Hommes uniquement
+          </span>
+          <Link to="/legal" className="underline hover:no-underline text-sm ml-2">
+            Mentions légales
+          </Link>
+        </div>
+      </div>
+
       {/* Header */}
       <header className="p-4 border-b border-border/50">
         <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="h-9 w-9">
@@ -128,6 +148,25 @@ const Auth = () => {
                       placeholder="TonPseudo"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
+                      className="pl-10 h-11 bg-secondary/50 border-border/50 rounded-xl focus:bg-secondary transition-colors"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Age */}
+                <div className="space-y-2">
+                  <Label htmlFor="age" className="text-sm text-muted-foreground">Âge (18 ans minimum)</Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="age"
+                      type="number"
+                      placeholder="18"
+                      min={18}
+                      max={99}
+                      value={age}
+                      onChange={(e) => setAge(e.target.value)}
                       className="pl-10 h-11 bg-secondary/50 border-border/50 rounded-xl focus:bg-secondary transition-colors"
                       required
                     />

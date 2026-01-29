@@ -10,7 +10,7 @@ interface AuthContextType {
   profile: Profile | null;
   session: Session | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, username: string, region: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, username: string, region: string, age: number) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [user]);
 
-  const signUp = async (email: string, password: string, username: string, region: string) => {
+  const signUp = async (email: string, password: string, username: string, region: string, age: number) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -126,6 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             user_id: data.user.id,
             username,
             region,
+            age,
             is_online: true,
           });
 

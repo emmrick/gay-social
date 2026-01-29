@@ -219,7 +219,14 @@ const About = () => {
       {/* Footer */}
       <footer className="py-8 border-t border-border">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2024 Gay Connect. Tous droits réservés.</p>
+          <p className="mb-2">© 2025 Gay Connect. Tous droits réservés.</p>
+          <Button 
+            variant="link" 
+            className="text-muted-foreground hover:text-primary"
+            onClick={() => navigate('/legal')}
+          >
+            Mentions légales & CGU
+          </Button>
         </div>
       </footer>
     </div>

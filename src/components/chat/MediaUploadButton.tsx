@@ -30,9 +30,12 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size (max 50MB)
-      if (file.size > 50 * 1024 * 1024) {
-        toast.error('Le fichier est trop volumineux (max 50 Mo)');
+      // Check file size - photos: max 20MB, videos: max 500MB
+      const maxSize = type === 'image' ? 20 * 1024 * 1024 : 500 * 1024 * 1024;
+      const maxSizeLabel = type === 'image' ? '20 Mo' : '500 Mo';
+      
+      if (file.size > maxSize) {
+        toast.error(`Le fichier est trop volumineux (max ${maxSizeLabel})`);
         return;
       }
       setPreviewFile(file);

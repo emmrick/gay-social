@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfileStats } from '@/hooks/useProfileStats';
+import { useIsAdmin } from '@/hooks/useAdmin';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, LogOut, Edit2, Shield, Bell, Moon, HelpCircle, ChevronRight, Loader2 } from 'lucide-react';
+import { MapPin, Calendar, LogOut, Edit2, Shield, Bell, Moon, HelpCircle, ChevronRight, Loader2, Crown } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ProfileEditDialog from './ProfileEditDialog';
@@ -47,6 +48,7 @@ type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps) => {
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
+  const { data: isAdminUser } = useIsAdmin();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [settingsType, setSettingsType] = useState<SettingsType | null>(null);
 
@@ -104,10 +106,18 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
 
             {/* Name & info */}
             <div className="mt-4 text-center">
-              <h1 className="text-2xl font-bold font-display">
-                {profile.username}
-                {profile.age && <span className="text-muted-foreground font-normal">, {profile.age} ans</span>}
-              </h1>
+              <div className="flex items-center justify-center gap-2">
+                <h1 className="text-2xl font-bold font-display">
+                  {profile.username}
+                  {profile.age && <span className="text-muted-foreground font-normal">, {profile.age} ans</span>}
+                </h1>
+                {isAdminUser && (
+                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg">
+                    <Crown className="w-3 h-3 mr-1" />
+                    Admin
+                  </Badge>
+                )}
+              </div>
               
               {/* Position badge */}
               {(profile as any).sexual_position && (

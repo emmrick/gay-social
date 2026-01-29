@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Users, Shield, MapPin } from 'lucide-react';
 import { useTotalMemberCount } from '@/hooks/useTotalMemberCount';
+import { useNavigate } from 'react-router-dom';
 
 interface HeroProps {
   onGetStarted: () => void;
@@ -9,16 +10,13 @@ interface HeroProps {
 
 const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
   const { data: memberCount } = useTotalMemberCount();
+  const navigate = useNavigate();
 
   const handleLearnMore = () => {
     if (onLearnMore) {
       onLearnMore();
     } else {
-      // Scroll to features section
-      const featuresSection = document.querySelector('#features');
-      if (featuresSection) {
-        featuresSection.scrollIntoView({ behavior: 'smooth' });
-      }
+      navigate('/about');
     }
   };
 

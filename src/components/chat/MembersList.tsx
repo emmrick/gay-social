@@ -105,8 +105,10 @@ const MemberCard = ({
               profile.username.charAt(0).toUpperCase()
             )}
           </div>
-          {profile.is_online === true && (
+          {profile.is_online === true ? (
             <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-card" />
+          ) : (
+            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-gray-400 rounded-full border-2 border-card" />
           )}
         </div>
 

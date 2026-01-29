@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical, Flag } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, FolderLock } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -19,6 +19,7 @@ import {
 import ChatInput from './ChatInput';
 import EphemeralMessage from './EphemeralMessage';
 import ReportUserDialog from './ReportUserDialog';
+import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 
 interface PrivateChatRoomProps {
   otherUserId: string;
@@ -33,6 +34,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showShareAlbum, setShowShareAlbum] = useState(false);
 
   // Mobile back navigation
   useMobileNavigation({ onBack, enabled: true });
@@ -123,6 +125,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setShowShareAlbum(true)}>
+              <FolderLock className="w-4 h-4 mr-2" />
+              Partager un album privé
+            </DropdownMenuItem>
             <DropdownMenuItem 
               className="text-destructive focus:text-destructive"
               onClick={() => setShowReportDialog(true)}
@@ -141,6 +147,16 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           onOpenChange={setShowReportDialog}
           userId={otherUserId}
           username={otherUserProfile.username}
+        />
+      )}
+
+      {/* Share Album Dialog */}
+      {otherUserProfile && (
+        <ShareAlbumDialog
+          isOpen={showShareAlbum}
+          onClose={() => setShowShareAlbum(false)}
+          recipientId={otherUserId}
+          recipientName={otherUserProfile.username}
         />
       )}
 

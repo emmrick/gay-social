@@ -46,6 +46,47 @@ export type Database = {
           },
         ]
       }
+      album_shares: {
+        Row: {
+          album_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          shared_by_user_id: string
+          shared_with_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          album_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          shared_by_user_id: string
+          shared_with_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          album_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          shared_by_user_id?: string
+          shared_with_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_shares_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "user_albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_rooms: {
         Row: {
           created_at: string
@@ -361,6 +402,7 @@ export type Database = {
           hiv_status: string | null
           id: string
           is_online: boolean | null
+          is_premium: boolean | null
           is_verified: boolean
           last_seen: string | null
           latitude: number | null
@@ -391,6 +433,7 @@ export type Database = {
           hiv_status?: string | null
           id?: string
           is_online?: boolean | null
+          is_premium?: boolean | null
           is_verified?: boolean
           last_seen?: string | null
           latitude?: number | null
@@ -421,6 +464,7 @@ export type Database = {
           hiv_status?: string | null
           id?: string
           is_online?: boolean | null
+          is_premium?: boolean | null
           is_verified?: boolean
           last_seen?: string | null
           latitude?: number | null

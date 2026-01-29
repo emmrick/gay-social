@@ -1,0 +1,307 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+
+interface Album {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  is_private: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface AlbumMedia {
+  id: string;
+  album_id: string;
+  media_url: string;
+  media_type: string;
+  created_at: string;
+}
+
+interface AlbumShare {
+  id: string;
+  album_id: string;
+  shared_with_user_id: string;
+  shared_by_user_id: string;
+  expires_at: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export const useAlbums = (userId?: string) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const targetUserId = userId || user?.id;
+  const isOwnAlbums = targetUserId === user?.id;
+
+  // Fetch user's albums
+  const { data: albums = [], isLoading: albumsLoading } = useQuery({
+    queryKey: ['albums', targetUserId],
+    queryFn: async () => {
+      if (!targetUserId) return [];
+
+      const { data, error } = await supabase
+        .from('user_albums')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as Album[];
+    },
+    enabled: !!targetUserId,
+  });
+
+  // Fetch albums shared with current user
+  const { data: sharedAlbums = [], isLoading: sharedLoading } = useQuery({
+    queryKey: ['shared-albums', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+
+      const { data: shares, error: sharesError } = await supabase
+        .from('album_shares')
+        .select('*, album:user_albums(*)')
+        .eq('shared_with_user_id', user.id)
+        .eq('is_active', true);
+
+      if (sharesError) throw sharesError;
+
+      // Filter out expired shares
+      const activeShares = (shares || []).filter(share => {
+        if (!share.expires_at) return true;
+        return new Date(share.expires_at) > new Date();
+      });
+
+      return activeShares.map(share => ({
+        ...share.album,
+        share: {
+          id: share.id,
+          expires_at: share.expires_at,
+          shared_by_user_id: share.shared_by_user_id,
+        }
+      }));
+    },
+    enabled: !!user?.id,
+  });
+
+  // Create album
+  const createAlbum = useMutation({
+    mutationFn: async ({ name, description }: { name: string; description?: string }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('user_albums')
+        .insert({
+          user_id: user.id,
+          name,
+          description: description || null,
+          is_private: true,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['albums', user?.id] });
+      toast.success('Album créé !');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erreur lors de la création');
+    },
+  });
+
+  // Delete album
+  const deleteAlbum = useMutation({
+    mutationFn: async (albumId: string) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('user_albums')
+        .delete()
+        .eq('id', albumId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['albums', user?.id] });
+      toast.success('Album supprimé');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erreur lors de la suppression');
+    },
+  });
+
+  // Add media to album
+  const addMedia = useMutation({
+    mutationFn: async ({ albumId, file }: { albumId: string; file: File }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      // Upload to storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${albumId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('media')
+        .getPublicUrl(fileName);
+
+      // Insert media record
+      const { data, error } = await supabase
+        .from('album_media')
+        .insert({
+          album_id: albumId,
+          media_url: urlData.publicUrl,
+          media_type: file.type.startsWith('video/') ? 'video' : 'image',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['album-media', variables.albumId] });
+      toast.success('Média ajouté !');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erreur lors de l\'upload');
+    },
+  });
+
+  // Get album media
+  const useAlbumMedia = (albumId: string) => {
+    return useQuery({
+      queryKey: ['album-media', albumId],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('album_media')
+          .select('*')
+          .eq('album_id', albumId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data as AlbumMedia[];
+      },
+      enabled: !!albumId,
+    });
+  };
+
+  // Share album with user
+  const shareAlbum = useMutation({
+    mutationFn: async ({ 
+      albumId, 
+      sharedWithUserId, 
+      duration 
+    }: { 
+      albumId: string; 
+      sharedWithUserId: string; 
+      duration?: 'unlimited' | '24h' | '7d' | '30d';
+    }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      let expiresAt: string | null = null;
+      if (duration && duration !== 'unlimited') {
+        const now = new Date();
+        switch (duration) {
+          case '24h':
+            now.setHours(now.getHours() + 24);
+            break;
+          case '7d':
+            now.setDate(now.getDate() + 7);
+            break;
+          case '30d':
+            now.setDate(now.getDate() + 30);
+            break;
+        }
+        expiresAt = now.toISOString();
+      }
+
+      const { data, error } = await supabase
+        .from('album_shares')
+        .insert({
+          album_id: albumId,
+          shared_with_user_id: sharedWithUserId,
+          shared_by_user_id: user.id,
+          expires_at: expiresAt,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['album-shares'] });
+      toast.success('Album partagé !');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erreur lors du partage');
+    },
+  });
+
+  // Stop sharing album
+  const stopSharing = useMutation({
+    mutationFn: async (shareId: string) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('album_shares')
+        .update({ is_active: false })
+        .eq('id', shareId)
+        .eq('shared_by_user_id', user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['album-shares'] });
+      toast.success('Partage arrêté');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erreur');
+    },
+  });
+
+  // Get shares for an album
+  const useAlbumShares = (albumId: string) => {
+    return useQuery({
+      queryKey: ['album-shares', albumId],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('album_shares')
+          .select('*')
+          .eq('album_id', albumId)
+          .eq('is_active', true);
+
+        if (error) throw error;
+        return data as AlbumShare[];
+      },
+      enabled: !!albumId && !!user?.id,
+    });
+  };
+
+  return {
+    albums,
+    sharedAlbums,
+    isLoading: albumsLoading || sharedLoading,
+    isOwnAlbums,
+    createAlbum,
+    deleteAlbum,
+    addMedia,
+    shareAlbum,
+    stopSharing,
+    useAlbumMedia,
+    useAlbumShares,
+  };
+};

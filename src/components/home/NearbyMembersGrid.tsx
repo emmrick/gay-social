@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Loader2, Navigation, RefreshCw, Crown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyProfiles } from '@/hooks/useNearbyProfiles';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePremiumUsers } from '@/hooks/usePremiumUsers';
 import MemberProfileCard from './MemberProfileCard';
+import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
 import { cn } from '@/lib/utils';
 
 interface NearbyMembersGridProps {
@@ -130,7 +132,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
   }
 
   // Build the final profiles list with current user first
-  const allProfiles = [];
+  const allProfiles: any[] = [];
   
   // Add current user profile first
   if (currentUserProfile) {
@@ -160,6 +162,10 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
       });
     });
   }
+
+  // Get user IDs for premium check
+  const userIds = useMemo(() => allProfiles.map(p => p.user_id), [allProfiles.length]);
+  const { data: premiumMap = {} } = usePremiumUsers(userIds);
 
   return (
     <div className="space-y-4">
@@ -261,10 +267,21 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
                 </div>
               )}
 
-              {/* Online indicator - only show if explicitly true */}
-              {profile.is_online === true && !profile.isCurrentUser && (
+              {/* Premium badge */}
+              {!profile.isCurrentUser && premiumMap[profile.user_id] && (
+                <div className="absolute top-2 left-2">
+                  <PremiumUserBadge size="sm" />
+                </div>
+              )}
+
+              {/* Online/Offline indicator */}
+              {!profile.isCurrentUser && (
                 <div className="absolute top-2 right-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-500 block shadow-lg shadow-green-500/50" />
+                  {profile.is_online === true ? (
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500 block shadow-lg shadow-green-500/50" />
+                  ) : (
+                    <span className="w-2.5 h-2.5 rounded-full bg-gray-400 block" />
+                  )}
                 </div>
               )}
 

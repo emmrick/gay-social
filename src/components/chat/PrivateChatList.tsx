@@ -1,9 +1,12 @@
+import { useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { usePremiumUsers } from '@/hooks/usePremiumUsers';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MessageCircle, ChevronRight } from 'lucide-react';
+import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
 import { cn } from '@/lib/utils';
 
 interface PrivateChatListProps {
@@ -14,6 +17,13 @@ interface PrivateChatListProps {
 const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatListProps) => {
   const { conversations, isLoading } = usePrivateConversations();
   const { getUnreadCount } = useUnreadMessages();
+
+  // Get user IDs for premium check
+  const userIds = useMemo(
+    () => conversations.map(conv => conv.otherUser.user_id),
+    [conversations]
+  );
+  const { data: premiumMap = {} } = usePremiumUsers(userIds);
 
   if (isLoading) {
     return (
@@ -50,6 +60,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatLi
       {conversations.map((conv, index) => {
         const unreadCount = getUnreadCount(conv.otherUser.user_id);
         const hasUnread = unreadCount > 0;
+        const isPremium = premiumMap[conv.otherUser.user_id] || false;
         
         return (
           <button
@@ -81,8 +92,17 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatLi
                   conv.otherUser.username.charAt(0).toUpperCase()
                 )}
               </div>
-              {conv.otherUser.is_online === true && (
+              {/* Online/Offline indicator */}
+              {conv.otherUser.is_online === true ? (
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+              ) : (
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-gray-400 rounded-full border-2 border-background" />
+              )}
+              {/* Premium badge */}
+              {isPremium && (
+                <div className="absolute -top-1 -left-1">
+                  <PremiumUserBadge size="xs" />
+                </div>
               )}
             </div>
 

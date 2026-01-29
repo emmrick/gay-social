@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, LogOut, Edit2, Shield, Bell, Moon, HelpCircle, ChevronRight, Loader2, Crown, Sparkles } from 'lucide-react';
+import { MapPin, Calendar, LogOut, Edit2, Shield, Bell, Moon, HelpCircle, ChevronRight, Loader2, Crown, Sparkles, FolderLock } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ProfileEditDialog from './ProfileEditDialog';
 import SettingsDialog from './SettingsDialog';
+import AlbumManager from '@/components/albums/AlbumManager';
 
 // Labels
 const POSITION_LABELS: Record<string, string> = {
@@ -53,6 +54,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
   const { isPremium, subscriptionEnd, openCustomerPortal } = useSubscription();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [settingsType, setSettingsType] = useState<SettingsType | null>(null);
+  const [showAlbumManager, setShowAlbumManager] = useState(false);
 
   if (!profile) {
     return (
@@ -64,6 +66,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
 
   const menuItems = [
     { icon: Edit2, label: 'Modifier le profil', action: () => setShowEditDialog(true) },
+    { icon: FolderLock, label: 'Albums privés', action: () => setShowAlbumManager(true) },
     { icon: Bell, label: 'Notifications', action: () => setSettingsType('notifications') },
     { icon: Moon, label: 'Apparence', action: () => setSettingsType('appearance') },
     { icon: Shield, label: 'Confidentialité', action: () => setSettingsType('privacy') },
@@ -73,6 +76,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
   return (
     <div className="animate-fade-in pb-8">
       <ProfileEditDialog open={showEditDialog} onOpenChange={setShowEditDialog} />
+      <AlbumManager isOpen={showAlbumManager} onClose={() => setShowAlbumManager(false)} />
       
       {settingsType && (
         <SettingsDialog 

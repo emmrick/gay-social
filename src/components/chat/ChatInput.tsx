@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Smile } from 'lucide-react';
 import MediaUploadButton from './MediaUploadButton';
+import SavedMessagesDialog from './SavedMessagesDialog';
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
@@ -59,6 +60,10 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
     }, 300);
   };
 
+  const handleSelectSavedMessage = (content: string) => {
+    onSendMessage(content);
+  };
+
   return (
     <div className="p-3 border-t border-border bg-card/50 backdrop-blur-lg">
       <div className="flex items-end gap-2">
@@ -68,6 +73,9 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
           recipientId={recipientId}
           isPrivate={isPrivate}
         />
+
+        {/* Saved messages button */}
+        <SavedMessagesDialog onSelectMessage={handleSelectSavedMessage} />
         
         {/* Emoji button */}
         <Button 

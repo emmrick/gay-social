@@ -105,7 +105,7 @@ const MemberCard = ({
               profile.username.charAt(0).toUpperCase()
             )}
           </div>
-          {profile.is_online && (
+          {profile.is_online === true && (
             <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-card" />
           )}
         </div>
@@ -114,7 +114,7 @@ const MemberCard = ({
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-foreground truncate">{profile.username}</h3>
           <p className="text-sm text-muted-foreground">
-            {profile.is_online ? (
+            {profile.is_online === true ? (
               <span className="text-green-500">En ligne</span>
             ) : profile.last_seen ? (
               `Vu ${formatDistanceToNow(new Date(profile.last_seen), {

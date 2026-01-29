@@ -55,7 +55,7 @@ const ProfileDetailDialog = ({
                 <User className="w-10 h-10" />
               )}
             </div>
-            {profile.is_online && (
+            {profile.is_online === true && (
               <span className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 rounded-full border-3 border-background" />
             )}
           </div>
@@ -65,8 +65,8 @@ const ProfileDetailDialog = ({
             <h2 className="text-xl font-display font-bold text-foreground">
               {profile.username}
             </h2>
-            <p className={`text-sm ${profile.is_online ? 'text-green-500' : 'text-muted-foreground'}`}>
-              {profile.is_online ? (
+            <p className={`text-sm ${profile.is_online === true ? 'text-green-500' : 'text-muted-foreground'}`}>
+              {profile.is_online === true ? (
                 '● En ligne'
               ) : profile.last_seen ? (
                 `Vu ${formatDistanceToNow(new Date(profile.last_seen), {

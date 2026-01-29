@@ -67,7 +67,7 @@ const MemberProfileCard = ({
   const extendedProfile = profile as any;
 
   const getLastSeenText = () => {
-    if (profile?.is_online) return 'En ligne maintenant';
+    if (profile?.is_online === true) return 'En ligne maintenant';
     if (!profile?.last_seen) return 'Hors ligne';
     
     const diff = Date.now() - new Date(profile.last_seen).getTime();
@@ -135,7 +135,7 @@ const MemberProfileCard = ({
                 </Button>
 
                 {/* Online status */}
-                {profile?.is_online && (
+                {profile?.is_online === true && (
                   <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-xs font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                     En ligne

@@ -96,7 +96,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                   otherUserProfile?.username.charAt(0).toUpperCase()
                 )}
               </div>
-              {otherUserProfile?.is_online && (
+              {otherUserProfile?.is_online === true && (
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
               )}
             </div>
@@ -106,7 +106,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 {otherUserProfile?.username}
               </h2>
               <p className="text-xs text-muted-foreground">
-                {otherUserProfile?.is_online ? (
+                {otherUserProfile?.is_online === true ? (
                   <span className="text-green-500">En ligne</span>
                 ) : (
                   'Hors ligne'

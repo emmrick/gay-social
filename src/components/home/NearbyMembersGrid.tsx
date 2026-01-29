@@ -30,7 +30,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
   };
 
   const getLastSeenText = (lastSeen: string | null, isOnline: boolean | null) => {
-    if (isOnline) return null;
+    if (isOnline === true) return null;
     if (!lastSeen) return 'Hors ligne';
     
     const diff = Date.now() - new Date(lastSeen).getTime();
@@ -232,8 +232,8 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
                 </div>
               )}
 
-              {/* Online indicator */}
-              {profile.is_online && !profile.isCurrentUser && (
+              {/* Online indicator - only show if explicitly true */}
+              {profile.is_online === true && !profile.isCurrentUser && (
                 <div className="absolute top-2 right-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-green-500 block shadow-lg shadow-green-500/50" />
                 </div>

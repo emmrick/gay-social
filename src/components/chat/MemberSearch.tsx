@@ -124,7 +124,7 @@ const MemberSearch = ({ onSelectUser, onClose }: MemberSearchProps) => {
                         profile.username.charAt(0).toUpperCase()
                       )}
                     </div>
-                    {profile.is_online && (
+                    {profile.is_online === true && (
                       <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
                     )}
                   </div>
@@ -136,7 +136,7 @@ const MemberSearch = ({ onSelectUser, onClose }: MemberSearchProps) => {
                     </h3>
                     <p className="text-xs text-muted-foreground truncate">
                       {profile.region && `📍 ${profile.region}`}
-                      {profile.is_online && <span className="text-green-500 ml-2">• En ligne</span>}
+                      {profile.is_online === true && <span className="text-green-500 ml-2">• En ligne</span>}
                     </p>
                   </div>
 

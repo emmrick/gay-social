@@ -16,14 +16,22 @@ export const AgeConfirmationModal = () => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    const isConfirmed = localStorage.getItem(AGE_CONFIRMED_KEY);
-    if (!isConfirmed) {
+    // localStorage peut être indisponible dans certains contextes (mode privé, restrictions navigateur)
+    // -> on évite un crash qui peut conduire à un écran noir.
+    try {
+      const isConfirmed = window.localStorage.getItem(AGE_CONFIRMED_KEY);
+      if (!isConfirmed) setShowModal(true);
+    } catch {
       setShowModal(true);
     }
   }, []);
 
   const handleConfirm = () => {
-    localStorage.setItem(AGE_CONFIRMED_KEY, 'true');
+    try {
+      window.localStorage.setItem(AGE_CONFIRMED_KEY, 'true');
+    } catch {
+      // Même si on ne peut pas persister, on laisse l'utilisateur entrer.
+    }
     setShowModal(false);
   };
 

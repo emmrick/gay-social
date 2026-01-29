@@ -449,6 +449,8 @@ const Index = () => {
     }
   };
 
+  const content = renderContent();
+
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-hidden">
       {/* Verification Reminder Banner */}
@@ -460,7 +462,22 @@ const Index = () => {
         showBottomNav && "pb-20"
       )}>
         <AnimatePresence mode="wait" custom={direction}>
-          {renderContent()}
+          {content ?? (
+            <motion.div
+              key="fallback"
+              variants={fadeVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.2 }}
+              className="flex-1 flex items-center justify-center"
+            >
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Chargement...</p>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
 

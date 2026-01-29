@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Hero from '@/components/landing/Hero';
-import RegionSelector from '@/components/landing/RegionSelector';
 import HomeView from '@/components/home/HomeView';
 import ChatRoom from '@/components/chat/ChatRoom';
 import PrivateChatList from '@/components/chat/PrivateChatList';
@@ -10,10 +9,13 @@ import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import ProfileView from '@/components/profile/ProfileView';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
 import MemberSearch from '@/components/chat/MemberSearch';
+import JoinedGroupsList from '@/components/chat/JoinedGroupsList';
+import GroupPickerDialog from '@/components/chat/GroupPickerDialog';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useRegionMemberCount } from '@/hooks/useRegionMemberCounts';
+import { useJoinedGroups } from '@/hooks/useJoinedGroups';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -62,12 +64,14 @@ const Index = () => {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedPrivateUserId, setSelectedPrivateUserId] = useState<string | null>(null);
   const [showMemberSearch, setShowMemberSearch] = useState(false);
+  const [showGroupPicker, setShowGroupPicker] = useState(false);
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
   const { total: memberCount } = useRegionMemberCount(selectedRegion || '');
   const { getOrCreateConversation } = usePrivateConversations();
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
+  const { joinedGroups, joinGroup, remainingSlots, maxGroups } = useJoinedGroups();
   const navigate = useNavigate();
 
   // Calculate animation direction based on tab order
@@ -270,10 +274,11 @@ const Index = () => {
             animate="animate"
             exit="exit"
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="flex-1"
+            className="flex-1 flex flex-col"
           >
-            <ScrollArea className="h-full">
-              <div className="px-5 py-5">
+            {/* Header with add button */}
+            <div className="px-5 py-5 border-b border-border/50 flex items-center justify-between">
+              <div>
                 <motion.h2 
                   className="font-display text-2xl font-bold text-foreground mb-1"
                   initial={{ opacity: 0, y: -10 }}
@@ -288,11 +293,29 @@ const Index = () => {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.15 }}
                 >
-                  Choisis ta région pour discuter
+                  {joinedGroups.length}/{maxGroups} groupes rejoints
                 </motion.p>
               </div>
-              <RegionSelector onSelectRegion={handleSelectRegion} />
+              <Button
+                onClick={() => setShowGroupPicker(true)}
+                size="icon"
+                className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            {/* Groups list */}
+            <ScrollArea className="flex-1">
+              <JoinedGroupsList onSelectGroup={handleSelectRegion} />
             </ScrollArea>
+
+            {/* Group picker dialog */}
+            <GroupPickerDialog
+              open={showGroupPicker}
+              onOpenChange={setShowGroupPicker}
+              onGroupJoined={handleSelectRegion}
+            />
           </motion.div>
         );
 

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import BlockedUserGuard from "@/components/BlockedUserGuard";
+import VerificationGuard from "@/components/verification/VerificationGuard";
 import InstallPWAPrompt from "@/components/pwa/InstallPWAPrompt";
 import { AgeConfirmationModal } from "@/components/AgeConfirmationModal";
 import Index from "./pages/Index";
@@ -20,23 +21,25 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <BlockedUserGuard>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/legal" element={<Legal />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-          <InstallPWAPrompt />
-          <AgeConfirmationModal />
-        </TooltipProvider>
+        <VerificationGuard>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/legal" element={<Legal />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+            <InstallPWAPrompt />
+            <AgeConfirmationModal />
+          </TooltipProvider>
+        </VerificationGuard>
       </BlockedUserGuard>
     </AuthProvider>
   </QueryClientProvider>

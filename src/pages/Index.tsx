@@ -13,6 +13,7 @@ import MemberSearch from '@/components/chat/MemberSearch';
 import JoinedGroupsList from '@/components/chat/JoinedGroupsList';
 import GroupPickerDialog from '@/components/chat/GroupPickerDialog';
 import IdentityVerificationDialog from '@/components/verification/IdentityVerificationDialog';
+import VerificationReminderBanner from '@/components/verification/VerificationReminderBanner';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -450,6 +451,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-hidden">
+      {/* Verification Reminder Banner */}
+      {user && currentView !== 'landing' && <VerificationReminderBanner />}
+      
       {/* Content with AnimatePresence for transitions */}
       <main className={cn(
         "flex-1 flex flex-col overflow-hidden",

@@ -3,12 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, MapPin, Clock, Flag } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ReportUserDialog from './ReportUserDialog';
+import ProfilePhotoCarousel from './ProfilePhotoCarousel';
 
 interface UserProfile {
   user_id: string;
@@ -77,17 +77,16 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : profile ? (
-            <div className="flex flex-col items-center gap-4 py-4">
-              {/* Avatar */}
-              <Avatar className="w-24 h-24">
-                <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="text-2xl bg-gradient-to-br from-primary to-accent text-white">
-                  {profile.username.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+            <div className="flex flex-col gap-4">
+              {/* Photo Carousel - Swipeable */}
+              <ProfilePhotoCarousel
+                photos={profile.avatar_url ? [profile.avatar_url] : []}
+                username={profile.username}
+                className="rounded-lg overflow-hidden -mx-6 -mt-6"
+              />
 
               {/* Username & Status */}
-              <div className="text-center">
+              <div className="text-center pt-2">
                 <h3 className="text-xl font-semibold">{profile.username}</h3>
                 <Badge 
                   variant={profile.is_online === true ? "default" : "secondary"}
@@ -99,7 +98,7 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
 
               {/* Bio */}
               {profile.bio && (
-                <p className="text-center text-muted-foreground text-sm max-w-xs">
+                <p className="text-center text-muted-foreground text-sm max-w-xs mx-auto">
                   {profile.bio}
                 </p>
               )}
@@ -122,7 +121,7 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
 
               {/* Actions */}
               {!isOwnProfile && (
-                <div className="flex gap-2 mt-4 w-full">
+                <div className="flex gap-2 mt-2 w-full">
                   <Button 
                     variant="gradient" 
                     className="flex-1"

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserUsage } from './useUserUsage';
 import { toast } from 'sonner';
 
 interface SavedMessage {
@@ -14,6 +15,14 @@ interface SavedMessage {
 export const useSavedMessages = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { 
+    canAddSavedMessage, 
+    incrementSavedMessages, 
+    decrementSavedMessages,
+    savedMessagesCount, 
+    limits,
+    isPremium 
+  } = useUserUsage();
 
   // Fetch saved messages from database
   const query = useQuery({
@@ -38,6 +47,11 @@ export const useSavedMessages = () => {
     mutationFn: async (content: string) => {
       if (!user) throw new Error('Not authenticated');
 
+      // Check limit before adding
+      if (!canAddSavedMessage()) {
+        throw new Error('LIMIT_REACHED');
+      }
+
       const { data, error } = await supabase
         .from('saved_messages')
         .insert({
@@ -48,14 +62,30 @@ export const useSavedMessages = () => {
         .single();
 
       if (error) throw error;
+
+      // Increment usage counter
+      await incrementSavedMessages();
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['saved-messages', user?.id] });
     },
-    onError: (error) => {
-      console.error('Error adding saved message:', error);
-      toast.error('Erreur lors de l\'enregistrement du message');
+    onError: (error: Error) => {
+      if (error.message === 'LIMIT_REACHED') {
+        toast.error(
+          `Limite atteinte ! Vous avez ${savedMessagesCount}/${limits.maxSavedMessages} message(s) enregistré(s).`,
+          {
+            action: isPremium ? undefined : {
+              label: 'Passer Premium',
+              onClick: () => window.location.href = '/?tab=premium',
+            },
+          }
+        );
+      } else {
+        console.error('Error adding saved message:', error);
+        toast.error('Erreur lors de l\'enregistrement du message');
+      }
     },
   });
 
@@ -96,6 +126,9 @@ export const useSavedMessages = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Decrement usage counter
+      await decrementSavedMessages();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['saved-messages', user?.id] });
@@ -126,5 +159,7 @@ export const useSavedMessages = () => {
     addMessage,
     deleteMessage,
     updateMessage,
+    canAddMore: canAddSavedMessage(),
+    remainingSlots: Math.max(0, limits.maxSavedMessages - savedMessagesCount),
   };
 };

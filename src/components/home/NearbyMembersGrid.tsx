@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Loader2, Navigation, RefreshCw, Crown } from 'lucide-react';
+import { MapPin, Loader2, Navigation, RefreshCw, Crown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyProfiles } from '@/hooks/useNearbyProfiles';
@@ -16,7 +16,7 @@ interface NearbyMembersGridProps {
 const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProps) => {
   const { profile: currentUserProfile } = useAuth();
   const { latitude, longitude, loading: locationLoading, error: locationError, requestLocation, permissionState } = useGeolocation();
-  const { data: profiles, isLoading: profilesLoading, refetch } = useNearbyProfiles(latitude, longitude);
+  const { data: profiles, isLoading: profilesLoading, refetch, maxProfilesAllowed, isPremium, isLimited } = useNearbyProfiles(latitude, longitude);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const handleRequestLocation = async () => {
@@ -170,6 +170,12 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
           <span className="text-sm text-muted-foreground">
             {(profiles?.length || 0) + (currentUserProfile ? 1 : 0)} membres{latitude ? ' à proximité' : ''}
           </span>
+          {!isPremium && (
+            <span className="text-xs text-amber-600 flex items-center gap-1">
+              <Lock className="w-3 h-3" />
+              max {maxProfilesAllowed}
+            </span>
+          )}
         </div>
         <Button 
           variant="ghost" 
@@ -184,6 +190,29 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
           Actualiser
         </Button>
       </div>
+
+      {/* Limit warning */}
+      {isLimited && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs flex items-center gap-2"
+        >
+          <Lock className="w-4 h-4 text-amber-500 flex-shrink-0" />
+          <span className="text-amber-600 dark:text-amber-400 flex-1">
+            Tu vois {maxProfilesAllowed} profils max. Passe Premium pour voir tous les membres !
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs px-2 flex-shrink-0"
+            onClick={() => window.location.href = '/?tab=premium'}
+          >
+            <Crown className="w-3 h-3 mr-1" />
+            Premium
+          </Button>
+        </motion.div>
+      )}
 
       {/* Members grid */}
       {allProfiles.length > 0 ? (

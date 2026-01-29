@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ClipboardList, Plus, Trash2, Send, X, Check, Loader2 } from 'lucide-react';
+import { ClipboardList, Plus, Trash2, Send, X, Check, Loader2, Lock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import { useSavedMessages } from '@/hooks/useSavedMessages';
 import { toast } from 'sonner';
 
@@ -19,7 +20,7 @@ interface SavedMessagesDialogProps {
 }
 
 const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
-  const { savedMessages, isLoading, addMessage, deleteMessage } = useSavedMessages();
+  const { savedMessages, isLoading, addMessage, deleteMessage, canAddMore, remainingSlots } = useSavedMessages();
   const [open, setOpen] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
   const [newMessageContent, setNewMessageContent] = useState('');
@@ -31,6 +32,17 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
       toast.error('Le message ne peut pas être vide');
       return;
     }
+    
+    if (!canAddMore) {
+      toast.error('Limite atteinte ! Passez Premium pour plus de messages.', {
+        action: {
+          label: 'Premium',
+          onClick: () => window.location.href = '/?tab=premium',
+        },
+      });
+      return;
+    }
+    
     setIsSaving(true);
     try {
       await addMessage(newMessageContent);
@@ -64,6 +76,19 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
     toast.success('Message supprimé');
   };
 
+  const handleShowNewForm = () => {
+    if (!canAddMore) {
+      toast.error('Limite atteinte ! Passez Premium pour plus de messages.', {
+        action: {
+          label: 'Premium',
+          onClick: () => window.location.href = '/?tab=premium',
+        },
+      });
+      return;
+    }
+    setShowNewForm(true);
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -78,19 +103,47 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
       <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>Messages enregistrés</span>
+            <div className="flex items-center gap-2">
+              <span>Messages enregistrés</span>
+              <Badge variant="secondary" className="text-xs">
+                {savedMessages.length}{!canAddMore && ` / ${savedMessages.length}`}
+              </Badge>
+            </div>
             {!showNewForm && (
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowNewForm(true)}
-                className="h-8 w-8"
+                onClick={handleShowNewForm}
+                className={`h-8 w-8 ${!canAddMore ? 'opacity-60' : ''}`}
               >
-                <Plus className="w-4 h-4" />
+                {canAddMore ? (
+                  <Plus className="w-4 h-4" />
+                ) : (
+                  <Lock className="w-4 h-4 text-amber-500" />
+                )}
               </Button>
             )}
           </DialogTitle>
         </DialogHeader>
+
+        {/* Limit warning */}
+        {!canAddMore && !showNewForm && (
+          <div className="px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs flex items-center gap-2">
+            <Lock className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            <span className="text-amber-600 dark:text-amber-400">
+              Limite atteinte ! 
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto h-6 text-xs px-2"
+              onClick={() => window.location.href = '/?tab=premium'}
+            >
+              <Crown className="w-3 h-3 mr-1" />
+              Premium
+            </Button>
+          </div>
+        )}
 
         {/* New message form */}
         {showNewForm && (

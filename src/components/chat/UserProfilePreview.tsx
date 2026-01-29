@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ReportUserDialog from './ReportUserDialog';
 import ProfilePhotoCarousel from './ProfilePhotoCarousel';
+import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 
 interface UserProfile {
   user_id: string;
@@ -32,6 +33,7 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const { photos: userPhotos } = useProfilePhotos(userId || undefined);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -80,7 +82,13 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
             <div className="flex flex-col gap-4">
               {/* Photo Carousel - Swipeable */}
               <ProfilePhotoCarousel
-                photos={profile.avatar_url ? [profile.avatar_url] : []}
+                photos={
+                  userPhotos.length > 0 
+                    ? userPhotos.map(p => p.photo_url)
+                    : profile.avatar_url 
+                      ? [profile.avatar_url] 
+                      : []
+                }
                 username={profile.username}
                 className="rounded-lg overflow-hidden -mx-6 -mt-6"
               />

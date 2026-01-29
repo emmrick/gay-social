@@ -27,6 +27,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import PhotoGalleryManager from './PhotoGalleryManager';
 
 interface ProfileEditDialogProps {
   open: boolean;
@@ -352,8 +353,9 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="basic" className="flex-1">
-          <TabsList className="grid grid-cols-4 mx-6">
+        <Tabs defaultValue="photos" className="flex-1">
+          <TabsList className="grid grid-cols-5 mx-6">
+            <TabsTrigger value="photos" className="text-xs">Photos</TabsTrigger>
             <TabsTrigger value="basic" className="text-xs">Profil</TabsTrigger>
             <TabsTrigger value="physical" className="text-xs">Physique</TabsTrigger>
             <TabsTrigger value="preferences" className="text-xs">Préfs</TabsTrigger>
@@ -361,39 +363,13 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
           </TabsList>
 
           <ScrollArea className="h-[400px] px-6">
+            {/* Photos Tab */}
+            <TabsContent value="photos" className="mt-4 pb-4">
+              <PhotoGalleryManager />
+            </TabsContent>
+
             {/* Basic Info Tab */}
             <TabsContent value="basic" className="space-y-4 mt-4 pb-4">
-              {/* Avatar */}
-              <div className="flex flex-col items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleAvatarClick}
-                  className="relative group"
-                  disabled={isUploading}
-                >
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
-                    {avatarPreview ? (
-                      <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-10 h-10" />
-                    )}
-                  </div>
-                  <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    {isUploading ? (
-                      <Loader2 className="w-6 h-6 text-white animate-spin" />
-                    ) : (
-                      <Camera className="w-6 h-6 text-white" />
-                    )}
-                  </div>
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="username">Pseudo *</Label>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ClipboardList, Plus, Trash2, Send, X, Check } from 'lucide-react';
+import { ClipboardList, Plus, Trash2, Send, X, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useSavedMessages } from '@/hooks/useSavedMessages';
 import { toast } from 'sonner';
 
@@ -18,21 +19,27 @@ interface SavedMessagesDialogProps {
 }
 
 const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
-  const { savedMessages, addMessage, deleteMessage } = useSavedMessages();
+  const { savedMessages, isLoading, addMessage, deleteMessage } = useSavedMessages();
   const [open, setOpen] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
   const [newMessageContent, setNewMessageContent] = useState('');
   const [selectedMessage, setSelectedMessage] = useState<{ id: string; content: string } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleAddMessage = () => {
+  const handleAddMessage = async () => {
     if (!newMessageContent.trim()) {
       toast.error('Le message ne peut pas être vide');
       return;
     }
-    addMessage(newMessageContent);
-    setNewMessageContent('');
-    setShowNewForm(false);
-    toast.success('Message enregistré');
+    setIsSaving(true);
+    try {
+      await addMessage(newMessageContent);
+      setNewMessageContent('');
+      setShowNewForm(false);
+      toast.success('Message enregistré');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSelectMessage = (id: string, content: string) => {
@@ -111,8 +118,13 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
                 variant="default"
                 size="sm"
                 onClick={handleAddMessage}
+                disabled={isSaving}
               >
-                <Check className="w-4 h-4 mr-1" />
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4 mr-1" />
+                )}
                 Enregistrer
               </Button>
             </div>
@@ -148,7 +160,13 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
 
         {/* Messages list */}
         <ScrollArea className="flex-1 -mx-6 px-6">
-          {savedMessages.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : savedMessages.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p className="text-sm">Aucun message enregistré</p>

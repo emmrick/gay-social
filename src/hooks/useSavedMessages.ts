@@ -1,86 +1,128 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface SavedMessage {
   id: string;
   content: string;
-  createdAt: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
 }
 
 export const useSavedMessages = () => {
   const { user } = useAuth();
-  const [savedMessages, setSavedMessages] = useState<SavedMessage[]>([]);
+  const queryClient = useQueryClient();
 
-  const storageKey = user ? `saved_messages_${user.id}` : null;
+  // Fetch saved messages from database
+  const query = useQuery({
+    queryKey: ['saved-messages', user?.id],
+    queryFn: async (): Promise<SavedMessage[]> => {
+      if (!user) return [];
 
-  // Load saved messages from localStorage
-  useEffect(() => {
-    if (!storageKey) {
-      setSavedMessages([]);
-      return;
-    }
+      const { data, error } = await supabase
+        .from('saved_messages')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        setSavedMessages(JSON.parse(stored));
-      }
-    } catch (error) {
-      console.error('Error loading saved messages:', error);
-      setSavedMessages([]);
-    }
-  }, [storageKey]);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
 
-  // Save to localStorage whenever messages change
-  const persistMessages = useCallback((messages: SavedMessage[]) => {
-    if (!storageKey) return;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(messages));
-    } catch (error) {
-      console.error('Error saving messages:', error);
-    }
-  }, [storageKey]);
+  // Add new saved message
+  const addMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!user) throw new Error('Not authenticated');
 
-  const addMessage = useCallback((content: string) => {
+      const { data, error } = await supabase
+        .from('saved_messages')
+        .insert({
+          user_id: user.id,
+          content: content.trim(),
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['saved-messages', user?.id] });
+    },
+    onError: (error) => {
+      console.error('Error adding saved message:', error);
+      toast.error('Erreur lors de l\'enregistrement du message');
+    },
+  });
+
+  // Update saved message
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, content }: { id: string; content: string }) => {
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('saved_messages')
+        .update({ content: content.trim() })
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['saved-messages', user?.id] });
+    },
+    onError: (error) => {
+      console.error('Error updating saved message:', error);
+      toast.error('Erreur lors de la mise à jour du message');
+    },
+  });
+
+  // Delete saved message
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('saved_messages')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['saved-messages', user?.id] });
+    },
+    onError: (error) => {
+      console.error('Error deleting saved message:', error);
+      toast.error('Erreur lors de la suppression du message');
+    },
+  });
+
+  const addMessage = (content: string) => {
     if (!content.trim()) return;
+    return addMutation.mutateAsync(content);
+  };
 
-    const newMessage: SavedMessage = {
-      id: crypto.randomUUID(),
-      content: content.trim(),
-      createdAt: new Date().toISOString(),
-    };
+  const deleteMessage = (id: string) => {
+    return deleteMutation.mutateAsync(id);
+  };
 
-    setSavedMessages((prev) => {
-      const updated = [newMessage, ...prev];
-      persistMessages(updated);
-      return updated;
-    });
-
-    return newMessage;
-  }, [persistMessages]);
-
-  const deleteMessage = useCallback((id: string) => {
-    setSavedMessages((prev) => {
-      const updated = prev.filter((msg) => msg.id !== id);
-      persistMessages(updated);
-      return updated;
-    });
-  }, [persistMessages]);
-
-  const updateMessage = useCallback((id: string, content: string) => {
+  const updateMessage = (id: string, content: string) => {
     if (!content.trim()) return;
-
-    setSavedMessages((prev) => {
-      const updated = prev.map((msg) =>
-        msg.id === id ? { ...msg, content: content.trim() } : msg
-      );
-      persistMessages(updated);
-      return updated;
-    });
-  }, [persistMessages]);
+    return updateMutation.mutateAsync({ id, content });
+  };
 
   return {
-    savedMessages,
+    savedMessages: query.data || [],
+    isLoading: query.isLoading,
     addMessage,
     deleteMessage,
     updateMessage,

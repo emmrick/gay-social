@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Image, Video, Eye, Loader2 } from 'lucide-react';
 import { useEphemeralMedia } from '@/hooks/useEphemeralMedia';
-import EphemeralMedia from './EphemeralMedia';
+import EphemeralMediaViewer from './EphemeralMediaViewer';
 
 interface EphemeralMessageProps {
   messageId: string;
@@ -14,21 +14,21 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn }: Ephemer
   const [showMedia, setShowMedia] = useState(false);
   const { media, isLoading, markAsViewed } = useEphemeralMedia(messageId);
 
-  const handleView = () => {
+  const handleView = useCallback(() => {
     if (media && !media.is_viewed) {
       setShowMedia(true);
     }
-  };
+  }, [media]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setShowMedia(false);
-  };
+  }, []);
 
-  const handleViewed = async () => {
+  const handleViewed = useCallback(async () => {
     if (media) {
       await markAsViewed.mutateAsync(media.id);
     }
-  };
+  }, [media, markAsViewed]);
 
   if (isLoading) {
     return (
@@ -107,18 +107,17 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn }: Ephemer
         </div>
       </button>
 
-      {/* Full screen media viewer */}
-      {showMedia && media && (
-        <EphemeralMedia
-          type={messageType}
-          src={media.signedUrl}
-          senderName={senderName}
-          duration={media.view_duration}
-          mediaId={media.id}
-          onClose={handleClose}
-          onViewed={handleViewed}
-        />
-      )}
+      {/* Full screen media viewer - POPUP */}
+      <EphemeralMediaViewer
+        isOpen={showMedia}
+        type={messageType}
+        src={media.signedUrl}
+        senderName={senderName}
+        duration={media.view_duration}
+        mediaId={media.id}
+        onClose={handleClose}
+        onViewed={handleViewed}
+      />
     </>
   );
 };

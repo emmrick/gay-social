@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription, FREE_LIMITS, PREMIUM_LIMITS } from './useSubscription';
 
 interface NearbyProfile {
   id: string;
@@ -22,9 +23,15 @@ export const useNearbyProfiles = (
   limit: number = 50
 ) => {
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
 
-  return useQuery({
-    queryKey: ['nearby-profiles', latitude, longitude, maxDistance, limit],
+  // Apply limit based on subscription status
+  const effectiveLimit = isPremium 
+    ? limit 
+    : Math.min(limit, FREE_LIMITS.nearbyProfiles);
+
+  const query = useQuery({
+    queryKey: ['nearby-profiles', latitude, longitude, maxDistance, effectiveLimit, isPremium],
     queryFn: async (): Promise<NearbyProfile[]> => {
       if (!latitude || !longitude) {
         // Fallback: get all online profiles if no location
@@ -34,7 +41,7 @@ export const useNearbyProfiles = (
           .neq('user_id', user?.id || '')
           .order('is_online', { ascending: false })
           .order('last_seen', { ascending: false })
-          .limit(limit);
+          .limit(effectiveLimit);
 
         if (error) throw error;
         
@@ -50,7 +57,7 @@ export const useNearbyProfiles = (
           user_lat: latitude,
           user_lon: longitude,
           max_distance_km: maxDistance,
-          limit_count: limit,
+          limit_count: effectiveLimit,
         });
 
       if (error) throw error;
@@ -60,6 +67,17 @@ export const useNearbyProfiles = (
     refetchInterval: 30000, // Refresh every 30 seconds
     staleTime: 15000,
   });
+
+  const maxProfilesAllowed = isPremium 
+    ? PREMIUM_LIMITS.nearbyProfiles 
+    : FREE_LIMITS.nearbyProfiles;
+
+  return {
+    ...query,
+    maxProfilesAllowed,
+    isPremium,
+    isLimited: !isPremium && (query.data?.length || 0) >= FREE_LIMITS.nearbyProfiles,
+  };
 };
 
 export default useNearbyProfiles;

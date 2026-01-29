@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Image, Video, Camera, X, Send, Clock, Loader2, Aperture } from 'lucide-react';
+import { Image, Video, Camera, X, Send, Clock, Loader2, Aperture, Lock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
 import { useEphemeralMediaUpload } from '@/hooks/useEphemeralMediaUpload';
 import { toast } from 'sonner';
 import CameraCapture from './CameraCapture';
+import { Badge } from '@/components/ui/badge';
 
 interface MediaUploadButtonProps {
   chatRoomId?: string;
@@ -25,7 +26,7 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
   const [showCamera, setShowCamera] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const { uploadEphemeralMedia, isUploading, progress } = useEphemeralMediaUpload();
+  const { uploadEphemeralMedia, isUploading, progress, canSend, remainingCount } = useEphemeralMediaUpload();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
     const file = e.target.files?.[0];
@@ -62,7 +63,7 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
       handleCancel();
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error("Erreur lors de l'envoi du média");
+      // Error is handled in the hook
     }
   };
 
@@ -72,6 +73,19 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
     }
     setPreviewFile(null);
     setPreviewUrl(null);
+  };
+
+  const handleMenuClick = (action: () => void) => {
+    if (!canSend) {
+      toast.error('Limite atteinte ! Passez Premium pour envoyer plus de médias.', {
+        action: {
+          label: 'Premium',
+          onClick: () => window.location.href = '/?tab=premium',
+        },
+      });
+      return;
+    }
+    action();
   };
 
   const durations = [5, 10, 15, 30];
@@ -200,21 +214,52 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
           <Button 
             variant="ghost" 
             size="icon" 
-            className="text-muted-foreground hover:text-primary"
+            className={`text-muted-foreground hover:text-primary relative ${!canSend ? 'opacity-60' : ''}`}
           >
             <Camera className="w-5 h-5" />
+            {!canSend && (
+              <Lock className="w-3 h-3 absolute -bottom-0.5 -right-0.5 text-amber-500" />
+            )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48">
-          <DropdownMenuItem onClick={() => setShowCamera(true)}>
+        <DropdownMenuContent align="start" className="w-56">
+          {/* Remaining count badge */}
+          <div className="px-2 py-1.5 mb-1 border-b border-border">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {canSend ? (
+                <>
+                  <span>{remainingCount} média(s) restant(s) cette semaine</span>
+                </>
+              ) : (
+                <div className="flex items-center gap-1 text-amber-600">
+                  <Lock className="w-3 h-3" />
+                  <span>Limite atteinte</span>
+                  <Badge variant="outline" className="ml-auto text-[10px] px-1 py-0 h-4">
+                    <Crown className="w-2.5 h-2.5 mr-0.5" />
+                    Premium
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </div>
+          <DropdownMenuItem 
+            onClick={() => handleMenuClick(() => setShowCamera(true))}
+            disabled={!canSend}
+          >
             <Aperture className="w-4 h-4 mr-2" />
             Prendre une photo/vidéo
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => imageInputRef.current?.click()}>
+          <DropdownMenuItem 
+            onClick={() => handleMenuClick(() => imageInputRef.current?.click())}
+            disabled={!canSend}
+          >
             <Image className="w-4 h-4 mr-2" />
             Envoyer une photo
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => videoInputRef.current?.click()}>
+          <DropdownMenuItem 
+            onClick={() => handleMenuClick(() => videoInputRef.current?.click())}
+            disabled={!canSend}
+          >
             <Video className="w-4 h-4 mr-2" />
             Envoyer une vidéo
           </DropdownMenuItem>

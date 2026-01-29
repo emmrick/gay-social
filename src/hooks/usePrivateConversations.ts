@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserUsage } from './useUserUsage';
+import { toast } from 'sonner';
 
 type PrivateConversation = Tables<'private_conversations'>;
 
@@ -24,6 +26,13 @@ interface ConversationWithProfile extends PrivateConversation {
 export const usePrivateConversations = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { 
+    canStartConversation, 
+    incrementConversations, 
+    conversationsCount, 
+    limits,
+    isPremium 
+  } = useUserUsage();
 
   const query = useQuery({
     queryKey: ['private-conversations', user?.id],
@@ -127,6 +136,11 @@ export const usePrivateConversations = () => {
 
       if (existing) return existing;
 
+      // Check limit before creating new conversation
+      if (!canStartConversation()) {
+        throw new Error('LIMIT_REACHED');
+      }
+
       // Create new conversation
       const { data, error } = await supabase
         .from('private_conversations')
@@ -138,10 +152,27 @@ export const usePrivateConversations = () => {
         .single();
 
       if (error) throw error;
+
+      // Increment usage counter for new conversation
+      await incrementConversations();
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
+    },
+    onError: (error: Error) => {
+      if (error.message === 'LIMIT_REACHED') {
+        toast.error(
+          `Limite atteinte ! Vous avez démarré ${conversationsCount}/${limits.conversationsPerWeek} conversations cette semaine.`,
+          {
+            action: isPremium ? undefined : {
+              label: 'Passer Premium',
+              onClick: () => window.location.href = '/?tab=premium',
+            },
+          }
+        );
+      }
     },
   });
 
@@ -150,5 +181,7 @@ export const usePrivateConversations = () => {
     isLoading: query.isLoading,
     error: query.error,
     getOrCreateConversation,
+    canStartNewConversation: canStartConversation(),
+    remainingConversations: Math.max(0, limits.conversationsPerWeek - conversationsCount),
   };
 };

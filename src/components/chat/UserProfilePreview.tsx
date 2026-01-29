@@ -90,10 +90,10 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
               <div className="text-center">
                 <h3 className="text-xl font-semibold">{profile.username}</h3>
                 <Badge 
-                  variant={profile.is_online ? "default" : "secondary"}
+                  variant={profile.is_online === true ? "default" : "secondary"}
                   className="mt-2"
                 >
-                  {profile.is_online ? '🟢 En ligne' : '⚫ Hors ligne'}
+                  {profile.is_online === true ? '🟢 En ligne' : '⚫ Hors ligne'}
                 </Badge>
               </div>
 
@@ -110,7 +110,7 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
                   <MapPin className="w-4 h-4" />
                   <span>{profile.region}</span>
                 </div>
-                {!profile.is_online && profile.last_seen && (
+                {profile.is_online !== true && profile.last_seen && (
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     <span>

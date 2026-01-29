@@ -13,6 +13,7 @@ import MemberSearch from '@/components/chat/MemberSearch';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { useRegionMemberCount } from '@/hooks/useRegionMemberCounts';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -64,6 +65,7 @@ const Index = () => {
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
+  const { total: memberCount } = useRegionMemberCount(selectedRegion || '');
   const { getOrCreateConversation } = usePrivateConversations();
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
   const navigate = useNavigate();
@@ -173,10 +175,6 @@ const Index = () => {
     setCurrentView('messages');
   };
 
-  const getMemberCount = () => {
-    if (!selectedRoomData) return 0;
-    return 100;
-  };
 
   // Render private chat view with slide animation
   if (currentView === 'private' && selectedPrivateUserId) {
@@ -210,7 +208,7 @@ const Index = () => {
           roomId={selectedRoomData.id}
           regionCode={selectedRegion}
           regionName={selectedRoomData.region_name}
-          memberCount={getMemberCount()}
+          memberCount={memberCount}
           onBack={handleBackToRegions}
           onStartPrivateChat={handleStartPrivateChat}
         />

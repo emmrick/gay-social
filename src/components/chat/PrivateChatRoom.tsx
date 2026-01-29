@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ArrowLeft, MoreVertical, Flag } from 'lucide-react';
@@ -31,6 +31,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
   const { markAsRead } = useUnreadMessages();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
 
   // Mobile back navigation
@@ -49,6 +50,15 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  // Scroll to bottom when input is focused (keyboard opens)
+  const handleInputFocus = useCallback(() => {
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  }, []);
 
   const handleSendMessage = async (content: string) => {
     if (content.trim()) {
@@ -135,7 +145,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
       )}
 
       {/* Messages - scrollable middle section */}
-      <div className="flex-1 overflow-y-auto overscroll-contain p-4">
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4" ref={messagesContainerRef}>
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -215,6 +225,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           onSendMessage={handleSendMessage} 
           recipientId={otherUserId}
           isPrivate={true}
+          onFocus={handleInputFocus}
         />
       </div>
     </div>

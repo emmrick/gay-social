@@ -90,11 +90,18 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
     }
   }, [searchIndex, searchResults, searchQuery]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  };
+  }, []);
+
+  // Handle input focus - scroll to bottom when keyboard opens
+  const handleInputFocus = useCallback(() => {
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+  }, [scrollToBottom]);
 
   const handleSendMessage = async (content: string) => {
     if (content.trim()) {
@@ -327,6 +334,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
           chatRoomId={roomId}
           isPrivate={false}
           onTyping={handleTyping}
+          onFocus={handleInputFocus}
         />
       </div>
     </div>

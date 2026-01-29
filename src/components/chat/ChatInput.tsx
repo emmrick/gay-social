@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Smile } from 'lucide-react';
@@ -10,10 +10,12 @@ interface ChatInputProps {
   recipientId?: string;
   isPrivate?: boolean;
   onTyping?: () => void;
+  onFocus?: () => void;
 }
 
-const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, onTyping }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, onTyping, onFocus }: ChatInputProps) => {
   const [message, setMessage] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
     if (message.trim()) {
@@ -32,6 +34,16 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(e.target.value);
     onTyping?.();
+  };
+
+  const handleFocus = () => {
+    // Notify parent to scroll to bottom when keyboard opens
+    onFocus?.();
+    
+    // Small delay to ensure keyboard is open before scrolling
+    setTimeout(() => {
+      onFocus?.();
+    }, 300);
   };
 
   return (
@@ -55,9 +67,11 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
         
         {/* Message input */}
         <Input
+          ref={inputRef}
           value={message}
           onChange={handleChange}
           onKeyPress={handleKeyPress}
+          onFocus={handleFocus}
           placeholder="Écris ton message..."
           className="flex-1 bg-secondary border-none h-11"
         />

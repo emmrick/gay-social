@@ -484,10 +484,12 @@ const Index = () => {
       </AnimatePresence>
 
       {/* Identity Verification Dialog */}
-      <IdentityVerificationDialog
-        open={showVerificationDialog}
-        onOpenChange={setShowVerificationDialog}
-      />
+      {showVerificationDialog && (
+        <IdentityVerificationDialog
+          open={showVerificationDialog}
+          onOpenChange={setShowVerificationDialog}
+        />
+      )}
     </div>
   );
 };

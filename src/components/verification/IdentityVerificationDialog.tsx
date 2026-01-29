@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useIdentityVerification } from '@/hooks/useIdentityVerification';
@@ -30,6 +30,17 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const revokePreviewUrl = (url: string | null) => {
+    if (!url) return;
+    if (url.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        // noop
+      }
+    }
+  };
+
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -53,6 +64,31 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
     }
     setIsCameraActive(false);
   }, []);
+
+  // Critical: when the dialog closes (or unmounts due to guard changes),
+  // stop camera streams and clear previews so we never leave a blocking overlay on Android.
+  useEffect(() => {
+    if (open) return;
+
+    stopCamera();
+    setIsUploading(false);
+
+    revokePreviewUrl(selfiePreview);
+    revokePreviewUrl(idFrontPreview);
+    revokePreviewUrl(idBackPreview);
+
+    setSelfieFile(null);
+    setSelfiePreview(null);
+    setIdFrontFile(null);
+    setIdFrontPreview(null);
+    setIdBackFile(null);
+    setIdBackPreview(null);
+    setStep('intro');
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [open, stopCamera, selfiePreview, idFrontPreview, idBackPreview]);
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
@@ -129,8 +165,13 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
         idBackUrl,
       });
 
-      setStep('submitted');
+      // On Android Chrome, the app may switch from the "blocked" screen to the main app right after this.
+      // If the dialog is still open during that transition, Radix overlay can remain stuck.
+      // So we close immediately after a successful submit.
       toast.success('Documents envoyés avec succès !');
+      onOpenChange(false);
+      // Force a refresh of the verification state for the guard/UI.
+      refetch();
     } catch (error) {
       toast.error('Erreur lors de l\'envoi des documents');
     } finally {

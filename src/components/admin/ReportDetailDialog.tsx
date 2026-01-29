@@ -10,7 +10,9 @@ import {
   Eye,
   Loader2,
   Ban,
-  ShieldOff
+  ShieldOff,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 import {
   Dialog,
@@ -23,13 +25,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   ReportWithProfiles, 
   ReportStatus, 
   useUpdateReportStatus,
+  useSuspendUser,
   useBlockUser,
   useIsUserBlocked,
-  useUnblockUser
+  useUnblockUser,
+  SuspensionDuration,
+  suspensionDurations,
 } from '@/hooks/useAdmin';
 import { reportReasonLabels, reportReasonDescriptions } from '@/hooks/useReports';
 
@@ -46,10 +58,19 @@ const statusLabels: Record<ReportStatus, string> = {
   dismissed: 'Rejeté',
 };
 
+const reportTypeLabels: Record<string, string> = {
+  user: 'Utilisateur',
+  message: 'Message',
+  group: 'Groupe',
+};
+
 const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogProps) => {
   const [resolutionNotes, setResolutionNotes] = useState(report.resolution_notes || '');
-  const [blockReason, setBlockReason] = useState('');
+  const [suspensionReason, setSuspensionReason] = useState('');
+  const [selectedDuration, setSelectedDuration] = useState<SuspensionDuration>('24hours');
+  
   const updateStatus = useUpdateReportStatus();
+  const suspendUser = useSuspendUser();
   const blockUser = useBlockUser();
   const unblockUser = useUnblockUser();
   const { data: isBlocked, isLoading: checkingBlock } = useIsUserBlocked(report.reported_user_id);
@@ -63,12 +84,21 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
     onOpenChange(false);
   };
 
-  const handleBlockUser = async () => {
+  const handleSuspendUser = async () => {
+    await suspendUser.mutateAsync({
+      userId: report.reported_user_id,
+      reason: suspensionReason.trim() || `Signalement: ${report.reason}`,
+      duration: selectedDuration,
+    });
+    setSuspensionReason('');
+  };
+
+  const handleBanUser = async () => {
     await blockUser.mutateAsync({
       userId: report.reported_user_id,
-      reason: blockReason.trim() || `Signalement: ${report.reason}`,
+      reason: suspensionReason.trim() || `Signalement: ${report.reason}`,
     });
-    setBlockReason('');
+    setSuspensionReason('');
   };
 
   const handleUnblockUser = async () => {
@@ -89,10 +119,13 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Status */}
-          <div className="flex items-center gap-2">
+          {/* Status & Type */}
+          <div className="flex items-center gap-2 flex-wrap">
             <Badge variant={report.status === 'pending' ? 'destructive' : 'secondary'}>
               {statusLabels[report.status]}
+            </Badge>
+            <Badge variant="outline">
+              {reportTypeLabels[report.report_type] || report.report_type}
             </Badge>
             {isBlocked && (
               <Badge variant="destructive" className="bg-red-600">
@@ -101,6 +134,21 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
               </Badge>
             )}
           </div>
+
+          {/* Message content if this is a message report */}
+          {report.report_type === 'message' && report.message_id && (
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                <MessageSquare className="w-3 h-3 inline mr-1" />
+                Message signalé
+              </Label>
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                <p className="text-sm whitespace-pre-wrap">
+                  {report.message?.content || '[Contenu média ou supprimé]'}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Reported User */}
           <div className="space-y-2">
@@ -123,43 +171,6 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
                 <p className="font-medium">{report.reported_user?.username || 'Utilisateur inconnu'}</p>
                 <p className="text-xs text-muted-foreground">ID: {report.reported_user_id.slice(0, 8)}...</p>
               </div>
-              
-              {/* Block/Unblock button */}
-              {checkingBlock ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : isBlocked ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleUnblockUser}
-                  disabled={unblockUser.isPending}
-                >
-                  {unblockUser.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <ShieldOff className="w-4 h-4 mr-1" />
-                      Débloquer
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBlockUser}
-                  disabled={blockUser.isPending}
-                >
-                  {blockUser.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Ban className="w-4 h-4 mr-1" />
-                      Bloquer
-                    </>
-                  )}
-                </Button>
-              )}
             </div>
           </div>
 
@@ -214,6 +225,112 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
               </Label>
               <div className="p-3 rounded-lg bg-secondary/50">
                 <p className="text-sm whitespace-pre-wrap">{report.description}</p>
+              </div>
+            </div>
+          )}
+
+          <Separator />
+
+          {/* Suspension Actions */}
+          {!isBlocked && (report.status === 'pending' || report.status === 'reviewed') && (
+            <div className="space-y-4 p-4 rounded-lg border border-destructive/30 bg-destructive/5">
+              <div className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="w-4 h-4" />
+                <Label className="text-sm font-medium">Actions de modération</Label>
+              </div>
+              
+              {/* Suspension reason */}
+              <div className="space-y-2">
+                <Label htmlFor="suspension-reason" className="text-xs text-muted-foreground">
+                  Raison (optionnel)
+                </Label>
+                <Textarea
+                  id="suspension-reason"
+                  placeholder="Raison de la suspension..."
+                  value={suspensionReason}
+                  onChange={(e) => setSuspensionReason(e.target.value)}
+                  className="resize-none"
+                  rows={2}
+                />
+              </div>
+
+              {/* Duration selection */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Durée de suspension</Label>
+                <Select value={selectedDuration} onValueChange={(v) => setSelectedDuration(v as SuspensionDuration)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(suspensionDurations).map(([key, { label }]) => (
+                      <SelectItem key={key} value={key}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-wrap gap-2">
+                {checkingBlock ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSuspendUser}
+                      disabled={suspendUser.isPending}
+                      className="border-orange-500/50 text-orange-500 hover:bg-orange-500/10"
+                    >
+                      {suspendUser.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                      ) : (
+                        <Clock className="w-4 h-4 mr-1" />
+                      )}
+                      Suspendre
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBanUser}
+                      disabled={blockUser.isPending}
+                    >
+                      {blockUser.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                      ) : (
+                        <Ban className="w-4 h-4 mr-1" />
+                      )}
+                      Bannir définitivement
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Unblock if already blocked */}
+          {isBlocked && (
+            <div className="p-4 rounded-lg border border-green-500/30 bg-green-500/5">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">Cet utilisateur est actuellement bloqué.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUnblockUser}
+                  disabled={unblockUser.isPending}
+                  className="border-green-500/50 text-green-500 hover:bg-green-500/10"
+                >
+                  {unblockUser.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <ShieldOff className="w-4 h-4 mr-1" />
+                      Débloquer
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           )}

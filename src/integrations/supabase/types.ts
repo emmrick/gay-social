@@ -413,7 +413,9 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          message_id: string | null
           reason: Database["public"]["Enums"]["report_reason"]
+          report_type: string
           reported_user_id: string
           reporter_id: string
           resolution_notes: string | null
@@ -426,7 +428,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          message_id?: string | null
           reason: Database["public"]["Enums"]["report_reason"]
+          report_type?: string
           reported_user_id: string
           reporter_id: string
           resolution_notes?: string | null
@@ -439,7 +443,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          message_id?: string | null
           reason?: Database["public"]["Enums"]["report_reason"]
+          report_type?: string
           reported_user_id?: string
           reporter_id?: string
           resolution_notes?: string | null
@@ -448,7 +454,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["report_status"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reports_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_messages: {
         Row: {
@@ -554,6 +568,9 @@ export type Database = {
           id: string
           is_active: boolean
           reason: string | null
+          suspension_duration: unknown
+          suspension_ends_at: string | null
+          suspension_type: string | null
           unblocked_at: string | null
           user_id: string
         }
@@ -563,6 +580,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           reason?: string | null
+          suspension_duration?: unknown
+          suspension_ends_at?: string | null
+          suspension_type?: string | null
           unblocked_at?: string | null
           user_id: string
         }
@@ -572,6 +592,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           reason?: string | null
+          suspension_duration?: unknown
+          suspension_ends_at?: string | null
+          suspension_type?: string | null
           unblocked_at?: string | null
           user_id?: string
         }
@@ -642,6 +665,7 @@ export type Database = {
         Returns: boolean
       }
       is_user_blocked: { Args: { _user_id: string }; Returns: boolean }
+      is_user_suspended: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

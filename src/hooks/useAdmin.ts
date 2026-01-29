@@ -9,6 +9,8 @@ export interface ReportWithProfiles {
   id: string;
   reporter_id: string;
   reported_user_id: string;
+  message_id: string | null;
+  report_type: string;
   reason: string;
   description: string | null;
   status: ReportStatus;
@@ -25,6 +27,9 @@ export interface ReportWithProfiles {
     username: string;
     avatar_url: string | null;
   };
+  message?: {
+    content: string | null;
+  } | null;
 }
 
 export interface UserBlock {
@@ -35,11 +40,25 @@ export interface UserBlock {
   blocked_at: string;
   unblocked_at: string | null;
   is_active: boolean;
+  suspension_type: 'temporary' | 'permanent' | null;
+  suspension_duration: string | null;
+  suspension_ends_at: string | null;
   user?: {
     username: string;
     avatar_url: string | null;
   };
 }
+
+export type SuspensionDuration = '10min' | '1hour' | '24hours' | '7days' | '30days' | 'permanent';
+
+export const suspensionDurations: Record<SuspensionDuration, { label: string; interval: string | null }> = {
+  '10min': { label: '10 minutes', interval: '10 minutes' },
+  '1hour': { label: '1 heure', interval: '1 hour' },
+  '24hours': { label: '24 heures', interval: '24 hours' },
+  '7days': { label: '7 jours', interval: '7 days' },
+  '30days': { label: '30 jours', interval: '30 days' },
+  'permanent': { label: 'Permanent', interval: null },
+};
 
 export const useIsAdmin = () => {
   const { user } = useAuth();
@@ -98,11 +117,27 @@ export const useAdminReports = (status?: ReportStatus) => {
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
+      // Fetch message content for message reports
+      const messageIds = reports
+        .filter(r => r.message_id)
+        .map(r => r.message_id as string);
+
+      let messageMap = new Map<string, { content: string | null }>();
+      if (messageIds.length > 0) {
+        const { data: messages } = await supabase
+          .from('messages')
+          .select('id, content')
+          .in('id', messageIds);
+
+        messageMap = new Map(messages?.map(m => [m.id, { content: m.content }]) || []);
+      }
+
       return reports.map(report => ({
         ...report,
         status: report.status as ReportStatus,
         reporter: profileMap.get(report.reporter_id),
         reported_user: profileMap.get(report.reported_user_id),
+        message: report.message_id ? messageMap.get(report.message_id) || null : null,
       }));
     },
     enabled: isAdmin === true,
@@ -233,12 +268,113 @@ export const useBlockedUsers = () => {
 
       return blocks.map(block => ({
         ...block,
+        suspension_type: block.suspension_type as 'temporary' | 'permanent' | null,
+        suspension_duration: block.suspension_duration as string | null,
         user: profileMap.get(block.user_id),
-      }));
+      })) as UserBlock[];
     },
     enabled: isAdmin === true,
   });
 };
+
+export const useSuspendUser = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      userId, 
+      reason,
+      duration
+    }: { 
+      userId: string; 
+      reason?: string;
+      duration: SuspensionDuration;
+    }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      const durationConfig = suspensionDurations[duration];
+      const isPermanent = duration === 'permanent';
+      
+      // Calculate suspension end time
+      let suspensionEndsAt: string | null = null;
+      if (!isPermanent && durationConfig.interval) {
+        const now = new Date();
+        const intervalMs = parseInterval(durationConfig.interval);
+        suspensionEndsAt = new Date(now.getTime() + intervalMs).toISOString();
+      }
+
+      // Check if user is already blocked
+      const { data: existing } = await supabase
+        .from('user_blocks')
+        .select('id, is_active')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existing && existing.is_active) {
+        throw new Error('User is already suspended');
+      }
+
+      const blockData = {
+        user_id: userId,
+        blocked_by: user.id,
+        blocked_at: new Date().toISOString(),
+        reason: reason || null,
+        is_active: true,
+        unblocked_at: null,
+        suspension_type: isPermanent ? 'permanent' : 'temporary',
+        suspension_duration: durationConfig.interval,
+        suspension_ends_at: suspensionEndsAt,
+      };
+
+      if (existing) {
+        const { error } = await supabase
+          .from('user_blocks')
+          .update(blockData)
+          .eq('id', existing.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('user_blocks')
+          .insert(blockData);
+
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['blocked-users'] });
+      queryClient.invalidateQueries({ queryKey: ['user-blocked'] });
+      const label = suspensionDurations[variables.duration].label;
+      toast.success(`Utilisateur suspendu (${label})`);
+    },
+    onError: (error) => {
+      console.error('Error suspending user:', error);
+      toast.error('Erreur lors de la suspension');
+    },
+  });
+};
+
+// Helper function to parse interval string to milliseconds
+function parseInterval(interval: string): number {
+  const parts = interval.split(' ');
+  const value = parseInt(parts[0]);
+  const unit = parts[1];
+  
+  switch (unit) {
+    case 'minutes':
+    case 'minute':
+      return value * 60 * 1000;
+    case 'hour':
+    case 'hours':
+      return value * 60 * 60 * 1000;
+    case 'day':
+    case 'days':
+      return value * 24 * 60 * 60 * 1000;
+    default:
+      return value * 60 * 1000;
+  }
+}
 
 export const useBlockUser = () => {
   const { user } = useAuth();
@@ -275,6 +411,8 @@ export const useBlockUser = () => {
             blocked_at: new Date().toISOString(),
             reason: reason || null,
             unblocked_at: null,
+            suspension_type: 'permanent',
+            suspension_ends_at: null,
           })
           .eq('id', existing.id);
 
@@ -287,6 +425,7 @@ export const useBlockUser = () => {
             user_id: userId,
             blocked_by: user.id,
             reason: reason || null,
+            suspension_type: 'permanent',
           });
 
         if (error) throw error;
@@ -295,7 +434,7 @@ export const useBlockUser = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blocked-users'] });
       queryClient.invalidateQueries({ queryKey: ['user-blocked'] });
-      toast.success('Utilisateur bloqué');
+      toast.success('Utilisateur bloqué définitivement');
     },
     onError: (error) => {
       console.error('Error blocking user:', error);

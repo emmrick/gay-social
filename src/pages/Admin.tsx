@@ -14,7 +14,8 @@ import {
   Filter,
   Ban,
   Users,
-  ShieldOff
+  ShieldOff,
+  IdCard
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -35,6 +36,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
+import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', color: 'bg-yellow-500', icon: Clock },
@@ -48,7 +50,7 @@ const Admin = () => {
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats, isLoading: statsLoading } = useReportStats();
   const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
-  const [activeSection, setActiveSection] = useState<'reports' | 'blocked'>('reports');
+  const [activeSection, setActiveSection] = useState<'reports' | 'blocked' | 'verification'>('reports');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
@@ -160,15 +162,19 @@ const Admin = () => {
         </div>
 
         {/* Section Tabs */}
-        <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as 'reports' | 'blocked')}>
-          <TabsList className="grid grid-cols-2 w-fit">
+        <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as 'reports' | 'blocked' | 'verification')}>
+          <TabsList className="grid grid-cols-3 w-fit">
             <TabsTrigger value="reports" className="gap-2">
               <Filter className="w-4 h-4" />
               Signalements
             </TabsTrigger>
+            <TabsTrigger value="verification" className="gap-2">
+              <IdCard className="w-4 h-4" />
+              Vérifications
+            </TabsTrigger>
             <TabsTrigger value="blocked" className="gap-2">
               <Ban className="w-4 h-4" />
-              Utilisateurs bloqués
+              Bloqués
             </TabsTrigger>
           </TabsList>
 
@@ -217,6 +223,16 @@ const Admin = () => {
                     </ScrollArea>
                   </TabsContent>
                 </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+
+          {/* Identity Verification Section */}
+          <TabsContent value="verification">
+            <Card>
+              <CardContent className="pt-6">
+                <IdentityVerificationPanel />
               </CardContent>
             </Card>
           </TabsContent>

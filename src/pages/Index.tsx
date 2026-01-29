@@ -11,11 +11,13 @@ import BottomNavBar from '@/components/navigation/BottomNavBar';
 import MemberSearch from '@/components/chat/MemberSearch';
 import JoinedGroupsList from '@/components/chat/JoinedGroupsList';
 import GroupPickerDialog from '@/components/chat/GroupPickerDialog';
+import IdentityVerificationDialog from '@/components/verification/IdentityVerificationDialog';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useRegionMemberCount } from '@/hooks/useRegionMemberCounts';
 import { useJoinedGroups } from '@/hooks/useJoinedGroups';
+import { useIdentityVerification } from '@/hooks/useIdentityVerification';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -65,8 +67,10 @@ const Index = () => {
   const [selectedPrivateUserId, setSelectedPrivateUserId] = useState<string | null>(null);
   const [showMemberSearch, setShowMemberSearch] = useState(false);
   const [showGroupPicker, setShowGroupPicker] = useState(false);
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
+  const { verification, isLoading: verificationLoading } = useIdentityVerification();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
   const { total: memberCount } = useRegionMemberCount(selectedRegion || '');
   const { getOrCreateConversation } = usePrivateConversations();
@@ -89,6 +93,17 @@ const Index = () => {
       setCurrentView('landing');
     }
   }, [user, authLoading, currentView]);
+
+  // Show verification dialog if user hasn't completed verification
+  useEffect(() => {
+    if (user && !verificationLoading && !verification?.submitted_at && verification?.status !== 'approved') {
+      // Only show if the user is logged in and hasn't submitted verification yet
+      const timer = setTimeout(() => {
+        setShowVerificationDialog(true);
+      }, 1000); // Small delay to not overwhelm the user
+      return () => clearTimeout(timer);
+    }
+  }, [user, verification, verificationLoading]);
 
   // Show loading while auth is initializing
   if (authLoading) {
@@ -439,6 +454,12 @@ const Index = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Identity Verification Dialog */}
+      <IdentityVerificationDialog
+        open={showVerificationDialog}
+        onOpenChange={setShowVerificationDialog}
+      />
     </div>
   );
 };

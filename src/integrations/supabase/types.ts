@@ -100,6 +100,60 @@ export type Database = {
         }
         Relationships: []
       }
+      identity_verifications: {
+        Row: {
+          admin_screenshot_detected: boolean
+          admin_viewed_at: string | null
+          created_at: string
+          documents_deleted: boolean
+          id: string
+          id_back_url: string | null
+          id_front_url: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selfie_url: string | null
+          status: Database["public"]["Enums"]["verification_status"]
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_screenshot_detected?: boolean
+          admin_viewed_at?: string | null
+          created_at?: string
+          documents_deleted?: boolean
+          id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_screenshot_detected?: boolean
+          admin_viewed_at?: string | null
+          created_at?: string
+          documents_deleted?: boolean
+          id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       message_reactions: {
         Row: {
           created_at: string
@@ -275,6 +329,7 @@ export type Database = {
           hiv_status: string | null
           id: string
           is_online: boolean | null
+          is_verified: boolean
           last_seen: string | null
           latitude: number | null
           location_updated_at: string | null
@@ -304,6 +359,7 @@ export type Database = {
           hiv_status?: string | null
           id?: string
           is_online?: boolean | null
+          is_verified?: boolean
           last_seen?: string | null
           latitude?: number | null
           location_updated_at?: string | null
@@ -333,6 +389,7 @@ export type Database = {
           hiv_status?: string | null
           id?: string
           is_online?: boolean | null
+          is_verified?: boolean
           last_seen?: string | null
           latitude?: number | null
           location_updated_at?: string | null
@@ -596,6 +653,7 @@ export type Database = {
         | "underage"
         | "other"
       report_status: "pending" | "reviewed" | "resolved" | "dismissed"
+      verification_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -733,6 +791,7 @@ export const Constants = {
         "other",
       ],
       report_status: ["pending", "reviewed", "resolved", "dismissed"],
+      verification_status: ["pending", "approved", "rejected"],
     },
   },
 } as const

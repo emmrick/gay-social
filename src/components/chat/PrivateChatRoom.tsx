@@ -20,6 +20,7 @@ import ChatInput from './ChatInput';
 import EphemeralMessage from './EphemeralMessage';
 import ReportUserDialog from './ReportUserDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
+import UserProfilePreview from './UserProfilePreview';
 
 interface PrivateChatRoomProps {
   otherUserId: string;
@@ -35,6 +36,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showShareAlbum, setShowShareAlbum] = useState(false);
+  const [showProfilePreview, setShowProfilePreview] = useState(false);
 
   // Mobile back navigation
   useMobileNavigation({ onBack, enabled: true });
@@ -86,7 +88,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           </div>
         ) : (
           <>
-            <div className="relative">
+            <button
+              onClick={() => setShowProfilePreview(true)}
+              className="relative cursor-pointer hover:scale-105 transition-transform"
+            >
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
                 {otherUserProfile?.avatar_url ? (
                   <img
@@ -101,9 +106,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               {otherUserProfile?.is_online === true && (
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
               )}
-            </div>
+            </button>
 
-            <div className="flex-1">
+            <button
+              onClick={() => setShowProfilePreview(true)}
+              className="flex-1 text-left cursor-pointer hover:opacity-80 transition-opacity"
+            >
               <h2 className="font-semibold text-foreground">
                 {otherUserProfile?.username}
               </h2>
@@ -114,7 +122,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                   'Hors ligne'
                 )}
               </p>
-            </div>
+            </button>
           </>
         )}
 
@@ -160,6 +168,14 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
         />
       )}
 
+      {/* User Profile Preview */}
+      <UserProfilePreview
+        userId={otherUserId}
+        isOpen={showProfilePreview}
+        onClose={() => setShowProfilePreview(false)}
+        onStartPrivateChat={() => setShowProfilePreview(false)}
+      />
+
       {/* Messages - scrollable middle section */}
       <div className="flex-1 overflow-y-auto overscroll-contain p-4" ref={messagesContainerRef}>
         {isLoading ? (
@@ -190,7 +206,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 >
                   {/* Avatar */}
                   {!isOwn && (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                    <button
+                      onClick={() => setShowProfilePreview(true)}
+                      className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                    >
                       {message.senderAvatar ? (
                         <img
                           src={message.senderAvatar}
@@ -200,7 +219,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                       ) : (
                         message.senderUsername.charAt(0).toUpperCase()
                       )}
-                    </div>
+                    </button>
                   )}
 
                   <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>

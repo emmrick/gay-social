@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
@@ -7,6 +7,7 @@ import { usePremiumUsers } from '@/hooks/usePremiumUsers';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MessageCircle, ChevronRight } from 'lucide-react';
 import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
+import UserProfilePreview from './UserProfilePreview';
 import { cn } from '@/lib/utils';
 
 interface PrivateChatListProps {
@@ -17,6 +18,7 @@ interface PrivateChatListProps {
 const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatListProps) => {
   const { conversations, isLoading } = usePrivateConversations();
   const { getUnreadCount } = useUnreadMessages();
+  const [profilePreviewUserId, setProfilePreviewUserId] = useState<string | null>(null);
 
   // Get user IDs for premium check
   const userIds = useMemo(
@@ -24,6 +26,11 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatLi
     [conversations]
   );
   const { data: premiumMap = {} } = usePremiumUsers(userIds);
+
+  const handleAvatarClick = (e: React.MouseEvent, userId: string) => {
+    e.stopPropagation();
+    setProfilePreviewUserId(userId);
+  };
 
   if (isLoading) {
     return (
@@ -77,7 +84,10 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatLi
             style={{ animationDelay: `${index * 0.05}s` }}
           >
             {/* Avatar */}
-            <div className="relative flex-shrink-0">
+            <button
+              onClick={(e) => handleAvatarClick(e, conv.otherUser.user_id)}
+              className="relative flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
+            >
               <div className={cn(
                 "w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden",
                 "bg-gradient-to-br from-primary to-accent"
@@ -104,7 +114,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatLi
                   <PremiumUserBadge size="xs" />
                 </div>
               )}
-            </div>
+            </button>
 
             {/* Info */}
             <div className="flex-1 min-w-0">
@@ -150,6 +160,17 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatLi
           </button>
         );
       })}
+
+      {/* User Profile Preview */}
+      <UserProfilePreview
+        userId={profilePreviewUserId}
+        isOpen={!!profilePreviewUserId}
+        onClose={() => setProfilePreviewUserId(null)}
+        onStartPrivateChat={(userId) => {
+          setProfilePreviewUserId(null);
+          onSelectConversation(userId);
+        }}
+      />
     </div>
   );
 };

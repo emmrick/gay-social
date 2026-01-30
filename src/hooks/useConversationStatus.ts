@@ -25,7 +25,8 @@ export const useConversationStatus = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversation-status', user?.id] });
       toast.success('Conversation archivée');
     },
     onError: () => {
@@ -51,7 +52,8 @@ export const useConversationStatus = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversation-status', user?.id] });
       toast.success('Conversation restaurée');
     },
     onError: () => {
@@ -77,7 +79,8 @@ export const useConversationStatus = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversation-status', user?.id] });
       toast.success('Conversation supprimée');
     },
     onError: () => {
@@ -98,7 +101,8 @@ export const useConversationStatus = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversation-status', user?.id] });
       toast.success('Conversation restaurée');
     },
     onError: () => {

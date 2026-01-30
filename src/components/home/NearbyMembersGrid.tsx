@@ -285,6 +285,8 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
                   <img 
                     src={profile.avatar_url} 
                     alt={profile.username}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 ) : (

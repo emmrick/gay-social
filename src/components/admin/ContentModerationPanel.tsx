@@ -124,13 +124,34 @@ const useRecentMessages = (search: string) => {
   });
 };
 
-const useProfilePhotos = () => {
+// Fetch reported user IDs to filter content
+const useReportedUsers = () => {
   return useQuery({
-    queryKey: ['admin-profile-photos'],
+    queryKey: ['admin-reported-users'],
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase
+        .from('reports')
+        .select('reported_user_id')
+        .in('status', ['pending', 'reviewed']);
+
+      if (error) throw error;
+
+      // Get unique user IDs
+      return [...new Set(data?.map(r => r.reported_user_id) || [])];
+    },
+  });
+};
+
+const useProfilePhotos = (reportedUserIds: string[]) => {
+  return useQuery({
+    queryKey: ['admin-profile-photos', reportedUserIds],
     queryFn: async (): Promise<ProfilePhoto[]> => {
+      if (reportedUserIds.length === 0) return [];
+
       const { data, error } = await supabase
         .from('profile_photos')
         .select('*')
+        .in('user_id', reportedUserIds)
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -150,16 +171,20 @@ const useProfilePhotos = () => {
         profile: profileMap.get(photo.user_id),
       }));
     },
+    enabled: reportedUserIds.length > 0,
   });
 };
 
-const useAlbums = () => {
+const useAlbums = (reportedUserIds: string[]) => {
   return useQuery({
-    queryKey: ['admin-albums'],
+    queryKey: ['admin-albums', reportedUserIds],
     queryFn: async (): Promise<Album[]> => {
+      if (reportedUserIds.length === 0) return [];
+
       const { data: albums, error } = await supabase
         .from('user_albums')
         .select('*')
+        .in('user_id', reportedUserIds)
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -190,6 +215,7 @@ const useAlbums = () => {
         profile: profileMap.get(album.user_id),
       }));
     },
+    enabled: reportedUserIds.length > 0,
   });
 };
 
@@ -201,9 +227,13 @@ const ContentModerationPanel = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
+  const { data: reportedUserIds = [], isLoading: reportedUsersLoading, refetch: refetchReportedUsers } = useReportedUsers();
   const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useRecentMessages(messageSearch);
-  const { data: photos, isLoading: photosLoading, refetch: refetchPhotos } = useProfilePhotos();
-  const { data: albums, isLoading: albumsLoading, refetch: refetchAlbums } = useAlbums();
+  const { data: photos, isLoading: photosLoading, refetch: refetchPhotos } = useProfilePhotos(reportedUserIds);
+  const { data: albums, isLoading: albumsLoading, refetch: refetchAlbums } = useAlbums(reportedUserIds);
+
+  const photosLoaderState = reportedUsersLoading || photosLoading;
+  const albumsLoaderState = reportedUsersLoading || albumsLoading;
 
   const deleteMessage = useMutation({
     mutationFn: async (messageId: string) => {
@@ -391,18 +421,28 @@ const ContentModerationPanel = () => {
 
         {/* Photos Tab */}
         <TabsContent value="photos" className="space-y-4">
-          <div className="flex justify-end">
-            <Button variant="ghost" size="icon" onClick={() => refetchPhotos()}>
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Seules les photos des utilisateurs signalés sont affichées
+            </p>
+            <Button variant="ghost" size="icon" onClick={() => { refetchReportedUsers(); refetchPhotos(); }}>
               <RefreshCw className="w-4 h-4" />
             </Button>
           </div>
 
           <ScrollArea className="h-[400px]">
-            {photosLoading ? (
+            {photosLoaderState ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <Skeleton key={i} className="aspect-square rounded-lg" />
                 ))}
+              </div>
+            ) : reportedUserIds.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p className="font-medium">Aucun utilisateur signalé</p>
+                <p className="text-sm mt-1">Les photos ne sont visibles que lorsqu'un utilisateur est signalé</p>
               </div>
             ) : photos?.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
@@ -454,23 +494,33 @@ const ContentModerationPanel = () => {
 
         {/* Albums Tab */}
         <TabsContent value="albums" className="space-y-4">
-          <div className="flex justify-end">
-            <Button variant="ghost" size="icon" onClick={() => refetchAlbums()}>
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Seuls les albums des utilisateurs signalés sont affichés
+            </p>
+            <Button variant="ghost" size="icon" onClick={() => { refetchReportedUsers(); refetchAlbums(); }}>
               <RefreshCw className="w-4 h-4" />
             </Button>
           </div>
 
           <ScrollArea className="h-[400px]">
-            {albumsLoading ? (
+            {albumsLoaderState ? (
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Skeleton key={i} className="h-16 rounded-lg" />
                 ))}
               </div>
+            ) : reportedUserIds.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p className="font-medium">Aucun utilisateur signalé</p>
+                <p className="text-sm mt-1">Les albums ne sont visibles que lorsqu'un utilisateur est signalé</p>
+              </div>
             ) : albums?.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Folder className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Aucun album trouvé</p>
+                <p>Aucun album trouvé pour les utilisateurs signalés</p>
               </div>
             ) : (
               <div className="space-y-2">

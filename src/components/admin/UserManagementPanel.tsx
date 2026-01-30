@@ -21,7 +21,8 @@ import {
   ExternalLink,
   Crown,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Euro
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,7 @@ import {
   SuspensionDuration,
   suspensionDurations,
 } from '@/hooks/useAdmin';
+import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModeratorEarnings';
 
 interface UserProfile {
   id: string;
@@ -121,6 +123,9 @@ const UserManagementPanel = () => {
   const blockUser = useBlockUser();
   const unblockUser = useUnblockUser();
   const { data: isSelectedUserBlocked } = useIsUserBlocked(selectedUser?.user_id || '');
+  const recordEarning = useRecordEarning();
+  const { data: taskRates } = useTaskRates();
+  const suspensionRate = taskRates?.find(r => r.task_type === 'user_suspension')?.rate_cents || 15;
 
   const handleAction = (user: UserProfile, action: 'suspend' | 'ban' | 'delete') => {
     setSelectedUser(user);
@@ -139,11 +144,33 @@ const UserManagementPanel = () => {
           reason: suspensionReason.trim() || undefined,
           duration: selectedDuration,
         });
+        
+        // Record earning for suspension
+        const earned = await recordEarning.mutateAsync({
+          taskType: 'user_suspension',
+          targetUserId: selectedUser.user_id,
+          description: `Suspension de ${selectedUser.username} (${suspensionDurations[selectedDuration].label})`,
+        });
+        
+        if (earned) {
+          toast.success(`Utilisateur suspendu (+${formatCents(suspensionRate)})`);
+        }
       } else if (actionType === 'ban') {
         await blockUser.mutateAsync({
           userId: selectedUser.user_id,
           reason: suspensionReason.trim() || undefined,
         });
+        
+        // Record earning for ban
+        const earned = await recordEarning.mutateAsync({
+          taskType: 'user_suspension',
+          targetUserId: selectedUser.user_id,
+          description: `Bannissement permanent de ${selectedUser.username}`,
+        });
+        
+        if (earned) {
+          toast.success(`Utilisateur banni (+${formatCents(suspensionRate)})`);
+        }
       } else if (actionType === 'delete') {
         // Suppression du profil (l'utilisateur ne sera pas supprimé de auth)
         const { error } = await supabase

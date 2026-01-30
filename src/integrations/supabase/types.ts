@@ -343,6 +343,96 @@ export type Database = {
           },
         ]
       }
+      moderator_action_cooldowns: {
+        Row: {
+          action_count: number | null
+          id: string
+          last_action_at: string | null
+          target_user_id: string
+          task_type: Database["public"]["Enums"]["moderator_task_type"]
+          user_id: string
+        }
+        Insert: {
+          action_count?: number | null
+          id?: string
+          last_action_at?: string | null
+          target_user_id: string
+          task_type: Database["public"]["Enums"]["moderator_task_type"]
+          user_id: string
+        }
+        Update: {
+          action_count?: number | null
+          id?: string
+          last_action_at?: string | null
+          target_user_id?: string
+          task_type?: Database["public"]["Enums"]["moderator_task_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      moderator_earnings: {
+        Row: {
+          amount_cents: number
+          created_at: string | null
+          description: string | null
+          id: string
+          target_entity_id: string | null
+          target_user_id: string | null
+          task_type: Database["public"]["Enums"]["moderator_task_type"]
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          target_entity_id?: string | null
+          target_user_id?: string | null
+          task_type: Database["public"]["Enums"]["moderator_task_type"]
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          target_entity_id?: string | null
+          target_user_id?: string | null
+          task_type?: Database["public"]["Enums"]["moderator_task_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      moderator_wallets: {
+        Row: {
+          balance_cents: number
+          created_at: string | null
+          id: string
+          total_earned_cents: number
+          total_withdrawn_cents: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance_cents?: number
+          created_at?: string | null
+          id?: string
+          total_earned_cents?: number
+          total_withdrawn_cents?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance_cents?: number
+          created_at?: string | null
+          id?: string
+          total_earned_cents?: number
+          total_withdrawn_cents?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       private_conversations: {
         Row: {
           created_at: string
@@ -611,6 +701,36 @@ export type Database = {
           },
         ]
       }
+      task_rates: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          rate_cents: number
+          task_type: Database["public"]["Enums"]["moderator_task_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          rate_cents: number
+          task_type: Database["public"]["Enums"]["moderator_task_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          rate_cents?: number
+          task_type?: Database["public"]["Enums"]["moderator_task_type"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       typing_indicators: {
         Row: {
           chat_room_id: string | null
@@ -808,6 +928,42 @@ export type Database = {
         }
         Relationships: []
       }
+      withdrawal_requests: {
+        Row: {
+          amount_cents: number
+          id: string
+          payment_reference: string | null
+          processed_at: string | null
+          processed_by: string | null
+          rejection_reason: string | null
+          requested_at: string | null
+          status: Database["public"]["Enums"]["withdrawal_status"] | null
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          id?: string
+          payment_reference?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          rejection_reason?: string | null
+          requested_at?: string | null
+          status?: Database["public"]["Enums"]["withdrawal_status"] | null
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          id?: string
+          payment_reference?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          rejection_reason?: string | null
+          requested_at?: string | null
+          status?: Database["public"]["Enums"]["withdrawal_status"] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -816,6 +972,15 @@ export type Database = {
       calculate_distance: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
+      }
+      can_earn_for_action: {
+        Args: {
+          _cooldown_minutes?: number
+          _target_user_id: string
+          _task_type: Database["public"]["Enums"]["moderator_task_type"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       get_nearby_profiles: {
         Args: {
@@ -850,9 +1015,25 @@ export type Database = {
       }
       is_user_blocked: { Args: { _user_id: string }; Returns: boolean }
       is_user_suspended: { Args: { _user_id: string }; Returns: boolean }
+      record_moderator_earning: {
+        Args: {
+          _description?: string
+          _target_entity_id?: string
+          _target_user_id?: string
+          _task_type: Database["public"]["Enums"]["moderator_task_type"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      request_withdrawal: { Args: { _user_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      moderator_task_type:
+        | "identity_verification"
+        | "report_response"
+        | "user_suspension"
+        | "private_message_response"
       report_reason:
         | "harassment"
         | "inappropriate_content"
@@ -862,6 +1043,7 @@ export type Database = {
         | "other"
       report_status: "pending" | "reviewed" | "resolved" | "dismissed"
       verification_status: "pending" | "approved" | "rejected"
+      withdrawal_status: "pending" | "approved" | "rejected" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -990,6 +1172,12 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      moderator_task_type: [
+        "identity_verification",
+        "report_response",
+        "user_suspension",
+        "private_message_response",
+      ],
       report_reason: [
         "harassment",
         "inappropriate_content",
@@ -1000,6 +1188,7 @@ export const Constants = {
       ],
       report_status: ["pending", "reviewed", "resolved", "dismissed"],
       verification_status: ["pending", "approved", "rejected"],
+      withdrawal_status: ["pending", "approved", "rejected", "completed"],
     },
   },
 } as const

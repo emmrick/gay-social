@@ -12,7 +12,8 @@ import {
   Ban,
   ShieldOff,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Euro
 } from 'lucide-react';
 import {
   Dialog,
@@ -44,6 +45,8 @@ import {
   suspensionDurations,
 } from '@/hooks/useAdmin';
 import { reportReasonLabels, reportReasonDescriptions } from '@/hooks/useReports';
+import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModeratorEarnings';
+import { toast } from 'sonner';
 
 interface ReportDetailDialogProps {
   report: ReportWithProfiles;
@@ -74,6 +77,10 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
   const blockUser = useBlockUser();
   const unblockUser = useUnblockUser();
   const { data: isBlocked, isLoading: checkingBlock } = useIsUserBlocked(report.reported_user_id);
+  const recordEarning = useRecordEarning();
+  const { data: taskRates } = useTaskRates();
+  const reportRate = taskRates?.find(r => r.task_type === 'report_response')?.rate_cents || 10;
+  const suspensionRate = taskRates?.find(r => r.task_type === 'user_suspension')?.rate_cents || 15;
 
   const handleUpdateStatus = async (status: ReportStatus) => {
     await updateStatus.mutateAsync({
@@ -81,6 +88,19 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
       status,
       resolutionNotes: resolutionNotes.trim() || undefined,
     });
+    
+    // Record earning for report response
+    const earned = await recordEarning.mutateAsync({
+      taskType: 'report_response',
+      targetUserId: report.reported_user_id,
+      targetEntityId: report.id,
+      description: `Traitement signalement: ${status === 'resolved' ? 'Résolu' : status === 'dismissed' ? 'Rejeté' : 'En cours'}`,
+    });
+    
+    if (earned) {
+      toast.success(`Signalement traité (+${formatCents(reportRate)})`);
+    }
+    
     onOpenChange(false);
   };
 
@@ -90,6 +110,18 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
       reason: suspensionReason.trim() || `Signalement: ${report.reason}`,
       duration: selectedDuration,
     });
+    
+    // Record earning for suspension
+    const earned = await recordEarning.mutateAsync({
+      taskType: 'user_suspension',
+      targetUserId: report.reported_user_id,
+      description: `Suspension suite signalement (${suspensionDurations[selectedDuration].label})`,
+    });
+    
+    if (earned) {
+      toast.success(`Utilisateur suspendu (+${formatCents(suspensionRate)})`);
+    }
+    
     setSuspensionReason('');
   };
 
@@ -98,6 +130,18 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
       userId: report.reported_user_id,
       reason: suspensionReason.trim() || `Signalement: ${report.reason}`,
     });
+    
+    // Record earning for ban
+    const earned = await recordEarning.mutateAsync({
+      taskType: 'user_suspension',
+      targetUserId: report.reported_user_id,
+      description: 'Bannissement permanent suite signalement',
+    });
+    
+    if (earned) {
+      toast.success(`Utilisateur banni (+${formatCents(suspensionRate)})`);
+    }
+    
     setSuspensionReason('');
   };
 

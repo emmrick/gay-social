@@ -14,12 +14,14 @@ import {
   AlertTriangle, 
   Clock,
   User,
-  Trash2
+  Trash2,
+  Euro
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModeratorEarnings';
 
 interface VerificationWithProfile {
   id: string;
@@ -52,6 +54,10 @@ const IdentityVerificationPanel = () => {
     idFront: string | null;
     idBack: string | null;
   }>({ selfie: null, idFront: null, idBack: null });
+  
+  const recordEarning = useRecordEarning();
+  const { data: taskRates } = useTaskRates();
+  const verificationRate = taskRates?.find(r => r.task_type === 'identity_verification')?.rate_cents || 50;
 
   // Screenshot detection for admin
   const detectScreenshot = useCallback(() => {
@@ -134,7 +140,21 @@ const IdentityVerificationPanel = () => {
         verificationId: selectedVerification.id,
         userId: selectedVerification.user_id,
       });
-      toast.success('Utilisateur vérifié et documents supprimés');
+      
+      // Record earning for identity verification
+      const earned = await recordEarning.mutateAsync({
+        taskType: 'identity_verification',
+        targetUserId: selectedVerification.user_id,
+        targetEntityId: selectedVerification.id,
+        description: `Vérification de ${selectedVerification.profiles?.username}`,
+      });
+      
+      if (earned) {
+        toast.success(`Utilisateur vérifié (+${formatCents(verificationRate)})`);
+      } else {
+        toast.success('Utilisateur vérifié et documents supprimés');
+      }
+      
       setViewDialogOpen(false);
       setSelectedVerification(null);
     } catch (error) {

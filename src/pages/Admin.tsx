@@ -18,7 +18,8 @@ import {
   IdCard,
   Ticket,
   BarChart3,
-  MessageSquare
+  MessageSquare,
+  Wallet
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -44,6 +45,7 @@ import PromoCodePanel from '@/components/admin/PromoCodePanel';
 import UserManagementPanel from '@/components/admin/UserManagementPanel';
 import ContentModerationPanel from '@/components/admin/ContentModerationPanel';
 import AdminStatsPanel from '@/components/admin/AdminStatsPanel';
+import ModeratorWalletPanel from '@/components/admin/ModeratorWalletPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', color: 'bg-yellow-500', icon: Clock },
@@ -57,7 +59,7 @@ const Admin = () => {
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats, isLoading: statsLoading } = useReportStats();
   const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
-  const [activeSection, setActiveSection] = useState<'stats' | 'users' | 'reports' | 'moderation' | 'blocked' | 'verification' | 'promo'>('stats');
+  const [activeSection, setActiveSection] = useState<'wallet' | 'stats' | 'users' | 'reports' | 'moderation' | 'blocked' | 'verification' | 'promo'>('wallet');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
@@ -172,6 +174,10 @@ const Admin = () => {
         <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as typeof activeSection)}>
           <div className="overflow-x-auto pb-2">
             <TabsList className="inline-flex w-auto min-w-full md:min-w-0">
+              <TabsTrigger value="wallet" className="gap-2">
+                <Wallet className="w-4 h-4" />
+                <span className="hidden sm:inline">Portefeuille</span>
+              </TabsTrigger>
               <TabsTrigger value="stats" className="gap-2">
                 <BarChart3 className="w-4 h-4" />
                 <span className="hidden sm:inline">Statistiques</span>
@@ -202,6 +208,15 @@ const Admin = () => {
               </TabsTrigger>
             </TabsList>
           </div>
+
+          {/* Wallet Section */}
+          <TabsContent value="wallet">
+            <Card>
+              <CardContent className="pt-6">
+                <ModeratorWalletPanel />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Stats Section */}
           <TabsContent value="stats">

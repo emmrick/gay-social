@@ -434,3 +434,57 @@ export const useEarningsStats = () => {
     enabled: !!user?.id,
   });
 };
+
+// ========== TODAY'S EARNINGS ==========
+
+export interface TodayEarningsSummary {
+  totalEarned: number;
+  taskCount: number;
+  byType: Record<string, { count: number; total: number }>;
+  earnings: ModeratorEarning[];
+}
+
+export const useTodayEarnings = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['today-earnings', user?.id],
+    queryFn: async (): Promise<TodayEarningsSummary | null> => {
+      if (!user?.id) return null;
+
+      // Get today's start time in UTC
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStart = today.toISOString();
+
+      const { data: earnings, error } = await supabase
+        .from('moderator_earnings')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('created_at', todayStart)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const byType: Record<string, { count: number; total: number }> = {};
+      
+      (earnings || []).forEach((e) => {
+        const type = e.task_type as string;
+        if (!byType[type]) {
+          byType[type] = { count: 0, total: 0 };
+        }
+        byType[type].count++;
+        byType[type].total += e.amount_cents;
+      });
+
+      return {
+        totalEarned: earnings?.reduce((sum, e) => sum + e.amount_cents, 0) || 0,
+        taskCount: earnings?.length || 0,
+        byType,
+        earnings: (earnings || []) as ModeratorEarning[],
+      };
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+};

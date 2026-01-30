@@ -15,6 +15,8 @@ import {
   ChevronDown,
   ChevronUp,
   PartyPopper,
+  CalendarDays,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +36,7 @@ import {
   useRequestWithdrawal,
   useTaskRates,
   useEarningsStats,
+  useTodayEarnings,
   formatCents,
   getTaskLabel,
   ModeratorTaskType,
@@ -66,6 +69,7 @@ const ModeratorWalletPanel = () => {
   const { data: withdrawals } = useWithdrawalRequests();
   const { data: taskRates } = useTaskRates();
   const { data: stats } = useEarningsStats();
+  const { data: todayEarnings } = useTodayEarnings();
   const requestWithdrawal = useRequestWithdrawal();
 
   const balance = wallet?.balance_cents || 0;
@@ -180,7 +184,84 @@ const ModeratorWalletPanel = () => {
         </div>
       </div>
 
-      {/* Task Rates */}
+      {/* Today's Earnings Summary */}
+      <div className="glass-card rounded-xl p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4 text-green-500" />
+            <h3 className="font-semibold">Gains du jour</h3>
+          </div>
+          {todayEarnings && todayEarnings.taskCount > 0 && (
+            <Badge variant="secondary" className="bg-green-500/20 text-green-600">
+              <Sparkles className="w-3 h-3 mr-1" />
+              {todayEarnings.taskCount} tâche{todayEarnings.taskCount > 1 ? 's' : ''}
+            </Badge>
+          )}
+        </div>
+
+        {todayEarnings && todayEarnings.taskCount > 0 ? (
+          <div className="space-y-4">
+            {/* Total du jour */}
+            <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+              <span className="text-sm text-muted-foreground">Total aujourd'hui</span>
+              <span className="text-2xl font-bold text-green-500">
+                +{formatCents(todayEarnings.totalEarned)}
+              </span>
+            </div>
+
+            {/* Répartition par type */}
+            {Object.entries(todayEarnings.byType).length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Répartition</p>
+                {Object.entries(todayEarnings.byType).map(([type, data]) => (
+                  <div key={type} className="flex items-center justify-between text-sm py-1">
+                    <span className="flex items-center gap-2">
+                      <TaskIcon type={type as ModeratorTaskType} />
+                      <span className="text-muted-foreground">{getTaskLabel(type as ModeratorTaskType)}</span>
+                    </span>
+                    <span className="font-medium">
+                      {data.count}x = <span className="text-green-500">{formatCents(data.total)}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Liste des dernières tâches du jour */}
+            {todayEarnings.earnings.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Dernières tâches</p>
+                <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                  {todayEarnings.earnings.slice(0, 5).map((earning) => (
+                    <div 
+                      key={earning.id}
+                      className="flex items-center justify-between text-xs p-2 bg-secondary/30 rounded"
+                    >
+                      <span className="flex items-center gap-2 truncate flex-1">
+                        <TaskIcon type={earning.task_type} />
+                        <span className="truncate text-muted-foreground">
+                          {earning.description || getTaskLabel(earning.task_type)}
+                        </span>
+                      </span>
+                      <Badge variant="outline" className="text-green-500 border-green-500/30 ml-2 shrink-0">
+                        +{formatCents(earning.amount_cents)}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-6 text-muted-foreground">
+            <CalendarDays className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">Aucun gain enregistré aujourd'hui</p>
+            <p className="text-xs mt-1">Effectuez des tâches de modération pour commencer !</p>
+          </div>
+        )}
+      </div>
+
+
       <div className="glass-card rounded-xl p-4">
         <div className="flex items-center gap-2 mb-4">
           <Euro className="w-4 h-4 text-primary" />

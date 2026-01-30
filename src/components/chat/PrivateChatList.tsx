@@ -6,6 +6,7 @@ import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { usePremiumUsers } from '@/hooks/usePremiumUsers';
 import { useConversationStatus } from '@/hooks/useConversationStatus';
 import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +28,7 @@ import {
 import { MessageCircle, ChevronRight, MoreVertical, Archive, Trash2, ArchiveRestore } from 'lucide-react';
 import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
 import UserProfilePreview from './UserProfilePreview';
+import SwipeableConversationItem from './SwipeableConversationItem';
 import { cn } from '@/lib/utils';
 
 type ViewMode = 'active' | 'archived' | 'deleted';
@@ -41,6 +43,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
   const { conversations, archivedConversations, deletedConversations, isLoading } = usePrivateConversations();
   const { getUnreadCount } = useUnreadMessages();
   const { archiveConversation, unarchiveConversation, deleteConversation, restoreConversation } = useConversationStatus();
+  const isMobile = useIsMobile();
   const [profilePreviewUserId, setProfilePreviewUserId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [permanentDeleteDialogOpen, setPermanentDeleteDialogOpen] = useState(false);
@@ -162,6 +165,38 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
     );
   }
 
+  // Determine swipe actions based on view mode
+  const getSwipeActions = (convId: string) => {
+    if (viewMode === 'deleted') {
+      return {
+        leftAction: 'restore' as const,
+        rightAction: 'restore' as const,
+        onSwipeLeft: () => restoreConversation.mutate(convId),
+        onSwipeRight: () => restoreConversation.mutate(convId),
+      };
+    } else if (viewMode === 'archived') {
+      return {
+        leftAction: 'restore' as const,
+        rightAction: 'delete' as const,
+        onSwipeLeft: () => unarchiveConversation.mutate(convId),
+        onSwipeRight: () => {
+          setConversationToDelete(convId);
+          setDeleteDialogOpen(true);
+        },
+      };
+    } else {
+      return {
+        leftAction: 'archive' as const,
+        rightAction: 'delete' as const,
+        onSwipeLeft: () => archiveConversation.mutate(convId),
+        onSwipeRight: () => {
+          setConversationToDelete(convId);
+          setDeleteDialogOpen(true);
+        },
+      };
+    }
+  };
+
   return (
     <>
     <div className="px-4 pb-6 space-y-2">
@@ -169,13 +204,14 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
         const unreadCount = getUnreadCount(conv.otherUser.user_id);
         const hasUnread = unreadCount > 0;
         const isPremium = premiumMap[conv.otherUser.user_id] || false;
+        const swipeActions = getSwipeActions(conv.id);
         
-        return (
+        const conversationContent = (
           <button
-            key={conv.id}
             onClick={() => onSelectConversation(conv.otherUser.user_id)}
             className={cn(
-              "w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left group",
+              "w-full flex items-center gap-3 p-3 transition-all duration-200 text-left group",
+              !isMobile && "rounded-xl",
               "bg-secondary/30 border border-transparent",
               "hover:bg-secondary hover:border-border",
               "active:scale-[0.98]",
@@ -263,60 +299,78 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
               </div>
             </div>
 
-            {/* Actions dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8">
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                {viewMode === 'deleted' ? (
-                  <>
-                    <DropdownMenuItem onClick={(e) => handleRestore(e, conv.id)}>
-                      <ArchiveRestore className="w-4 h-4 mr-2" />
-                      Restaurer
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={(e) => handlePermanentDeleteClick(e, conv.id)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Supprimer définitivement
-                    </DropdownMenuItem>
-                  </>
-                ) : viewMode === 'archived' ? (
-                  <>
-                    <DropdownMenuItem onClick={(e) => handleUnarchive(e, conv.id)}>
-                      <ArchiveRestore className="w-4 h-4 mr-2" />
-                      Restaurer
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={(e) => handleDeleteClick(e, conv.id)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Supprimer
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <>
-                    <DropdownMenuItem onClick={(e) => handleArchive(e, conv.id)}>
-                      <Archive className="w-4 h-4 mr-2" />
-                      Archiver
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={(e) => handleDeleteClick(e, conv.id)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Supprimer
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Actions dropdown - only show on desktop */}
+            {!isMobile && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                  {viewMode === 'deleted' ? (
+                    <>
+                      <DropdownMenuItem onClick={(e) => handleRestore(e, conv.id)}>
+                        <ArchiveRestore className="w-4 h-4 mr-2" />
+                        Restaurer
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={(e) => handlePermanentDeleteClick(e, conv.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Supprimer définitivement
+                      </DropdownMenuItem>
+                    </>
+                  ) : viewMode === 'archived' ? (
+                    <>
+                      <DropdownMenuItem onClick={(e) => handleUnarchive(e, conv.id)}>
+                        <ArchiveRestore className="w-4 h-4 mr-2" />
+                        Restaurer
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={(e) => handleDeleteClick(e, conv.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem onClick={(e) => handleArchive(e, conv.id)}>
+                        <Archive className="w-4 h-4 mr-2" />
+                        Archiver
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={(e) => handleDeleteClick(e, conv.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </button>
+        );
+        
+        return isMobile ? (
+          <SwipeableConversationItem
+            key={conv.id}
+            onSwipeLeft={swipeActions.onSwipeLeft}
+            onSwipeRight={swipeActions.onSwipeRight}
+            leftAction={swipeActions.leftAction}
+            rightAction={swipeActions.rightAction}
+          >
+            {conversationContent}
+          </SwipeableConversationItem>
+        ) : (
+          <div key={conv.id} className="rounded-xl overflow-hidden">
+            {conversationContent}
+          </div>
         );
       })}
 

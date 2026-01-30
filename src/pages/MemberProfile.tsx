@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2 } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Crown, Gem } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
-
+import { useIsPremiumUser } from '@/hooks/usePremiumUsers';
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {
   'actif': '🔝 Actif (Top)',
@@ -87,9 +87,9 @@ const MemberProfile = () => {
   const { data: profile, isLoading } = useProfile(userId || '');
   const { photos } = useProfilePhotos(userId || '');
   const { isFavorite, toggleFavorite, isToggling } = useUserFavorites();
+  const { isPremium: isUserPremium } = useIsPremiumUser(userId);
 
   const extendedProfile = profile as any;
-
   // Handle back navigation with swipe gesture support
   const handleBack = useCallback(() => {
     navigate(-1);
@@ -201,17 +201,30 @@ const MemberProfile = () => {
 
       {/* Photo Carousel */}
       <div className="relative">
-        <ProfilePhotoCarousel 
-          photos={allPhotos} 
-          username={profile.username}
-          className="aspect-square"
-        />
+        {/* Premium golden frame around carousel */}
+        <div className={isUserPremium ? "p-1 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500" : ""}>
+          <ProfilePhotoCarousel 
+            photos={allPhotos} 
+            username={profile.username}
+            className="aspect-square"
+          />
+        </div>
         
         {/* Online status overlay */}
         {isTrulyOnline && (
           <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-xs font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             En ligne
+          </div>
+        )}
+
+        {/* Premium badge overlay */}
+        {isUserPremium && (
+          <div className="absolute top-4 right-4">
+            <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg">
+              <Crown className="w-3 h-3 mr-1" />
+              Premium
+            </Badge>
           </div>
         )}
 

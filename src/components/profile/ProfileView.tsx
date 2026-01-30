@@ -124,14 +124,16 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
         {/* Profile info overlay */}
         <div className="px-4 -mt-16">
           <div className="flex flex-col items-center">
-            {/* Avatar */}
+            {/* Avatar with Premium golden ring */}
             <div className="relative">
-              <Avatar className="w-28 h-28 border-4 border-background shadow-xl">
-                <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="text-3xl bg-gradient-to-br from-primary to-accent text-white">
-                  {profile.username.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <div className={isPremium ? "p-1 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 shadow-lg shadow-amber-500/30" : ""}>
+                <Avatar className={`w-28 h-28 border-4 ${isPremium ? 'border-background' : 'border-background'} shadow-xl`}>
+                  <AvatarImage src={profile.avatar_url || undefined} />
+                  <AvatarFallback className="text-3xl bg-gradient-to-br from-primary to-accent text-white">
+                    {profile.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
               <Badge 
                 className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5"
                 variant={profile.is_online ? "default" : "secondary"}
@@ -142,7 +144,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
 
             {/* Name & info */}
             <div className="mt-4 text-center">
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold font-display">
                   {profile.username}
                   {profile.age && <span className="text-muted-foreground font-normal">, {profile.age} ans</span>}
@@ -151,6 +153,12 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
                   <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg">
                     <Crown className="w-3 h-3 mr-1" />
                     Admin
+                  </Badge>
+                )}
+                {isPremium && !isAdminUser && (
+                  <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg">
+                    <Crown className="w-3 h-3 mr-1" />
+                    Premium
                   </Badge>
                 )}
               </div>

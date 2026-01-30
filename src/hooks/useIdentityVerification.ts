@@ -71,16 +71,9 @@ export const useIdentityVerification = () => {
 
     if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('identity-documents')
-      .getPublicUrl(fileName);
-
-    // For private buckets, we need to use signed URLs
-    const { data: signedUrlData } = await supabase.storage
-      .from('identity-documents')
-      .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
-
-    return signedUrlData?.signedUrl || fileName;
+    // For private buckets, store only the file path (not signed URL)
+    // Signed URLs will be generated when admin views the documents
+    return fileName;
   };
 
   const submitVerification = useMutation({

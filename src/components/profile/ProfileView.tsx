@@ -19,6 +19,7 @@ import { fr } from 'date-fns/locale';
 import ProfileEditDialog from './ProfileEditDialog';
 import SettingsDialog from './SettingsDialog';
 import AlbumManager from '@/components/albums/AlbumManager';
+import ProfileReactions from './ProfileReactions';
 
 // Labels
 const POSITION_LABELS: Record<string, string> = {
@@ -218,6 +219,16 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
                 </Badge>
               )}
             </div>
+
+            {/* Profile Reactions */}
+            {profile.user_id && (
+              <div className="mt-4 w-full max-w-sm">
+                <p className="text-xs text-muted-foreground mb-2 text-center font-medium uppercase tracking-wide">
+                  Réactions sur ton profil
+                </p>
+                <ProfileReactions profileUserId={profile.user_id} className="justify-center" />
+              </div>
+            )}
 
             {/* Bio */}
             {profile.bio && (

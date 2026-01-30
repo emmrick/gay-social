@@ -585,6 +585,30 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          profile_user_id: string
+          reactor_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          profile_user_id: string
+          reactor_user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          profile_user_id?: string
+          reactor_user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           accepts_nsfw: boolean | null

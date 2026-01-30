@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getDetailedLastSeenText, isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import ProfilePhotoCarousel from '@/components/chat/ProfilePhotoCarousel';
 import ReportUserDialog from '@/components/chat/ReportUserDialog';
+import ProfileReactions from '@/components/profile/ProfileReactions';
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -256,6 +257,11 @@ const MemberProfile = () => {
             {getLastSeenText()}
           </p>
         </div>
+
+        {/* Profile Reactions */}
+        {userId && (
+          <ProfileReactions profileUserId={userId} />
+        )}
 
         {/* Quick info pills */}
         <div className="flex flex-wrap gap-2">

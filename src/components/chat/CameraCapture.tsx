@@ -363,13 +363,13 @@ const CameraCapture = ({
 
         {/* Camera preview */}
         {!capturedMedia && !cameraError && !isInitializing && (
-          <>
+          <div className="absolute inset-0 flex flex-col">
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+              className={`flex-1 w-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
             />
 
             {/* Recording indicator */}
@@ -442,7 +442,7 @@ const CameraCapture = ({
                 </button>
               )}
             </div>
-          </>
+          </div>
         )}
 
         {/* Captured media preview */}

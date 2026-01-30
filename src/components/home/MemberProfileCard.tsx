@@ -1,9 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageCircle, Eye, MapPin, Calendar, User, Ruler, Weight, Heart, Flame } from 'lucide-react';
+import { X, MessageCircle, Eye, MapPin, Calendar, User, Ruler, Weight, Heart, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
+import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useState } from 'react';
 
 interface MemberProfileCardProps {
   userId: string;
@@ -62,9 +64,26 @@ const MemberProfileCard = ({
   onStartChat, 
   onViewProfile 
 }: MemberProfileCardProps) => {
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const { data: profile, isLoading } = useProfile(userId);
+  const { photos: userPhotos } = useProfilePhotos(userId);
 
   const extendedProfile = profile as any;
+  
+  // Build photos array
+  const allPhotos = userPhotos.length > 0 
+    ? userPhotos.map(p => p.photo_url)
+    : profile?.avatar_url 
+      ? [profile.avatar_url] 
+      : [];
+  
+  const goToPrevPhoto = () => {
+    setCurrentPhotoIndex(prev => prev > 0 ? prev - 1 : allPhotos.length - 1);
+  };
+  
+  const goToNextPhoto = () => {
+    setCurrentPhotoIndex(prev => prev < allPhotos.length - 1 ? prev + 1 : 0);
+  };
 
   const getLastSeenText = () => {
     if (profile?.is_online === true) return 'En ligne maintenant';
@@ -103,16 +122,50 @@ const MemberProfileCard = ({
             className="fixed bottom-0 left-0 right-0 z-50 max-w-lg mx-auto max-h-[85vh] overflow-y-auto"
           >
             <div className="bg-card rounded-t-3xl border-t border-x border-border shadow-2xl overflow-hidden">
-              {/* Header with photo */}
-              <div className="relative h-56 bg-gradient-to-br from-primary/30 to-accent/30">
+              {/* Header with photo carousel */}
+              <div className="relative h-64 bg-gradient-to-br from-primary/30 to-accent/30">
                 {isLoading ? (
                   <Skeleton className="w-full h-full" />
-                ) : profile?.avatar_url ? (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt={profile.username}
-                    className="w-full h-full object-cover"
-                  />
+                ) : allPhotos.length > 0 ? (
+                  <>
+                    <img 
+                      src={allPhotos[currentPhotoIndex]} 
+                      alt={profile?.username}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Photo navigation */}
+                    {allPhotos.length > 1 && (
+                      <>
+                        {/* Dots indicator */}
+                        <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 z-10">
+                          {allPhotos.map((_, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setCurrentPhotoIndex(idx)}
+                              className={`w-2 h-2 rounded-full transition-all ${
+                                idx === currentPhotoIndex 
+                                  ? 'bg-white w-4' 
+                                  : 'bg-white/50'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        {/* Left/Right arrows */}
+                        <button 
+                          onClick={goToPrevPhoto}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center text-white hover:bg-black/50 transition-colors"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button 
+                          onClick={goToNextPhoto}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center text-white hover:bg-black/50 transition-colors"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <span className="text-6xl font-bold text-white/50">
@@ -122,7 +175,7 @@ const MemberProfileCard = ({
                 )}
                 
                 {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent pointer-events-none" />
                 
                 {/* Close button */}
                 <Button

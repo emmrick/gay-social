@@ -232,7 +232,7 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
       </div>
 
       {isCameraActive ? (
-        <div className="relative aspect-[4/3] bg-black rounded-xl overflow-hidden">
+        <div className="relative aspect-[3/4] bg-black rounded-xl overflow-hidden flex items-center justify-center">
           <video 
             ref={videoRef} 
             autoPlay 

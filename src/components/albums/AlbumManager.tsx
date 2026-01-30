@@ -84,16 +84,30 @@ const AlbumManager = ({ isOpen, onClose }: AlbumManagerProps) => {
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, albumId: string) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-      toast.error('Seules les images et vidéos sont acceptées');
-      return;
+    // Convert to array and validate
+    const validFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+        toast.error(`"${file.name}" n'est pas une image ou vidéo`);
+        continue;
+      }
+      validFiles.push(file);
     }
 
-    await addMedia.mutateAsync({ albumId, file });
+    if (validFiles.length === 0) return;
+
+    // Upload all files
+    toast.info(`Upload de ${validFiles.length} fichier(s)...`);
+    
+    for (const file of validFiles) {
+      await addMedia.mutateAsync({ albumId, file });
+    }
+    
+    toast.success(`${validFiles.length} média(s) ajouté(s) !`);
     e.target.value = '';
   };
 
@@ -202,11 +216,12 @@ const AlbumManager = ({ isOpen, onClose }: AlbumManagerProps) => {
         </SheetContent>
       </Sheet>
 
-      {/* File input for adding media */}
+      {/* File input for adding media - MULTIPLE */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*,video/*"
+        multiple
         className="hidden"
         onChange={(e) => selectedAlbum && handleFileSelect(e, selectedAlbum)}
       />

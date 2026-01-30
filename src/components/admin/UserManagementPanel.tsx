@@ -193,37 +193,60 @@ const useRequestVerification = () => {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      // Create a pending verification record if none exists
+      // Check if a verification record exists
       const { data: existing } = await supabase
         .from('identity_verifications')
         .select('id, status')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (existing && existing.status === 'pending') {
-        throw new Error('Une demande de vérification est déjà en attente');
+      if (existing && existing.status === 'pending' && existing.id) {
+        // Already has pending verification with submitted documents
+        const { data: checkSubmitted } = await supabase
+          .from('identity_verifications')
+          .select('submitted_at')
+          .eq('id', existing.id)
+          .single();
+        
+        if (checkSubmitted?.submitted_at) {
+          throw new Error('Une demande de vérification est déjà en attente de traitement');
+        }
+        // Otherwise it's a pending request awaiting user submission - allow re-send notification
       }
 
       if (existing && existing.status === 'approved') {
         throw new Error('L\'utilisateur est déjà vérifié');
       }
 
-      // Create or reset verification request
-      const { error } = await supabase
-        .from('identity_verifications')
-        .upsert({
-          user_id: userId,
-          status: 'pending',
-          submitted_at: null,
-          selfie_url: null,
-          id_front_url: null,
-          id_back_url: null,
-          rejection_reason: null,
-          reviewed_at: null,
-          reviewed_by: null,
-        }, { onConflict: 'user_id' });
+      // If existing record (rejected or pending without submission), update it
+      // Otherwise create new record
+      if (existing) {
+        const { error } = await supabase
+          .from('identity_verifications')
+          .update({
+            status: 'pending',
+            submitted_at: null,
+            selfie_url: null,
+            id_front_url: null,
+            id_back_url: null,
+            rejection_reason: null,
+            reviewed_at: null,
+            reviewed_by: null,
+            documents_deleted: false,
+          })
+          .eq('id', existing.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('identity_verifications')
+          .insert({
+            user_id: userId,
+            status: 'pending',
+          });
+
+        if (error) throw error;
+      }
 
       // Create notification for the user
       const { error: notifError } = await supabase.from('notifications').insert({

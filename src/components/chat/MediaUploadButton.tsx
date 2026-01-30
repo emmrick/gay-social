@@ -17,7 +17,9 @@ import {
 } from '@/components/ui/dialog';
 import { useEphemeralMediaUpload } from '@/hooks/useEphemeralMediaUpload';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
-import { usePrivateMessages } from '@/hooks/usePrivateMessages';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import CameraCapture from './CameraCapture';
 import RegularMediaWarningDialog from './RegularMediaWarningDialog';
@@ -51,9 +53,10 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
   const regularImageInputRef = useRef<HTMLInputElement>(null);
   const regularVideoInputRef = useRef<HTMLInputElement>(null);
   
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { uploadEphemeralMedia, isUploading, progress, canSend, remainingCount } = useEphemeralMediaUpload();
   const { uploadMedia, isUploading: isUploadingRegular, progress: regularProgress } = useMediaUpload();
-  const { sendMessage } = usePrivateMessages(recipientId || null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
     const file = e.target.files?.[0];
@@ -119,7 +122,13 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
   };
 
   const handleSendRegular = async () => {
-    if (!regularPreviewFile || !recipientId) return;
+    if (!regularPreviewFile || !user) return;
+    
+    // Vérifier qu'on a soit un recipientId soit un chatRoomId
+    if (!recipientId && !chatRoomId) {
+      toast.error('Destination non définie');
+      return;
+    }
 
     try {
       const mediaUrl = await uploadMedia(regularPreviewFile);
@@ -128,10 +137,33 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
         return;
       }
 
-      await sendMessage.mutateAsync({
-        content: mediaUrl,
-        messageType: regularMediaType,
-      });
+      // Créer le message directement via Supabase
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: user.id,
+          recipient_id: isPrivate ? recipientId : null,
+          chat_room_id: isPrivate ? null : chatRoomId,
+          content: mediaUrl,
+          message_type: regularMediaType,
+          is_private: isPrivate,
+        });
+
+      if (error) throw error;
+
+      // Invalider les queries pour rafraîchir la conversation
+      if (isPrivate && recipientId) {
+        await queryClient.invalidateQueries({ 
+          queryKey: ['private-messages', user.id, recipientId] 
+        });
+        await queryClient.invalidateQueries({ 
+          queryKey: ['private-conversations', user.id] 
+        });
+      } else if (chatRoomId) {
+        await queryClient.invalidateQueries({ 
+          queryKey: ['messages', chatRoomId] 
+        });
+      }
 
       toast.success('Média envoyé !');
       handleCancelRegular();

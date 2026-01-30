@@ -67,6 +67,9 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     enabled: !!user && !!otherUserId,
     staleTime: 10000, // Cache for 10 seconds
     gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
+    // IMPORTANT: avoid long "stuck loading" states when the backend is slow/unavailable.
+    // Users have a manual "Réessayer" button in the UI.
+    retry: 0,
   });
 
   // Real-time subscription for new messages

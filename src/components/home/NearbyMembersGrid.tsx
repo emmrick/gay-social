@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Loader2, Navigation, RefreshCw, Crown, Lock } from 'lucide-react';
@@ -8,6 +8,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyProfiles } from '@/hooks/useNearbyProfiles';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePremiumUsers } from '@/hooks/usePremiumUsers';
+import { shouldShowOnlineIndicator, getLastSeenText } from '@/hooks/useOnlineStatus';
 import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
 import { cn } from '@/lib/utils';
 
@@ -127,29 +128,13 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
     return `${km.toFixed(1)}km`;
   };
 
-  const getLastSeenText = (profile: any) => {
-    const hideOnlineStatus = profile?.hide_online_status;
-    const hideLastSeen = profile?.hide_last_seen;
-    
-    if (hideOnlineStatus && hideLastSeen) return null;
-    if (!hideOnlineStatus && profile?.is_online === true) return null;
-    if (hideLastSeen) return null;
-    if (!profile?.last_seen) return 'Hors ligne';
-    
-    const diff = Date.now() - new Date(profile.last_seen).getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    
-    if (minutes < 5) return 'À l\'instant';
-    if (minutes < 60) return `${minutes}min`;
-    if (hours < 24) return `${hours}h`;
-    return `${days}j`;
+  // Use centralized online status helpers
+  const getProfileLastSeenText = (profile: any) => {
+    return getLastSeenText(profile);
   };
   
   const shouldShowOnlineStatus = (profile: any) => {
-    const hideOnlineStatus = profile?.hide_online_status;
-    return !hideOnlineStatus && profile?.is_online === true;
+    return shouldShowOnlineIndicator(profile);
   };
 
   // ---------- EARLY RETURNS (AFTER ALL HOOKS) ----------
@@ -410,7 +395,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
                         <span>{formatDistance(profile.distance_km)}</span>
                       </>
                     ) : (
-                      <span>{getLastSeenText(profile)}</span>
+                      <span>{getProfileLastSeenText(profile)}</span>
                     )}
                   </div>
                 </div>

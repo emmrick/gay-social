@@ -7,6 +7,7 @@ import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
+import { getDetailedLastSeenText, isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import ProfilePhotoCarousel from '@/components/chat/ProfilePhotoCarousel';
 import ReportUserDialog from '@/components/chat/ReportUserDialog';
 import { useState, useCallback } from 'react';
@@ -104,20 +105,8 @@ const MemberProfile = () => {
       ? [profile.avatar_url] 
       : [];
 
-  const getLastSeenText = () => {
-    if (profile?.is_online === true) return 'En ligne maintenant';
-    if (!profile?.last_seen) return 'Hors ligne';
-    
-    const diff = Date.now() - new Date(profile.last_seen).getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    
-    if (minutes < 5) return 'Vu à l\'instant';
-    if (minutes < 60) return `Vu il y a ${minutes} min`;
-    if (hours < 24) return `Vu il y a ${hours}h`;
-    return `Vu il y a ${days}j`;
-  };
+  const getLastSeenText = () => getDetailedLastSeenText(profile);
+  const isTrulyOnline = isUserTrulyOnline(profile);
 
   const handleStartChat = async () => {
     if (!user || !userId) return;
@@ -197,7 +186,7 @@ const MemberProfile = () => {
           </Button>
           <div className="flex-1">
             <h1 className="font-semibold">{profile.username}</h1>
-            <p className={`text-xs ${profile.is_online ? 'text-green-500' : 'text-muted-foreground'}`}>
+          <p className={`text-xs ${isTrulyOnline ? 'text-green-500' : 'text-muted-foreground'}`}>
               {getLastSeenText()}
             </p>
           </div>
@@ -219,7 +208,7 @@ const MemberProfile = () => {
         />
         
         {/* Online status overlay */}
-        {profile.is_online && (
+        {isTrulyOnline && (
           <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-xs font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             En ligne

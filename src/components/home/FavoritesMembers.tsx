@@ -5,6 +5,7 @@ import { Star, MapPin, MessageCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
+import { isUserTrulyOnline, getLastSeenText as getOnlineStatusText } from '@/hooks/useOnlineStatus';
 import { cn } from '@/lib/utils';
 
 interface FavoritesMembersProps {
@@ -20,9 +21,11 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
     return favorites
       .filter(f => f.profile)
       .sort((a, b) => {
-        // Online first
-        if (a.profile?.is_online && !b.profile?.is_online) return -1;
-        if (!a.profile?.is_online && b.profile?.is_online) return 1;
+        // Truly online first (using the 5-minute threshold)
+        const aOnline = isUserTrulyOnline(a.profile);
+        const bOnline = isUserTrulyOnline(b.profile);
+        if (aOnline && !bOnline) return -1;
+        if (!aOnline && bOnline) return 1;
         // Then by last_seen
         const aTime = a.profile?.last_seen ? new Date(a.profile.last_seen).getTime() : 0;
         const bTime = b.profile?.last_seen ? new Date(b.profile.last_seen).getTime() : 0;
@@ -47,18 +50,10 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
     return null; // Don't show section if no favorites
   }
 
-  const getLastSeenText = (lastSeen: string | null, isOnline: boolean | null) => {
-    if (isOnline === true) return 'En ligne';
-    if (!lastSeen) return 'Hors ligne';
-    
-    const diff = Date.now() - new Date(lastSeen).getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    
-    if (minutes < 5) return 'À l\'instant';
-    if (minutes < 60) return `${minutes}min`;
-    if (hours < 24) return `${hours}h`;
-    return 'Hors ligne';
+  const getLastSeenText = (profile: any) => {
+    if (isUserTrulyOnline(profile)) return 'En ligne';
+    const text = getOnlineStatusText(profile);
+    return text || 'Hors ligne';
   };
 
   return (
@@ -87,7 +82,7 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
                 <div className={cn(
                   "relative w-20 h-24 rounded-xl overflow-hidden",
                   "border-2 transition-all duration-200",
-                  profile.is_online 
+                  isUserTrulyOnline(profile) 
                     ? "border-green-500 shadow-lg shadow-green-500/20" 
                     : "border-border/30"
                 )}>
@@ -111,7 +106,7 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
 
                   {/* Online indicator */}
                   <div className="absolute top-1.5 right-1.5">
-                    {profile.is_online ? (
+                    {isUserTrulyOnline(profile) ? (
                       <span className="w-2.5 h-2.5 rounded-full bg-green-500 block shadow-lg shadow-green-500/50" />
                     ) : (
                       <span className="w-2.5 h-2.5 rounded-full bg-gray-400 block" />

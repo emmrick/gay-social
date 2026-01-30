@@ -4,6 +4,7 @@ import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { usePremiumUsers } from '@/hooks/usePremiumUsers';
+import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MessageCircle, ChevronRight } from 'lucide-react';
 import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
@@ -103,7 +104,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatLi
                 )}
               </div>
               {/* Online/Offline indicator */}
-              {conv.otherUser.is_online === true ? (
+              {shouldShowOnlineIndicator(conv.otherUser) ? (
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
               ) : (
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-gray-400 rounded-full border-2 border-background" />

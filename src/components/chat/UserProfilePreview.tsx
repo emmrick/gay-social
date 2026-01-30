@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageCircle, MapPin, Clock, Flag, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import ReportUserDialog from './ReportUserDialog';
 import ProfilePhotoCarousel from './ProfilePhotoCarousel';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
@@ -106,10 +107,10 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
               <div className="text-center pt-2">
                 <h3 className="text-xl font-semibold">{profile.username}</h3>
                 <Badge 
-                  variant={profile.is_online === true ? "default" : "secondary"}
+                  variant={isUserTrulyOnline(profile) ? "default" : "secondary"}
                   className="mt-2"
                 >
-                  {profile.is_online === true ? '🟢 En ligne' : '⚫ Hors ligne'}
+                  {isUserTrulyOnline(profile) ? '🟢 En ligne' : '⚫ Hors ligne'}
                 </Badge>
               </div>
 

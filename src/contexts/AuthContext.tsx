@@ -92,19 +92,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Update offline status when leaving
+  // Heartbeat: Update online status and last_seen periodically
   useEffect(() => {
-    const handleBeforeUnload = async () => {
-      if (user) {
+    if (!user) return;
+
+    // Update online status immediately
+    const updateOnlineStatus = async () => {
+      await supabase
+        .from('profiles')
+        .update({ is_online: true, last_seen: new Date().toISOString() })
+        .eq('user_id', user.id);
+    };
+
+    updateOnlineStatus();
+
+    // Heartbeat every 2 minutes to keep online status fresh
+    const heartbeatInterval = setInterval(updateOnlineStatus, 2 * 60 * 1000);
+
+    // Handle visibility change (tab becomes hidden/visible)
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        await updateOnlineStatus();
+      } else {
+        // When tab is hidden, mark as offline after a short delay
+        // This handles cases where user switches tabs briefly
         await supabase
           .from('profiles')
-          .update({ is_online: false, last_seen: new Date().toISOString() })
+          .update({ last_seen: new Date().toISOString() })
           .eq('user_id', user.id);
       }
     };
 
+    // Handle before unload (closing tab/browser)
+    const handleBeforeUnload = () => {
+      // Use sendBeacon for reliable offline status on page unload
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?user_id=eq.${user.id}`;
+      const body = JSON.stringify({ is_online: false, last_seen: new Date().toISOString() });
+      
+      navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      clearInterval(heartbeatInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, [user]);
 
   const signUp = async (email: string, password: string, username: string, region: string, age: number) => {

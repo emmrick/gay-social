@@ -174,11 +174,12 @@ export const usePrivateConversations = () => {
     return status.is_archived && !status.is_deleted;
   });
 
-  // Deleted conversations: marked as deleted
+  // Deleted conversations: marked as deleted but NOT permanently deleted
+  // Permanently deleted = is_deleted AND is_archived (both true)
   const deletedConversations = allConversations.filter(conv => {
     const status = statusMap.get(conv.id);
     if (!status) return false;
-    return status.is_deleted;
+    return status.is_deleted && !status.is_archived; // Only soft-deleted, not permanent
   });
 
   // Real-time subscription for new conversations AND new messages

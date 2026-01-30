@@ -138,7 +138,11 @@ export const useConversationStatus = () => {
 
       const { error } = await supabase
         .from('private_conversation_status')
-        .delete()
+        .update({
+          is_deleted: false,
+          is_archived: false,
+          updated_at: new Date().toISOString(),
+        })
         .eq('conversation_id', conversationId)
         .eq('user_id', user.id);
 
@@ -155,10 +159,40 @@ export const useConversationStatus = () => {
     },
   });
 
+  // Suppression définitive - marque comme permanently_deleted
+  const permanentlyDeleteConversation = useMutation({
+    mutationFn: async (conversationId: string) => {
+      if (!user) throw new Error('Not authenticated');
+
+      // Set a special flag to mark as permanently deleted
+      const { error } = await supabase
+        .from('private_conversation_status')
+        .update({
+          is_deleted: true,
+          is_archived: true, // Use both flags to mark as permanently deleted
+          updated_at: new Date().toISOString(),
+        })
+        .eq('conversation_id', conversationId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversation-status'] });
+      toast.success('Conversation supprimée définitivement');
+    },
+    onError: (error) => {
+      console.error('Permanent delete error:', error);
+      toast.error('Erreur lors de la suppression définitive');
+    },
+  });
+
   return {
     archiveConversation,
     unarchiveConversation,
     deleteConversation,
     restoreConversation,
+    permanentlyDeleteConversation,
   };
 };

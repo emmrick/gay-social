@@ -46,7 +46,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
   const navigate = useNavigate();
   const { conversations, archivedConversations, deletedConversations, isLoading } = usePrivateConversations();
   const { getUnreadCount } = useUnreadMessages();
-  const { archiveConversation, unarchiveConversation, deleteConversation, restoreConversation } = useConversationStatus();
+  const { archiveConversation, unarchiveConversation, deleteConversation, restoreConversation, permanentlyDeleteConversation } = useConversationStatus();
   const isMobile = useIsMobile();
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -124,9 +124,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
 
   const confirmPermanentDelete = () => {
     if (conversationToDelete) {
-      // For now, permanent delete just removes the status (restores then immediately re-deletes visibility)
-      // In a real app, you might want to actually delete messages
-      restoreConversation.mutate(conversationToDelete);
+      permanentlyDeleteConversation.mutate(conversationToDelete);
       setConversationToDelete(null);
       setPermanentDeleteDialogOpen(false);
     }

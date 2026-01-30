@@ -97,14 +97,16 @@ export const useSubscription = () => {
     return () => clearInterval(interval);
   }, [checkSubscription]);
 
-  const startCheckout = async () => {
+  const startCheckout = async (promoCode?: string) => {
     if (!user) {
       toast.error('Veuillez vous connecter pour souscrire');
       return;
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout');
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: promoCode ? { promoCode } : undefined,
+      });
       
       if (error) throw error;
       
@@ -114,6 +116,20 @@ export const useSubscription = () => {
     } catch (error) {
       console.error('Error creating checkout:', error);
       toast.error('Erreur lors de la création du paiement');
+    }
+  };
+
+  const validatePromoCode = async (code: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-promo-codes', {
+        body: { action: 'validate', code },
+      });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error validating promo code:', error);
+      return { valid: false, message: 'Erreur lors de la validation' };
     }
   };
 
@@ -147,5 +163,6 @@ export const useSubscription = () => {
     startCheckout,
     openCustomerPortal,
     getLimits,
+    validatePromoCode,
   };
 };

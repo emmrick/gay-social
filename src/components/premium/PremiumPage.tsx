@@ -13,15 +13,19 @@ import {
   Headphones,
   Zap,
   Loader2,
-  Sparkles
+  Sparkles,
+  Ticket,
+  CheckCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useSubscription } from '@/hooks/useSubscription';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 interface FeatureComparisonProps {
   feature: string;
@@ -46,13 +50,35 @@ const FeatureComparison = ({ feature, icon, freeValue, premiumValue }: FeatureCo
 );
 
 const PremiumPage = () => {
-  const { isPremium, subscribed, subscriptionEnd, startCheckout, openCustomerPortal, isLoading } = useSubscription();
+  const { isPremium, subscribed, subscriptionEnd, startCheckout, openCustomerPortal, isLoading, validatePromoCode } = useSubscription();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoValidation, setPromoValidation] = useState<{
+    valid: boolean;
+    description?: string;
+    message?: string;
+  } | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+
+  const handleValidatePromo = async () => {
+    if (!promoCode.trim()) return;
+    
+    setIsValidating(true);
+    const result = await validatePromoCode(promoCode.trim());
+    setPromoValidation(result);
+    setIsValidating(false);
+    
+    if (result.valid) {
+      toast.success(`Code promo valide: ${result.description}`);
+    } else {
+      toast.error(result.message || 'Code promo invalide');
+    }
+  };
 
   const handleSubscribe = async () => {
     setIsCheckingOut(true);
     try {
-      await startCheckout();
+      await startCheckout(promoValidation?.valid ? promoCode.trim() : undefined);
     } finally {
       setIsCheckingOut(false);
     }
@@ -201,6 +227,53 @@ const PremiumPage = () => {
               <div>
                 <span className="text-4xl font-bold">4,50 €</span>
                 <span className="text-muted-foreground">/mois</span>
+              </div>
+
+              {/* Promo Code Input */}
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Code promo"
+                      value={promoCode}
+                      onChange={(e) => {
+                        setPromoCode(e.target.value.toUpperCase());
+                        setPromoValidation(null);
+                      }}
+                      className="pl-9 uppercase"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleValidatePromo}
+                    disabled={!promoCode.trim() || isValidating}
+                  >
+                    {isValidating ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Valider'
+                    )}
+                  </Button>
+                </div>
+                
+                {promoValidation && (
+                  <div className={`flex items-center gap-2 text-sm ${
+                    promoValidation.valid ? 'text-green-500' : 'text-destructive'
+                  }`}>
+                    {promoValidation.valid ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        {promoValidation.description}
+                      </>
+                    ) : (
+                      <>
+                        <X className="w-4 h-4" />
+                        {promoValidation.message}
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
               
               <Button 

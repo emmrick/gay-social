@@ -47,6 +47,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const [showShareAlbum, setShowShareAlbum] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
+  const lastMessageCountRef = useRef(0);
+  const isNearBottomRef = useRef(true);
 
   // Mobile back navigation
   useMobileNavigation({ onBack, enabled: true });
@@ -93,26 +96,52 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   }, [isLoading, messages.length, scrollToBottom]);
 
-  // Auto-scroll on new messages (after initial load)
+  // Track new messages when scrolled up
   useEffect(() => {
     if (hasScrolledInitially.current && messages.length > 0) {
-      // For new messages, use smooth scroll
-      scrollToBottom(false);
+      const newCount = messages.length - lastMessageCountRef.current;
+      
+      if (newCount > 0 && lastMessageCountRef.current > 0) {
+        // Check if the new message is from the other user
+        const latestMessage = messages[messages.length - 1];
+        const isFromOtherUser = latestMessage?.sender_id === otherUserId;
+        
+        if (!isNearBottomRef.current && isFromOtherUser) {
+          // User is scrolled up, increment counter
+          setNewMessagesCount(prev => prev + newCount);
+        } else {
+          // User is at bottom, auto-scroll and reset counter
+          scrollToBottom(false);
+          setNewMessagesCount(0);
+        }
+      }
+      
+      lastMessageCountRef.current = messages.length;
+    } else if (messages.length > 0) {
+      lastMessageCountRef.current = messages.length;
     }
-  }, [messages, scrollToBottom]);
+  }, [messages, scrollToBottom, otherUserId]);
 
   // Reset scroll tracking when conversation changes
   useEffect(() => {
     hasScrolledInitially.current = false;
     isInitialLoad.current = true;
+    lastMessageCountRef.current = 0;
+    setNewMessagesCount(0);
   }, [otherUserId]);
 
-  // Handle scroll to show/hide scroll button
+  // Handle scroll to show/hide scroll button and track position
   const handleScroll = useCallback(() => {
     if (messagesContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      isNearBottomRef.current = isNearBottom;
       setShowScrollButton(!isNearBottom);
+      
+      // Reset counter when user scrolls to bottom
+      if (isNearBottom) {
+        setNewMessagesCount(0);
+      }
     }
   }, []);
 
@@ -382,15 +411,23 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
         )}
       </div>
 
-      {/* Scroll to bottom button */}
+      {/* Scroll to bottom button with new messages indicator */}
       {showScrollButton && (
         <Button
           variant="secondary"
           size="icon"
           className="absolute bottom-24 right-4 rounded-full shadow-lg z-10 animate-fade-in"
-          onClick={() => scrollToBottom(false)}
+          onClick={() => {
+            scrollToBottom(false);
+            setNewMessagesCount(0);
+          }}
         >
           <ChevronDown className="w-5 h-5" />
+          {newMessagesCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center animate-bounce">
+              {newMessagesCount > 99 ? '99+' : newMessagesCount}
+            </span>
+          )}
         </Button>
       )}
 

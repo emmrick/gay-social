@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageCircle, Eye, MapPin, Calendar, User, Ruler, Weight, Heart, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -70,6 +71,11 @@ const MemberProfileCard = ({
   const { data: profile, isLoading } = useProfile(userId);
   const { photos: userPhotos } = useProfilePhotos(userId);
 
+  // iOS/Safari quirk: a `position: fixed` element inside a transformed ancestor
+  // (e.g., page transitions / motion wrappers) can become offset.
+  // Rendering in a portal ensures correct viewport anchoring.
+  const portalTarget = typeof document !== 'undefined' ? document.body : null;
+
   const extendedProfile = profile as any;
   
   // Build photos array
@@ -102,7 +108,7 @@ const MemberProfileCard = ({
     return `Vu il y a ${days}j`;
   };
 
-  return (
+  const modal = (
     <AnimatePresence>
       {isOpen && (
         <>
@@ -112,7 +118,7 @@ const MemberProfileCard = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm"
           />
           
           {/* Card */}
@@ -121,9 +127,9 @@ const MemberProfileCard = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-w-lg mx-auto max-h-[85dvh] overflow-y-auto"
+            className="fixed inset-x-0 bottom-0 z-[100] w-full max-w-lg mx-auto h-[85dvh] overflow-y-auto sm:h-auto sm:max-h-[85dvh]"
           >
-            <div className="bg-card rounded-t-3xl border-t border-x border-border shadow-2xl overflow-hidden safe-area-pb">
+            <div className="bg-card rounded-t-3xl border-t border-x border-border shadow-2xl overflow-hidden safe-area-pb min-h-full">
               {/* Header with photo carousel */}
               <div className="relative h-64 bg-gradient-to-br from-primary/30 to-accent/30">
                 {isLoading ? (
@@ -338,6 +344,10 @@ const MemberProfileCard = ({
       )}
     </AnimatePresence>
   );
+
+  if (!portalTarget) return null;
+
+  return createPortal(modal, portalTarget);
 };
 
 export default MemberProfileCard;

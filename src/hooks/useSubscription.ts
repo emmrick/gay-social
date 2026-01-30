@@ -10,6 +10,7 @@ export interface SubscriptionStatus {
   productId: string | null;
   subscriptionEnd: string | null;
   isLoading: boolean;
+  isVerifying: boolean; // Background verification in progress
   isAdmin: boolean;
 }
 
@@ -64,6 +65,7 @@ export const useSubscription = () => {
       productId: null,
       subscriptionEnd: null,
       isLoading: true,
+      isVerifying: false,
       isAdmin: false,
     };
   });
@@ -88,6 +90,7 @@ export const useSubscription = () => {
         productId: null,
         subscriptionEnd: null,
         isLoading: false,
+        isVerifying: false,
         isAdmin: false,
       });
       return;
@@ -106,6 +109,8 @@ export const useSubscription = () => {
       setStatus({ ...cached.status, isLoading: false });
       return;
     }
+    // Set verifying state for background check
+    setStatus(prev => ({ ...prev, isVerifying: true }));
 
     try {
       // Check admin status first (fast, from DB)
@@ -121,6 +126,7 @@ export const useSubscription = () => {
           productId: null,
           subscriptionEnd: null,
           isAdmin: true,
+          isVerifying: false,
         };
         subscriptionCache.set(user.id, { status: adminStatus, timestamp: now });
         setStatus({ ...adminStatus, isLoading: false });
@@ -146,6 +152,7 @@ export const useSubscription = () => {
         productId: subscriptionData?.product_id || null,
         subscriptionEnd: subscriptionData?.subscription_end || null,
         isAdmin: false,
+        isVerifying: false,
       };
 
       subscriptionCache.set(user.id, { status: newStatus, timestamp: now });
@@ -156,7 +163,8 @@ export const useSubscription = () => {
       setStatus(prev => ({ 
         ...prev, 
         isPremium: profile?.is_premium || prev.isPremium,
-        isLoading: false 
+        isLoading: false,
+        isVerifying: false,
       }));
     }
   }, [user, profile?.is_premium]);

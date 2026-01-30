@@ -82,6 +82,62 @@ export const useTaskRates = () => {
   });
 };
 
+// All task rates (for admin, includes inactive)
+export const useAllTaskRates = () => {
+  return useQuery({
+    queryKey: ['all-task-rates'],
+    queryFn: async (): Promise<TaskRate[]> => {
+      const { data, error } = await supabase
+        .from('task_rates')
+        .select('*')
+        .order('task_type');
+
+      if (error) throw error;
+      return (data || []) as TaskRate[];
+    },
+  });
+};
+
+// Update task rate (admin only)
+export const useUpdateTaskRate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      rate_cents,
+      description,
+      is_active,
+    }: {
+      id: string;
+      rate_cents: number;
+      description: string | null;
+      is_active: boolean;
+    }) => {
+      const { error } = await supabase
+        .from('task_rates')
+        .update({
+          rate_cents,
+          description,
+          is_active,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task-rates'] });
+      queryClient.invalidateQueries({ queryKey: ['all-task-rates'] });
+      toast.success('Tarif mis à jour');
+    },
+    onError: (error) => {
+      console.error('Error updating task rate:', error);
+      toast.error('Erreur lors de la mise à jour du tarif');
+    },
+  });
+};
+
 // ========== WALLET ==========
 
 export const useModeratorWallet = () => {

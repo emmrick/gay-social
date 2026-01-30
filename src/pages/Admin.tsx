@@ -19,7 +19,8 @@ import {
   Ticket,
   BarChart3,
   MessageSquare,
-  Wallet
+  Wallet,
+  Euro
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -46,6 +47,7 @@ import UserManagementPanel from '@/components/admin/UserManagementPanel';
 import ContentModerationPanel from '@/components/admin/ContentModerationPanel';
 import AdminStatsPanel from '@/components/admin/AdminStatsPanel';
 import ModeratorWalletPanel from '@/components/admin/ModeratorWalletPanel';
+import TaskRatesPanel from '@/components/admin/TaskRatesPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', color: 'bg-yellow-500', icon: Clock },
@@ -59,7 +61,7 @@ const Admin = () => {
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats, isLoading: statsLoading } = useReportStats();
   const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
-  const [activeSection, setActiveSection] = useState<'wallet' | 'stats' | 'users' | 'reports' | 'moderation' | 'blocked' | 'verification' | 'promo'>('wallet');
+  const [activeSection, setActiveSection] = useState<'wallet' | 'rates' | 'stats' | 'users' | 'reports' | 'moderation' | 'blocked' | 'verification' | 'promo'>('wallet');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
@@ -178,6 +180,10 @@ const Admin = () => {
                 <Wallet className="w-4 h-4" />
                 <span className="hidden sm:inline">Portefeuille</span>
               </TabsTrigger>
+              <TabsTrigger value="rates" className="gap-2">
+                <Euro className="w-4 h-4" />
+                <span className="hidden sm:inline">Tarifs</span>
+              </TabsTrigger>
               <TabsTrigger value="stats" className="gap-2">
                 <BarChart3 className="w-4 h-4" />
                 <span className="hidden sm:inline">Statistiques</span>
@@ -214,6 +220,15 @@ const Admin = () => {
             <Card>
               <CardContent className="pt-6">
                 <ModeratorWalletPanel />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Task Rates Section */}
+          <TabsContent value="rates">
+            <Card>
+              <CardContent className="pt-6">
+                <TaskRatesPanel />
               </CardContent>
             </Card>
           </TabsContent>

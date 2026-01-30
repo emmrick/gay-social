@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Loader2, Navigation, RefreshCw, Crown, Lock } from 'lucide-react';
@@ -26,6 +26,14 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
   const hasLocation = latitude != null && longitude != null;
 
   // ---------- ALL HOOKS MUST BE ABOVE ANY EARLY RETURN ----------
+
+  // If the user already granted location permission, fetch location automatically on mount
+  // so we don't render the non-location fallback list.
+  useEffect(() => {
+    if (permissionState === 'granted' && !hasLocation && !locationLoading) {
+      void requestLocation();
+    }
+  }, [permissionState, hasLocation, locationLoading, requestLocation]);
 
   // Build the final profiles list with current user first
   const allProfiles = useMemo(() => {
@@ -144,6 +152,20 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
           )}
         </Button>
       </motion.div>
+    );
+  }
+
+  // If permission is already granted, wait for coordinates instead of showing the fallback list
+  if (!hasLocation && permissionState === 'granted' && !locationError) {
+    return (
+      <div className="grid grid-cols-3 gap-2">
+        {Array.from({ length: 9 }).map((_, i) => (
+          <div
+            key={i}
+            className="aspect-[3/4] rounded-xl bg-secondary/50 animate-pulse"
+          />
+        ))}
+      </div>
     );
   }
 

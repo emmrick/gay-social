@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Star, MapPin, MessageCircle } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Star, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
+import { usePremiumUsers } from '@/hooks/usePremiumUsers';
 import { isUserTrulyOnline, getLastSeenText as getOnlineStatusText } from '@/hooks/useOnlineStatus';
+import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
 import { cn } from '@/lib/utils';
 
 interface FavoritesMembersProps {
@@ -32,6 +33,10 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
         return bTime - aTime;
       });
   }, [favorites]);
+
+  // Get user IDs for premium check
+  const userIds = useMemo(() => sortedFavorites.map(f => f.profile!.user_id), [sortedFavorites]);
+  const { data: premiumMap = {} } = usePremiumUsers(userIds);
 
   if (isLoading) {
     return (
@@ -114,8 +119,11 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
                   </div>
 
                   {/* Star badge */}
-                  <div className="absolute top-1.5 left-1.5">
+                  <div className="absolute top-1.5 left-1.5 flex items-center gap-1">
                     <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                    {premiumMap[profile.user_id] && (
+                      <PremiumUserBadge size="sm" />
+                    )}
                   </div>
 
                   {/* Name */}

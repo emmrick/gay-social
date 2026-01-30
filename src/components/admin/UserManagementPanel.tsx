@@ -358,7 +358,27 @@ const UserManagementPanel = () => {
           .eq('user_id', selectedUser.user_id);
         
         if (error) throw error;
-        toast.success('Profil supprimé');
+        
+        // Log action
+        await logAction.mutateAsync({
+          targetUserId: selectedUser.user_id,
+          actionType: 'user_suspended',
+          details: `Suppression du profil de ${selectedUser.username}${suspensionReason ? `: ${suspensionReason}` : ''}`,
+          metadata: { deleted: true, reason: suspensionReason },
+        });
+        
+        // Record earning for deletion (uses suspension rate)
+        const earned = await recordEarning.mutateAsync({
+          taskType: 'user_suspension',
+          targetUserId: selectedUser.user_id,
+          description: `Suppression du profil de ${selectedUser.username}`,
+        });
+        
+        if (earned) {
+          toast.success(`Profil supprimé (+${formatCents(suspensionRate)})`);
+        } else {
+          toast.success('Profil supprimé');
+        }
         refetch();
       }
       setActionDialogOpen(false);

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, Circle, CheckCheck } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, CheckCheck } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -9,6 +9,7 @@ import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHasBlockedUser, useUnblockUserAction } from '@/hooks/useUserBlock';
+import { usePrivateTypingIndicator } from '@/hooks/usePrivateTypingIndicator';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -40,6 +41,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { markAsRead } = useUnreadMessages();
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
   const unblockUser = useUnblockUserAction();
+  const { isOtherTyping, startTyping, stopTyping } = usePrivateTypingIndicator(otherUserId);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
@@ -99,6 +101,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
   const handleSendMessage = async (content: string) => {
     if (content.trim()) {
+      stopTyping();
       await sendMessage.mutateAsync({ content, messageType: 'text' });
     }
   };
@@ -369,6 +372,21 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 </div>
               );
             })}
+            
+            {/* Typing indicator */}
+            {isOtherTyping && (
+              <div className="flex items-center gap-2 px-2 py-1 animate-fade-in">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {otherUserProfile?.username} écrit...
+                </span>
+              </div>
+            )}
+            
             <div ref={scrollRef} />
           </div>
         )}
@@ -381,6 +399,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           recipientId={otherUserId}
           isPrivate={true}
           onFocus={handleInputFocus}
+          onTyping={startTyping}
         />
       </div>
     </div>

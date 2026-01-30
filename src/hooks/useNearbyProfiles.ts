@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription, FREE_LIMITS, PREMIUM_LIMITS } from './useSubscription';
+import { useMemo } from 'react';
 
 interface NearbyProfile {
   id: string;
@@ -16,32 +17,40 @@ interface NearbyProfile {
   distance_km: number | null;
 }
 
+const PAGE_SIZE = 12; // Load 12 profiles at a time (4 rows of 3)
+
 export const useNearbyProfiles = (
   latitude: number | null,
   longitude: number | null,
-  maxDistance: number = 100,
-  limit: number = 50
+  maxDistance: number = 100
 ) => {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
 
-  // Apply limit based on subscription status
-  const effectiveLimit = isPremium 
-    ? limit 
-    : Math.min(limit, FREE_LIMITS.nearbyProfiles);
-
   // Calculate offline threshold based on subscription status
-  // Premium users can see members offline up to 24 hours, free users only 1 hour
   const getOfflineThreshold = () => {
     return isPremium 
       ? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 24 hours for Premium
       : new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 hour for free
   };
 
-  const query = useQuery({
-    queryKey: ['nearby-profiles', latitude, longitude, maxDistance, effectiveLimit, isPremium],
-    queryFn: async (): Promise<NearbyProfile[]> => {
+  const maxProfilesAllowed = isPremium 
+    ? PREMIUM_LIMITS.nearbyProfiles 
+    : FREE_LIMITS.nearbyProfiles;
+
+  const query = useInfiniteQuery({
+    queryKey: ['nearby-profiles', latitude, longitude, maxDistance, isPremium],
+    queryFn: async ({ pageParam = 0 }): Promise<{ profiles: NearbyProfile[]; nextPage: number | null }> => {
       const offlineThreshold = getOfflineThreshold();
+      const offset = pageParam * PAGE_SIZE;
+      
+      // Apply limit based on subscription for total profiles
+      const remainingAllowed = Math.max(0, maxProfilesAllowed - offset);
+      const effectiveLimit = Math.min(PAGE_SIZE, remainingAllowed);
+      
+      if (effectiveLimit <= 0) {
+        return { profiles: [], nextPage: null };
+      }
 
       // Use explicit null/undefined checks (0 is a valid coordinate).
       if (latitude == null || longitude == null) {
@@ -53,23 +62,29 @@ export const useNearbyProfiles = (
           .or(`is_online.eq.true,last_seen.gte.${offlineThreshold}`)
           .order('is_online', { ascending: false })
           .order('last_seen', { ascending: false })
-          .limit(effectiveLimit);
+          .range(offset, offset + effectiveLimit - 1);
 
         if (error) throw error;
         
-        return (data || []).map(profile => ({
+        const profiles = (data || []).map(profile => ({
           ...profile,
           distance_km: null,
         }));
+
+        const hasMore = profiles.length === effectiveLimit && (offset + profiles.length) < maxProfilesAllowed;
+        return { 
+          profiles, 
+          nextPage: hasMore ? pageParam + 1 : null 
+        };
       }
 
-      // Use the nearby profiles function
+      // Use the nearby profiles function with pagination
       const { data, error } = await supabase
         .rpc('get_nearby_profiles', {
           user_lat: latitude,
           user_lon: longitude,
           max_distance_km: maxDistance,
-          limit_count: effectiveLimit,
+          limit_count: effectiveLimit + offset, // Get all up to this point
         });
 
       if (error) throw error;
@@ -81,26 +96,42 @@ export const useNearbyProfiles = (
         return new Date(profile.last_seen) >= new Date(offlineThreshold);
       });
       
-      return filteredData;
+      // Apply pagination manually since RPC doesn't support offset
+      const paginatedProfiles = filteredData.slice(offset, offset + effectiveLimit);
+      
+      const hasMore = paginatedProfiles.length === effectiveLimit && (offset + paginatedProfiles.length) < maxProfilesAllowed;
+      return { 
+        profiles: paginatedProfiles, 
+        nextPage: hasMore ? pageParam + 1 : null 
+      };
     },
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 0,
     enabled: !!user,
-    // Force refetch on mount/focus to ensure fresh data
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
-    refetchInterval: 60000, // Refresh every minute for fresher data
-    staleTime: 0, // Always consider data stale to re-filter with current time
-    gcTime: 60000, // Keep in cache for 1 minute only
+    staleTime: 30000, // 30 seconds - less aggressive refetching
+    gcTime: 60000,
   });
 
-  const maxProfilesAllowed = isPremium 
-    ? PREMIUM_LIMITS.nearbyProfiles 
-    : FREE_LIMITS.nearbyProfiles;
+  // Flatten all pages into single array
+  const allProfiles = useMemo(() => {
+    return query.data?.pages.flatMap(page => page.profiles) ?? [];
+  }, [query.data]);
+
+  const isLimited = !isPremium && allProfiles.length >= FREE_LIMITS.nearbyProfiles;
 
   return {
-    ...query,
+    data: allProfiles,
+    isLoading: query.isLoading,
+    isFetchingNextPage: query.isFetchingNextPage,
+    hasNextPage: query.hasNextPage,
+    fetchNextPage: query.fetchNextPage,
+    error: query.error,
+    refetch: query.refetch,
     maxProfilesAllowed,
     isPremium,
-    isLimited: !isPremium && (query.data?.length || 0) >= FREE_LIMITS.nearbyProfiles,
+    isLimited,
   };
 };
 

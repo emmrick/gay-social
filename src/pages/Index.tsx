@@ -80,7 +80,7 @@ const Index = () => {
   const { verification, isLoading: verificationLoading } = useIdentityVerification();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
   const { total: memberCount } = useRegionMemberCount(selectedRegion || '');
-  const { getOrCreateConversation } = usePrivateConversations();
+  const { getOrCreateConversation, conversations, archivedConversations, deletedConversations } = usePrivateConversations();
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
   const { joinedGroups, joinGroup, remainingSlots, maxGroups } = useJoinedGroups();
   const navigate = useNavigate();
@@ -380,14 +380,31 @@ const Index = () => {
                 onValueChange={(v) => setConversationViewMode(v as 'active' | 'archived' | 'deleted')}
               >
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="active">Messages</TabsTrigger>
-                  <TabsTrigger value="archived" className="flex items-center gap-1">
+                  <TabsTrigger value="active" className="flex items-center gap-1.5">
+                    Messages
+                    {conversations.length > 0 && (
+                      <span className="min-w-5 h-5 px-1.5 rounded-full bg-primary/20 text-primary text-[11px] font-medium flex items-center justify-center">
+                        {conversations.length}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="archived" className="flex items-center gap-1.5">
                     <Archive className="w-3 h-3" />
                     Archives
+                    {archivedConversations.length > 0 && (
+                      <span className="min-w-5 h-5 px-1.5 rounded-full bg-muted text-muted-foreground text-[11px] font-medium flex items-center justify-center">
+                        {archivedConversations.length}
+                      </span>
+                    )}
                   </TabsTrigger>
-                  <TabsTrigger value="deleted" className="flex items-center gap-1">
+                  <TabsTrigger value="deleted" className="flex items-center gap-1.5">
                     <Trash2 className="w-3 h-3" />
                     Corbeille
+                    {deletedConversations.length > 0 && (
+                      <span className="min-w-5 h-5 px-1.5 rounded-full bg-destructive/20 text-destructive text-[11px] font-medium flex items-center justify-center">
+                        {deletedConversations.length}
+                      </span>
+                    )}
                   </TabsTrigger>
                 </TabsList>
               </Tabs>

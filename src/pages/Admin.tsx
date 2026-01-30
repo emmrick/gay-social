@@ -15,7 +15,8 @@ import {
   Ban,
   Users,
   ShieldOff,
-  IdCard
+  IdCard,
+  Ticket
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -37,6 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPanel';
+import PromoCodePanel from '@/components/admin/PromoCodePanel';
 
 const statusConfig: Record<ReportStatus, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', color: 'bg-yellow-500', icon: Clock },
@@ -50,7 +52,7 @@ const Admin = () => {
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats, isLoading: statsLoading } = useReportStats();
   const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
-  const [activeSection, setActiveSection] = useState<'reports' | 'blocked' | 'verification'>('reports');
+  const [activeSection, setActiveSection] = useState<'reports' | 'blocked' | 'verification' | 'promo'>('reports');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
@@ -162,8 +164,8 @@ const Admin = () => {
         </div>
 
         {/* Section Tabs */}
-        <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as 'reports' | 'blocked' | 'verification')}>
-          <TabsList className="grid grid-cols-3 w-fit">
+        <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as 'reports' | 'blocked' | 'verification' | 'promo')}>
+          <TabsList className="grid grid-cols-4 w-fit">
             <TabsTrigger value="reports" className="gap-2">
               <Filter className="w-4 h-4" />
               Signalements
@@ -171,6 +173,10 @@ const Admin = () => {
             <TabsTrigger value="verification" className="gap-2">
               <IdCard className="w-4 h-4" />
               Vérifications
+            </TabsTrigger>
+            <TabsTrigger value="promo" className="gap-2">
+              <Ticket className="w-4 h-4" />
+              Codes promo
             </TabsTrigger>
             <TabsTrigger value="blocked" className="gap-2">
               <Ban className="w-4 h-4" />
@@ -233,6 +239,15 @@ const Admin = () => {
             <Card>
               <CardContent className="pt-6">
                 <IdentityVerificationPanel />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Promo Codes Section */}
+          <TabsContent value="promo">
+            <Card>
+              <CardContent className="pt-6">
+                <PromoCodePanel />
               </CardContent>
             </Card>
           </TabsContent>

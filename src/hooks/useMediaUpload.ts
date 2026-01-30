@@ -2,11 +2,21 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+/**
+ * Hook for uploading media to the private 'media' bucket.
+ * Returns the file path (not URL) which should be stored in the database.
+ * Use useSignedMediaUrl hook to get a signed URL for displaying the media.
+ */
 export const useMediaUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const { user } = useAuth();
 
+  /**
+   * Upload a file to the media bucket.
+   * @returns The file path (e.g., "userId/filename.jpg") to store in the database,
+   *          or null if upload fails.
+   */
   const uploadMedia = async (file: File): Promise<string | null> => {
     if (!user) return null;
 
@@ -27,13 +37,10 @@ export const useMediaUpload = () => {
 
       if (error) throw error;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('media')
-        .getPublicUrl(filePath);
-
       setProgress(100);
-      return urlData.publicUrl;
+      // Return the file path, NOT the public URL
+      // The consuming component should use useSignedMediaUrl to get a signed URL
+      return filePath;
     } catch (error) {
       console.error('Upload error:', error);
       return null;

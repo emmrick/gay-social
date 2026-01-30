@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Image, Play, Download, ExternalLink } from 'lucide-react';
+import { Image, Play, Download, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
+import { useSignedMediaUrl } from '@/hooks/useSignedMediaUrl';
 
 interface RegularMediaMessageProps {
-  mediaUrl: string;
+  mediaUrl: string; // This is now the file path stored in the database
   mediaType: 'image' | 'video';
   isOwn: boolean;
 }
@@ -15,10 +16,15 @@ interface RegularMediaMessageProps {
 const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessageProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
+  
+  // Get signed URL for the media (handles both legacy URLs and new file paths)
+  const { signedUrl, isLoading, error } = useSignedMediaUrl(mediaUrl);
 
   const handleDownload = async () => {
+    if (!signedUrl) return;
+    
     try {
-      const response = await fetch(mediaUrl);
+      const response = await fetch(signedUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -28,14 +34,27 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Download error:', error);
+    } catch (err) {
+      console.error('Download error:', err);
     }
   };
 
-  if (imageError) {
+  // Loading state
+  if (isLoading) {
     return (
-      <div className={`rounded-2xl overflow-hidden ${isOwn ? 'bg-primary/20' : 'bg-secondary'} p-4`}>
+      <div className={`rounded-2xl overflow-hidden ${isOwn ? 'bg-primary/20' : 'bg-secondary'} p-4 max-w-[240px] ${isOwn ? 'ml-auto' : 'mr-auto'}`}>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Chargement...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (imageError || error || !signedUrl) {
+    return (
+      <div className={`rounded-2xl overflow-hidden ${isOwn ? 'bg-primary/20' : 'bg-secondary'} p-4 max-w-[240px] ${isOwn ? 'ml-auto' : 'mr-auto'}`}>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Image className="w-5 h-5" />
           <span className="text-sm">Média non disponible</span>
@@ -54,7 +73,7 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
       >
         {mediaType === 'image' ? (
           <img
-            src={mediaUrl}
+            src={signedUrl}
             alt="Photo partagée"
             className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
             onError={() => setImageError(true)}
@@ -62,7 +81,7 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
         ) : (
           <div className="relative">
             <video
-              src={mediaUrl}
+              src={signedUrl}
               className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
               preload="metadata"
             />
@@ -86,13 +105,13 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
           <div className="relative w-full h-full flex items-center justify-center min-h-[50vh]">
             {mediaType === 'image' ? (
               <img
-                src={mediaUrl}
+                src={signedUrl}
                 alt="Photo partagée"
                 className="max-w-full max-h-[85vh] object-contain"
               />
             ) : (
               <video
-                src={mediaUrl}
+                src={signedUrl}
                 className="max-w-full max-h-[85vh] object-contain"
                 controls
                 autoPlay

@@ -291,6 +291,8 @@ export type Database = {
           chat_room_id: string | null
           content: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           is_private: boolean | null
           message_type: string
@@ -302,6 +304,8 @@ export type Database = {
           chat_room_id?: string | null
           content?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           is_private?: boolean | null
           message_type?: string
@@ -313,6 +317,8 @@ export type Database = {
           chat_room_id?: string | null
           content?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           is_private?: boolean | null
           message_type?: string

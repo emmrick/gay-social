@@ -54,7 +54,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     enabled: !!user && !!otherUserId,
   });
 
-  // Real-time subscription for new messages
+  // Real-time subscription for new messages AND updates (for read status)
   useEffect(() => {
     if (!user || !otherUserId) return;
 
@@ -96,6 +96,37 @@ export const usePrivateMessages = (otherUserId: string | null) => {
 
             // Also invalidate conversations to update last message
             queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const updatedMsg = payload.new as Message;
+          
+          // Only handle messages for this conversation
+          if (
+            updatedMsg.is_private &&
+            ((updatedMsg.sender_id === user.id && updatedMsg.recipient_id === otherUserId) ||
+              (updatedMsg.sender_id === otherUserId && updatedMsg.recipient_id === user.id))
+          ) {
+            // Update the message in cache to reflect read_at change
+            queryClient.setQueryData<PrivateMessageWithProfile[]>(
+              ['private-messages', user.id, otherUserId],
+              (old) => {
+                if (!old) return old;
+                return old.map(msg => 
+                  msg.id === updatedMsg.id 
+                    ? { ...msg, read_at: updatedMsg.read_at }
+                    : msg
+                );
+              }
+            );
           }
         }
       )

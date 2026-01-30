@@ -296,6 +296,7 @@ export type Database = {
           id: string
           is_private: boolean | null
           message_type: string
+          read_at: string | null
           recipient_id: string | null
           reply_to_id: string | null
           sender_id: string
@@ -309,6 +310,7 @@ export type Database = {
           id?: string
           is_private?: boolean | null
           message_type?: string
+          read_at?: string | null
           recipient_id?: string | null
           reply_to_id?: string | null
           sender_id: string
@@ -322,6 +324,7 @@ export type Database = {
           id?: string
           is_private?: boolean | null
           message_type?: string
+          read_at?: string | null
           recipient_id?: string | null
           reply_to_id?: string | null
           sender_id?: string
@@ -1167,6 +1170,10 @@ export type Database = {
       }
       is_user_blocked: { Args: { _user_id: string }; Returns: boolean }
       is_user_suspended: { Args: { _user_id: string }; Returns: boolean }
+      mark_messages_as_read: {
+        Args: { _sender_id: string; _user_id: string }
+        Returns: number
+      }
       record_moderator_earning: {
         Args: {
           _description?: string

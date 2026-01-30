@@ -116,6 +116,29 @@ export const useUnreadMessages = () => {
     },
   });
 
+  // Mark conversation as unread (set last_read_at to a past date)
+  const markAsUnread = useMutation({
+    mutationFn: async (partnerId: string) => {
+      if (!user) throw new Error('Not authenticated');
+
+      // Set last_read_at to epoch (very old date) to mark all messages as unread
+      const { error } = await supabase
+        .from('message_read_status')
+        .upsert({
+          user_id: user.id,
+          conversation_partner_id: partnerId,
+          last_read_at: '1970-01-01T00:00:00.000Z',
+        }, {
+          onConflict: 'user_id,conversation_partner_id',
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unread-messages', user?.id] });
+    },
+  });
+
   // Get unread count for a specific partner
   const getUnreadCount = (partnerId: string): number => {
     const counts = query.data || [];
@@ -135,5 +158,6 @@ export const useUnreadMessages = () => {
     getUnreadCount,
     getTotalUnreadCount,
     markAsRead,
+    markAsUnread,
   };
 };

@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MessageCircle, ChevronRight, MoreVertical, Archive, Trash2, ArchiveRestore } from 'lucide-react';
+import { MessageCircle, ChevronRight, MoreVertical, Archive, Trash2, ArchiveRestore, Mail, MailOpen } from 'lucide-react';
 import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
 import UserProfilePreview from './UserProfilePreview';
 import { cn } from '@/lib/utils';
@@ -37,7 +37,7 @@ interface PrivateChatListProps {
 
 const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = false }: PrivateChatListProps) => {
   const { conversations, archivedConversations, isLoading } = usePrivateConversations();
-  const { getUnreadCount } = useUnreadMessages();
+  const { getUnreadCount, markAsRead, markAsUnread } = useUnreadMessages();
   const { archiveConversation, unarchiveConversation, deleteConversation } = useConversationStatus();
   const [profilePreviewUserId, setProfilePreviewUserId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -72,6 +72,16 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
     e.stopPropagation();
     setConversationToDelete(conversationId);
     setDeleteDialogOpen(true);
+  };
+
+  const handleMarkAsRead = (e: React.MouseEvent, partnerId: string) => {
+    e.stopPropagation();
+    markAsRead.mutate(partnerId);
+  };
+
+  const handleMarkAsUnread = (e: React.MouseEvent, partnerId: string) => {
+    e.stopPropagation();
+    markAsUnread.mutate(partnerId);
   };
 
   const confirmDelete = () => {
@@ -230,6 +240,20 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                {/* Read/Unread options */}
+                {hasUnread ? (
+                  <DropdownMenuItem onClick={(e) => handleMarkAsRead(e, conv.otherUser.user_id)}>
+                    <MailOpen className="w-4 h-4 mr-2" />
+                    Marquer comme lu
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={(e) => handleMarkAsUnread(e, conv.otherUser.user_id)}>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Marquer comme non lu
+                  </DropdownMenuItem>
+                )}
+                
+                {/* Archive/Restore options */}
                 {showArchived ? (
                   <DropdownMenuItem onClick={(e) => handleUnarchive(e, conv.id)}>
                     <ArchiveRestore className="w-4 h-4 mr-2" />
@@ -241,6 +265,8 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                     Archiver
                   </DropdownMenuItem>
                 )}
+                
+                {/* Delete option */}
                 <DropdownMenuItem 
                   onClick={(e) => handleDeleteClick(e, conv.id)}
                   className="text-destructive focus:text-destructive"

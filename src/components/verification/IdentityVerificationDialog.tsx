@@ -23,6 +23,11 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
   const [idBackFile, setIdBackFile] = useState<File | null>(null);
   const [idBackPreview, setIdBackPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{
+    selfie: 'pending' | 'uploading' | 'done' | 'error';
+    idFront: 'pending' | 'uploading' | 'done' | 'error';
+    idBack: 'pending' | 'uploading' | 'done' | 'error';
+  }>({ selfie: 'pending', idFront: 'pending', idBack: 'pending' });
   const [isCameraActive, setIsCameraActive] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -143,12 +148,23 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
     if (!selfieFile || !idFrontFile || !idBackFile) return;
 
     setIsUploading(true);
+    setUploadProgress({ selfie: 'pending', idFront: 'pending', idBack: 'pending' });
+    
     try {
-      const [selfieUrl, idFrontUrl, idBackUrl] = await Promise.all([
-        uploadDocument(selfieFile, 'selfie'),
-        uploadDocument(idFrontFile, 'id_front'),
-        uploadDocument(idBackFile, 'id_back'),
-      ]);
+      // Upload selfie
+      setUploadProgress(prev => ({ ...prev, selfie: 'uploading' }));
+      const selfieUrl = await uploadDocument(selfieFile, 'selfie');
+      setUploadProgress(prev => ({ ...prev, selfie: 'done' }));
+
+      // Upload ID front
+      setUploadProgress(prev => ({ ...prev, idFront: 'uploading' }));
+      const idFrontUrl = await uploadDocument(idFrontFile, 'id_front');
+      setUploadProgress(prev => ({ ...prev, idFront: 'done' }));
+
+      // Upload ID back
+      setUploadProgress(prev => ({ ...prev, idBack: 'uploading' }));
+      const idBackUrl = await uploadDocument(idBackFile, 'id_back');
+      setUploadProgress(prev => ({ ...prev, idBack: 'done' }));
 
       await submitVerification.mutateAsync({
         selfieUrl,
@@ -156,15 +172,17 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
         idBackUrl,
       });
 
-      // On Android Chrome, the app may switch from the "blocked" screen to the main app right after this.
-      // If the dialog is still open during that transition, Radix overlay can remain stuck.
-      // So we close immediately after a successful submit.
       toast.success('Documents envoyés avec succès !');
       onOpenChange(false);
-      // Force a refresh of the verification state for the guard/UI.
       refetch();
     } catch (error: any) {
       console.error('Verification submission error:', error);
+      // Mark current uploading item as error
+      setUploadProgress(prev => ({
+        selfie: prev.selfie === 'uploading' ? 'error' : prev.selfie,
+        idFront: prev.idFront === 'uploading' ? 'error' : prev.idFront,
+        idBack: prev.idBack === 'uploading' ? 'error' : prev.idBack,
+      }));
       const errorMessage = error?.message || error?.error?.message || 'Erreur lors de l\'envoi des documents';
       toast.error(errorMessage);
     } finally {
@@ -315,6 +333,19 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
     </div>
   );
 
+  const renderUploadStatus = (status: 'pending' | 'uploading' | 'done' | 'error') => {
+    switch (status) {
+      case 'uploading':
+        return <Loader2 className="w-4 h-4 animate-spin text-primary" />;
+      case 'done':
+        return <Check className="w-4 h-4 text-green-500" />;
+      case 'error':
+        return <XCircle className="w-4 h-4 text-destructive" />;
+      default:
+        return <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30" />;
+    }
+  };
+
   const renderReview = () => (
     <div className="space-y-4">
       <div className="text-center">
@@ -325,23 +356,55 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
       <div className="grid grid-cols-3 gap-2">
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground text-center">Selfie</p>
-          <div className="aspect-square bg-secondary rounded-lg overflow-hidden">
+          <div className="aspect-square bg-secondary rounded-lg overflow-hidden relative">
             {selfiePreview && <img src={selfiePreview} alt="Selfie" className="w-full h-full object-cover" />}
+            {isUploading && (
+              <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                {renderUploadStatus(uploadProgress.selfie)}
+              </div>
+            )}
           </div>
         </div>
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground text-center">Recto ID</p>
-          <div className="aspect-square bg-secondary rounded-lg overflow-hidden">
+          <div className="aspect-square bg-secondary rounded-lg overflow-hidden relative">
             {idFrontPreview && <img src={idFrontPreview} alt="ID Front" className="w-full h-full object-cover" />}
+            {isUploading && (
+              <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                {renderUploadStatus(uploadProgress.idFront)}
+              </div>
+            )}
           </div>
         </div>
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground text-center">Verso ID</p>
-          <div className="aspect-square bg-secondary rounded-lg overflow-hidden">
+          <div className="aspect-square bg-secondary rounded-lg overflow-hidden relative">
             {idBackPreview && <img src={idBackPreview} alt="ID Back" className="w-full h-full object-cover" />}
+            {isUploading && (
+              <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                {renderUploadStatus(uploadProgress.idBack)}
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {isUploading && (
+        <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-5 h-5 animate-spin text-primary flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-primary">Envoi en cours...</p>
+              <p className="text-xs text-muted-foreground">
+                {uploadProgress.selfie === 'uploading' && 'Upload du selfie...'}
+                {uploadProgress.idFront === 'uploading' && 'Upload du recto ID...'}
+                {uploadProgress.idBack === 'uploading' && 'Upload du verso ID...'}
+                {uploadProgress.selfie === 'done' && uploadProgress.idFront === 'done' && uploadProgress.idBack === 'done' && 'Finalisation...'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-muted/50 rounded-xl p-3 text-xs text-muted-foreground">
         En envoyant ces documents, tu confirmes avoir 18 ans ou plus et acceptes 
@@ -349,7 +412,7 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
       </div>
 
       <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={() => setStep('id_back')}>
+        <Button variant="outline" className="flex-1" onClick={() => setStep('id_back')} disabled={isUploading}>
           Retour
         </Button>
         <Button 

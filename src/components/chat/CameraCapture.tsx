@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Camera, 
   X, 
@@ -12,9 +12,17 @@ import {
   Loader2,
   SwitchCamera,
   ShieldAlert,
-  Settings
+  Settings,
+  Infinity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEphemeralMediaUpload } from '@/hooks/useEphemeralMediaUpload';
 import { useCameraPermission } from '@/hooks/useCameraPermission';
 import { toast } from 'sonner';
@@ -57,7 +65,7 @@ const CameraCapture = ({
   const { uploadEphemeralMedia, isUploading, progress } = useEphemeralMediaUpload();
   const { permissions, isCameraDenied, needsPermission, requestCameraAccess } = useCameraPermission();
 
-  const durations = [5, 10, 15, 30];
+  const durations = [5, 10, 15, 30, 0]; // 0 = unlimited
 
   // Start camera with permission handling
   const startCamera = useCallback(async () => {
@@ -282,262 +290,271 @@ const CameraCapture = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (!isOpen) return null;
-
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] bg-black"
-      >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="max-w-md max-h-[90vh] p-0 overflow-hidden bg-black border-border">
         <canvas ref={canvasRef} className="hidden" />
+        
+        <DialogHeader className="p-4 border-b border-border bg-background/80 backdrop-blur-sm">
+          <DialogTitle className="text-center font-display flex items-center justify-center gap-2">
+            <Camera className="w-5 h-5 text-primary" />
+            {capturedMedia ? 'Aperçu du média' : 'Capture éphémère'}
+          </DialogTitle>
+        </DialogHeader>
 
-        {/* Close button */}
-        <div className="absolute top-4 left-4 z-10">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleClose}
-            className="text-white bg-black/30 hover:bg-black/50 rounded-full"
-          >
-            <X className="w-6 h-6" />
-          </Button>
-        </div>
-
-        {/* Permission request state */}
-        {isInitializing && !cameraError && !capturedMedia && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-            <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-            <p className="text-white text-lg">Initialisation de la caméra...</p>
-          </div>
-        )}
-
-        {/* Camera permission denied state */}
-        {cameraError === 'permission_denied' && !capturedMedia && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-gradient-to-b from-black to-gray-900">
-            <div className="w-20 h-20 rounded-full bg-destructive/20 flex items-center justify-center mb-6">
-              <ShieldAlert className="w-10 h-10 text-destructive" />
-            </div>
-            <h2 className="text-white text-xl font-semibold mb-2">
-              Accès à la caméra refusé
-            </h2>
-            <p className="text-white/70 text-sm mb-6 max-w-xs">
-              Pour prendre des photos et vidéos, tu dois autoriser l'accès à la caméra dans les paramètres de ton navigateur.
-            </p>
-            <div className="flex flex-col gap-3 w-full max-w-xs">
-              <Button 
-                variant="default" 
-                onClick={startCamera}
-                className="w-full bg-primary hover:bg-primary/90"
-              >
-                <Camera className="w-4 h-4 mr-2" />
-                Réessayer
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleClose}
-                className="w-full border-white/20 text-white hover:bg-white/10"
-              >
-                Annuler
-              </Button>
-            </div>
-            <p className="text-white/50 text-xs mt-6 flex items-center gap-1">
-              <Settings className="w-3 h-3" />
-              Paramètres → Site → Caméra → Autoriser
-            </p>
-          </div>
-        )}
-
-        {/* Other camera errors */}
-        {cameraError && cameraError !== 'permission_denied' && !capturedMedia && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-gradient-to-b from-black to-gray-900">
-            <Camera className="w-16 h-16 text-muted-foreground mb-4" />
-            <p className="text-white text-lg mb-4">{cameraError}</p>
-            <Button variant="outline" onClick={startCamera} className="border-white/20 text-white hover:bg-white/10">
-              Réessayer
-            </Button>
-          </div>
-        )}
-
-        {/* Camera preview */}
-        {!capturedMedia && !cameraError && !isInitializing && (
-          <div className="absolute inset-0 flex flex-col">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className={`flex-1 w-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
-            />
-
-            {/* Recording indicator */}
-            {isRecording && (
-              <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-600 px-3 py-1.5 rounded-full">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                <span className="text-white text-sm font-medium">
-                  {formatTime(recordingTime)}
-                </span>
+        <ScrollArea className="max-h-[calc(90vh-140px)]">
+          <div className="relative">
+            {/* Permission request state */}
+            {isInitializing && !cameraError && !capturedMedia && (
+              <div className="flex flex-col items-center justify-center text-center p-8 min-h-[300px]">
+                <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+                <p className="text-white text-lg">Initialisation de la caméra...</p>
               </div>
             )}
 
-            {/* Switch camera */}
-            <div className="absolute top-4 right-4">
-              {!isRecording && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={switchCamera}
-                  className="text-white bg-black/30 hover:bg-black/50 rounded-full"
-                >
-                  <SwitchCamera className="w-6 h-6" />
-                </Button>
-              )}
-            </div>
-
-            {/* Mode toggle */}
-            <div className="absolute left-1/2 -translate-x-1/2 flex gap-4" style={{ bottom: 'calc(8rem + env(safe-area-inset-bottom, 0px))' }}>
-              <Button
-                variant={mode === 'photo' ? 'default' : 'ghost'}
-                onClick={() => setMode('photo')}
-                className={`rounded-full ${mode === 'photo' ? 'bg-white text-black' : 'text-white'}`}
-                disabled={isRecording}
-              >
-                <Camera className="w-5 h-5 mr-2" />
-                Photo
-              </Button>
-              <Button
-                variant={mode === 'video' ? 'default' : 'ghost'}
-                onClick={() => setMode('video')}
-                className={`rounded-full ${mode === 'video' ? 'bg-white text-black' : 'text-white'}`}
-                disabled={isRecording}
-              >
-                <Video className="w-5 h-5 mr-2" />
-                Vidéo
-              </Button>
-            </div>
-
-            {/* Capture button */}
-            <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}>
-              {mode === 'photo' ? (
-                <button
-                  onClick={takePhoto}
-                  className="w-20 h-20 rounded-full border-4 border-white bg-white/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform"
-                >
-                  <div className="w-16 h-16 rounded-full bg-white" />
-                </button>
-              ) : (
-                <button
-                  onClick={toggleRecording}
-                  className={`w-20 h-20 rounded-full border-4 border-white flex items-center justify-center active:scale-95 transition-all ${
-                    isRecording ? 'bg-red-600' : 'bg-white/20 backdrop-blur-sm'
-                  }`}
-                >
-                  {isRecording ? (
-                    <Square className="w-8 h-8 text-white fill-white" />
-                  ) : (
-                    <Circle className="w-16 h-16 text-red-500 fill-red-500" />
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Captured media preview */}
-        {capturedMedia && (
-          <>
-            {capturedMedia.type === 'photo' ? (
-              <img
-                src={capturedMedia.url}
-                alt="Captured"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <video
-                src={capturedMedia.url}
-                autoPlay
-                loop
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            )}
-
-            {/* Duration selector */}
-            <div className="absolute left-0 right-0 px-6" style={{ bottom: 'calc(12rem + env(safe-area-inset-bottom, 0px))' }}>
-              <p className="text-sm text-white/80 mb-3 flex items-center gap-2 justify-center">
-                <Clock className="w-4 h-4" />
-                Durée d'affichage
-              </p>
-              <div className="flex gap-2 justify-center">
-                {durations.map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setViewDuration(d)}
-                    disabled={isUploading}
-                    className={`px-4 py-2 rounded-full font-medium transition-all ${
-                      viewDuration === d 
-                        ? 'bg-white text-black' 
-                        : 'bg-white/20 text-white hover:bg-white/30'
-                    } disabled:opacity-50`}
+            {/* Camera permission denied state */}
+            {cameraError === 'permission_denied' && !capturedMedia && (
+              <div className="flex flex-col items-center justify-center text-center p-8 min-h-[300px]">
+                <div className="w-20 h-20 rounded-full bg-destructive/20 flex items-center justify-center mb-6">
+                  <ShieldAlert className="w-10 h-10 text-destructive" />
+                </div>
+                <h2 className="text-white text-xl font-semibold mb-2">
+                  Accès à la caméra refusé
+                </h2>
+                <p className="text-white/70 text-sm mb-6 max-w-xs">
+                  Pour prendre des photos et vidéos, tu dois autoriser l'accès à la caméra dans les paramètres de ton navigateur.
+                </p>
+                <div className="flex flex-col gap-3 w-full max-w-xs">
+                  <Button 
+                    variant="default" 
+                    onClick={startCamera}
+                    className="w-full bg-primary hover:bg-primary/90"
                   >
-                    {d}s
-                  </button>
-                ))}
+                    <Camera className="w-4 h-4 mr-2" />
+                    Réessayer
+                  </Button>
+                </div>
+                <p className="text-white/50 text-xs mt-6 flex items-center gap-1">
+                  <Settings className="w-3 h-3" />
+                  Paramètres → Site → Caméra → Autoriser
+                </p>
               </div>
-            </div>
+            )}
 
-            {/* Progress bar */}
-            {isUploading && (
-              <div className="absolute left-6 right-6" style={{ bottom: 'calc(9rem + env(safe-area-inset-bottom, 0px))' }}>
-                <div className="h-1 bg-white/20 rounded-full overflow-hidden">
-                  <motion.div 
-                    className="h-full bg-white"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
+            {/* Other camera errors */}
+            {cameraError && cameraError !== 'permission_denied' && !capturedMedia && (
+              <div className="flex flex-col items-center justify-center text-center p-8 min-h-[300px]">
+                <Camera className="w-16 h-16 text-muted-foreground mb-4" />
+                <p className="text-white text-lg mb-4">{cameraError}</p>
+                <Button variant="outline" onClick={startCamera} className="border-white/20 text-white hover:bg-white/10">
+                  Réessayer
+                </Button>
+              </div>
+            )}
+
+            {/* Camera preview */}
+            {!capturedMedia && !cameraError && !isInitializing && (
+              <div className="relative">
+                <div className="aspect-[3/4] bg-black overflow-hidden relative">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
                   />
+
+                  {/* Recording indicator */}
+                  {isRecording && (
+                    <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600 px-3 py-1.5 rounded-full">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                      <span className="text-white text-sm font-medium">
+                        {formatTime(recordingTime)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Switch camera */}
+                  {!isRecording && (
+                    <div className="absolute top-4 right-4">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={switchCamera}
+                        className="text-white bg-black/30 hover:bg-black/50 rounded-full"
+                      >
+                        <SwitchCamera className="w-6 h-6" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mode toggle */}
+                <div className="flex justify-center gap-4 p-4 bg-black/80">
+                  <Button
+                    variant={mode === 'photo' ? 'default' : 'ghost'}
+                    onClick={() => setMode('photo')}
+                    className={`rounded-full ${mode === 'photo' ? 'bg-white text-black' : 'text-white'}`}
+                    disabled={isRecording}
+                  >
+                    <Camera className="w-5 h-5 mr-2" />
+                    Photo
+                  </Button>
+                  <Button
+                    variant={mode === 'video' ? 'default' : 'ghost'}
+                    onClick={() => setMode('video')}
+                    className={`rounded-full ${mode === 'video' ? 'bg-white text-black' : 'text-white'}`}
+                    disabled={isRecording}
+                  >
+                    <Video className="w-5 h-5 mr-2" />
+                    Vidéo
+                  </Button>
+                </div>
+
+                {/* Capture button */}
+                <div className="flex justify-center pb-4 bg-black/80">
+                  {mode === 'photo' ? (
+                    <button
+                      onClick={takePhoto}
+                      className="w-16 h-16 rounded-full border-4 border-white bg-white/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-white" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={toggleRecording}
+                      className={`w-16 h-16 rounded-full border-4 border-white flex items-center justify-center active:scale-95 transition-all ${
+                        isRecording ? 'bg-red-600' : 'bg-white/20 backdrop-blur-sm'
+                      }`}
+                    >
+                      {isRecording ? (
+                        <Square className="w-6 h-6 text-white fill-white" />
+                      ) : (
+                        <Circle className="w-12 h-12 text-red-500 fill-red-500" />
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Action buttons */}
-            <div className="absolute left-0 right-0 flex justify-center gap-8" style={{ bottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}>
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={handleRetake}
-                disabled={isUploading}
-                className="text-white bg-black/30 hover:bg-black/50 rounded-full px-6"
-              >
-                <RotateCcw className="w-5 h-5 mr-2" />
-                Reprendre
-              </Button>
-              
-              <Button
-                variant="default"
-                size="lg"
-                onClick={handleSend}
-                disabled={isUploading}
-                className="bg-primary hover:bg-primary/90 rounded-full px-8"
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                    Envoi...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5 mr-2" />
-                    Envoyer
-                  </>
+            {/* Captured media preview */}
+            {capturedMedia && (
+              <div className="space-y-4">
+                {/* Media preview */}
+                <div className="aspect-[3/4] bg-black overflow-hidden">
+                  {capturedMedia.type === 'photo' ? (
+                    <img
+                      src={capturedMedia.url}
+                      alt="Captured"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <video
+                      src={capturedMedia.url}
+                      autoPlay
+                      loop
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+
+                {/* Duration selector */}
+                <div className="px-4 pb-2">
+                  <p className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Durée d'affichage
+                  </p>
+                  <div className="flex gap-2 mb-2">
+                    {durations.filter(d => d > 0).map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setViewDuration(d)}
+                        disabled={isUploading}
+                        className={`flex-1 py-2 rounded-lg font-medium transition-all text-sm ${
+                          viewDuration === d 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        } disabled:opacity-50`}
+                      >
+                        {d}s
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setViewDuration(0)}
+                    disabled={isUploading}
+                    className={`w-full py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                      viewDuration === 0 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    } disabled:opacity-50`}
+                  >
+                    <Infinity className="w-4 h-4" />
+                    Illimité (enregistrable)
+                  </button>
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    {viewDuration === 0 
+                      ? '✓ Le destinataire pourra enregistrer ce média' 
+                      : '🔒 Le média disparaîtra après visionnage'}
+                  </p>
+                </div>
+
+                {/* Progress bar */}
+                {isUploading && (
+                  <div className="px-4">
+                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                      <motion.div 
+                        className="h-full bg-gradient-to-r from-primary to-accent"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 text-center">
+                      Envoi en cours... {progress}%
+                    </p>
+                  </div>
                 )}
-              </Button>
-            </div>
-          </>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        {/* Footer actions */}
+        {capturedMedia && (
+          <div className="p-4 border-t border-border flex gap-2 bg-background">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={handleRetake}
+              disabled={isUploading}
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reprendre
+            </Button>
+            <Button 
+              variant="hero" 
+              className="flex-1"
+              onClick={handleSend}
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Envoi...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Envoyer
+                </>
+              )}
+            </Button>
+          </div>
         )}
-      </motion.div>
-    </AnimatePresence>
+      </DialogContent>
+    </Dialog>
   );
 };
 

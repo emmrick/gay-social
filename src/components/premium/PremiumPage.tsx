@@ -180,7 +180,7 @@ const PremiumPage = () => {
         {/* Current Status */}
         {(isPremium || isVip) && subscribed && (
           <Card className={`${isVip ? 'border-purple-500/50 bg-gradient-to-br from-purple-500/10 to-purple-600/5' : 'border-amber-500/50 bg-gradient-to-br from-amber-500/10 to-orange-500/5'}`}>
-            <CardContent className="p-4">
+            <CardContent className="p-4 space-y-4">
               <div className="flex items-center gap-3">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isVip ? 'bg-gradient-to-br from-purple-400 to-purple-600' : 'bg-gradient-to-br from-amber-400 to-orange-500'}`}>
                   {isVip ? <Diamond className="w-6 h-6 text-white" /> : <Crown className="w-6 h-6 text-white" />}
@@ -196,9 +196,17 @@ const PremiumPage = () => {
                     </p>
                   )}
                 </div>
-                <Button variant="outline" size="sm" onClick={openCustomerPortal}>
-                  Gérer
+              </div>
+              
+              <Separator />
+              
+              <div className="flex flex-col gap-2">
+                <Button variant="outline" className="w-full" onClick={openCustomerPortal}>
+                  Gérer mon abonnement
                 </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  Modifier le moyen de paiement, changer d'offre ou résilier
+                </p>
               </div>
             </CardContent>
           </Card>

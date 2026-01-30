@@ -86,19 +86,19 @@ export const usePrivateConversations = () => {
       const lastMessageMap = new Map<string, { content: string | null; created_at: string; message_type: string }>();
 
       if (uniqueOtherUserIds.length > 0) {
-        const inList = uniqueOtherUserIds.join(',');
-        const limit = Math.min(500, Math.max(50, uniqueOtherUserIds.length * 12));
+        // Build OR conditions for each conversation partner
+        const orConditions = uniqueOtherUserIds.map(otherId => 
+          `and(sender_id.eq.${user.id},recipient_id.eq.${otherId}),and(sender_id.eq.${otherId},recipient_id.eq.${user.id})`
+        ).join(',');
 
         const { data: recentMsgs, error: recentMsgsError } = await supabase
           .from('messages')
           .select('sender_id, recipient_id, content, created_at, message_type')
           .eq('is_private', true)
           .is('deleted_at', null)
-          .or(
-            `and(sender_id.eq.${user.id},recipient_id.in.(${inList})),and(recipient_id.eq.${user.id},sender_id.in.(${inList}))`
-          )
+          .or(orConditions)
           .order('created_at', { ascending: false })
-          .limit(limit);
+          .limit(Math.min(500, uniqueOtherUserIds.length * 5));
 
         if (recentMsgsError) throw recentMsgsError;
 

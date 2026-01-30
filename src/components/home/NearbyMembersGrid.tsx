@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Loader2, Navigation, RefreshCw, Crown, Lock } from 'lucide-react';
@@ -7,7 +7,6 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyProfiles } from '@/hooks/useNearbyProfiles';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePremiumUsers } from '@/hooks/usePremiumUsers';
-import MemberProfileCard from './MemberProfileCard';
 import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
 import { cn } from '@/lib/utils';
 
@@ -21,7 +20,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
   const { profile: currentUserProfile } = useAuth();
   const { latitude, longitude, loading: locationLoading, error: locationError, requestLocation, permissionState } = useGeolocation();
   const { data: profiles, isLoading: profilesLoading, error: profilesError, refetch, maxProfilesAllowed, isPremium, isLimited } = useNearbyProfiles(latitude, longitude);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  // Removed: selectedUserId state no longer needed - we navigate directly
 
   const hasLocation = latitude != null && longitude != null;
 
@@ -305,7 +304,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.03 }}
-              onClick={() => !profile.isCurrentUser && setSelectedUserId(profile.user_id)}
+              onClick={() => !profile.isCurrentUser && navigate(`/profile/${profile.user_id}`)}
               className={cn(
                 "relative aspect-[3/4] rounded-xl overflow-hidden group",
                 "bg-gradient-to-br from-secondary to-secondary/50",
@@ -402,22 +401,6 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
         </div>
       )}
 
-      {/* Profile preview sheet */}
-      {selectedUserId && (
-        <MemberProfileCard
-          userId={selectedUserId}
-          isOpen={!!selectedUserId}
-          onClose={() => setSelectedUserId(null)}
-          onStartChat={() => {
-            onStartChat(selectedUserId);
-            setSelectedUserId(null);
-          }}
-          onViewProfile={() => {
-            navigate(`/profile/${selectedUserId}`);
-            setSelectedUserId(null);
-          }}
-        />
-      )}
     </div>
   );
 };

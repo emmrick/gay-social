@@ -10,7 +10,12 @@ interface ProfilePhotoCarouselProps {
 }
 
 const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarouselProps) => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    dragFree: false,
+    containScroll: 'trimSnaps',
+    skipSnaps: false,
+  });
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const onSelect = useCallback(() => {
@@ -39,8 +44,12 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
   return (
     <div className={cn("relative w-full", className)}>
       {/* Carousel */}
-      <div ref={emblaRef} className="overflow-hidden rounded-lg">
-        <div className="flex">
+      <div 
+        ref={emblaRef} 
+        className="overflow-hidden rounded-lg touch-pan-y"
+        style={{ touchAction: 'pan-y pinch-zoom' }}
+      >
+        <div className="flex touch-pan-x" style={{ touchAction: 'pan-x' }}>
           {photos.map((photo, index) => (
             <div
               key={index}
@@ -50,7 +59,8 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
                 <img
                   src={photo}
                   alt={`${username} photo ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover select-none pointer-events-none"
+                  draggable={false}
                 />
               </div>
             </div>

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useCallback } from 'react';
 
 interface ProfilePhoto {
   id: string;
@@ -13,7 +14,7 @@ interface ProfilePhoto {
 }
 
 export const useProfilePhotos = (userId?: string) => {
-  const { user } = useAuth();
+  const { user, refetchProfile } = useAuth();
   const queryClient = useQueryClient();
   const targetUserId = userId || user?.id;
 
@@ -207,11 +208,11 @@ export const useProfilePhotos = (userId?: string) => {
 
       return photoId;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['profile-photos', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      // Force refresh auth context profile
-      queryClient.invalidateQueries({ queryKey: ['auth-profile'] });
+      // Refresh the auth context profile to update avatar everywhere
+      await refetchProfile();
       toast.success('Photo de profil mise à jour !');
     },
     onError: (error: Error) => {

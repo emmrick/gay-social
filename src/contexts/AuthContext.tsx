@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
@@ -14,6 +14,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
+  refetchProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -184,6 +185,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const refetchProfile = useCallback(async () => {
+    if (user) {
+      const newProfile = await fetchProfile(user.id);
+      setProfile(newProfile);
+    }
+  }, [user]);
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -194,6 +202,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signIn,
       signOut,
       updateProfile,
+      refetchProfile,
     }}>
       {children}
     </AuthContext.Provider>

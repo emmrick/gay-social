@@ -50,44 +50,70 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Set up auth listener BEFORE getSession
   useEffect(() => {
+    let isMounted = true;
+
+    const loadProfile = async (userId: string) => {
+      try {
+        const profileData = await fetchProfile(userId);
+        if (isMounted) {
+          setProfile(profileData);
+          // Update online status
+          if (profileData) {
+            await supabase
+              .from('profiles')
+              .update({ is_online: true, last_seen: new Date().toISOString() })
+              .eq('user_id', userId);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        if (isMounted) {
+          setProfile(null);
+        }
+      }
+    };
+
+    // Listener for ONGOING auth changes (does NOT control isLoading after initial load)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Use setTimeout to avoid Supabase deadlock
-          setTimeout(async () => {
-            const profile = await fetchProfile(session.user.id);
-            setProfile(profile);
-            
-            // Update online status
-            if (profile) {
-              await supabase
-                .from('profiles')
-                .update({ is_online: true, last_seen: new Date().toISOString() })
-                .eq('user_id', session.user.id);
-            }
-          }, 0);
+          // Fire and forget - profile loading happens in background
+          loadProfile(session.user.id);
         } else {
           setProfile(null);
         }
-        
-        setIsLoading(false);
       }
     );
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id).then(setProfile);
+    // INITIAL load (controls isLoading)
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        // Fetch profile BEFORE setting loading false for existing sessions
+        if (session?.user) {
+          await loadProfile(session.user.id);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-      setIsLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);

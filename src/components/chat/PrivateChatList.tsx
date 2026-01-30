@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { AnimatePresence } from 'framer-motion';
@@ -28,7 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { MessageCircle, ChevronRight, MoreVertical, Archive, Trash2, ArchiveRestore } from 'lucide-react';
 import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
-import UserProfilePreview from './UserProfilePreview';
+
 import SwipeableConversationItem from './SwipeableConversationItem';
 import SwipeHintOverlay from './SwipeHintOverlay';
 import { cn } from '@/lib/utils';
@@ -42,11 +43,12 @@ interface PrivateChatListProps {
 }
 
 const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'active' }: PrivateChatListProps) => {
+  const navigate = useNavigate();
   const { conversations, archivedConversations, deletedConversations, isLoading } = usePrivateConversations();
   const { getUnreadCount } = useUnreadMessages();
   const { archiveConversation, unarchiveConversation, deleteConversation, restoreConversation } = useConversationStatus();
   const isMobile = useIsMobile();
-  const [profilePreviewUserId, setProfilePreviewUserId] = useState<string | null>(null);
+  
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [permanentDeleteDialogOpen, setPermanentDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
@@ -87,7 +89,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
 
   const handleAvatarClick = (e: React.MouseEvent, userId: string) => {
     e.stopPropagation();
-    setProfilePreviewUserId(userId);
+    navigate(`/profile/${userId}`);
   };
 
   const handleArchive = (e: React.MouseEvent, conversationId: string) => {
@@ -401,17 +403,6 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
           </div>
         );
       })}
-
-      {/* User Profile Preview */}
-      <UserProfilePreview
-        userId={profilePreviewUserId}
-        isOpen={!!profilePreviewUserId}
-        onClose={() => setProfilePreviewUserId(null)}
-        onStartPrivateChat={(userId) => {
-          setProfilePreviewUserId(null);
-          onSelectConversation(userId);
-        }}
-      />
     </div>
 
     {/* Delete Confirmation Dialog */}

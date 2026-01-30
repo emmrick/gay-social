@@ -265,6 +265,10 @@ html, body {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+.safe-area-pb {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+}
+
 /* Touch feedback for mobile buttons */
 @media (hover: none) and (pointer: coarse) {
   .touch-feedback {

@@ -121,9 +121,9 @@ const MemberProfileCard = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-w-lg mx-auto max-h-[85vh] overflow-y-auto"
+            className="fixed inset-x-0 bottom-0 z-50 max-w-lg mx-auto max-h-[85dvh] overflow-y-auto"
           >
-            <div className="bg-card rounded-t-3xl border-t border-x border-border shadow-2xl overflow-hidden">
+            <div className="bg-card rounded-t-3xl border-t border-x border-border shadow-2xl overflow-hidden safe-area-pb">
               {/* Header with photo carousel */}
               <div className="relative h-64 bg-gradient-to-br from-primary/30 to-accent/30">
                 {isLoading ? (

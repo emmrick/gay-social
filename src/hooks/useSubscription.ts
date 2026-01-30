@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -39,19 +39,47 @@ export const PREMIUM_LIMITS = {
   maxVideoSize: 1024 * 1024 * 1024, // 1 GB
 };
 
+// Cache to avoid repeated calls
+const subscriptionCache = new Map<string, { status: Omit<SubscriptionStatus, 'isLoading'>; timestamp: number }>();
+const CACHE_DURATION = 30000; // 30 seconds
+
 export const useSubscription = () => {
-  const { user } = useAuth();
-  const [status, setStatus] = useState<SubscriptionStatus>({
-    subscribed: false,
-    isPremium: false,
-    isVip: false,
-    productId: null,
-    subscriptionEnd: null,
-    isLoading: true,
-    isAdmin: false,
+  const { user, profile } = useAuth();
+  const lastCheckRef = useRef<number>(0);
+  
+  // Initialize with profile data immediately (is_premium is synced via Stripe webhook)
+  const [status, setStatus] = useState<SubscriptionStatus>(() => {
+    // Check cache first
+    if (user) {
+      const cached = subscriptionCache.get(user.id);
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        return { ...cached.status, isLoading: false };
+      }
+    }
+    
+    return {
+      subscribed: profile?.is_premium || false,
+      isPremium: profile?.is_premium || false,
+      isVip: false,
+      productId: null,
+      subscriptionEnd: null,
+      isLoading: true,
+      isAdmin: false,
+    };
   });
 
-  const checkSubscription = useCallback(async () => {
+  // Update immediately when profile changes (webhook sync)
+  useEffect(() => {
+    if (profile) {
+      setStatus(prev => ({
+        ...prev,
+        subscribed: profile.is_premium || prev.subscribed,
+        isPremium: profile.is_premium || prev.isPremium,
+      }));
+    }
+  }, [profile?.is_premium]);
+
+  const checkSubscription = useCallback(async (force = false) => {
     if (!user) {
       setStatus({
         subscribed: false,
@@ -65,41 +93,79 @@ export const useSubscription = () => {
       return;
     }
 
-    try {
-      // Check both subscription and admin status in parallel
-      const [subscriptionResult, adminResult] = await Promise.all([
-        supabase.functions.invoke('check-subscription'),
-        supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
-      ]);
+    // Throttle: don't check more than once per 10 seconds unless forced
+    const now = Date.now();
+    if (!force && now - lastCheckRef.current < 10000) {
+      return;
+    }
+    lastCheckRef.current = now;
 
-      const subscriptionData = subscriptionResult.data;
+    // Check cache
+    const cached = subscriptionCache.get(user.id);
+    if (!force && cached && now - cached.timestamp < CACHE_DURATION) {
+      setStatus({ ...cached.status, isLoading: false });
+      return;
+    }
+
+    try {
+      // Check admin status first (fast, from DB)
+      const adminResult = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
       const isAdmin = adminResult.data === true;
 
-      // VIP users have VIP + Premium features
-      const isVip = isAdmin || subscriptionData?.is_vip || false;
-      // Admin users get premium features by default, VIP also includes Premium
-      const isPremium = isAdmin || isVip || subscriptionData?.is_premium || false;
+      // If admin, set premium immediately without calling Stripe
+      if (isAdmin) {
+        const adminStatus = {
+          subscribed: true,
+          isPremium: true,
+          isVip: true,
+          productId: null,
+          subscriptionEnd: null,
+          isAdmin: true,
+        };
+        subscriptionCache.set(user.id, { status: adminStatus, timestamp: now });
+        setStatus({ ...adminStatus, isLoading: false });
+        return;
+      }
 
-      setStatus({
+      // For non-admins, use profile.is_premium as initial, then verify with Stripe in background
+      if (profile?.is_premium) {
+        setStatus(prev => ({ ...prev, isPremium: true, isLoading: false }));
+      }
+
+      // Check Stripe subscription (can be slower)
+      const subscriptionResult = await supabase.functions.invoke('check-subscription');
+      const subscriptionData = subscriptionResult.data;
+
+      const isVip = subscriptionData?.is_vip || false;
+      const isPremium = isVip || subscriptionData?.is_premium || profile?.is_premium || false;
+
+      const newStatus = {
         subscribed: subscriptionData?.subscribed || false,
         isPremium,
         isVip,
         productId: subscriptionData?.product_id || null,
         subscriptionEnd: subscriptionData?.subscription_end || null,
-        isLoading: false,
-        isAdmin,
-      });
+        isAdmin: false,
+      };
+
+      subscriptionCache.set(user.id, { status: newStatus, timestamp: now });
+      setStatus({ ...newStatus, isLoading: false });
     } catch (error) {
       console.error('Error checking subscription:', error);
-      setStatus(prev => ({ ...prev, isLoading: false }));
+      // On error, still use profile.is_premium
+      setStatus(prev => ({ 
+        ...prev, 
+        isPremium: profile?.is_premium || prev.isPremium,
+        isLoading: false 
+      }));
     }
-  }, [user]);
+  }, [user, profile?.is_premium]);
 
   useEffect(() => {
     checkSubscription();
     
-    // Refresh every minute
-    const interval = setInterval(checkSubscription, 60000);
+    // Refresh every 2 minutes (not every minute to reduce load)
+    const interval = setInterval(() => checkSubscription(), 120000);
     return () => clearInterval(interval);
   }, [checkSubscription]);
 

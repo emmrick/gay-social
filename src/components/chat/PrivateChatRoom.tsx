@@ -358,9 +358,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                       {isOwn && (
                         <span className="flex items-center">
                           {message.read_at ? (
-                            <CheckCheck className="w-3.5 h-3.5 text-primary" />
+                            <CheckCheck className="w-3.5 h-3.5 text-primary animate-message-read" />
                           ) : (
-                            <CheckCheck className="w-3.5 h-3.5 text-muted-foreground" />
+                            <CheckCheck className="w-3.5 h-3.5 text-muted-foreground transition-colors duration-300" />
                           )}
                         </span>
                       )}

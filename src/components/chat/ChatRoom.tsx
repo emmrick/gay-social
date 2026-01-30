@@ -67,11 +67,25 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
   const scrollRef = useRef<HTMLDivElement>(null);
   const { isSuspended, getSuspensionTimeLeft } = useScreenshotProtection();
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom on new messages or when conversation opens
   useEffect(() => {
-    if (scrollRef.current && !searchQuery) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    const scrollToBottom = () => {
+      if (scrollRef.current && !searchQuery) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    };
+    
+    // Immediate scroll
+    scrollToBottom();
+    
+    // Delayed scrolls to handle media loading
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    const timeoutId2 = setTimeout(scrollToBottom, 300);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      clearTimeout(timeoutId2);
+    };
   }, [messages, searchQuery]);
 
   // Handle scroll to show/hide scroll button

@@ -74,7 +74,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
       {/* Header - fixed at top */}
       <div className="flex-shrink-0 flex items-center gap-3 p-4 border-b border-border bg-card/80 backdrop-blur-lg sticky top-0 z-20">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+        <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0">
           <ArrowLeft className="w-5 h-5" />
         </Button>
 

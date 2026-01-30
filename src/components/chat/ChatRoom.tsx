@@ -180,8 +180,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
       )}
 
       {/* Header - fixed at top */}
-      <header className="flex-shrink-0 flex items-center gap-4 px-4 py-3 border-b border-border bg-card/80 backdrop-blur-lg sticky top-0 z-20">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+      <header className="flex-shrink-0 flex items-center gap-3 p-4 border-b border-border bg-card/80 backdrop-blur-lg sticky top-0 z-20">
+        <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         

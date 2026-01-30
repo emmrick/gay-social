@@ -22,6 +22,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModeratorEarnings';
+import { useLogModerationAction } from '@/hooks/useModerationActions';
 
 interface VerificationWithProfile {
   id: string;
@@ -56,6 +57,7 @@ const IdentityVerificationPanel = () => {
   }>({ selfie: null, idFront: null, idBack: null });
   
   const recordEarning = useRecordEarning();
+  const logAction = useLogModerationAction();
   const { data: taskRates } = useTaskRates();
   const verificationRate = taskRates?.find(r => r.task_type === 'identity_verification')?.rate_cents || 50;
 
@@ -141,6 +143,14 @@ const IdentityVerificationPanel = () => {
         userId: selectedVerification.user_id,
       });
       
+      // Log action
+      await logAction.mutateAsync({
+        targetUserId: selectedVerification.user_id,
+        actionType: 'verification_approved',
+        details: `Vérification approuvée pour ${selectedVerification.profiles?.username}`,
+        metadata: { verificationId: selectedVerification.id },
+      });
+      
       // Record earning for identity verification
       const earned = await recordEarning.mutateAsync({
         taskType: 'identity_verification',
@@ -176,6 +186,15 @@ const IdentityVerificationPanel = () => {
         verificationId: selectedVerification.id,
         reason: rejectionReason,
       });
+      
+      // Log action
+      await logAction.mutateAsync({
+        targetUserId: selectedVerification.user_id,
+        actionType: 'verification_rejected',
+        details: `Vérification refusée pour ${selectedVerification.profiles?.username}: ${rejectionReason}`,
+        metadata: { verificationId: selectedVerification.id, reason: rejectionReason },
+      });
+      
       toast.success('Vérification refusée');
       setRejectDialogOpen(false);
       setViewDialogOpen(false);

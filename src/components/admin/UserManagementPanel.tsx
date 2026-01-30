@@ -68,6 +68,7 @@ import {
   suspensionDurations,
 } from '@/hooks/useAdmin';
 import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModeratorEarnings';
+import { useLogModerationAction } from '@/hooks/useModerationActions';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface UserProfile {
@@ -261,6 +262,7 @@ const UserManagementPanel = () => {
   const unblockUser = useUnblockUser();
   const { data: isSelectedUserBlocked } = useIsUserBlocked(selectedUser?.user_id || '');
   const recordEarning = useRecordEarning();
+  const logAction = useLogModerationAction();
   const { data: taskRates } = useTaskRates();
   const suspensionRate = taskRates?.find(r => r.task_type === 'user_suspension')?.rate_cents || 15;
 
@@ -282,6 +284,14 @@ const UserManagementPanel = () => {
           duration: selectedDuration,
         });
         
+        // Log action
+        await logAction.mutateAsync({
+          targetUserId: selectedUser.user_id,
+          actionType: 'user_suspended',
+          details: `Suspension de ${selectedUser.username} (${suspensionDurations[selectedDuration].label})${suspensionReason ? `: ${suspensionReason}` : ''}`,
+          metadata: { duration: selectedDuration, reason: suspensionReason },
+        });
+        
         // Record earning for suspension
         const earned = await recordEarning.mutateAsync({
           taskType: 'user_suspension',
@@ -296,6 +306,14 @@ const UserManagementPanel = () => {
         await blockUser.mutateAsync({
           userId: selectedUser.user_id,
           reason: suspensionReason.trim() || undefined,
+        });
+        
+        // Log action
+        await logAction.mutateAsync({
+          targetUserId: selectedUser.user_id,
+          actionType: 'user_suspended',
+          details: `Bannissement permanent de ${selectedUser.username}${suspensionReason ? `: ${suspensionReason}` : ''}`,
+          metadata: { permanent: true, reason: suspensionReason },
         });
         
         // Record earning for ban
@@ -327,9 +345,16 @@ const UserManagementPanel = () => {
     }
   };
 
-  const handleUnblock = async (userId: string) => {
+  const handleUnblock = async (userId: string, username: string) => {
     try {
       await unblockUser.mutateAsync(userId);
+      
+      // Log action
+      await logAction.mutateAsync({
+        targetUserId: userId,
+        actionType: 'user_unblocked',
+        details: `Déblocage de ${username}`,
+      });
     } catch (error) {
       console.error('Unblock error:', error);
     }
@@ -503,19 +528,30 @@ const UserCard = ({
 }: {
   user: UserProfile;
   onAction: (user: UserProfile, action: 'suspend' | 'ban' | 'delete') => void;
-  onUnblock: (userId: string) => void;
+  onUnblock: (userId: string, username: string) => void;
 }) => {
   const { data: isBlocked } = useIsUserBlocked(user.user_id);
   const { data: verificationStatus } = useUserVerificationStatus(user.user_id);
   const manualVerification = useManualVerification();
   const requestVerification = useRequestVerification();
+  const logAction = useLogModerationAction();
 
-  const handleManualVerify = () => {
-    manualVerification.mutate(user.user_id);
+  const handleManualVerify = async () => {
+    await manualVerification.mutateAsync(user.user_id);
+    await logAction.mutateAsync({
+      targetUserId: user.user_id,
+      actionType: 'manual_verification',
+      details: `Vérification manuelle de ${user.username}`,
+    });
   };
 
-  const handleRequestVerification = () => {
-    requestVerification.mutate(user.user_id);
+  const handleRequestVerification = async () => {
+    await requestVerification.mutateAsync(user.user_id);
+    await logAction.mutateAsync({
+      targetUserId: user.user_id,
+      actionType: 'verification_requested',
+      details: `Demande de vérification envoyée à ${user.username}`,
+    });
   };
 
   const getVerificationBadge = () => {
@@ -613,7 +649,7 @@ const UserCard = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onUnblock(user.user_id)}
+              onClick={() => onUnblock(user.user_id, user.username)}
               className="border-green-500/50 text-green-500 hover:bg-green-500/10"
             >
               <ShieldOff className="w-4 h-4 mr-1" />

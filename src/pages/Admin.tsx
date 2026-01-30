@@ -22,7 +22,8 @@ import {
   Wallet,
   Euro,
   ArrowUpRight,
-  PieChart
+  PieChart,
+  History
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -52,6 +53,7 @@ import ModeratorWalletPanel from '@/components/admin/ModeratorWalletPanel';
 import TaskRatesPanel from '@/components/admin/TaskRatesPanel';
 import WithdrawalRequestsPanel from '@/components/admin/WithdrawalRequestsPanel';
 import GlobalEarningsPanel from '@/components/admin/GlobalEarningsPanel';
+import ModerationHistoryPanel from '@/components/admin/ModerationHistoryPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', color: 'bg-yellow-500', icon: Clock },
@@ -65,7 +67,7 @@ const Admin = () => {
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats, isLoading: statsLoading } = useReportStats();
   const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
-  const [activeSection, setActiveSection] = useState<'wallet' | 'withdrawals' | 'rates' | 'global' | 'stats' | 'users' | 'reports' | 'moderation' | 'blocked' | 'verification' | 'promo'>('wallet');
+  const [activeSection, setActiveSection] = useState<'wallet' | 'withdrawals' | 'rates' | 'global' | 'stats' | 'users' | 'reports' | 'moderation' | 'blocked' | 'verification' | 'promo' | 'history'>('wallet');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
@@ -223,6 +225,10 @@ const Admin = () => {
               <TabsTrigger value="blocked" className="gap-2">
                 <Ban className="w-4 h-4" />
                 <span className="hidden sm:inline">Bloqués</span>
+              </TabsTrigger>
+              <TabsTrigger value="history" className="gap-2">
+                <History className="w-4 h-4" />
+                <span className="hidden sm:inline">Historique</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -387,6 +393,15 @@ const Admin = () => {
                     </div>
                   )}
                 </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Moderation History Section */}
+          <TabsContent value="history">
+            <Card>
+              <CardContent className="pt-6">
+                <ModerationHistoryPanel />
               </CardContent>
             </Card>
           </TabsContent>

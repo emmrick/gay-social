@@ -46,6 +46,7 @@ import {
 } from '@/hooks/useAdmin';
 import { reportReasonLabels, reportReasonDescriptions } from '@/hooks/useReports';
 import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModeratorEarnings';
+import { useLogModerationAction } from '@/hooks/useModerationActions';
 import { toast } from 'sonner';
 
 interface ReportDetailDialogProps {
@@ -78,6 +79,7 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
   const unblockUser = useUnblockUser();
   const { data: isBlocked, isLoading: checkingBlock } = useIsUserBlocked(report.reported_user_id);
   const recordEarning = useRecordEarning();
+  const logAction = useLogModerationAction();
   const { data: taskRates } = useTaskRates();
   const reportRate = taskRates?.find(r => r.task_type === 'report_response')?.rate_cents || 10;
   const suspensionRate = taskRates?.find(r => r.task_type === 'user_suspension')?.rate_cents || 15;
@@ -88,6 +90,16 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
       status,
       resolutionNotes: resolutionNotes.trim() || undefined,
     });
+    
+    // Log action
+    if (status === 'resolved' || status === 'dismissed') {
+      await logAction.mutateAsync({
+        targetUserId: report.reported_user_id,
+        actionType: status === 'resolved' ? 'report_resolved' : 'report_dismissed',
+        details: `Signalement ${status === 'resolved' ? 'résolu' : 'rejeté'} - ${report.reported_user?.username || 'Utilisateur inconnu'}${resolutionNotes ? `: ${resolutionNotes}` : ''}`,
+        metadata: { reportId: report.id, reason: report.reason },
+      });
+    }
     
     // Record earning for report response
     const earned = await recordEarning.mutateAsync({
@@ -111,6 +123,14 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
       duration: selectedDuration,
     });
     
+    // Log action
+    await logAction.mutateAsync({
+      targetUserId: report.reported_user_id,
+      actionType: 'user_suspended',
+      details: `Suspension suite signalement de ${report.reported_user?.username} (${suspensionDurations[selectedDuration].label})`,
+      metadata: { reportId: report.id, duration: selectedDuration },
+    });
+    
     // Record earning for suspension
     const earned = await recordEarning.mutateAsync({
       taskType: 'user_suspension',
@@ -131,6 +151,14 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
       reason: suspensionReason.trim() || `Signalement: ${report.reason}`,
     });
     
+    // Log action
+    await logAction.mutateAsync({
+      targetUserId: report.reported_user_id,
+      actionType: 'user_suspended',
+      details: `Bannissement permanent suite signalement de ${report.reported_user?.username}`,
+      metadata: { reportId: report.id, permanent: true },
+    });
+    
     // Record earning for ban
     const earned = await recordEarning.mutateAsync({
       taskType: 'user_suspension',
@@ -147,6 +175,14 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
 
   const handleUnblockUser = async () => {
     await unblockUser.mutateAsync(report.reported_user_id);
+    
+    // Log action
+    await logAction.mutateAsync({
+      targetUserId: report.reported_user_id,
+      actionType: 'user_unblocked',
+      details: `Déblocage de ${report.reported_user?.username} depuis signalement`,
+      metadata: { reportId: report.id },
+    });
   };
 
   const reasonLabel = reportReasonLabels[report.reason as keyof typeof reportReasonLabels] || report.reason;

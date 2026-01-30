@@ -343,6 +343,36 @@ export type Database = {
           },
         ]
       }
+      moderation_actions: {
+        Row: {
+          action_type: Database["public"]["Enums"]["moderation_action_type"]
+          created_at: string
+          details: string | null
+          id: string
+          metadata: Json | null
+          performed_by: string
+          target_user_id: string
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["moderation_action_type"]
+          created_at?: string
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+          performed_by: string
+          target_user_id: string
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["moderation_action_type"]
+          created_at?: string
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+          performed_by?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       moderator_action_cooldowns: {
         Row: {
           action_count: number | null
@@ -1062,6 +1092,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      moderation_action_type:
+        | "user_suspended"
+        | "user_unblocked"
+        | "verification_approved"
+        | "verification_rejected"
+        | "verification_requested"
+        | "report_resolved"
+        | "report_dismissed"
+        | "manual_verification"
       moderator_task_type:
         | "identity_verification"
         | "report_response"
@@ -1205,6 +1244,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      moderation_action_type: [
+        "user_suspended",
+        "user_unblocked",
+        "verification_approved",
+        "verification_rejected",
+        "verification_requested",
+        "report_resolved",
+        "report_dismissed",
+        "manual_verification",
+      ],
       moderator_task_type: [
         "identity_verification",
         "report_response",

@@ -271,10 +271,11 @@ export const useAlbums = (userId?: string) => {
 
       return shareData;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['album-shares'] });
-      queryClient.invalidateQueries({ queryKey: ['private-messages'] });
-      queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
+      // Invalidate with proper keys to refresh the conversation
+      queryClient.invalidateQueries({ queryKey: ['private-messages', user?.id, variables.sharedWithUserId] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
       toast.success('Album partagé !');
     },
     onError: (error: Error) => {

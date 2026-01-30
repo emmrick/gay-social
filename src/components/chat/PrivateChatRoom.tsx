@@ -277,9 +277,17 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               let albumShareData: { shareId: string; albumId: string; albumName: string; expiresAt: string | null } | null = null;
               if (isAlbumShare && message.content) {
                 try {
-                  albumShareData = JSON.parse(message.content);
-                } catch {
-                  console.error('Failed to parse album share data');
+                  const parsed = JSON.parse(message.content);
+                  // Handle different response structures safely
+                  if (parsed.shareId && parsed.albumId) {
+                    albumShareData = parsed;
+                  } else if (parsed.data?.shareId && parsed.data?.albumId) {
+                    albumShareData = parsed.data;
+                  } else {
+                    console.error('Invalid album share structure:', Object.keys(parsed));
+                  }
+                } catch (e) {
+                  console.error('Failed to parse album share data:', e, message.content);
                 }
               }
 

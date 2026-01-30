@@ -156,6 +156,13 @@ serve(async (req) => {
       }
 
       case "validate": {
+        // Check if promo code is being used for VIP tier (not allowed)
+        const tier = params.tier || 'premium';
+        if (tier === 'vip') {
+          result = { valid: false, message: "Les codes promo ne sont pas applicables à l'offre VIP" };
+          break;
+        }
+
         // Validate a promo code without being admin
         const promoCodes = await stripe.promotionCodes.list({
           code: params.code.toUpperCase(),

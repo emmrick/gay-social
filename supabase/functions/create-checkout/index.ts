@@ -81,9 +81,14 @@ serve(async (req) => {
       billing_address_collection: "auto",
     };
 
-    // If promo code provided, look it up and apply it
-    if (promoCode) {
-      logStep("Looking up promo code", { promoCode });
+    // Promo codes are only allowed for Premium tier, NOT for VIP
+    if (tier === 'vip') {
+      // VIP tier: no promo codes allowed at all
+      logStep("VIP tier selected - promo codes disabled");
+      // Don't allow any promotion codes for VIP
+    } else if (promoCode) {
+      // Premium tier with provided promo code
+      logStep("Looking up promo code for Premium", { promoCode });
       const promoCodes = await stripe.promotionCodes.list({
         code: promoCode.toUpperCase(),
         active: true,
@@ -95,11 +100,11 @@ serve(async (req) => {
         logStep("Promo code applied", { promoCodeId: promoCodes.data[0].id });
       } else {
         logStep("Promo code not found or inactive", { promoCode });
-        // Still allow checkout without promo code
+        // Still allow checkout without promo code for Premium
         sessionParams.allow_promotion_codes = true;
       }
     } else {
-      // Allow manual promo code entry in Stripe checkout
+      // Premium tier without promo code - allow manual entry in Stripe checkout
       sessionParams.allow_promotion_codes = true;
     }
 

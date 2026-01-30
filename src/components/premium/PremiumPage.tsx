@@ -204,12 +204,18 @@ const PremiumPage = () => {
           </Card>
         )}
 
-        {/* Promo Code Input (shared) */}
+        {/* Promo Code Input (Premium only) */}
         {!isPremium && !isVip && (
           <Card>
             <CardContent className="p-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium">Vous avez un code promo ?</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">Vous avez un code promo ?</p>
+                  <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-600">
+                    <Crown className="w-3 h-3 mr-1" />
+                    Premium uniquement
+                  </Badge>
+                </div>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -253,6 +259,10 @@ const PremiumPage = () => {
                     )}
                   </div>
                 )}
+                
+                <p className="text-xs text-muted-foreground">
+                  Les codes promotionnels sont valables uniquement pour l'offre Premium à 4,50€/mois.
+                </p>
               </div>
             </CardContent>
           </Card>

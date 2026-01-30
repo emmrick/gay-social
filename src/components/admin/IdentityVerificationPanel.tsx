@@ -106,11 +106,41 @@ const IdentityVerificationPanel = () => {
     try {
       const getSignedUrl = async (path: string | null) => {
         if (!path) return null;
-        // Extract the file path from the URL or use as-is if it's already a path
-        const filePath = path.includes('/') ? path.split('/').slice(-2).join('/') : path;
-        const { data } = await supabase.storage
+        
+        // If it's already a full URL (old format), extract the path
+        // Otherwise use the path directly (new format)
+        let filePath = path;
+        
+        if (path.startsWith('http')) {
+          // Extract path from URL - handle both signed and public URLs
+          try {
+            const url = new URL(path);
+            const pathParts = url.pathname.split('/');
+            // Find 'identity-documents' in path and get everything after
+            const bucketIndex = pathParts.findIndex(p => p === 'identity-documents');
+            if (bucketIndex !== -1) {
+              filePath = pathParts.slice(bucketIndex + 1).join('/');
+            }
+          } catch {
+            // If URL parsing fails, try simple extraction
+            const match = path.match(/identity-documents\/(.+?)(?:\?|$)/);
+            if (match) {
+              filePath = match[1];
+            }
+          }
+        }
+        
+        console.log('Getting signed URL for path:', filePath);
+        
+        const { data, error } = await supabase.storage
           .from('identity-documents')
           .createSignedUrl(filePath, 300); // 5 minutes
+          
+        if (error) {
+          console.error('Error creating signed URL:', error);
+          return null;
+        }
+        
         return data?.signedUrl || null;
       };
 
@@ -120,9 +150,11 @@ const IdentityVerificationPanel = () => {
         getSignedUrl(verification.id_back_url),
       ]);
 
+      console.log('Signed URLs:', { selfie: !!selfie, idFront: !!idFront, idBack: !!idBack });
       setSignedUrls({ selfie, idFront, idBack });
     } catch (error) {
       console.error('Error getting signed URLs:', error);
+      toast.error('Erreur lors du chargement des documents');
     }
 
     setViewDialogOpen(true);
@@ -359,10 +391,20 @@ const IdentityVerificationPanel = () => {
                             alt="Selfie" 
                             className="w-full h-full object-cover pointer-events-none"
                             draggable={false}
+                            onError={(e) => {
+                              console.error('Failed to load selfie image');
+                              e.currentTarget.style.display = 'none';
+                            }}
                           />
+                        ) : selectedVerification.selfie_url ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-destructive p-2">
+                            <AlertTriangle className="w-6 h-6 mb-1" />
+                            <span className="text-xs text-center">Erreur chargement</span>
+                          </div>
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Loader2 className="w-6 h-6 animate-spin" />
+                          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
+                            <User className="w-6 h-6 mb-1" />
+                            <span className="text-xs text-center">Non fourni</span>
                           </div>
                         )}
                       </div>
@@ -376,10 +418,20 @@ const IdentityVerificationPanel = () => {
                             alt="ID Recto" 
                             className="w-full h-full object-cover pointer-events-none"
                             draggable={false}
+                            onError={(e) => {
+                              console.error('Failed to load ID front image');
+                              e.currentTarget.style.display = 'none';
+                            }}
                           />
+                        ) : selectedVerification.id_front_url ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-destructive p-2">
+                            <AlertTriangle className="w-6 h-6 mb-1" />
+                            <span className="text-xs text-center">Erreur chargement</span>
+                          </div>
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Loader2 className="w-6 h-6 animate-spin" />
+                          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
+                            <Shield className="w-6 h-6 mb-1" />
+                            <span className="text-xs text-center">Non fourni</span>
                           </div>
                         )}
                       </div>
@@ -393,10 +445,20 @@ const IdentityVerificationPanel = () => {
                             alt="ID Verso" 
                             className="w-full h-full object-cover pointer-events-none"
                             draggable={false}
+                            onError={(e) => {
+                              console.error('Failed to load ID back image');
+                              e.currentTarget.style.display = 'none';
+                            }}
                           />
+                        ) : selectedVerification.id_back_url ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-destructive p-2">
+                            <AlertTriangle className="w-6 h-6 mb-1" />
+                            <span className="text-xs text-center">Erreur chargement</span>
+                          </div>
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Loader2 className="w-6 h-6 animate-spin" />
+                          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
+                            <Shield className="w-6 h-6 mb-1" />
+                            <span className="text-xs text-center">Non fourni</span>
                           </div>
                         )}
                       </div>

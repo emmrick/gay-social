@@ -15,6 +15,7 @@ import {
   Ban,
   Users,
   ShieldOff,
+  Crown,
   IdCard,
   Ticket,
   BarChart3,
@@ -54,6 +55,7 @@ import TaskRatesPanel from '@/components/admin/TaskRatesPanel';
 import WithdrawalRequestsPanel from '@/components/admin/WithdrawalRequestsPanel';
 import GlobalEarningsPanel from '@/components/admin/GlobalEarningsPanel';
 import ModerationHistoryPanel from '@/components/admin/ModerationHistoryPanel';
+import PremiumUsersPanel from '@/components/admin/PremiumUsersPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', color: 'bg-yellow-500', icon: Clock },
@@ -67,7 +69,7 @@ const Admin = () => {
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats, isLoading: statsLoading } = useReportStats();
   const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
-  const [activeSection, setActiveSection] = useState<'wallet' | 'withdrawals' | 'rates' | 'global' | 'stats' | 'users' | 'reports' | 'moderation' | 'blocked' | 'verification' | 'promo' | 'history'>('wallet');
+  const [activeSection, setActiveSection] = useState<'wallet' | 'withdrawals' | 'rates' | 'global' | 'stats' | 'users' | 'reports' | 'moderation' | 'blocked' | 'verification' | 'promo' | 'history' | 'premium'>('wallet');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
@@ -225,6 +227,10 @@ const Admin = () => {
               <TabsTrigger value="blocked" className="gap-2">
                 <Ban className="w-4 h-4" />
                 <span className="hidden sm:inline">Bloqués</span>
+              </TabsTrigger>
+              <TabsTrigger value="premium" className="gap-2">
+                <Crown className="w-4 h-4" />
+                <span className="hidden sm:inline">Premium</span>
               </TabsTrigger>
               <TabsTrigger value="history" className="gap-2">
                 <History className="w-4 h-4" />
@@ -402,6 +408,15 @@ const Admin = () => {
             <Card>
               <CardContent className="pt-6">
                 <ModerationHistoryPanel />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Premium Users Section */}
+          <TabsContent value="premium">
+            <Card>
+              <CardContent className="pt-6">
+                <PremiumUsersPanel />
               </CardContent>
             </Card>
           </TabsContent>

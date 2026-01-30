@@ -33,17 +33,19 @@ export const useNearbyProfiles = (
   const query = useQuery({
     queryKey: ['nearby-profiles', latitude, longitude, maxDistance, effectiveLimit, isPremium],
     queryFn: async (): Promise<NearbyProfile[]> => {
-      // Calculate 1 hour ago for filtering offline users (like Grindr)
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      // Premium users can see members offline up to 24 hours, free users only 1 hour
+      const offlineThreshold = isPremium 
+        ? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 24 hours for Premium
+        : new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 hour for free
 
       // Use explicit null/undefined checks (0 is a valid coordinate).
       if (latitude == null || longitude == null) {
-        // Fallback: get online profiles or recently active (within 1 hour)
+        // Fallback: get online profiles or recently active
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .neq('user_id', user?.id || '')
-          .or(`is_online.eq.true,last_seen.gte.${oneHourAgo}`)
+          .or(`is_online.eq.true,last_seen.gte.${offlineThreshold}`)
           .order('is_online', { ascending: false })
           .order('last_seen', { ascending: false })
           .limit(effectiveLimit);
@@ -67,11 +69,11 @@ export const useNearbyProfiles = (
 
       if (error) throw error;
       
-      // Filter out users who are offline for more than 1 hour (like Grindr)
+      // Filter out users who are offline beyond the threshold
       const filteredData = (data || []).filter(profile => {
         if (profile.is_online) return true;
         if (!profile.last_seen) return false;
-        return new Date(profile.last_seen) >= new Date(oneHourAgo);
+        return new Date(profile.last_seen) >= new Date(offlineThreshold);
       });
       
       return filteredData;

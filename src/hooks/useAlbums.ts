@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useCreateNotification } from '@/hooks/useNotifications';
 
 interface Album {
   id: string;
@@ -34,6 +35,7 @@ interface AlbumShare {
 export const useAlbums = (userId?: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const createNotification = useCreateNotification();
   const targetUserId = userId || user?.id;
   const isOwnAlbums = targetUserId === user?.id;
 
@@ -269,13 +271,30 @@ export const useAlbums = (userId?: string) => {
         // Don't throw - the share was created successfully
       }
 
-      return shareData;
+      // Get sender's profile for notification
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      return { shareData, albumName: album?.name, senderUsername: senderProfile?.username };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (result, variables) => {
       queryClient.invalidateQueries({ queryKey: ['album-shares'] });
       // Invalidate with proper keys to refresh the conversation
       queryClient.invalidateQueries({ queryKey: ['private-messages', user?.id, variables.sharedWithUserId] });
       queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
+      
+      // Create notification for recipient
+      createNotification.mutate({
+        userId: variables.sharedWithUserId,
+        type: 'album_share',
+        title: '📁 Nouvel album partagé',
+        message: `${result?.senderUsername || 'Quelqu\'un'} a partagé l'album "${result?.albumName || 'Album'}" avec toi`,
+        actionUrl: `/messages`,
+      });
+      
       toast.success('Album partagé !');
     },
     onError: (error: Error) => {

@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { useNotificationSound } from './useNotificationSound';
 
 export interface Notification {
   id: string;
@@ -17,6 +18,8 @@ export interface Notification {
 export const useNotifications = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { playNotificationSound } = useNotificationSound();
+  const isInitialLoadRef = useRef(true);
 
   const query = useQuery({
     queryKey: ['notifications', user?.id],
@@ -40,6 +43,11 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!user?.id) return;
 
+    // Mark initial load as complete after a short delay
+    const timer = setTimeout(() => {
+      isInitialLoadRef.current = false;
+    }, 2000);
+
     const channel = supabase
       .channel('notifications-realtime')
       .on(
@@ -50,16 +58,33 @@ export const useNotifications = () => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`,
         },
-        () => {
+        (payload) => {
           queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+          queryClient.invalidateQueries({ queryKey: ['notifications-unread-count', user.id] });
+          
+          // Play sound only for new notifications (not initial load)
+          if (!isInitialLoadRef.current) {
+            playNotificationSound();
+            
+            // Show browser notification if permission granted and page not visible
+            if (document.visibilityState === 'hidden' && Notification.permission === 'granted') {
+              const notifData = payload.new as Notification;
+              new Notification(notifData.title, {
+                body: notifData.message || '',
+                icon: '/pwa-192x192.png',
+                tag: notifData.id,
+              });
+            }
+          }
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(timer);
       supabase.removeChannel(channel);
     };
-  }, [user?.id, queryClient]);
+  }, [user?.id, queryClient, playNotificationSound]);
 
   return query;
 };

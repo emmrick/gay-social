@@ -163,8 +163,10 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
       onOpenChange(false);
       // Force a refresh of the verification state for the guard/UI.
       refetch();
-    } catch (error) {
-      toast.error('Erreur lors de l\'envoi des documents');
+    } catch (error: any) {
+      console.error('Verification submission error:', error);
+      const errorMessage = error?.message || error?.error?.message || 'Erreur lors de l\'envoi des documents';
+      toast.error(errorMessage);
     } finally {
       setIsUploading(false);
     }

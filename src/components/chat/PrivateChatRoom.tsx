@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import ChatInput from './ChatInput';
 import EphemeralMessage from './EphemeralMessage';
+import RegularMediaMessage from './RegularMediaMessage';
 import ReportUserDialog from './ReportUserDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 import UserProfilePreview from './UserProfilePreview';
@@ -197,7 +198,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           <div className="space-y-4">
             {messages.map((message) => {
               const isOwn = message.sender_id === user?.id;
-              const isEphemeral = message.message_type === 'image' || message.message_type === 'video';
+              const isEphemeralMedia = (message.message_type === 'image' || message.message_type === 'video') && 
+                                       message.content && !message.content.startsWith('http');
+              const isRegularMedia = (message.message_type === 'image' || message.message_type === 'video') && 
+                                     message.content && message.content.startsWith('http');
 
               return (
                 <div
@@ -224,11 +228,17 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
                   <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
                     {/* Message content */}
-                    {isEphemeral ? (
+                    {isEphemeralMedia ? (
                       <EphemeralMessage
                         messageId={message.id}
                         messageType={message.message_type as 'image' | 'video'}
                         senderName={message.senderUsername}
+                        isOwn={isOwn}
+                      />
+                    ) : isRegularMedia ? (
+                      <RegularMediaMessage
+                        mediaUrl={message.content!}
+                        mediaType={message.message_type as 'image' | 'video'}
                         isOwn={isOwn}
                       />
                     ) : (

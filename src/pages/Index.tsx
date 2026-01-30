@@ -110,26 +110,9 @@ const Index = () => {
     }
   }, [user, verification, verificationLoading]);
 
-  // Show loading while auth is initializing
+  // Skeleton already shown by parent Suspense, just return null briefly
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <motion.div 
-          className="flex flex-col items-center gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          >
-            <Loader2 className="w-8 h-8 text-primary" />
-          </motion.div>
-          <p className="text-muted-foreground">Chargement...</p>
-        </motion.div>
-      </div>
-    );
+    return null;
   }
 
   const handleGetStarted = () => {

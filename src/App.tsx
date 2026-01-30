@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,16 +10,30 @@ import VerificationGuard from "@/components/verification/VerificationGuard";
 import InstallPWAPrompt from "@/components/pwa/InstallPWAPrompt";
 import { AgeConfirmationModal } from "@/components/AgeConfirmationModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
+import { PageFallback } from "@/components/loading/LazyPageLoader";
 import { toast } from "sonner";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Admin from "./pages/Admin";
-import About from "./pages/About";
-import Legal from "./pages/Legal";
-import NotFound from "./pages/NotFound";
-import MemberProfile from "./pages/MemberProfile";
 
-const queryClient = new QueryClient();
+// Lazy load pages for better initial bundle size
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Admin = lazy(() => import("./pages/Admin"));
+const About = lazy(() => import("./pages/About"));
+const Legal = lazy(() => import("./pages/Legal"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const MemberProfile = lazy(() => import("./pages/MemberProfile"));
+
+// Optimized QueryClient with better caching
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2, // 2 minutes
+      gcTime: 1000 * 60 * 5, // 5 minutes (replaces cacheTime)
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 // Global unhandled rejection handler to catch async errors that React ErrorBoundary cannot catch
 const useGlobalErrorHandler = () => {
@@ -62,16 +76,18 @@ const AppContent = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/profile/:userId" element={<MemberProfile />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/legal" element={<Legal />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <Suspense fallback={<AppLoadingSkeleton />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/profile/:userId" element={<Suspense fallback={<PageFallback />}><MemberProfile /></Suspense>} />
+                  <Route path="/auth" element={<Suspense fallback={<PageFallback />}><Auth /></Suspense>} />
+                  <Route path="/admin" element={<Suspense fallback={<PageFallback />}><Admin /></Suspense>} />
+                  <Route path="/about" element={<Suspense fallback={<PageFallback />}><About /></Suspense>} />
+                  <Route path="/legal" element={<Suspense fallback={<PageFallback />}><Legal /></Suspense>} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
+                </Routes>
+              </Suspense>
             </BrowserRouter>
             <InstallPWAPrompt />
             <AgeConfirmationModal />

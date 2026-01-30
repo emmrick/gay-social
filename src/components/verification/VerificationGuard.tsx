@@ -17,13 +17,9 @@ const VerificationGuard = ({ children }: VerificationGuardProps) => {
     return <>{children}</>;
   }
 
-  // Show loading while checking
+  // Show nothing while checking - parent Suspense handles the skeleton
   if (authLoading || verificationLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return null;
   }
 
   // If verification is pending (submitted), allow access

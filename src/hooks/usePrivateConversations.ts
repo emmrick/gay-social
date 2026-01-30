@@ -138,6 +138,13 @@ export const usePrivateConversations = () => {
     return status.is_archived && !status.is_deleted;
   });
 
+  // Deleted conversations: marked as deleted
+  const deletedConversations = allConversations.filter(conv => {
+    const status = statusMap.get(conv.id);
+    if (!status) return false;
+    return status.is_deleted;
+  });
+
   // Real-time subscription for new conversations AND new messages
   useEffect(() => {
     if (!user) return;
@@ -237,6 +244,7 @@ export const usePrivateConversations = () => {
   return {
     conversations: activeConversations,
     archivedConversations,
+    deletedConversations,
     isLoading: query.isLoading || statusQuery.isLoading,
     error: query.error,
     getOrCreateConversation,

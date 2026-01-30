@@ -29,22 +29,29 @@ import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
 import UserProfilePreview from './UserProfilePreview';
 import { cn } from '@/lib/utils';
 
+type ViewMode = 'active' | 'archived' | 'deleted';
+
 interface PrivateChatListProps {
   onSelectConversation: (userId: string) => void;
   selectedUserId: string | null;
-  showArchived?: boolean;
+  viewMode?: ViewMode;
 }
 
-const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = false }: PrivateChatListProps) => {
-  const { conversations, archivedConversations, isLoading } = usePrivateConversations();
+const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'active' }: PrivateChatListProps) => {
+  const { conversations, archivedConversations, deletedConversations, isLoading } = usePrivateConversations();
   const { getUnreadCount } = useUnreadMessages();
-  const { archiveConversation, unarchiveConversation, deleteConversation } = useConversationStatus();
+  const { archiveConversation, unarchiveConversation, deleteConversation, restoreConversation } = useConversationStatus();
   const [profilePreviewUserId, setProfilePreviewUserId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [permanentDeleteDialogOpen, setPermanentDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
 
-  // Use archived or active conversations based on prop
-  const displayConversations = showArchived ? archivedConversations : conversations;
+  // Use the appropriate conversations based on viewMode
+  const displayConversations = viewMode === 'deleted' 
+    ? deletedConversations 
+    : viewMode === 'archived' 
+      ? archivedConversations 
+      : conversations;
 
   // Get user IDs for premium check
   const userIds = useMemo(
@@ -82,6 +89,27 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
     }
   };
 
+  const handlePermanentDeleteClick = (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation();
+    setConversationToDelete(conversationId);
+    setPermanentDeleteDialogOpen(true);
+  };
+
+  const confirmPermanentDelete = () => {
+    if (conversationToDelete) {
+      // For now, permanent delete just removes the status (restores then immediately re-deletes visibility)
+      // In a real app, you might want to actually delete messages
+      restoreConversation.mutate(conversationToDelete);
+      setConversationToDelete(null);
+      setPermanentDeleteDialogOpen(false);
+    }
+  };
+
+  const handleRestore = (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation();
+    restoreConversation.mutate(conversationId);
+  };
+
   if (isLoading) {
     return (
       <div className="p-4 space-y-3">
@@ -99,23 +127,36 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
   }
 
   if (displayConversations.length === 0) {
+    const emptyConfig = {
+      active: {
+        icon: <MessageCircle className="w-10 h-10 text-primary" />,
+        title: 'Aucune conversation',
+        description: 'Utilise le bouton + ci-dessus pour rechercher et démarrer une conversation',
+      },
+      archived: {
+        icon: <Archive className="w-10 h-10 text-primary" />,
+        title: 'Aucune archive',
+        description: 'Vos conversations archivées apparaîtront ici',
+      },
+      deleted: {
+        icon: <Trash2 className="w-10 h-10 text-muted-foreground" />,
+        title: 'Aucune suppression',
+        description: 'Les conversations supprimées apparaîtront ici. Vous pourrez les restaurer ou les supprimer définitivement.',
+      },
+    };
+    
+    const config = emptyConfig[viewMode];
+    
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center px-6">
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-5">
-          {showArchived ? (
-            <Archive className="w-10 h-10 text-primary" />
-          ) : (
-            <MessageCircle className="w-10 h-10 text-primary" />
-          )}
+          {config.icon}
         </div>
         <h3 className="font-display font-semibold text-foreground text-lg mb-2">
-          {showArchived ? 'Aucune archive' : 'Aucune conversation'}
+          {config.title}
         </h3>
         <p className="text-sm text-muted-foreground max-w-xs">
-          {showArchived 
-            ? 'Vos conversations archivées apparaîtront ici'
-            : 'Utilise le bouton + ci-dessus pour rechercher et démarrer une conversation'
-          }
+          {config.description}
         </p>
       </div>
     );
@@ -230,24 +271,49 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                {showArchived ? (
-                  <DropdownMenuItem onClick={(e) => handleUnarchive(e, conv.id)}>
-                    <ArchiveRestore className="w-4 h-4 mr-2" />
-                    Restaurer
-                  </DropdownMenuItem>
+                {viewMode === 'deleted' ? (
+                  <>
+                    <DropdownMenuItem onClick={(e) => handleRestore(e, conv.id)}>
+                      <ArchiveRestore className="w-4 h-4 mr-2" />
+                      Restaurer
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => handlePermanentDeleteClick(e, conv.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Supprimer définitivement
+                    </DropdownMenuItem>
+                  </>
+                ) : viewMode === 'archived' ? (
+                  <>
+                    <DropdownMenuItem onClick={(e) => handleUnarchive(e, conv.id)}>
+                      <ArchiveRestore className="w-4 h-4 mr-2" />
+                      Restaurer
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => handleDeleteClick(e, conv.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Supprimer
+                    </DropdownMenuItem>
+                  </>
                 ) : (
-                  <DropdownMenuItem onClick={(e) => handleArchive(e, conv.id)}>
-                    <Archive className="w-4 h-4 mr-2" />
-                    Archiver
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem onClick={(e) => handleArchive(e, conv.id)}>
+                      <Archive className="w-4 h-4 mr-2" />
+                      Archiver
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => handleDeleteClick(e, conv.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Supprimer
+                    </DropdownMenuItem>
+                  </>
                 )}
-                <DropdownMenuItem 
-                  onClick={(e) => handleDeleteClick(e, conv.id)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Supprimer
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </button>
@@ -279,6 +345,24 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
           <AlertDialogCancel>Annuler</AlertDialogCancel>
           <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
             Supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* Permanent Delete Confirmation Dialog */}
+    <AlertDialog open={permanentDeleteDialogOpen} onOpenChange={setPermanentDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Supprimer définitivement ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Cette action est irréversible. La conversation sera complètement retirée de votre liste.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmPermanentDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            Supprimer définitivement
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -9,10 +9,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import ProfilePhotoCarousel from '@/components/chat/ProfilePhotoCarousel';
 import ReportUserDialog from '@/components/chat/ReportUserDialog';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {
@@ -87,6 +88,14 @@ const MemberProfile = () => {
   const { isFavorite, toggleFavorite, isToggling } = useUserFavorites();
 
   const extendedProfile = profile as any;
+
+  // Handle back navigation with swipe gesture support
+  const handleBack = useCallback(() => {
+    navigate(-1);
+  }, [navigate]);
+
+  // Enable swipe-to-go-back gesture on mobile
+  useMobileNavigation({ onBack: handleBack, enabled: true });
 
   // Build photos array
   const allPhotos = photos.length > 0 

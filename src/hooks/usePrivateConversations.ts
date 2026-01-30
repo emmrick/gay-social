@@ -124,19 +124,32 @@ export const usePrivateConversations = () => {
   
   const statusMap = new Map(statuses.map(s => [s.conversation_id, s]));
   
+  // Helper to sort by last activity (last message or creation date)
+  const sortByLastActivity = (convs: ConversationWithProfile[]) => {
+    return [...convs].sort((a, b) => {
+      const aTime = a.lastMessage?.created_at || a.created_at;
+      const bTime = b.lastMessage?.created_at || b.created_at;
+      return new Date(bTime).getTime() - new Date(aTime).getTime();
+    });
+  };
+  
   // Active conversations: not archived and not deleted
-  const activeConversations = allConversations.filter(conv => {
-    const status = statusMap.get(conv.id);
-    if (!status) return true; // No status = active
-    return !status.is_archived && !status.is_deleted;
-  });
+  const activeConversations = sortByLastActivity(
+    allConversations.filter(conv => {
+      const status = statusMap.get(conv.id);
+      if (!status) return true; // No status = active
+      return !status.is_archived && !status.is_deleted;
+    })
+  );
   
   // Archived conversations: archived but not deleted
-  const archivedConversations = allConversations.filter(conv => {
-    const status = statusMap.get(conv.id);
-    if (!status) return false;
-    return status.is_archived && !status.is_deleted;
-  });
+  const archivedConversations = sortByLastActivity(
+    allConversations.filter(conv => {
+      const status = statusMap.get(conv.id);
+      if (!status) return false;
+      return status.is_archived && !status.is_deleted;
+    })
+  );
 
   // Real-time subscription for new conversations AND new messages
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FolderLock, Clock, Eye, X } from 'lucide-react';
+import { FolderLock, Clock, Eye, X, ShieldX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,6 +13,7 @@ import { fr } from 'date-fns/locale';
 import { Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 
 interface SharedAlbumViewerProps {
   albumId: string;
@@ -44,7 +45,13 @@ const getSignedUrl = async (mediaUrl: string): Promise<string> => {
 
 const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: SharedAlbumViewerProps) => {
   const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; type: string } | null>(null);
-
+  const { 
+    isSuspended, 
+    isBlocked, 
+    getSuspensionTimeLeft, 
+    preventContextMenu, 
+    preventDrag 
+  } = useScreenshotProtection();
   // Fetch album media with signed URLs
   const { data: media = [], isLoading } = useQuery({
     queryKey: ['shared-album-media', albumId],
@@ -69,6 +76,29 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
     },
     enabled: isOpen && !!albumId,
   });
+
+  // Show suspended screen if user is suspended
+  if (isSuspended) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <div className="text-center py-8 space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+              <ShieldX className="w-8 h-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold">Accès suspendu</h3>
+            <p className="text-sm text-muted-foreground">
+              Votre accès aux albums est temporairement suspendu suite à une tentative de capture d'écran.
+            </p>
+            <p className="text-sm font-medium text-destructive">
+              Temps restant : {getSuspensionTimeLeft()}
+            </p>
+            <Button onClick={onClose} variant="outline">Fermer</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -100,23 +130,33 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
               <p>Cet album est vide</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 relative">
+              {/* Screenshot block overlay */}
+              {isBlocked && (
+                <div className="absolute inset-0 z-50 bg-black flex items-center justify-center">
+                  <p className="text-white text-sm font-medium">Capture détectée</p>
+                </div>
+              )}
               {media.map((item) => (
                 <div 
                   key={item.id} 
                   className="aspect-square rounded-lg overflow-hidden bg-secondary cursor-pointer"
                   onClick={() => setFullscreenMedia({ url: item.signed_url, type: item.media_type })}
+                  onContextMenu={preventContextMenu}
+                  onDragStart={preventDrag}
                 >
                   {item.media_type === 'image' ? (
                     <img 
                       src={item.signed_url} 
                       alt="" 
-                      className="w-full h-full object-cover hover:scale-105 transition-transform"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform select-none pointer-events-none"
+                      draggable={false}
                     />
                   ) : (
                     <video 
                       src={item.signed_url} 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover select-none pointer-events-none"
+                      draggable={false}
                     />
                   )}
                 </div>
@@ -125,16 +165,23 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
           )}
         </ScrollArea>
 
-        {/* Fullscreen media viewer */}
+        {/* Fullscreen media viewer with protection */}
         {fullscreenMedia && (
           <div 
             className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
             onClick={() => setFullscreenMedia(null)}
+            onContextMenu={preventContextMenu}
           >
+            {/* Screenshot block overlay in fullscreen */}
+            {isBlocked && (
+              <div className="absolute inset-0 z-[101] bg-black flex items-center justify-center">
+                <p className="text-white text-lg font-medium">Capture détectée</p>
+              </div>
+            )}
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-4 right-4 text-white hover:bg-white/20"
+              className="absolute top-4 right-4 text-white hover:bg-white/20 z-[102]"
               onClick={() => setFullscreenMedia(null)}
             >
               <X className="w-6 h-6" />
@@ -143,16 +190,21 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
               <img 
                 src={fullscreenMedia.url} 
                 alt="" 
-                className="max-w-full max-h-full object-contain"
+                className="max-w-full max-h-full object-contain select-none"
                 onClick={(e) => e.stopPropagation()}
+                onContextMenu={preventContextMenu}
+                onDragStart={preventDrag}
+                draggable={false}
               />
             ) : (
               <video 
                 src={fullscreenMedia.url} 
-                className="max-w-full max-h-full"
+                className="max-w-full max-h-full select-none"
                 controls
                 autoPlay
                 onClick={(e) => e.stopPropagation()}
+                onContextMenu={preventContextMenu}
+                controlsList="nodownload"
               />
             )}
           </div>

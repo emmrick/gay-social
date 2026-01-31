@@ -745,6 +745,7 @@ export type Database = {
         Row: {
           consecutive_payments: number
           created_at: string
+          expires_at: string
           id: string
           last_payment_at: string | null
           referral_code_id: string
@@ -759,6 +760,7 @@ export type Database = {
         Insert: {
           consecutive_payments?: number
           created_at?: string
+          expires_at?: string
           id?: string
           last_payment_at?: string | null
           referral_code_id: string
@@ -773,6 +775,7 @@ export type Database = {
         Update: {
           consecutive_payments?: number
           created_at?: string
+          expires_at?: string
           id?: string
           last_payment_at?: string | null
           referral_code_id?: string

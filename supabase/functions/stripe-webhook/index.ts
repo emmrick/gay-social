@@ -259,6 +259,36 @@ async function processReferralPayment(
     return;
   }
   
+  // Check if the referral has expired (must subscribe within 7 days)
+  const expiresAt = new Date(referral.expires_at);
+  const now = new Date();
+  
+  if (now > expiresAt) {
+    logStep("Referral expired, marking as expired", { 
+      referralId: referral.id, 
+      expiresAt: referral.expires_at,
+      now: now.toISOString()
+    });
+    
+    // Mark referral as expired
+    await supabaseClient
+      .from('referrals')
+      .update({ status: 'expired' })
+      .eq('id', referral.id);
+    
+    return;
+  }
+  
+  // If this is the first payment, activate the referral
+  if (referral.status === 'pending') {
+    logStep("First payment received within 7 days, activating referral", { referralId: referral.id });
+    
+    await supabaseClient
+      .from('referrals')
+      .update({ status: 'active' })
+      .eq('id', referral.id);
+  }
+  
   const newPaymentCount = referral.consecutive_payments + 1;
   logStep("Incrementing consecutive payments", { userId: user.id, newCount: newPaymentCount });
   

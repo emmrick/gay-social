@@ -94,14 +94,24 @@ const Index = () => {
   useEffect(() => {
     const state = location.state as { openPrivateChat?: string } | null;
     if (state?.openPrivateChat && user) {
-      setSelectedPrivateUserId(state.openPrivateChat);
-      markAsRead.mutate(state.openPrivateChat);
-      setCurrentView('private');
-      setActiveTab('messages');
-      // Clear the state to prevent re-opening on refresh
+      const targetUserId = state.openPrivateChat;
+      
+      // Clear the state immediately to prevent re-triggering
       navigate('/', { replace: true, state: {} });
+      
+      // Ensure conversation exists and open the chat
+      getOrCreateConversation.mutateAsync(targetUserId)
+        .then(() => {
+          setSelectedPrivateUserId(targetUserId);
+          markAsRead.mutate(targetUserId);
+          setCurrentView('private');
+          setActiveTab('messages');
+        })
+        .catch((error) => {
+          console.error('Error opening conversation:', error);
+        });
     }
-  }, [location.state, user, navigate, markAsRead]);
+  }, [location.state, user, navigate, markAsRead, getOrCreateConversation]);
 
   // Calculate animation direction based on tab order
   const direction = useMemo(() => {

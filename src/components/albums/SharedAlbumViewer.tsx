@@ -162,15 +162,15 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[80vh]">
+      <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FolderLock className="w-5 h-5 text-primary" />
+          <DialogTitle className="flex items-center gap-2 text-lg">
+            <FolderLock className="w-6 h-6 text-primary" />
             {albumName}
           </DialogTitle>
           {expiresAt && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Clock className="w-3 h-3" />
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
+              <Clock className="w-4 h-4" />
               Accès expire {formatDistanceToNow(new Date(expiresAt), { 
                 addSuffix: true, 
                 locale: fr 
@@ -179,28 +179,28 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
           )}
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh]">
+        <ScrollArea className="max-h-[70vh]">
           {isLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin" />
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : media.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Eye className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Cet album est vide</p>
+            <div className="text-center py-12 text-muted-foreground">
+              <Eye className="w-16 h-16 mx-auto mb-4 opacity-50" />
+              <p className="text-lg">Cet album est vide</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2 relative">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 relative p-1">
               {/* Screenshot block overlay */}
               {isBlocked && (
-                <div className="absolute inset-0 z-50 bg-black flex items-center justify-center">
-                  <p className="text-white text-sm font-medium">Capture détectée</p>
+                <div className="absolute inset-0 z-50 bg-black rounded-xl flex items-center justify-center">
+                  <p className="text-white text-lg font-medium">Capture détectée</p>
                 </div>
               )}
               {media.map((item) => (
                 <div 
                   key={item.id} 
-                  className="aspect-square rounded-lg overflow-hidden bg-secondary cursor-pointer"
+                  className="aspect-square rounded-xl overflow-hidden bg-secondary cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
                   onClick={() => setFullscreenMedia({ url: item.signed_url, type: item.media_type })}
                   onContextMenu={preventContextMenu}
                   onDragStart={preventDrag}
@@ -209,7 +209,7 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
                     <img 
                       src={item.signed_url} 
                       alt="" 
-                      className="w-full h-full object-cover hover:scale-105 transition-transform select-none pointer-events-none"
+                      className="w-full h-full object-cover select-none pointer-events-none"
                       draggable={false}
                     />
                   ) : (

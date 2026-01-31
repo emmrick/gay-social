@@ -342,21 +342,21 @@ const AlbumCard = ({
         </div>
       )}
 
-      {/* Media preview grid */}
+      {/* Media preview grid - larger display */}
       {isSelected && media.length > 0 && (
-        <div className="mt-4 grid grid-cols-4 gap-2">
-          {media.slice(0, 8).map((item: any) => (
-            <div key={item.id} className="aspect-square rounded-lg overflow-hidden bg-secondary">
+        <div className="mt-4 grid grid-cols-3 gap-3">
+          {media.slice(0, 6).map((item: any) => (
+            <div key={item.id} className="aspect-square rounded-xl overflow-hidden bg-secondary shadow-md">
               {item.media_type === 'image' ? (
-                <img src={item.media_url} alt="" className="w-full h-full object-cover" />
+                <img src={item.media_url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-200" />
               ) : (
                 <video src={item.media_url} className="w-full h-full object-cover" />
               )}
             </div>
           ))}
-          {media.length > 8 && (
-            <div className="aspect-square rounded-lg bg-secondary flex items-center justify-center text-muted-foreground text-sm">
-              +{media.length - 8}
+          {media.length > 6 && (
+            <div className="aspect-square rounded-xl bg-secondary/80 flex items-center justify-center text-muted-foreground font-medium text-lg shadow-md">
+              +{media.length - 6}
             </div>
           )}
         </div>

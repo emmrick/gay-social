@@ -66,7 +66,17 @@ export const useNearbyProfiles = (
 
         if (error) throw error;
         
-        const profiles = (data || []).map(profile => ({
+        // Filter out blocked/suspended users client-side for fallback query
+        const filteredProfiles = [];
+        for (const profile of data || []) {
+          const { data: isBlocked } = await supabase.rpc('is_user_blocked', { _user_id: profile.user_id });
+          const { data: isSuspended } = await supabase.rpc('is_user_suspended', { _user_id: profile.user_id });
+          if (!isBlocked && !isSuspended) {
+            filteredProfiles.push(profile);
+          }
+        }
+        
+        const profiles = filteredProfiles.map(profile => ({
           ...profile,
           distance_km: null,
         }));

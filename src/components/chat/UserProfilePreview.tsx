@@ -5,13 +5,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, MapPin, Clock, Flag, User } from 'lucide-react';
+import { MessageCircle, MapPin, Clock, Flag, User, Ban } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import ReportUserDialog from './ReportUserDialog';
 import ProfilePhotoCarousel from './ProfilePhotoCarousel';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
+import { useUserSuspensionStatus } from '@/hooks/useUserSuspensionStatus';
 
 interface UserProfile {
   user_id: string;
@@ -37,6 +38,9 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
   const [isLoading, setIsLoading] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const { photos: userPhotos } = useProfilePhotos(userId || undefined);
+  const { data: suspensionStatus, isLoading: suspensionLoading } = useUserSuspensionStatus(userId || undefined);
+  
+  const isUserUnavailable = suspensionStatus?.isBlocked || suspensionStatus?.isSuspended;
 
   const handleViewFullProfile = () => {
     if (userId) {
@@ -80,13 +84,28 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogHeader>
             <DialogTitle className="sr-only">Profil utilisateur</DialogTitle>
           </DialogHeader>
 
-          {isLoading ? (
+          {isLoading || suspensionLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : isUserUnavailable ? (
+            <div className="flex flex-col items-center justify-center py-8 gap-4">
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                <Ban className="w-8 h-8 text-destructive" />
+              </div>
+              <div className="text-center">
+                <h3 className="font-semibold mb-1">Profil indisponible</h3>
+                <p className="text-sm text-muted-foreground">
+                  Ce compte a été suspendu ou désactivé.
+                </p>
+              </div>
+              <Button variant="outline" onClick={onClose}>
+                Fermer
+              </Button>
             </div>
           ) : profile ? (
             <div className="flex flex-col gap-4">

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Crown, Gem } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Crown, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { useIsPremiumUser } from '@/hooks/usePremiumUsers';
+import { useUserSuspensionStatus } from '@/hooks/useUserSuspensionStatus';
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {
   'actif': '🔝 Actif (Top)',
@@ -90,9 +91,13 @@ const MemberProfile = () => {
   const { photos } = useProfilePhotos(userId || '');
   const { isFavorite, toggleFavorite, isToggling } = useUserFavorites();
   const { isPremium: isUserPremium } = useIsPremiumUser(userId);
+  const { data: suspensionStatus, isLoading: suspensionLoading } = useUserSuspensionStatus(userId);
 
   // Subscribe to real-time online status changes for this user
   useRealtimeUserOnlineStatus(userId);
+  
+  // Check if user is blocked or suspended
+  const isUserUnavailable = suspensionStatus?.isBlocked || suspensionStatus?.isSuspended;
 
   const extendedProfile = profile as any;
   // Handle back navigation with swipe gesture support
@@ -148,7 +153,7 @@ const MemberProfile = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || suspensionLoading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border p-4">
@@ -162,6 +167,25 @@ const MemberProfile = () => {
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-24 w-full" />
         </div>
+      </div>
+    );
+  }
+
+  // Show blocked/suspended user screen
+  if (isUserUnavailable) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+          <Ban className="w-10 h-10 text-destructive" />
+        </div>
+        <h2 className="text-xl font-semibold mb-2">Profil indisponible</h2>
+        <p className="text-muted-foreground mb-4 text-center max-w-xs">
+          Ce compte a été suspendu ou désactivé et n'est plus accessible.
+        </p>
+        <Button onClick={() => navigate(-1)}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Retour
+        </Button>
       </div>
     );
   }

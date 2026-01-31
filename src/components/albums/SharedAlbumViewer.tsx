@@ -26,22 +26,58 @@ interface SharedAlbumViewerProps {
 
 // Helper to extract storage path from URL and create signed URL
 const getSignedUrl = async (mediaUrl: string): Promise<string> => {
-  // Extract the path from the public URL
-  // URL format: https://xxx.supabase.co/storage/v1/object/public/media/userId/albumId/filename
-  const match = mediaUrl.match(/\/storage\/v1\/object\/public\/media\/(.+)$/);
-  if (!match) return mediaUrl;
+  // Extract the path from the URL
+  // URL format can be:
+  // - Public: https://xxx.supabase.co/storage/v1/object/public/media/userId/albumId/filename
+  // - Authenticated: https://xxx.supabase.co/storage/v1/object/authenticated/media/userId/albumId/filename
+  // - Signed: already has token parameter
   
-  const path = match[1];
-  const { data, error } = await supabase.storage
-    .from('media')
-    .createSignedUrl(path, 3600); // 1 hour
-  
-  if (error || !data?.signedUrl) {
-    console.error('Failed to create signed URL:', error);
+  // If already a signed URL, return as-is
+  if (mediaUrl.includes('token=')) {
     return mediaUrl;
   }
   
-  return data.signedUrl;
+  // Try to extract path from various URL formats
+  let path: string | null = null;
+  
+  // Match public or authenticated bucket URLs
+  const publicMatch = mediaUrl.match(/\/storage\/v1\/object\/public\/media\/(.+)$/);
+  const authMatch = mediaUrl.match(/\/storage\/v1\/object\/authenticated\/media\/(.+)$/);
+  const signMatch = mediaUrl.match(/\/storage\/v1\/object\/sign\/media\/(.+?)(\?|$)/);
+  
+  if (publicMatch) {
+    path = publicMatch[1];
+  } else if (authMatch) {
+    path = authMatch[1];
+  } else if (signMatch) {
+    path = signMatch[1];
+  }
+  
+  if (!path) {
+    console.error('Could not extract path from media URL:', mediaUrl);
+    return mediaUrl;
+  }
+  
+  try {
+    const { data, error } = await supabase.storage
+      .from('media')
+      .createSignedUrl(path, 3600); // 1 hour
+    
+    if (error) {
+      console.error('Failed to create signed URL:', error);
+      return mediaUrl;
+    }
+    
+    if (!data?.signedUrl) {
+      console.error('No signed URL returned');
+      return mediaUrl;
+    }
+    
+    return data.signedUrl;
+  } catch (err) {
+    console.error('Error creating signed URL:', err);
+    return mediaUrl;
+  }
 };
 
 const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: SharedAlbumViewerProps) => {
@@ -155,29 +191,49 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
   prevBlockedRef.current = isBlocked;
 
   // Fetch album media with signed URLs
-  const { data: media = [], isLoading } = useQuery({
+  const { data: media = [], isLoading, error: mediaError } = useQuery({
     queryKey: ['shared-album-media', albumId],
     queryFn: async () => {
+      console.log('Fetching album media for albumId:', albumId);
+      
       const { data, error } = await supabase
         .from('album_media')
         .select('*')
         .eq('album_id', albumId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching album media:', error);
+        throw error;
+      }
+      
+      console.log('Album media fetched:', data?.length || 0, 'items');
+      
+      if (!data || data.length === 0) {
+        return [];
+      }
       
       // Generate signed URLs for all media
       const mediaWithSignedUrls = await Promise.all(
-        (data || []).map(async (item) => ({
-          ...item,
-          signed_url: await getSignedUrl(item.media_url),
-        }))
+        data.map(async (item) => {
+          const signed_url = await getSignedUrl(item.media_url);
+          console.log('Generated signed URL for:', item.id, signed_url ? 'success' : 'failed');
+          return {
+            ...item,
+            signed_url,
+          };
+        })
       );
       
       return mediaWithSignedUrls;
     },
     enabled: isOpen && !!albumId && !shareRevoked,
   });
+
+  // Log any query errors
+  if (mediaError) {
+    console.error('Media query error:', mediaError);
+  }
 
   // Show revoked access screen
   if (shareRevoked) {

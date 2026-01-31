@@ -90,10 +90,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // INITIAL load (controls isLoading)
+    // INITIAL load (controls isLoading) with timeout safety
     const initializeAuth = async () => {
+      // Safety timeout - prevent infinite loading on slow/failed network
+      const timeoutId = setTimeout(() => {
+        if (isMounted) {
+          console.warn('[AuthContext] Auth initialization timeout - forcing completion');
+          setIsLoading(false);
+        }
+      }, 8000); // 8 second max wait
+
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[AuthContext] Error getting session:', error);
+        }
+        
         if (!isMounted) return;
 
         setSession(session);
@@ -101,9 +114,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         // Fetch profile BEFORE setting loading false for existing sessions
         if (session?.user) {
-          await loadProfile(session.user.id);
+          // Profile loading with its own timeout
+          const profilePromise = loadProfile(session.user.id);
+          const profileTimeout = new Promise((resolve) => setTimeout(resolve, 5000));
+          
+          await Promise.race([profilePromise, profileTimeout]);
         }
+      } catch (error) {
+        console.error('[AuthContext] Auth initialization error:', error);
       } finally {
+        clearTimeout(timeoutId);
         if (isMounted) {
           setIsLoading(false);
         }

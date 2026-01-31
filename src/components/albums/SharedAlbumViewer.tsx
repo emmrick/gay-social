@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
-import { FolderLock, Clock, Eye, X, ShieldX } from 'lucide-react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { FolderLock, Clock, Eye, X, ShieldX, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Loader2 } from 'lucide-react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,7 +46,9 @@ const getSignedUrl = async (mediaUrl: string): Promise<string> => {
 
 const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: SharedAlbumViewerProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; type: string } | null>(null);
+  const [shareRevoked, setShareRevoked] = useState(false);
   const notificationSentRef = useRef(false);
   
   const { 
@@ -56,6 +58,46 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
     preventContextMenu, 
     preventDrag 
   } = useScreenshotProtection();
+
+  // Subscribe to album_shares changes in real-time
+  useEffect(() => {
+    if (!isOpen || !albumId || !user?.id) return;
+
+    const channel = supabase
+      .channel(`album-share-${albumId}-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'album_shares',
+          filter: `album_id=eq.${albumId}`,
+        },
+        (payload) => {
+          const newRecord = payload.new as { is_active: boolean; shared_with_user_id: string };
+          // If sharing was stopped for this user
+          if (newRecord.shared_with_user_id === user.id && !newRecord.is_active) {
+            setShareRevoked(true);
+            setFullscreenMedia(null);
+            // Invalidate related queries
+            queryClient.invalidateQueries({ queryKey: ['album-share-status'] });
+            queryClient.invalidateQueries({ queryKey: ['shared-albums'] });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isOpen, albumId, user?.id, queryClient]);
+
+  // Reset shareRevoked state when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShareRevoked(false);
+    }
+  }, [isOpen]);
 
   // Fetch album owner
   const { data: albumOwner } = useQuery({
@@ -134,8 +176,28 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
       
       return mediaWithSignedUrls;
     },
-    enabled: isOpen && !!albumId,
+    enabled: isOpen && !!albumId && !shareRevoked,
   });
+
+  // Show revoked access screen
+  if (shareRevoked) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <div className="text-center py-8 space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center">
+              <Lock className="w-8 h-8 text-amber-500" />
+            </div>
+            <h3 className="text-lg font-semibold">Accès révoqué</h3>
+            <p className="text-sm text-muted-foreground">
+              Le propriétaire a arrêté le partage de cet album. Vous n'avez plus accès à son contenu.
+            </p>
+            <Button onClick={onClose} variant="outline">Fermer</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   // Show suspended screen if user is suspended
   if (isSuspended) {

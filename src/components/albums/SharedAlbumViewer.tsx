@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { FolderLock, Clock, Eye, X, ShieldX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,9 +11,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Loader2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SharedAlbumViewerProps {
   albumId: string;
@@ -44,7 +45,10 @@ const getSignedUrl = async (mediaUrl: string): Promise<string> => {
 };
 
 const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: SharedAlbumViewerProps) => {
+  const { user } = useAuth();
   const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; type: string } | null>(null);
+  const notificationSentRef = useRef(false);
+  
   const { 
     isSuspended, 
     isBlocked, 
@@ -52,6 +56,62 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
     preventContextMenu, 
     preventDrag 
   } = useScreenshotProtection();
+
+  // Fetch album owner
+  const { data: albumOwner } = useQuery({
+    queryKey: ['album-owner', albumId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_albums')
+        .select('user_id')
+        .eq('id', albumId)
+        .single();
+
+      if (error) throw error;
+      return data?.user_id;
+    },
+    enabled: isOpen && !!albumId,
+  });
+
+  // Mutation to notify album owner of screenshot attempt
+  const notifyOwnerMutation = useMutation({
+    mutationFn: async () => {
+      if (!albumOwner || !user || albumOwner === user.id || notificationSentRef.current) {
+        return;
+      }
+      
+      notificationSentRef.current = true;
+
+      const { data: viewerProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .single();
+
+      const viewerName = viewerProfile?.username || 'Un utilisateur';
+
+      await supabase.from('notifications').insert({
+        user_id: albumOwner,
+        type: 'screenshot_attempt',
+        title: '🛡️ Tentative de capture détectée',
+        message: `${viewerName} a tenté de capturer votre album "${albumName}". Rassurez-vous, nous avons pris des mesures pour protéger votre contenu : l'écran a été masqué et l'utilisateur a été sanctionné.`,
+        action_url: '/profile',
+      });
+    },
+  });
+
+  // Notify owner when screenshot is blocked
+  const handleScreenshotDetected = useCallback(() => {
+    notifyOwnerMutation.mutate();
+  }, [notifyOwnerMutation]);
+
+  // Watch for isBlocked changes to notify owner
+  const prevBlockedRef = useRef(false);
+  if (isBlocked && !prevBlockedRef.current) {
+    handleScreenshotDetected();
+  }
+  prevBlockedRef.current = isBlocked;
+
   // Fetch album media with signed URLs
   const { data: media = [], isLoading } = useQuery({
     queryKey: ['shared-album-media', albumId],

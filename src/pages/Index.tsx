@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Hero from '@/components/landing/Hero';
 import HomeView from '@/components/home/HomeView';
@@ -84,6 +84,20 @@ const Index = () => {
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
   const { joinedGroups, joinGroup, remainingSlots, maxGroups } = useJoinedGroups();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle deep link to open private chat from navigation state
+  useEffect(() => {
+    const state = location.state as { openPrivateChat?: string } | null;
+    if (state?.openPrivateChat && user) {
+      setSelectedPrivateUserId(state.openPrivateChat);
+      markAsRead.mutate(state.openPrivateChat);
+      setCurrentView('private');
+      setActiveTab('messages');
+      // Clear the state to prevent re-opening on refresh
+      navigate('/', { replace: true, state: {} });
+    }
+  }, [location.state, user, navigate, markAsRead]);
 
   // Calculate animation direction based on tab order
   const direction = useMemo(() => {

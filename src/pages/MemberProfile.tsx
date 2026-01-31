@@ -120,21 +120,20 @@ const MemberProfile = () => {
         .or(`and(user1_id.eq.${user.id},user2_id.eq.${userId}),and(user1_id.eq.${userId},user2_id.eq.${user.id})`)
         .maybeSingle();
 
-      if (existing) {
-        navigate(`/messages/${userId}`);
-        return;
+      if (!existing) {
+        // Create new conversation
+        const { error } = await supabase
+          .from('private_conversations')
+          .insert({
+            user1_id: user.id,
+            user2_id: userId,
+          });
+
+        if (error) throw error;
       }
 
-      // Create new conversation
-      const { error } = await supabase
-        .from('private_conversations')
-        .insert({
-          user1_id: user.id,
-          user2_id: userId,
-        });
-
-      if (error) throw error;
-      navigate(`/messages/${userId}`);
+      // Navigate to home with state to open the conversation
+      navigate('/', { state: { openPrivateChat: userId } });
     } catch (error) {
       console.error('Error starting chat:', error);
       toast({

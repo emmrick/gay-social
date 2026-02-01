@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageCircle, MapPin, Clock, Flag, User, Ban } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
+import { shouldShowOnlineIndicator, getDetailedLastSeenText } from '@/hooks/useOnlineStatus';
 import ReportUserDialog from './ReportUserDialog';
 import ProfilePhotoCarousel from './ProfilePhotoCarousel';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
@@ -20,8 +20,10 @@ interface UserProfile {
   avatar_url: string | null;
   bio: string | null;
   region: string;
-  is_online: boolean;
+  is_online: boolean | null;
   last_seen: string | null;
+  hide_online_status: boolean | null;
+  hide_last_seen: boolean | null;
 }
 
 interface UserProfilePreviewProps {
@@ -56,7 +58,7 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
       setIsLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, username, avatar_url, bio, region, is_online, last_seen')
+        .select('user_id, username, avatar_url, bio, region, is_online, last_seen, hide_online_status, hide_last_seen')
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -126,10 +128,10 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
               <div className="text-center pt-2">
                 <h3 className="text-xl font-semibold">{profile.username}</h3>
                 <Badge 
-                  variant={isUserTrulyOnline(profile) ? "default" : "secondary"}
+                  variant={shouldShowOnlineIndicator(profile) ? "default" : "secondary"}
                   className="mt-2"
                 >
-                  {isUserTrulyOnline(profile) ? '🟢 En ligne' : '⚫ Hors ligne'}
+                  {shouldShowOnlineIndicator(profile) ? '🟢 En ligne' : '⚫ Hors ligne'}
                 </Badge>
               </div>
 
@@ -146,11 +148,11 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
                   <MapPin className="w-4 h-4" />
                   <span>{profile.region}</span>
                 </div>
-                {profile.is_online !== true && profile.last_seen && (
+                {!shouldShowOnlineIndicator(profile) && !profile.hide_last_seen && profile.last_seen && (
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     <span>
-                      Vu {format(new Date(profile.last_seen), "d MMM 'à' HH:mm", { locale: fr })}
+                      {getDetailedLastSeenText(profile)}
                     </span>
                   </div>
                 )}

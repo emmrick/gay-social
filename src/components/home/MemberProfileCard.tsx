@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { Skeleton } from '@/components/ui/skeleton';
+import { shouldShowOnlineIndicator, getDetailedLastSeenText } from '@/hooks/useOnlineStatus';
 
 interface MemberProfileCardProps {
   userId: string;
@@ -94,33 +95,10 @@ const MemberProfileCard = ({
   };
 
   const getLastSeenText = () => {
-    // Respect VIP privacy settings
-    const hideOnlineStatus = (extendedProfile as any)?.hide_online_status;
-    const hideLastSeen = (extendedProfile as any)?.hide_last_seen;
-    
-    if (hideOnlineStatus && hideLastSeen) return ''; // Hide everything
-    
-    if (!hideOnlineStatus && profile?.is_online === true) return 'En ligne maintenant';
-    
-    if (hideLastSeen) return hideOnlineStatus ? '' : 'Hors ligne';
-    
-    if (!profile?.last_seen) return 'Hors ligne';
-    
-    const diff = Date.now() - new Date(profile.last_seen).getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    
-    if (minutes < 5) return 'Vu à l\'instant';
-    if (minutes < 60) return `Vu il y a ${minutes} min`;
-    if (hours < 24) return `Vu il y a ${hours}h`;
-    return `Vu il y a ${days}j`;
+    return getDetailedLastSeenText(profile);
   };
   
-  const shouldShowOnlineStatus = () => {
-    const hideOnlineStatus = (extendedProfile as any)?.hide_online_status;
-    return !hideOnlineStatus && profile?.is_online === true;
-  };
+  const isOnline = shouldShowOnlineIndicator(profile);
 
   const modal = (
     <AnimatePresence>
@@ -210,7 +188,7 @@ const MemberProfileCard = ({
                 </Button>
 
                 {/* Online status */}
-                {shouldShowOnlineStatus() && (
+                {isOnline && (
                   <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-xs font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                     En ligne

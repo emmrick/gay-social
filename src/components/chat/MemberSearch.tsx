@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -24,9 +25,10 @@ const MemberSearch = ({ onSelectUser, onClose }: MemberSearchProps) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, username, avatar_url, region, is_online, bio')
+        .select('user_id, username, avatar_url, region, is_online, last_seen, hide_online_status, hide_last_seen, bio')
         .neq('user_id', user?.id || '')
         .order('is_online', { ascending: false })
+        .order('last_seen', { ascending: false, nullsFirst: false })
         .order('username', { ascending: true })
         .limit(100);
 
@@ -124,8 +126,10 @@ const MemberSearch = ({ onSelectUser, onClose }: MemberSearchProps) => {
                         profile.username.charAt(0).toUpperCase()
                       )}
                     </div>
-                    {profile.is_online === true && (
+                    {shouldShowOnlineIndicator(profile) ? (
                       <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                    ) : (
+                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-gray-400 rounded-full border-2 border-background" />
                     )}
                   </div>
 
@@ -136,7 +140,7 @@ const MemberSearch = ({ onSelectUser, onClose }: MemberSearchProps) => {
                     </h3>
                     <p className="text-xs text-muted-foreground truncate">
                       {profile.region && `📍 ${profile.region}`}
-                      {profile.is_online === true && <span className="text-green-500 ml-2">• En ligne</span>}
+                      {shouldShowOnlineIndicator(profile) && <span className="text-green-500 ml-2">• En ligne</span>}
                     </p>
                   </div>
 

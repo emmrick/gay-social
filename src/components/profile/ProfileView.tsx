@@ -4,6 +4,7 @@ import { useProfileStats } from '@/hooks/useProfileStats';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
+import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -137,9 +138,9 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
               </div>
               <Badge 
                 className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5"
-                variant={profile.is_online ? "default" : "secondary"}
+                variant={shouldShowOnlineIndicator(profile) ? "default" : "secondary"}
               >
-                {profile.is_online ? '🟢 En ligne' : '⚫ Hors ligne'}
+                {shouldShowOnlineIndicator(profile) ? '🟢 En ligne' : '⚫ Hors ligne'}
               </Badge>
             </div>
 

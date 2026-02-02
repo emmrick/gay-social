@@ -12,15 +12,16 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Bell, Moon, Shield, HelpCircle, ExternalLink, Mail, MessageSquare, 
+  Bell, Moon, Shield, HelpCircle, MessageSquare, 
   Volume2, VolumeX, Eye, EyeOff, Palette, Sparkles, ChevronRight,
-  Globe, Lock, Check, Diamond, Crown, BellRing, BellOff
+  Globe, Lock, Check, Diamond, BellRing, BellOff, Settings2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { usePrivacySettings } from '@/hooks/usePrivacySettings';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Badge } from '@/components/ui/badge';
+import NotificationPreferencesSection from './NotificationPreferencesSection';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
@@ -188,6 +189,18 @@ const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDi
                     </div>
                   </div>
                 </motion.div>
+              )}
+
+              {/* Notification Preferences Section */}
+              {pushSubscribed && (
+                <>
+                  <Separator className="my-4" />
+                  <div className="flex items-center gap-2 mb-2">
+                    <Settings2 className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">Préférences par type</span>
+                  </div>
+                  <NotificationPreferencesSection />
+                </>
               )}
             </div>
           ),

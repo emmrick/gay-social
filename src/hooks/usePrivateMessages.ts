@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRecordEarning } from '@/hooks/useModeratorEarnings';
+import { notifyNewPrivateMessage } from '@/services/pushNotificationService';
+import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 
 type Message = Tables<'messages'>;
 
@@ -106,6 +108,11 @@ export const usePrivateMessages = (otherUserId: string | null) => {
               }
             );
 
+            // Play notification sound for incoming messages (not our own)
+            if (newMsg.sender_id !== user.id) {
+              playNotificationSoundStandalone();
+            }
+
             // Also invalidate conversations to update last message
             queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
           }
@@ -182,7 +189,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         sendingRef.current = false;
       }
     },
-    onSuccess: (newMessage) => {
+    onSuccess: async (newMessage) => {
       // Immediately add message to cache for instant UI feedback
       if (newMessage) {
         const messageWithProfile: PrivateMessageWithProfile = {
@@ -199,6 +206,28 @@ export const usePrivateMessages = (otherUserId: string | null) => {
             return [...(old || []), messageWithProfile];
           }
         );
+
+        // Send push notification to recipient
+        if (otherUserId && user) {
+          // Get sender's username
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          const messagePreview = newMessage.message_type === 'text' 
+            ? newMessage.content 
+            : newMessage.message_type === 'image' 
+              ? '📷 Photo' 
+              : '🎥 Vidéo';
+          
+          notifyNewPrivateMessage(
+            otherUserId,
+            senderProfile?.username || 'Quelqu\'un',
+            messagePreview || undefined
+          );
+        }
       }
       
       // Record earning for admin/moderator when sending private message

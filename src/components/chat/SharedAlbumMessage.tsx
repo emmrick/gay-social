@@ -139,11 +139,10 @@ const SharedAlbumMessage = ({
     <>
       <div className="space-y-2">
         <button
-          onClick={() => !isOwn && setShowViewer(true)}
-          disabled={isOwn}
+          onClick={() => setShowViewer(true)}
           className={`flex items-center gap-3 p-4 rounded-xl transition-all w-full ${
             isOwn
-              ? 'bg-primary/20 cursor-default'
+              ? 'bg-primary/20 hover:bg-primary/30 cursor-pointer'
               : 'bg-gradient-to-br from-primary/20 to-accent/20 hover:from-primary/30 hover:to-accent/30 cursor-pointer'
           }`}
         >
@@ -163,7 +162,7 @@ const SharedAlbumMessage = ({
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
               <Eye className="w-3 h-3" />
               {mediaCount} média{mediaCount !== 1 ? 's' : ''}
-              {!isOwn && ' • Appuie pour voir'}
+              {' • Appuie pour voir'}
             </p>
             {expiresAt && (
               <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">

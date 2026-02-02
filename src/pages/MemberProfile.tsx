@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Crown, Ban } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Crown, Ban, Sparkles, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
@@ -19,6 +19,8 @@ import { cn } from '@/lib/utils';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { useIsPremiumUser } from '@/hooks/usePremiumUsers';
 import { useUserSuspensionStatus } from '@/hooks/useUserSuspensionStatus';
+import { motion } from 'framer-motion';
+
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {
   'actif': '🔝 Actif (Top)',
@@ -39,13 +41,13 @@ const BODY_TYPE_LABELS: Record<string, string> = {
 };
 
 const LOOKING_FOR_LABELS: Record<string, string> = {
-  'plan_cul': 'Plan cul',
-  'plan_regulier': 'Plan régulier',
-  'relation': 'Relation',
-  'amitie': 'Amitié',
-  'discussion': 'Discussion',
-  'webcam': 'Webcam',
-  'groupe': 'Plan à plusieurs',
+  'plan_cul': '🔥 Plan cul',
+  'plan_regulier': '🔄 Plan régulier',
+  'relation': '❤️ Relation',
+  'amitie': '🤝 Amitié',
+  'discussion': '💬 Discussion',
+  'webcam': '📹 Webcam',
+  'groupe': '👥 Plan à plusieurs',
 };
 
 const TRIBE_LABELS: Record<string, string> = {
@@ -69,6 +71,12 @@ const ETHNICITY_LABELS: Record<string, string> = {
   'mixed': 'Métis',
   'south_asian': 'Sud-Asiatique',
   'white': 'Blanc',
+  'europeen': 'Européen',
+  'africain': 'Africain',
+  'maghrebin': 'Maghrébin',
+  'asiatique': 'Asiatique',
+  'metis': 'Métis',
+  'autre': 'Autre',
   'other': 'Autre',
 };
 
@@ -100,6 +108,7 @@ const MemberProfile = () => {
   const isUserUnavailable = suspensionStatus?.isBlocked || suspensionStatus?.isSuspended;
 
   const extendedProfile = profile as any;
+  
   // Handle back navigation with swipe gesture support
   const handleBack = useCallback(() => {
     navigate(-1);
@@ -175,9 +184,13 @@ const MemberProfile = () => {
   if (isUserUnavailable) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mb-4"
+        >
           <Ban className="w-10 h-10 text-destructive" />
-        </div>
+        </motion.div>
         <h2 className="text-xl font-semibold mb-2">Profil indisponible</h2>
         <p className="text-muted-foreground mb-4 text-center max-w-xs">
           Ce compte a été suspendu ou désactivé et n'est plus accessible.
@@ -193,7 +206,12 @@ const MemberProfile = () => {
   if (!profile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <User className="w-16 h-16 text-muted-foreground mb-4" />
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+        >
+          <User className="w-16 h-16 text-muted-foreground mb-4" />
+        </motion.div>
         <h2 className="text-xl font-semibold mb-2">Profil non trouvé</h2>
         <p className="text-muted-foreground mb-4">Ce profil n'existe pas ou a été supprimé.</p>
         <Button onClick={() => navigate(-1)}>
@@ -204,187 +222,252 @@ const MemberProfile = () => {
     );
   }
 
+  // Check if there's any detailed info to show
+  const hasDetailedInfo = extendedProfile?.height || extendedProfile?.weight || 
+    extendedProfile?.body_type || extendedProfile?.ethnicity || 
+    extendedProfile?.relationship_status;
+
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center gap-3 p-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1">
-            <h1 className="font-semibold">{profile.username}</h1>
-          <p className={`text-xs ${isTrulyOnline ? 'text-green-500' : 'text-muted-foreground'}`}>
-              {getLastSeenText()}
-            </p>
-          </div>
-          {profile.is_verified && (
-            <Badge variant="secondary" className="bg-green-500/20 text-green-500">
-              <Shield className="w-3 h-3 mr-1" />
-              Vérifié
-            </Badge>
-          )}
+      {/* Header - floating style */}
+      <div className="fixed top-0 left-0 right-0 z-20 pt-[env(safe-area-inset-top)]">
+        <div className="flex items-center justify-between p-4">
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+          >
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="rounded-full bg-background/80 backdrop-blur-sm shadow-lg"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          </motion.div>
+          
+          <motion.div
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="flex items-center gap-2"
+          >
+            {profile.is_verified && (
+              <Badge variant="secondary" className="bg-green-500/20 text-green-500 backdrop-blur-sm">
+                <Shield className="w-3 h-3 mr-1" />
+                Vérifié
+              </Badge>
+            )}
+            {isUserPremium && (
+              <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg backdrop-blur-sm">
+                <Crown className="w-3 h-3 mr-1" />
+                Premium
+              </Badge>
+            )}
+          </motion.div>
         </div>
       </div>
 
-      {/* Photo Carousel */}
-      <div className="relative">
+      {/* Photo Carousel - full width */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative"
+      >
         {/* Premium golden frame around carousel */}
         <div className={isUserPremium ? "p-1 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500" : ""}>
           <ProfilePhotoCarousel 
             photos={allPhotos} 
             username={profile.username}
-            className="aspect-square"
+            className="aspect-[3/4] max-h-[70vh]"
           />
         </div>
         
+        {/* Gradient overlay at bottom for text readability */}
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
+        
         {/* Online status overlay */}
         {isTrulyOnline && (
-          <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-xs font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="absolute top-20 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-xs font-medium shadow-lg"
+          >
+            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
             En ligne
-          </div>
+          </motion.div>
         )}
 
-        {/* Premium badge overlay */}
-        {isUserPremium && (
-          <div className="absolute top-4 right-4">
-            <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg">
-              <Crown className="w-3 h-3 mr-1" />
-              Premium
-            </Badge>
-          </div>
-        )}
-
-        {/* Position badge */}
+        {/* Position badge - bottom left */}
         {extendedProfile?.sexual_position && POSITION_LABELS[extendedProfile.sexual_position] && (
-          <div className="absolute bottom-4 left-4">
-            <Badge variant="secondary" className="bg-black/50 text-white border-0">
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="absolute bottom-24 left-4"
+          >
+            <Badge variant="secondary" className="bg-primary/90 text-primary-foreground border-0 text-sm px-3 py-1 shadow-lg">
               {POSITION_LABELS[extendedProfile.sexual_position]}
             </Badge>
-          </div>
+          </motion.div>
         )}
-      </div>
 
-      {/* Profile Content */}
-      <div className="p-4 space-y-6">
-        {/* Name and age */}
-        <div>
+        {/* Name overlay at bottom of image */}
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="absolute bottom-4 left-4 right-4"
+        >
           <div className="flex items-baseline gap-2 mb-1">
-            <h2 className="font-display text-2xl font-bold text-foreground">
+            <h2 className="font-display text-3xl font-bold text-foreground drop-shadow-lg">
               {profile.username}
             </h2>
             {extendedProfile?.age && (
-              <span className="text-lg text-muted-foreground">
-                {extendedProfile.age} ans
+              <span className="text-2xl font-medium text-foreground/80">
+                {extendedProfile.age}
               </span>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">
-            {getLastSeenText()}
-          </p>
-        </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="w-3.5 h-3.5" />
+            <span>{profile.region}</span>
+            <span className="text-muted-foreground/50">•</span>
+            <span className={isTrulyOnline ? 'text-green-500' : ''}>
+              {getLastSeenText()}
+            </span>
+          </div>
+        </motion.div>
+      </motion.div>
 
+      {/* Profile Content */}
+      <div className="px-4 pt-4 space-y-5">
         {/* Profile Reactions */}
         {userId && (
-          <ProfileReactions profileUserId={userId} />
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <ProfileReactions profileUserId={userId} />
+          </motion.div>
         )}
 
         {/* Quick info pills */}
-        <div className="flex flex-wrap gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-sm">
-            <MapPin className="w-3.5 h-3.5 text-primary" />
-            <span>{profile.region}</span>
-          </div>
-          
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.25 }}
+          className="flex flex-wrap gap-2"
+        >
           {extendedProfile?.height && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-sm">
-              <Ruler className="w-3.5 h-3.5 text-primary" />
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary/80 text-sm font-medium">
+              <Ruler className="w-4 h-4 text-primary" />
               <span>{extendedProfile.height} cm</span>
             </div>
           )}
           
           {extendedProfile?.weight && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-sm">
-              <Weight className="w-3.5 h-3.5 text-primary" />
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary/80 text-sm font-medium">
+              <Weight className="w-4 h-4 text-primary" />
               <span>{extendedProfile.weight} kg</span>
             </div>
           )}
           
           {extendedProfile?.body_type && BODY_TYPE_LABELS[extendedProfile.body_type] && (
-            <div className="px-3 py-1.5 rounded-full bg-secondary text-sm">
+            <div className="px-3 py-2 rounded-xl bg-secondary/80 text-sm font-medium">
               {BODY_TYPE_LABELS[extendedProfile.body_type]}
             </div>
           )}
 
           {extendedProfile?.ethnicity && ETHNICITY_LABELS[extendedProfile.ethnicity] && (
-            <div className="px-3 py-1.5 rounded-full bg-secondary text-sm">
+            <div className="px-3 py-2 rounded-xl bg-secondary/80 text-sm font-medium">
               {ETHNICITY_LABELS[extendedProfile.ethnicity]}
             </div>
           )}
-        </div>
 
-        {/* Relationship status */}
-        {extendedProfile?.relationship_status && RELATIONSHIP_LABELS[extendedProfile.relationship_status] && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Heart className="w-4 h-4" />
-            <span>{RELATIONSHIP_LABELS[extendedProfile.relationship_status]}</span>
-          </div>
-        )}
+          {extendedProfile?.relationship_status && RELATIONSHIP_LABELS[extendedProfile.relationship_status] && (
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary/80 text-sm font-medium">
+              <Heart className="w-4 h-4 text-pink-500" />
+              <span>{RELATIONSHIP_LABELS[extendedProfile.relationship_status]}</span>
+            </div>
+          )}
+        </motion.div>
 
         {/* Tribes */}
         {extendedProfile?.tribes && extendedProfile.tribes.length > 0 && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3" />
               Tribus
             </p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {extendedProfile.tribes.map((tribe: string) => (
-                <Badge key={tribe} variant="outline" className="text-sm">
+                <Badge 
+                  key={tribe} 
+                  variant="outline" 
+                  className="text-sm py-1.5 px-3 bg-secondary/50"
+                >
                   {TRIBE_LABELS[tribe] || tribe}
                 </Badge>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Looking for */}
         {extendedProfile?.looking_for && extendedProfile.looking_for.length > 0 && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide flex items-center gap-1">
-              <Heart className="w-3 h-3" />
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.35 }}
+          >
+            <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider flex items-center gap-1.5">
+              <Heart className="w-3 h-3 text-pink-500" />
               Recherche
             </p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {extendedProfile.looking_for.map((item: string) => (
                 <Badge 
                   key={item} 
-                  variant="secondary" 
-                  className="bg-primary/10 text-primary border-primary/20 text-sm"
+                  className="bg-gradient-to-r from-primary/20 to-accent/20 text-primary border-primary/30 text-sm py-1.5 px-3"
                 >
                   {LOOKING_FOR_LABELS[item] || item}
                 </Badge>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Bio */}
         {profile.bio && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider flex items-center gap-1.5">
+              <Info className="w-3 h-3" />
               À propos
             </p>
-            <div className="p-4 rounded-xl bg-secondary/50">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-secondary/80 to-secondary/40 border border-border/50">
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                 {profile.bio}
               </p>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Member since */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground pt-4 border-t border-border">
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.45 }}
+          className="flex items-center gap-2 text-sm text-muted-foreground pt-4"
+        >
           <Calendar className="w-4 h-4" />
           <span>
             Membre depuis {new Date(profile.created_at).toLocaleDateString('fr-FR', {
@@ -392,45 +475,50 @@ const MemberProfile = () => {
               year: 'numeric'
             })}
           </span>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Fixed bottom actions */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border">
+      {/* Fixed bottom actions - glass effect */}
+      <motion.div 
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 30 }}
+        className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-background/80 backdrop-blur-xl border-t border-border/50"
+      >
         <div className="flex gap-3 max-w-lg mx-auto">
           <Button
             variant="outline"
             size="icon"
-            className="text-destructive hover:text-destructive flex-shrink-0"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 rounded-xl h-12 w-12"
             onClick={() => setShowReportDialog(true)}
           >
-            <Flag className="w-4 h-4" />
+            <Flag className="w-5 h-5" />
           </Button>
           <Button
             variant="outline"
             size="icon"
             className={cn(
-              "flex-shrink-0 transition-colors",
-              isFavorite(userId || '') && "bg-amber-500/20 border-amber-500 text-amber-500 hover:bg-amber-500/30 hover:text-amber-600"
+              "flex-shrink-0 transition-all rounded-xl h-12 w-12",
+              isFavorite(userId || '') && "bg-amber-500/20 border-amber-500 text-amber-500 hover:bg-amber-500/30 hover:text-amber-600 scale-110"
             )}
             onClick={() => userId && toggleFavorite(userId)}
             disabled={isToggling}
           >
             {isToggling ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              <Star className={cn("w-4 h-4", isFavorite(userId || '') && "fill-current")} />
+              <Star className={cn("w-5 h-5", isFavorite(userId || '') && "fill-current")} />
             )}
           </Button>
           <Button
-            className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+            className="flex-1 h-12 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-base font-semibold rounded-xl shadow-lg shadow-primary/30"
             onClick={handleStartChat}
           >
-            <MessageCircle className="w-4 h-4 mr-2" />
-            Message
+            <MessageCircle className="w-5 h-5 mr-2" />
+            Envoyer un message
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Report Dialog */}
       <ReportUserDialog

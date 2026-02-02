@@ -182,7 +182,48 @@ export const useAlbums = (userId?: string) => {
     },
   });
 
-  // Get album media
+  // Remove media from album
+  const removeMedia = useMutation({
+    mutationFn: async ({ albumId, mediaId }: { albumId: string; mediaId: string }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      // First get the media URL to delete from storage
+      const { data: mediaData, error: fetchError } = await supabase
+        .from('album_media')
+        .select('media_url')
+        .eq('id', mediaId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Delete from database
+      const { error: deleteError } = await supabase
+        .from('album_media')
+        .delete()
+        .eq('id', mediaId);
+
+      if (deleteError) throw deleteError;
+
+      // Try to delete from storage (extract path from URL)
+      try {
+        const url = new URL(mediaData.media_url);
+        const pathMatch = url.pathname.match(/\/storage\/v1\/object\/public\/media\/(.+)/);
+        if (pathMatch) {
+          await supabase.storage.from('media').remove([pathMatch[1]]);
+        }
+      } catch (e) {
+        console.warn('Could not delete file from storage:', e);
+      }
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['album-media', variables.albumId] });
+      toast.success('Média supprimé');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erreur lors de la suppression');
+    },
+  });
+
   const useAlbumMedia = (albumId: string) => {
     return useQuery({
       queryKey: ['album-media', albumId],
@@ -352,6 +393,7 @@ export const useAlbums = (userId?: string) => {
     createAlbum,
     deleteAlbum,
     addMedia,
+    removeMedia,
     shareAlbum,
     stopSharing,
     useAlbumMedia,

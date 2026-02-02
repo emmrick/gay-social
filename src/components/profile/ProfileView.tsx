@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   MapPin, Calendar, LogOut, Edit2, Shield, Bell, Moon, HelpCircle, 
   ChevronRight, Loader2, Crown, Sparkles, FolderLock, Star, Heart,
-  MessageCircle, Users, Zap
+  MessageCircle, Users, Zap, Camera
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -21,6 +21,7 @@ import ProfileEditDialog from './ProfileEditDialog';
 import SettingsDialog from './SettingsDialog';
 import AlbumManager from '@/components/albums/AlbumManager';
 import ProfileReactions from './ProfileReactions';
+import { motion } from 'framer-motion';
 
 // Labels
 const POSITION_LABELS: Record<string, string> = {
@@ -96,12 +97,12 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
   }
 
   const menuItems = [
-    { icon: Edit2, label: 'Modifier le profil', action: () => setShowEditDialog(true) },
-    { icon: FolderLock, label: 'Albums privés', action: () => setShowAlbumManager(true) },
-    { icon: Bell, label: 'Notifications', action: () => setSettingsType('notifications') },
-    { icon: Moon, label: 'Apparence', action: () => setSettingsType('appearance') },
-    { icon: Shield, label: 'Confidentialité', action: () => setSettingsType('privacy') },
-    { icon: HelpCircle, label: 'Aide & Support', action: () => setSettingsType('help') },
+    { icon: Edit2, label: 'Modifier le profil', action: () => setShowEditDialog(true), color: 'text-primary' },
+    { icon: FolderLock, label: 'Albums privés', action: () => setShowAlbumManager(true), color: 'text-violet-500' },
+    { icon: Bell, label: 'Notifications', action: () => setSettingsType('notifications'), color: 'text-blue-500' },
+    { icon: Moon, label: 'Apparence', action: () => setSettingsType('appearance'), color: 'text-indigo-500' },
+    { icon: Shield, label: 'Confidentialité', action: () => setSettingsType('privacy'), color: 'text-green-500' },
+    { icon: HelpCircle, label: 'Aide & Support', action: () => setSettingsType('help'), color: 'text-orange-500' },
   ];
 
   return (
@@ -118,39 +119,65 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
         />
       )}
 
-      {/* Profile Header */}
+      {/* Profile Header - Modern gradient banner */}
       <div className="relative">
-        {/* Banner gradient */}
-        <div className="h-32 bg-gradient-to-br from-primary via-primary/80 to-accent" />
+        {/* Banner gradient with pattern overlay */}
+        <div className="h-40 bg-gradient-to-br from-primary via-primary/80 to-accent relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRoLTJWMTZoMnYxOHpNMjYgMzRoLTJWMTZoMnYxOHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
+        </div>
         
         {/* Profile info overlay */}
-        <div className="px-4 -mt-16">
-          <div className="flex flex-col items-center">
+        <div className="px-4 -mt-20">
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="flex flex-col items-center"
+          >
             {/* Avatar with Premium golden ring */}
             <div className="relative">
-              <div className={isPremium ? "p-1 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 shadow-lg shadow-amber-500/30" : ""}>
-                <Avatar className={`w-28 h-28 border-4 ${isPremium ? 'border-background' : 'border-background'} shadow-xl`}>
-                  <AvatarImage src={profile.avatar_url || undefined} />
-                  <AvatarFallback className="text-3xl bg-gradient-to-br from-primary to-accent text-white">
+              <div className={isPremium ? "p-1.5 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 shadow-xl shadow-amber-500/30" : "p-1 rounded-full bg-background shadow-xl"}>
+                <Avatar className="w-32 h-32 border-4 border-background">
+                  <AvatarImage src={profile.avatar_url || undefined} className="object-cover" />
+                  <AvatarFallback className="text-4xl bg-gradient-to-br from-primary to-accent text-white font-bold">
                     {profile.username.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </div>
+              
+              {/* Edit photo button */}
+              <button
+                onClick={() => setShowEditDialog(true)}
+                className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+              
+              {/* Online status */}
               <Badge 
-                className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5"
+                className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 shadow-lg"
                 variant={shouldShowOnlineIndicator(profile) ? "default" : "secondary"}
               >
-                {shouldShowOnlineIndicator(profile) ? '🟢 En ligne' : '⚫ Hors ligne'}
+                <span className={`w-2 h-2 rounded-full mr-1.5 ${shouldShowOnlineIndicator(profile) ? 'bg-green-400 animate-pulse' : 'bg-muted-foreground'}`} />
+                {shouldShowOnlineIndicator(profile) ? 'En ligne' : 'Hors ligne'}
               </Badge>
             </div>
 
             {/* Name & info */}
-            <div className="mt-4 text-center">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="mt-6 text-center"
+            >
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold font-display">
                   {profile.username}
-                  {profile.age && <span className="text-muted-foreground font-normal">, {profile.age} ans</span>}
+                  {profile.age && <span className="text-muted-foreground font-normal ml-1">, {profile.age} ans</span>}
                 </h1>
+              </div>
+              
+              {/* Role badges */}
+              <div className="flex items-center justify-center gap-2 mt-2">
                 {isAdminUser && (
                   <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg">
                     <Crown className="w-3 h-3 mr-1" />
@@ -172,7 +199,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
                 </Badge>
               )}
               
-              <div className="flex items-center justify-center gap-2 mt-2 text-muted-foreground">
+              <div className="flex items-center justify-center gap-2 mt-3 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
                 <span className="text-sm">{profile.region}</span>
               </div>
@@ -187,28 +214,38 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
               )}
               
               {profile.created_at && (
-                <div className="flex items-center justify-center gap-2 mt-1 text-muted-foreground">
+                <div className="flex items-center justify-center gap-2 mt-2 text-muted-foreground">
                   <Calendar className="w-4 h-4" />
                   <span className="text-sm">
                     Membre depuis {format(new Date(profile.created_at), 'MMMM yyyy', { locale: fr })}
                   </span>
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Looking for badges */}
             {(profile as any).looking_for && (profile as any).looking_for.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-1.5 mt-3">
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.15 }}
+                className="flex flex-wrap justify-center gap-1.5 mt-4"
+              >
                 {(profile as any).looking_for.map((item: string) => (
                   <Badge key={item} variant="outline" className="text-xs">
                     {getLookingForLabel(item)}
                   </Badge>
                 ))}
-              </div>
+              </motion.div>
             )}
 
             {/* Additional info badges */}
-            <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-wrap justify-center gap-1.5 mt-2"
+            >
               {(profile as any).body_type && (
                 <Badge variant="secondary" className="text-xs">
                   {getBodyTypeLabel((profile as any).body_type)}
@@ -219,106 +256,126 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
                   {getEthnicityLabel((profile as any).ethnicity)}
                 </Badge>
               )}
-            </div>
+            </motion.div>
 
             {/* Profile Reactions */}
             {profile.user_id && (
-              <div className="mt-4 w-full max-w-sm">
-                <p className="text-xs text-muted-foreground mb-2 text-center font-medium uppercase tracking-wide">
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.25 }}
+                className="mt-5 w-full max-w-sm"
+              >
+                <p className="text-xs text-muted-foreground mb-2 text-center font-medium uppercase tracking-wider flex items-center justify-center gap-1">
+                  <Sparkles className="w-3 h-3" />
                   Réactions sur ton profil
                 </p>
                 <ProfileReactions profileUserId={profile.user_id} className="justify-center" />
-              </div>
+              </motion.div>
             )}
 
             {/* Bio */}
             {profile.bio && (
-              <p className="mt-4 text-center text-muted-foreground max-w-sm">
-                {profile.bio}
-              </p>
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="mt-4 p-4 rounded-2xl bg-secondary/50 max-w-sm w-full"
+              >
+                <p className="text-center text-muted-foreground text-sm leading-relaxed">
+                  {profile.bio}
+                </p>
+              </motion.div>
             )}
 
             {/* Quick edit button */}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-4 gap-2"
-              onClick={() => setShowEditDialog(true)}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.35 }}
             >
-              <Edit2 className="w-4 h-4" />
-              Modifier le profil
-            </Button>
-          </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-4 gap-2 rounded-xl"
+                onClick={() => setShowEditDialog(true)}
+              >
+                <Edit2 className="w-4 h-4" />
+                Modifier le profil
+              </Button>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-4 gap-2 px-4 mt-6">
-        <Card className="bg-secondary/50">
-          <CardContent className="p-3 text-center">
-            {statsLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin mx-auto text-primary" />
-            ) : (
-              <p className="text-xl font-bold text-primary">{stats?.messagesCount || 0}</p>
-            )}
-            <p className="text-[10px] text-muted-foreground">Messages</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-secondary/50">
-          <CardContent className="p-3 text-center">
-            {statsLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin mx-auto text-primary" />
-            ) : (
-              <p className="text-xl font-bold text-primary">{stats?.conversationsCount || 0}</p>
-            )}
-            <p className="text-[10px] text-muted-foreground">Convs</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-secondary/50">
-          <CardContent className="p-3 text-center">
-            <p className="text-xl font-bold text-amber-500">{favorites.length}</p>
-            <p className="text-[10px] text-muted-foreground">Favoris</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-secondary/50">
-          <CardContent className="p-3 text-center">
-            {statsLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin mx-auto text-primary" />
-            ) : (
-              <p className="text-xl font-bold text-pink-500">{stats?.reactionsCount || 0}</p>
-            )}
-            <p className="text-[10px] text-muted-foreground">Réactions</p>
-          </CardContent>
-        </Card>
-      </div>
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="grid grid-cols-4 gap-2 px-4 mt-6"
+      >
+        {[
+          { value: stats?.messagesCount || 0, label: 'Messages', color: 'text-primary', icon: MessageCircle },
+          { value: stats?.conversationsCount || 0, label: 'Convs', color: 'text-blue-500', icon: Users },
+          { value: favorites.length, label: 'Favoris', color: 'text-amber-500', icon: Star },
+          { value: stats?.reactionsCount || 0, label: 'Réactions', color: 'text-pink-500', icon: Heart },
+        ].map((stat, index) => (
+          <Card key={stat.label} className="bg-secondary/50 overflow-hidden">
+            <CardContent className="p-3 text-center">
+              {statsLoading && index !== 2 ? (
+                <Loader2 className="w-4 h-4 animate-spin mx-auto text-primary" />
+              ) : (
+                <div className="flex flex-col items-center">
+                  <stat.icon className={`w-4 h-4 ${stat.color} mb-1`} />
+                  <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </motion.div>
 
       {/* Menu items */}
-      <div className="px-4 mt-6 space-y-2">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.45 }}
+        className="px-4 mt-6 space-y-2"
+      >
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Shield className="w-3 h-3" />
           Paramètres
         </h3>
         
         {menuItems.map((item, index) => (
-          <button
+          <motion.button
             key={index}
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.5 + index * 0.05 }}
             onClick={item.action}
-            className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+            className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <item.icon className="w-5 h-5 text-primary" />
+            <div className={`w-10 h-10 rounded-xl bg-secondary flex items-center justify-center`}>
+              <item.icon className={`w-5 h-5 ${item.color}`} />
             </div>
             <span className="flex-1 text-left font-medium">{item.label}</span>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </button>
+          </motion.button>
         ))}
 
         {/* Premium status */}
         {isPremium ? (
-          <button
+          <motion.button
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.8 }}
             onClick={openCustomerPortal}
-            className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 transition-colors border border-amber-500/30"
+            className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 transition-all border border-amber-500/30"
           >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
               <Crown className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 text-left">
@@ -333,13 +390,16 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
               )}
             </div>
             <ChevronRight className="w-5 h-5 text-amber-500" />
-          </button>
+          </motion.button>
         ) : (
-          <button
+          <motion.button
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.8 }}
             onClick={onNavigateToPremium}
             className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 transition-all border border-amber-500/30 group"
           >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-amber-500/30">
               <Crown className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 text-left">
@@ -350,36 +410,42 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
               <p className="text-xs text-muted-foreground">4,50 €/mois • Débloquez tout</p>
             </div>
             <ChevronRight className="w-5 h-5 text-amber-500 group-hover:translate-x-1 transition-transform" />
-          </button>
+          </motion.button>
         )}
 
         {/* Admin button */}
         {isAdmin && onNavigateToAdmin && (
-          <button
+          <motion.button
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.85 }}
             onClick={onNavigateToAdmin}
             className="w-full flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 transition-colors"
           >
-            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
               <Shield className="w-5 h-5 text-amber-500" />
             </div>
             <span className="flex-1 text-left font-medium text-amber-500">Administration</span>
             <ChevronRight className="w-5 h-5 text-amber-500" />
-          </button>
+          </motion.button>
         )}
 
         <Separator className="my-4" />
 
         {/* Sign out */}
-        <button
+        <motion.button
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.9 }}
           onClick={onSignOut}
           className="w-full flex items-center gap-3 p-3 rounded-xl bg-destructive/10 hover:bg-destructive/20 transition-colors"
         >
-          <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-destructive/20 flex items-center justify-center">
             <LogOut className="w-5 h-5 text-destructive" />
           </div>
           <span className="flex-1 text-left font-medium text-destructive">Se déconnecter</span>
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
     </div>
   );
 };

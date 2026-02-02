@@ -3,6 +3,7 @@ import { useMessages } from '@/hooks/useMessages';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { useMessageReactions } from '@/hooks/useMessageReactions';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
+import { useUnreadMentions } from '@/hooks/useUnreadMentions';
 import { useAuth } from '@/contexts/AuthContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
@@ -56,6 +57,14 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
   const { messages, searchResults, isLoading, sendMessage } = useMessages(roomId, searchQuery);
   const { typingUsers, startTyping, stopTyping } = useTypingIndicator(roomId);
   const { getReactionsForMessage, toggleReaction } = useMessageReactions(roomId);
+  const { markMentionsAsRead } = useUnreadMentions();
+  
+  // Mark mentions as read when opening the room
+  useEffect(() => {
+    if (roomId) {
+      markMentionsAsRead(roomId);
+    }
+  }, [roomId, markMentionsAsRead]);
   
   const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
   const [showMembers, setShowMembers] = useState(false);

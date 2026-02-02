@@ -1,7 +1,8 @@
 import { useJoinedGroups } from '@/hooks/useJoinedGroups';
 import { useOnlineMemberCounts } from '@/hooks/useOnlineMemberCounts';
-import { useRegionMemberCount } from '@/hooks/useRegionMemberCounts';
-import { Users, ChevronRight, LogOut, MessageSquare } from 'lucide-react';
+import { useUnreadMentions } from '@/hooks/useUnreadMentions';
+import { useChatRooms } from '@/hooks/useChatRooms';
+import { Users, ChevronRight, LogOut, MessageSquare, AtSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +24,14 @@ interface JoinedGroupsListProps {
 const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
   const { joinedGroups, leaveGroup } = useJoinedGroups();
   const { data: onlineCounts } = useOnlineMemberCounts();
+  const { data: chatRooms } = useChatRooms();
+  const { getMentionCount } = useUnreadMentions();
   const [leaveConfirm, setLeaveConfirm] = useState<string | null>(null);
+
+  // Create a map of region code to chat room id
+  const regionToRoomId = new Map(
+    chatRooms?.map(room => [room.region_code, room.id]) || []
+  );
 
   if (joinedGroups.length === 0) {
     return (
@@ -44,6 +52,8 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
       <div className="px-4 pb-6 space-y-2">
         {joinedGroups.map((group, index) => {
           const onlineCount = onlineCounts?.[group.regionCode] || 0;
+          const roomId = regionToRoomId.get(group.regionCode);
+          const mentionCount = roomId ? getMentionCount(roomId) : 0;
 
           return (
             <div
@@ -67,9 +77,16 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                 )}>
                   {group.regionCode}
                 </div>
+                {/* Online indicator */}
                 {onlineCount > 0 && (
                   <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background flex items-center justify-center">
                     <span className="text-[8px] font-bold text-white">{onlineCount > 9 ? '9+' : onlineCount}</span>
+                  </span>
+                )}
+                {/* Mention indicator */}
+                {mentionCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full border-2 border-background flex items-center justify-center animate-pulse">
+                    <AtSign className="w-3 h-3 text-white" />
                   </span>
                 )}
               </button>
@@ -83,6 +100,11 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                   <h3 className="font-medium text-foreground truncate">
                     {group.regionName}
                   </h3>
+                  {mentionCount > 0 && (
+                    <span className="flex-shrink-0 px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full">
+                      {mentionCount} mention{mentionCount > 1 ? 's' : ''}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Users className="w-3.5 h-3.5" />

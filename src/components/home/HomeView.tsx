@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesMembers from './FavoritesMembers';
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 interface HomeViewProps {
   onNavigateToGroups: () => void;
@@ -75,6 +76,7 @@ const HomeView = ({
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                 <span className="text-xs font-medium text-green-600 dark:text-green-400">{totalOnline}</span>
               </div>
+              <ThemeToggle />
               <NotificationsDropdown />
               {getTotalUnreadCount() > 0 && (
                 <button 

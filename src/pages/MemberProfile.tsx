@@ -29,6 +29,29 @@ const POSITION_LABELS: Record<string, string> = {
   'vers_top': '↕️🔝 Versatile Top',
   'vers_bottom': '↕️🔽 Versatile Bottom',
   'side': '🤝 Side',
+  'no_answer': 'Non précisé',
+};
+
+const POSITION_DETAIL_LABELS: Record<string, string> = {
+  'strict': 'Strict',
+  'flexible': 'Flexible',
+  'depends': 'Selon l\'affinité',
+};
+
+const ENDOWMENT_LABELS: Record<string, string> = {
+  'small': 'Petit',
+  'average': 'Moyen',
+  'large': 'Grand',
+  'xl': 'XL',
+  'no_answer': 'Non précisé',
+};
+
+const HIV_STATUS_LABELS: Record<string, string> = {
+  'negative': '🟢 Négatif',
+  'negative_prep': '💊 Négatif sous PrEP',
+  'positive_undetectable': '🔵 Positif indétectable',
+  'positive': '🟣 Positif',
+  'no_answer': 'Non précisé',
 };
 
 const BODY_TYPE_LABELS: Record<string, string> = {
@@ -298,15 +321,18 @@ const MemberProfile = () => {
         )}
 
         {/* Position badge - bottom left */}
-        {extendedProfile?.sexual_position && POSITION_LABELS[extendedProfile.sexual_position] && (
+        {extendedProfile?.sexual_position && POSITION_LABELS[extendedProfile.sexual_position] && extendedProfile.sexual_position !== 'no_answer' && (
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="absolute bottom-24 left-4"
+            className="absolute bottom-24 left-4 flex flex-col gap-1"
           >
             <Badge variant="secondary" className="bg-primary/90 text-primary-foreground border-0 text-sm px-3 py-1 shadow-lg">
               {POSITION_LABELS[extendedProfile.sexual_position]}
+              {extendedProfile.position_detail && POSITION_DETAIL_LABELS[extendedProfile.position_detail] && (
+                <span className="ml-1 opacity-80">({POSITION_DETAIL_LABELS[extendedProfile.position_detail]})</span>
+              )}
             </Badge>
           </motion.div>
         )}
@@ -379,6 +405,12 @@ const MemberProfile = () => {
             </div>
           )}
 
+          {extendedProfile?.endowment && extendedProfile.endowment !== 'no_answer' && ENDOWMENT_LABELS[extendedProfile.endowment] && (
+            <div className="px-3 py-2 rounded-xl bg-secondary/80 text-sm font-medium">
+              🍆 {ENDOWMENT_LABELS[extendedProfile.endowment]}
+            </div>
+          )}
+
           {extendedProfile?.ethnicity && ETHNICITY_LABELS[extendedProfile.ethnicity] && (
             <div className="px-3 py-2 rounded-xl bg-secondary/80 text-sm font-medium">
               {ETHNICITY_LABELS[extendedProfile.ethnicity]}
@@ -389,6 +421,12 @@ const MemberProfile = () => {
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary/80 text-sm font-medium">
               <Heart className="w-4 h-4 text-pink-500" />
               <span>{RELATIONSHIP_LABELS[extendedProfile.relationship_status]}</span>
+            </div>
+          )}
+
+          {extendedProfile?.hiv_status && extendedProfile.hiv_status !== 'no_answer' && HIV_STATUS_LABELS[extendedProfile.hiv_status] && (
+            <div className="px-3 py-2 rounded-xl bg-secondary/80 text-sm font-medium">
+              {HIV_STATUS_LABELS[extendedProfile.hiv_status]}
             </div>
           )}
         </motion.div>

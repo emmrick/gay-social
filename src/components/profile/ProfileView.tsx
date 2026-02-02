@@ -34,6 +34,28 @@ const POSITION_LABELS: Record<string, string> = {
   'no_answer': 'Non précisé',
 };
 
+const POSITION_DETAIL_LABELS: Record<string, string> = {
+  'strict': 'Strict',
+  'flexible': 'Flexible',
+  'depends': 'Selon l\'affinité',
+};
+
+const ENDOWMENT_LABELS: Record<string, string> = {
+  'small': 'Petit',
+  'average': 'Moyen',
+  'large': 'Grand',
+  'xl': 'XL',
+  'no_answer': 'Non précisé',
+};
+
+const HIV_STATUS_LABELS: Record<string, string> = {
+  'negative': '🟢 Négatif',
+  'negative_prep': '💊 Négatif sous PrEP',
+  'positive_undetectable': '🔵 Positif indétectable',
+  'positive': '🟣 Positif',
+  'no_answer': 'Non précisé',
+};
+
 const LOOKING_FOR_LABELS: Record<string, string> = {
   'plan_cul': '🔥 Plan cul',
   'plan_regulier': '🔄 Plan régulier',
@@ -193,9 +215,12 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
               </div>
               
               {/* Position badge */}
-              {(profile as any).sexual_position && (
+              {(profile as any).sexual_position && (profile as any).sexual_position !== 'no_answer' && (
                 <Badge variant="secondary" className="mt-2">
                   {getPositionLabel((profile as any).sexual_position)}
+                  {(profile as any).position_detail && POSITION_DETAIL_LABELS[(profile as any).position_detail] && (
+                    <span className="ml-1 opacity-80">({POSITION_DETAIL_LABELS[(profile as any).position_detail]})</span>
+                  )}
                 </Badge>
               )}
               
@@ -251,9 +276,19 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
                   {getBodyTypeLabel((profile as any).body_type)}
                 </Badge>
               )}
+              {(profile as any).endowment && (profile as any).endowment !== 'no_answer' && (
+                <Badge variant="secondary" className="text-xs">
+                  🍆 {ENDOWMENT_LABELS[(profile as any).endowment] || (profile as any).endowment}
+                </Badge>
+              )}
               {(profile as any).ethnicity && (
                 <Badge variant="secondary" className="text-xs">
                   {getEthnicityLabel((profile as any).ethnicity)}
+                </Badge>
+              )}
+              {(profile as any).hiv_status && (profile as any).hiv_status !== 'no_answer' && (
+                <Badge variant="secondary" className="text-xs">
+                  {HIV_STATUS_LABELS[(profile as any).hiv_status] || (profile as any).hiv_status}
                 </Badge>
               )}
             </motion.div>

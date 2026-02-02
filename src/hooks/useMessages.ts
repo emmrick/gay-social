@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 
 type Message = Tables<'messages'>;
 
@@ -137,6 +138,11 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
               return [...(old || []), newMessage];
             }
           );
+
+          // Play notification sound for incoming messages (not our own)
+          if (newMsg.sender_id !== user?.id) {
+            playNotificationSoundStandalone();
+          }
         }
       )
       .subscribe();

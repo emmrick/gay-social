@@ -466,6 +466,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          push_album_shares: boolean
+          push_favorites: boolean
+          push_group_messages: boolean
+          push_private_messages: boolean
+          push_reactions: boolean
+          sound_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          push_album_shares?: boolean
+          push_favorites?: boolean
+          push_group_messages?: boolean
+          push_private_messages?: boolean
+          push_reactions?: boolean
+          sound_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          push_album_shares?: boolean
+          push_favorites?: boolean
+          push_group_messages?: boolean
+          push_private_messages?: boolean
+          push_reactions?: boolean
+          sound_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null

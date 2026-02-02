@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
+import { notifyNewReaction } from '@/services/pushNotificationService';
 
 interface ProfileReaction {
   id: string;
@@ -127,6 +128,10 @@ export const useToggleProfileReaction = () => {
 
         // Send notification to profile owner (only if not reacting to own profile)
         if (profileUserId !== user.id) {
+          // Send push notification
+          notifyNewReaction(profileUserId, profile?.username || 'Quelqu\'un', emoji);
+
+          // Also create in-app notification
           await supabase
             .from('notifications')
             .insert({

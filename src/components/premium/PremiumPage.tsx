@@ -168,9 +168,9 @@ const PremiumPage = () => {
         {/* Pricing Card */}
         {!isPremium && (
           <Card className="border-2 border-amber-500/50 relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-              4,50 €/MOIS
-            </div>
+          <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+            5,99 €/MOIS
+          </div>
             <CardHeader className="text-center pb-2">
               <CardTitle className="text-xl flex items-center justify-center gap-2">
                 <Crown className="w-5 h-5 text-amber-500" />
@@ -178,10 +178,10 @@ const PremiumPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center space-y-4">
-              <div>
-                <span className="text-3xl font-bold">4,50 €</span>
-                <span className="text-muted-foreground">/mois</span>
-              </div>
+            <div>
+              <span className="text-3xl font-bold">5,99 €</span>
+              <span className="text-muted-foreground">/mois</span>
+            </div>
               
               <ul className="text-sm text-left space-y-2">
                 <li className="flex items-center gap-2">
@@ -268,7 +268,7 @@ const PremiumPage = () => {
             <div>
               <p className="font-medium text-sm">Comment fonctionne le paiement ?</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Cliquez sur "Payer avec Revolut" pour effectuer un paiement de 4,50€. Après réception, notre équipe activera votre abonnement Premium pour 30 jours.
+                Cliquez sur "Payer avec Revolut" pour effectuer un paiement de 5,99€. Après réception, notre équipe activera votre abonnement Premium pour 30 jours.
               </p>
             </div>
             <Separator />

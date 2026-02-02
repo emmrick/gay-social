@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { MessageCircle, Flag, MoreVertical } from 'lucide-react';
 import {
   Tooltip,
@@ -21,6 +19,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import ReportUserDialog from './ReportUserDialog';
 import ProfileDetailDialog from '@/components/profile/ProfileDetailDialog';
+import { 
+  isUserTrulyOnline, 
+  shouldShowOnlineIndicator, 
+  getLastSeenText 
+} from '@/hooks/useOnlineStatus';
 
 type Profile = Tables<'profiles'>;
 
@@ -111,7 +114,7 @@ const MemberCard = ({
               profile.username.charAt(0).toUpperCase()
             )}
           </div>
-          {profile.is_online === true ? (
+          {shouldShowOnlineIndicator(profile) ? (
             <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-card" />
           ) : (
             <TooltipProvider>
@@ -120,12 +123,7 @@ const MemberCard = ({
                   <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-gray-400 rounded-full border-2 border-card cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  {profile.last_seen
-                    ? `Vu ${formatDistanceToNow(new Date(profile.last_seen), {
-                        addSuffix: true,
-                        locale: fr,
-                      })}`
-                    : 'Jamais connecté'}
+                  {getLastSeenText(profile) || 'Hors ligne'}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -136,15 +134,10 @@ const MemberCard = ({
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-foreground truncate">{profile.username}</h3>
           <p className="text-sm text-muted-foreground">
-            {profile.is_online === true ? (
+            {isUserTrulyOnline(profile) && !profile.hide_online_status ? (
               <span className="text-green-500">En ligne</span>
-            ) : profile.last_seen ? (
-              `Vu ${formatDistanceToNow(new Date(profile.last_seen), {
-                addSuffix: true,
-                locale: fr,
-              })}`
             ) : (
-              'Hors ligne'
+              getLastSeenText(profile) || 'Hors ligne'
             )}
           </p>
         </div>

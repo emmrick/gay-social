@@ -280,22 +280,21 @@ export const useCredits = () => {
     },
   });
 
-  // Perform action with credit deduction
+  // Perform action with credit deduction - returns object with success status and showDialog callback
   const performAction = async (
     action: CreditActionType,
     description?: string
-  ): Promise<boolean> => {
+  ): Promise<{ success: boolean; showDialog?: () => void }> => {
     const cost = CREDIT_COSTS[action];
     
     if (!hasEnoughCredits(cost)) {
-      toast.error('Crédits insuffisants', {
-        description: `Cette action coûte ${cost} crédit${cost > 1 ? 's' : ''}.`,
-        action: {
-          label: 'Acheter',
-          onClick: () => window.location.href = '/?tab=credits',
-        },
-      });
-      return false;
+      // Return a callback to show the dialog - caller should use useCreditDialog
+      return { 
+        success: false,
+        showDialog: () => {
+          // This will be handled by the caller using useCreditDialog
+        }
+      };
     }
 
     try {
@@ -304,10 +303,37 @@ export const useCredits = () => {
         transactionType: action,
         description,
       });
-      return true;
+      return { success: true };
     } catch {
-      return false;
+      return { success: false };
     }
+  };
+
+  // Simple check that returns action cost if insufficient
+  const checkCreditsForAction = (action: CreditActionType): { 
+    hasEnough: boolean; 
+    cost: number; 
+    actionName: string;
+  } => {
+    const cost = CREDIT_COSTS[action];
+    const actionNames: Record<CreditActionType, string> = {
+      private_message_text: 'Envoyer un message',
+      private_message_media: 'Envoyer un média',
+      group_message_text: 'Message de groupe',
+      group_message_media: 'Média de groupe',
+      ephemeral_media: 'Média éphémère',
+      album_share: 'Partager un album',
+      album_create: 'Créer un album',
+      profile_reaction: 'Réaction profil',
+      profile_view: 'Voir un profil',
+      nearby_unlock_30: 'Débloquer 30 profils',
+      nearby_unlock_130: 'Débloquer 130 profils',
+    };
+    return {
+      hasEnough: hasEnoughCredits(cost),
+      cost,
+      actionName: actionNames[action] || action,
+    };
   };
 
   return {
@@ -327,6 +353,7 @@ export const useCredits = () => {
     // Checks
     hasEnoughCredits,
     canPerformAction,
+    checkCreditsForAction,
     // Actions
     performAction,
     deductCredits,

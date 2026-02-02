@@ -39,12 +39,15 @@ export const useNotificationSound = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const playNotificationSound = useCallback(() => {
-    // Check if sounds are enabled globally (from localStorage for immediate check)
-    const localSoundEnabled = localStorage.getItem('notifications_sound') !== 'false';
-    const prefSoundEnabled = preferences?.sound_enabled !== false;
+    // Check if sounds are enabled - prioritize localStorage for immediate reactivity
+    const localSoundEnabled = localStorage.getItem('notification_sound_enabled');
+    const soundEnabled = localSoundEnabled !== null 
+      ? localSoundEnabled === 'true' 
+      : preferences?.sound_enabled !== false;
+    
     const soundType = (localStorage.getItem('notification_sound_type') || preferences?.notification_sound || 'default') as NotificationSoundType;
 
-    if (!localSoundEnabled || !prefSoundEnabled || soundType === 'none') {
+    if (!soundEnabled || soundType === 'none') {
       return;
     }
 
@@ -91,8 +94,9 @@ export const useNotificationSound = () => {
 let cachedAudios: Record<string, HTMLAudioElement> = {};
 
 export const playNotificationSoundStandalone = () => {
-  const localSoundEnabled = localStorage.getItem('notifications_sound') !== 'false';
-  if (!localSoundEnabled) return;
+  const localSoundEnabled = localStorage.getItem('notification_sound_enabled');
+  // Default to true if not set
+  if (localSoundEnabled === 'false') return;
 
   const soundType = (localStorage.getItem('notification_sound_type') || 'default') as NotificationSoundType;
   if (soundType === 'none') return;

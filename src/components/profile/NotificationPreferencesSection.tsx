@@ -78,6 +78,13 @@ const NotificationPreferencesSection = () => {
     updatePreferences({ notification_sound: value });
   };
 
+  const handleSoundToggle = () => {
+    const newValue = !preferences.sound_enabled;
+    // Store in localStorage for immediate reactivity
+    localStorage.setItem('notification_sound_enabled', String(newValue));
+    togglePreference('sound_enabled');
+  };
+
   const handlePreviewSound = () => {
     const currentSound = (preferences.notification_sound || 'default') as NotificationSoundType;
     previewSound(currentSound);
@@ -156,7 +163,7 @@ const NotificationPreferencesSection = () => {
           title="Son de notification"
           description={preferences.sound_enabled ? "Jouer un son à chaque notification" : "Notifications silencieuses"}
           checked={preferences.sound_enabled}
-          onCheckedChange={() => togglePreference('sound_enabled')}
+          onCheckedChange={handleSoundToggle}
           disabled={isUpdating}
         />
 

@@ -15,6 +15,7 @@ import GroupPickerDialog from '@/components/chat/GroupPickerDialog';
 import IdentityVerificationDialog from '@/components/verification/IdentityVerificationDialog';
 import VerificationReminderBanner from '@/components/verification/VerificationReminderBanner';
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -311,31 +312,39 @@ const Index = () => {
             animate="animate"
             exit="exit"
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col min-h-0"
           >
             {/* Header */}
-            <div className="px-5 py-5 border-b border-border/50 flex items-center justify-between">
-              <div>
-                <motion.h2 
-                  className="font-display text-2xl font-bold text-foreground mb-1"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  Accueil
-                </motion.h2>
-                <motion.p 
-                  className="text-sm text-muted-foreground"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.15 }}
-                >
-                  Bienvenue, {profile?.username || 'membre'}
-                </motion.p>
+            <div 
+              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50 flex items-center justify-between"
+              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
+            >
+              <div className="px-5 pb-4 flex items-center justify-between w-full">
+                <div>
+                  <motion.h2 
+                    className="font-display text-2xl font-bold text-foreground mb-0.5"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    Accueil
+                  </motion.h2>
+                  <motion.p 
+                    className="text-sm text-muted-foreground"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.15 }}
+                  >
+                    Bienvenue, {profile?.username || 'membre'}
+                  </motion.p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ThemeToggle />
+                  <NotificationsDropdown />
+                </div>
               </div>
-              <NotificationsDropdown />
             </div>
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 min-h-0">
               <HomeView
                 onNavigateToGroups={() => handleTabChange('groups')}
                 onNavigateToMessages={() => handleTabChange('messages')}
@@ -357,42 +366,47 @@ const Index = () => {
             animate="animate"
             exit="exit"
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col min-h-0"
           >
             {/* Header with add button */}
-            <div className="px-5 py-5 border-b border-border/50 flex items-center justify-between">
-              <div>
-                <motion.h2 
-                  className="font-display text-2xl font-bold text-foreground mb-1"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  Groupes
-                </motion.h2>
-                <motion.p 
-                  className="text-sm text-muted-foreground"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.15 }}
-                >
-                  {joinedGroups.length}/{maxGroups} groupes rejoints
-                </motion.p>
-              </div>
-              <div className="flex items-center gap-2">
-                <NotificationsDropdown />
-                <Button
-                  onClick={() => setShowGroupPicker(true)}
-                  size="icon"
-                  className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
-                >
-                  <Plus className="w-5 h-5" />
-                </Button>
+            <div 
+              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
+              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
+            >
+              <div className="px-5 pb-4 flex items-center justify-between">
+                <div>
+                  <motion.h2 
+                    className="font-display text-2xl font-bold text-foreground mb-0.5"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    Groupes
+                  </motion.h2>
+                  <motion.p 
+                    className="text-sm text-muted-foreground"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.15 }}
+                  >
+                    {joinedGroups.length}/{maxGroups} groupes rejoints
+                  </motion.p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <NotificationsDropdown />
+                  <Button
+                    onClick={() => setShowGroupPicker(true)}
+                    size="icon"
+                    className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
             </div>
             
             {/* Groups list */}
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 min-h-0">
               <JoinedGroupsList onSelectGroup={handleSelectRegion} />
             </ScrollArea>
 
@@ -415,66 +429,71 @@ const Index = () => {
             animate="animate"
             exit="exit"
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="flex-1 flex flex-col relative"
+            className="flex-1 flex flex-col relative min-h-0"
           >
             {/* Header with search button */}
-            <div className="px-5 py-5 border-b border-border/50 flex items-center justify-between">
-              <div>
-                <motion.h2 
-                  className="font-display text-2xl font-bold text-foreground mb-1"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  Messages
-                </motion.h2>
-                <motion.p 
-                  className="text-sm text-muted-foreground"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.15 }}
-                >
-                  Tes conversations privées
-                </motion.p>
+            <div 
+              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
+              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
+            >
+              <div className="px-5 pb-4 flex items-center justify-between">
+                <div>
+                  <motion.h2 
+                    className="font-display text-2xl font-bold text-foreground mb-0.5"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    Messages
+                  </motion.h2>
+                  <motion.p 
+                    className="text-sm text-muted-foreground"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.15 }}
+                  >
+                    Tes conversations privées
+                  </motion.p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <NotificationsDropdown />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowArchivedConversations(!showArchivedConversations)}
+                    className={cn(
+                      "rounded-full",
+                      showArchivedConversations && "bg-secondary"
+                    )}
+                  >
+                    <Archive className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    onClick={() => setShowMemberSearch(true)}
+                    size="icon"
+                    className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <NotificationsDropdown />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowArchivedConversations(!showArchivedConversations)}
-                  className={cn(
-                    "rounded-full",
-                    showArchivedConversations && "bg-secondary"
-                  )}
-                >
-                  <Archive className="w-5 h-5" />
-                </Button>
-                <Button
-                  onClick={() => setShowMemberSearch(true)}
-                  size="icon"
-                  className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
-                >
-                  <Plus className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
 
-             {/* Tabs for active/archived */}
-             <div className="px-5 py-2">
-              <Tabs 
-                value={showArchivedConversations ? 'archived' : 'active'} 
-                onValueChange={(v) => setShowArchivedConversations(v === 'archived')}
-              >
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="active">Conversations</TabsTrigger>
-                  <TabsTrigger value="archived">Archives</TabsTrigger>
-                </TabsList>
-              </Tabs>
+               {/* Tabs for active/archived */}
+               <div className="px-5 pb-3">
+                <Tabs 
+                  value={showArchivedConversations ? 'archived' : 'active'} 
+                  onValueChange={(v) => setShowArchivedConversations(v === 'archived')}
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="active">Conversations</TabsTrigger>
+                    <TabsTrigger value="archived">Archives</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
             </div>
             
             {/* Conversation list */}
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 min-h-0">
               <PrivateChatList
                 onSelectConversation={handleSelectConversation}
                 selectedUserId={null}
@@ -505,31 +524,36 @@ const Index = () => {
             animate="animate"
             exit="exit"
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col min-h-0"
           >
             {/* Header */}
-            <div className="px-5 py-5 border-b border-border/50 flex items-center justify-between">
-              <div>
-                <motion.h2 
-                  className="font-display text-2xl font-bold text-foreground mb-1"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  Mon Profil
-                </motion.h2>
-                <motion.p 
-                  className="text-sm text-muted-foreground"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.15 }}
-                >
-                  Gérer ton compte
-                </motion.p>
+            <div 
+              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
+              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
+            >
+              <div className="px-5 pb-4 flex items-center justify-between">
+                <div>
+                  <motion.h2 
+                    className="font-display text-2xl font-bold text-foreground mb-0.5"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    Mon Profil
+                  </motion.h2>
+                  <motion.p 
+                    className="text-sm text-muted-foreground"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.15 }}
+                  >
+                    Gérer ton compte
+                  </motion.p>
+                </div>
+                <NotificationsDropdown />
               </div>
-              <NotificationsDropdown />
             </div>
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 min-h-0">
               <ProfileView 
                 onSignOut={handleSignOut}
                 onNavigateToAdmin={() => navigate('/admin')}
@@ -556,31 +580,36 @@ const Index = () => {
             animate="animate"
             exit="exit"
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col min-h-0"
           >
             {/* Header */}
-            <div className="px-5 py-5 border-b border-border/50 flex items-center justify-between">
-              <div>
-                <motion.h2 
-                  className="font-display text-2xl font-bold text-foreground mb-1"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  Premium
-                </motion.h2>
-                <motion.p 
-                  className="text-sm text-muted-foreground"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.15 }}
-                >
-                  Débloquer toutes les fonctionnalités
-                </motion.p>
+            <div 
+              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
+              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
+            >
+              <div className="px-5 pb-4 flex items-center justify-between">
+                <div>
+                  <motion.h2 
+                    className="font-display text-2xl font-bold text-foreground mb-0.5"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    Premium
+                  </motion.h2>
+                  <motion.p 
+                    className="text-sm text-muted-foreground"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.15 }}
+                  >
+                    Débloquer toutes les fonctionnalités
+                  </motion.p>
+                </div>
+                <NotificationsDropdown />
               </div>
-              <NotificationsDropdown />
             </div>
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 min-h-0">
               <PremiumPage />
             </ScrollArea>
           </motion.div>
@@ -594,15 +623,25 @@ const Index = () => {
   const content = renderContent();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-hidden">
+    <div 
+      className="min-h-dvh min-h-screen bg-background flex flex-col overflow-x-hidden"
+      style={{
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)',
+      }}
+    >
       {/* Verification Reminder Banner */}
       {user && currentView !== 'landing' && <VerificationReminderBanner />}
       
       {/* Content with AnimatePresence for transitions */}
       <main className={cn(
         "flex-1 flex flex-col overflow-hidden",
-        showBottomNav && "pb-20"
-      )}>
+        showBottomNav && "pb-24"
+      )}
+      style={{
+        paddingBottom: showBottomNav ? 'calc(96px + env(safe-area-inset-bottom, 0px))' : undefined,
+      }}
+      >
         <AnimatePresence mode="wait" custom={direction}>
           {content ?? (
             <motion.div

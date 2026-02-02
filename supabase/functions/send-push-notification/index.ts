@@ -1,23 +1,67 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import * as webpush from "jsr:@negrel/webpush";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Convert VAPID key to proper format for Web Push
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
-  const rawData = atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
+// Convert base64url to standard base64
+function base64UrlToBase64(base64url: string): string {
+  let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = (4 - (base64.length % 4)) % 4;
+  base64 += '='.repeat(padding);
+  return base64;
+}
+
+// Decode base64url string to Uint8Array
+function base64UrlDecode(str: string): Uint8Array {
+  const base64 = base64UrlToBase64(str);
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
   }
-  return outputArray;
+  return bytes;
+}
+
+// Convert raw bytes to base64
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+// Convert raw EC private key (32 bytes) to JWK format
+function rawPrivateKeyToJWK(privateKeyBytes: Uint8Array, publicKeyBytes: Uint8Array): JsonWebKey {
+  // The public key is 65 bytes (uncompressed): 0x04 + 32 bytes X + 32 bytes Y
+  const x = publicKeyBytes.slice(1, 33);
+  const y = publicKeyBytes.slice(33, 65);
+  
+  return {
+    kty: "EC",
+    crv: "P-256",
+    x: bytesToBase64(x).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
+    y: bytesToBase64(y).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
+    d: bytesToBase64(privateKeyBytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
+  };
+}
+
+// Convert raw EC public key (65 bytes) to JWK format
+function rawPublicKeyToJWK(publicKeyBytes: Uint8Array): JsonWebKey {
+  // The public key is 65 bytes (uncompressed): 0x04 + 32 bytes X + 32 bytes Y
+  const x = publicKeyBytes.slice(1, 33);
+  const y = publicKeyBytes.slice(33, 65);
+  
+  return {
+    kty: "EC",
+    crv: "P-256",
+    x: bytesToBase64(x).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
+    y: bytesToBase64(y).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
+  };
 }
 
 serve(async (req) => {
@@ -39,6 +83,29 @@ serve(async (req) => {
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Supabase credentials not configured");
     }
+
+    // Decode the base64url encoded keys
+    const privateKeyBytes = base64UrlDecode(VAPID_PRIVATE_KEY);
+    const publicKeyBytes = base64UrlDecode(VAPID_PUBLIC_KEY);
+
+    console.log("Private key bytes:", privateKeyBytes.length); // Should be 32
+    console.log("Public key bytes:", publicKeyBytes.length);   // Should be 65
+
+    // Convert to JWK format for the library
+    const privateJWK = rawPrivateKeyToJWK(privateKeyBytes, publicKeyBytes);
+    const publicJWK = rawPublicKeyToJWK(publicKeyBytes);
+
+    // Import VAPID keys
+    const vapidKeys = await webpush.importVapidKeys({
+      publicKey: publicJWK,
+      privateKey: privateJWK,
+    });
+
+    // Create application server
+    const appServer = await webpush.ApplicationServer.new({
+      contactInformation: "mailto:support@gayconnect.app",
+      vapidKeys,
+    });
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -101,6 +168,7 @@ serve(async (req) => {
 
     console.log(`Found ${subscriptions.length} subscriptions for user ${userId}`);
 
+    // Prepare the notification payload
     const payload = JSON.stringify({
       title,
       body: body || "",
@@ -114,57 +182,44 @@ serve(async (req) => {
 
     for (const subscription of subscriptions) {
       try {
-        const audience = new URL(subscription.endpoint).origin;
-        const now = Math.floor(Date.now() / 1000);
-        
-        // Create simple VAPID JWT header
-        const jwtHeader = { typ: "JWT", alg: "ES256" };
-        const jwtClaims = {
-          aud: audience,
-          exp: now + 12 * 60 * 60,
-          sub: "mailto:support@gayconnect.app",
+        // Build the PushSubscription object for the library
+        const pushSubscription = {
+          endpoint: subscription.endpoint,
+          keys: {
+            p256dh: subscription.p256dh_key,
+            auth: subscription.auth_key,
+          }
         };
 
-        const headerB64 = btoa(JSON.stringify(jwtHeader))
-          .replace(/\+/g, "-")
-          .replace(/\//g, "_")
-          .replace(/=/g, "");
-        const claimsB64 = btoa(JSON.stringify(jwtClaims))
-          .replace(/\+/g, "-")
-          .replace(/\//g, "_")
-          .replace(/=/g, "");
+        console.log("Sending push to:", subscription.endpoint.substring(0, 50) + "...");
 
-        // For Web Push, we need to send to the endpoint
-        // The browser handles decryption on its end
-        // We'll send a simple push without encryption (notification-only)
-        const response = await fetch(subscription.endpoint, {
-          method: "POST",
-          headers: {
-            "TTL": "86400",
-            "Urgency": "high",
-            "Authorization": `vapid t=${headerB64}.${claimsB64}, k=${VAPID_PUBLIC_KEY}`,
-          },
+        // Create subscriber
+        const subscriber = appServer.subscribe(pushSubscription);
+
+        // Send the notification (cast urgency to the expected type)
+        await subscriber.pushTextMessage(payload, {
+          ttl: 86400,
+          urgency: "high" as webpush.Urgency,
         });
 
-        console.log(`Push response for ${subscription.endpoint}: ${response.status}`);
+        console.log("Push sent successfully");
+        results.push({ endpoint: subscription.endpoint, success: true });
 
-        if (response.status === 201 || response.status === 200) {
-          results.push({ endpoint: subscription.endpoint, success: true });
-        } else if (response.status === 410 || response.status === 404) {
-          // Subscription expired or invalid, remove it
+      } catch (pushError: unknown) {
+        const errorMessage = pushError instanceof Error ? pushError.message : String(pushError);
+        console.error("Push error:", errorMessage);
+
+        // Check if subscription is expired/invalid (410 Gone or 404 Not Found)
+        if (errorMessage.includes("410") || errorMessage.includes("404") || errorMessage.includes("expired")) {
+          // Remove expired subscription
           await supabase
             .from("push_subscriptions")
             .delete()
             .eq("id", subscription.id);
           results.push({ endpoint: subscription.endpoint, success: false, reason: "expired" });
-        } else {
-          const errorText = await response.text();
-          console.log(`Push failed for ${subscription.endpoint}: ${response.status} - ${errorText}`);
-          results.push({ endpoint: subscription.endpoint, success: false, reason: `${response.status}: ${errorText}` });
+          continue;
         }
-      } catch (pushError: unknown) {
-        const errorMessage = pushError instanceof Error ? pushError.message : String(pushError);
-        console.error("Push error:", errorMessage);
+
         results.push({ endpoint: subscription.endpoint, success: false, reason: errorMessage });
       }
     }

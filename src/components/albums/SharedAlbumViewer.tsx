@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { FolderLock, Clock, Eye, X, ShieldX, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FolderLock, Clock, Eye, X, ShieldX, Lock, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,6 +17,7 @@ import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import { useAuth } from '@/contexts/AuthContext';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 
 interface SharedAlbumViewerProps {
   albumId: string;
@@ -88,23 +89,113 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   const [shareRevoked, setShareRevoked] = useState(false);
   
+  // Zoom state for pinch-to-zoom
+  const scale = useMotionValue(1);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const lastTapRef = useRef<number>(0);
+  const initialTouchDistanceRef = useRef<number | null>(null);
+  const initialScaleRef = useRef<number>(1);
+  
   // Embla carousel for fullscreen swipe navigation
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: false,
     dragFree: false,
     containScroll: 'trimSnaps',
+    watchDrag: !isZoomed, // Disable carousel drag when zoomed
   });
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Reset zoom when changing slides
+  const resetZoom = useCallback(() => {
+    animate(scale, 1, { duration: 0.2 });
+    animate(x, 0, { duration: 0.2 });
+    animate(y, 0, { duration: 0.2 });
+    setIsZoomed(false);
+  }, [scale, x, y]);
+
+  // Handle double tap to zoom
+  const handleDoubleTap = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      // Double tap detected
+      if (isZoomed) {
+        resetZoom();
+      } else {
+        animate(scale, 2.5, { duration: 0.2 });
+        setIsZoomed(true);
+      }
+    }
+    lastTapRef.current = now;
+  }, [isZoomed, resetZoom, scale]);
+
+  // Handle pinch zoom
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      initialTouchDistanceRef.current = distance;
+      initialScaleRef.current = scale.get();
+    }
+  }, [scale]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialTouchDistanceRef.current !== null) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      const scaleFactor = distance / initialTouchDistanceRef.current;
+      const newScale = Math.min(Math.max(initialScaleRef.current * scaleFactor, 1), 4);
+      
+      scale.set(newScale);
+      setIsZoomed(newScale > 1);
+    } else if (e.touches.length === 1 && isZoomed) {
+      // Pan when zoomed
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - (e.target as HTMLElement).getBoundingClientRect().width / 2;
+      const deltaY = touch.clientY - (e.target as HTMLElement).getBoundingClientRect().height / 2;
+      
+      const currentScale = scale.get();
+      const maxPan = (currentScale - 1) * 150;
+      
+      x.set(Math.min(Math.max(deltaX * 0.3, -maxPan), maxPan));
+      y.set(Math.min(Math.max(deltaY * 0.3, -maxPan), maxPan));
+    }
+  }, [scale, x, y, isZoomed]);
+
+  const handleTouchEnd = useCallback(() => {
+    initialTouchDistanceRef.current = null;
+    
+    // Snap back if scale is less than 1
+    if (scale.get() < 1.1) {
+      resetZoom();
+    }
+  }, [scale, resetZoom]);
 
   // Update carousel state
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
     setCanScrollPrev(emblaApi.canScrollPrev());
     setCanScrollNext(emblaApi.canScrollNext());
-    setCurrentSlide(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
+    const newSlide = emblaApi.selectedScrollSnap();
+    if (newSlide !== currentSlide) {
+      resetZoom();
+    }
+    setCurrentSlide(newSlide);
+  }, [emblaApi, currentSlide, resetZoom]);
 
   // Initialize carousel when opening fullscreen
   useEffect(() => {
@@ -124,16 +215,31 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
   useEffect(() => {
     if (fullscreenIndex !== null && emblaApi) {
       emblaApi.scrollTo(fullscreenIndex, true);
+      resetZoom();
     }
-  }, [fullscreenIndex, emblaApi]);
+  }, [fullscreenIndex, emblaApi, resetZoom]);
+
+  // Reset zoom when closing fullscreen
+  useEffect(() => {
+    if (fullscreenIndex === null) {
+      resetZoom();
+    }
+  }, [fullscreenIndex, resetZoom]);
+
+  // Reinit embla when zoom state changes
+  useEffect(() => {
+    if (emblaApi) {
+      emblaApi.reInit({ watchDrag: !isZoomed });
+    }
+  }, [emblaApi, isZoomed]);
 
   const scrollPrev = useCallback(() => {
-    emblaApi?.scrollPrev();
-  }, [emblaApi]);
+    if (!isZoomed) emblaApi?.scrollPrev();
+  }, [emblaApi, isZoomed]);
 
   const scrollNext = useCallback(() => {
-    emblaApi?.scrollNext();
-  }, [emblaApi]);
+    if (!isZoomed) emblaApi?.scrollNext();
+  }, [emblaApi, isZoomed]);
   const notificationSentRef = useRef(false);
   
   const { 
@@ -430,14 +536,28 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
                     onClick={(e) => e.stopPropagation()}
                   >
                     {item.media_type === 'image' ? (
-                      <img 
-                        src={item.signed_url} 
-                        alt="" 
-                        className="max-w-full max-h-full object-contain select-none"
-                        onContextMenu={preventContextMenu}
-                        onDragStart={preventDrag}
-                        draggable={false}
-                      />
+                      <motion.div
+                        className="relative max-w-full max-h-full flex items-center justify-center touch-none"
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                        onDoubleClick={handleDoubleTap}
+                        onTouchEndCapture={handleDoubleTap}
+                        style={{
+                          scale: index === currentSlide ? scale : 1,
+                          x: index === currentSlide ? x : 0,
+                          y: index === currentSlide ? y : 0,
+                        }}
+                      >
+                        <img 
+                          src={item.signed_url} 
+                          alt="" 
+                          className="max-w-full max-h-full object-contain select-none"
+                          onContextMenu={preventContextMenu}
+                          onDragStart={preventDrag}
+                          draggable={false}
+                        />
+                      </motion.div>
                     ) : (
                       <video 
                         src={item.signed_url} 
@@ -453,16 +573,24 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
               </div>
             </div>
 
+            {/* Zoom indicator */}
+            {isZoomed && (
+              <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[102] bg-black/60 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <ZoomIn className="w-3 h-3" />
+                <span>{Math.round(scale.get() * 100)}%</span>
+              </div>
+            )}
+
             {/* Navigation buttons - hidden on mobile, visible on desktop */}
             <Button
               variant="ghost"
               size="icon"
               className={cn(
                 "absolute left-4 top-1/2 -translate-y-1/2 z-[102] text-white hover:bg-white/20 h-12 w-12 rounded-full hidden sm:flex",
-                !canScrollPrev && "opacity-30 pointer-events-none"
+                (!canScrollPrev || isZoomed) && "opacity-30 pointer-events-none"
               )}
               onClick={scrollPrev}
-              disabled={!canScrollPrev}
+              disabled={!canScrollPrev || isZoomed}
             >
               <ChevronLeft className="w-8 h-8" />
             </Button>
@@ -471,10 +599,10 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
               size="icon"
               className={cn(
                 "absolute right-4 top-1/2 -translate-y-1/2 z-[102] text-white hover:bg-white/20 h-12 w-12 rounded-full hidden sm:flex",
-                !canScrollNext && "opacity-30 pointer-events-none"
+                (!canScrollNext || isZoomed) && "opacity-30 pointer-events-none"
               )}
               onClick={scrollNext}
-              disabled={!canScrollNext}
+              disabled={!canScrollNext || isZoomed}
             >
               <ChevronRight className="w-8 h-8" />
             </Button>
@@ -489,18 +617,20 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
                       "w-2 h-2 rounded-full transition-all",
                       index === currentSlide 
                         ? "bg-white w-4" 
-                        : "bg-white/40 hover:bg-white/60"
+                        : "bg-white/40 hover:bg-white/60",
+                      isZoomed && "opacity-50"
                     )}
-                    onClick={() => emblaApi?.scrollTo(index)}
+                    onClick={() => !isZoomed && emblaApi?.scrollTo(index)}
+                    disabled={isZoomed}
                   />
                 ))}
               </div>
             )}
 
-            {/* Swipe hint for mobile - only shown briefly */}
+            {/* Swipe/Zoom hint for mobile - only shown briefly */}
             <div className="absolute bottom-16 left-0 right-0 z-[102] flex justify-center sm:hidden pointer-events-none">
               <p className="text-white/60 text-xs animate-fade-in">
-                ← Glissez pour naviguer →
+                {isZoomed ? 'Double-tap pour dézoomer' : '← Glissez • Double-tap pour zoomer →'}
               </p>
             </div>
           </div>

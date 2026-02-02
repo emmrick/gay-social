@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, Send, Users, Globe, Loader2, CheckCircle } from 'lucide-react';
+import { Bell, Send, Users, Globe, Loader2, CheckCircle, History, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,8 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useBroadcastHistory } from '@/hooks/useBroadcastHistory';
+import { useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const REGIONS = [
   { code: 'FR-IDF', name: 'Île-de-France' },
@@ -33,6 +39,16 @@ const REGIONS = [
 
 type TargetType = 'all' | 'region' | 'premium';
 
+const getTargetLabel = (targetType: string, targetRegion: string | null) => {
+  if (targetType === 'all') return 'Tous';
+  if (targetType === 'premium') return 'Premium';
+  if (targetType === 'region' && targetRegion) {
+    const region = REGIONS.find(r => r.code === targetRegion);
+    return region?.name || targetRegion;
+  }
+  return targetType;
+};
+
 const BroadcastNotificationPanel = () => {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -41,6 +57,9 @@ const BroadcastNotificationPanel = () => {
   const [selectedRegion, setSelectedRegion] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [lastResult, setLastResult] = useState<{ sent: number; failed: number } | null>(null);
+  
+  const queryClient = useQueryClient();
+  const { data: history = [], isLoading: isLoadingHistory } = useBroadcastHistory();
 
   const handleSend = async () => {
     if (!title.trim()) {
@@ -75,6 +94,9 @@ const BroadcastNotificationPanel = () => {
       });
 
       toast.success(`Notifications envoyées: ${data.successCount} réussies, ${data.failedCount} échouées`);
+      
+      // Refresh history
+      queryClient.invalidateQueries({ queryKey: ['broadcast-history'] });
       
       // Reset form
       setTitle('');
@@ -202,51 +224,83 @@ const BroadcastNotificationPanel = () => {
                 </>
               )}
             </Button>
+
+            {lastResult && (
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-green-500/50 bg-green-500/5">
+                <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-sm">Envoi terminé</p>
+                  <p className="text-xs text-muted-foreground">
+                    {lastResult.sent} envoyées, {lastResult.failed} échouées
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Info & Stats */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Informations</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p>• Les notifications sont envoyées uniquement aux utilisateurs ayant activé les notifications push.</p>
-              <p>• Les utilisateurs peuvent désactiver certains types de notifications dans leurs paramètres.</p>
-              <p>• Le titre est obligatoire, le message est optionnel.</p>
-              <p>• Utilisez des emojis pour rendre vos notifications plus visibles ! 🎉</p>
-            </CardContent>
-          </Card>
-
-          {lastResult && (
-            <Card className="border-green-500/50 bg-green-500/5">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="w-8 h-8 text-green-500" />
-                  <div>
-                    <p className="font-medium">Envoi terminé</p>
-                    <p className="text-sm text-muted-foreground">
-                      {lastResult.sent} notifications envoyées, {lastResult.failed} échouées
-                    </p>
-                  </div>
+        {/* History */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <History className="w-4 h-4" />
+              Historique des envois
+            </CardTitle>
+            <CardDescription>
+              Les 50 dernières notifications envoyées
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[400px] pr-4">
+              {isLoadingHistory ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Conseils</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>📱 <strong>Titre court</strong> - Moins de 50 caractères pour être visible sur mobile</p>
-              <p>🎯 <strong>Ciblez bien</strong> - N'envoyez pas trop de notifications pour éviter les désabonnements</p>
-              <p>⏰ <strong>Timing</strong> - Évitez les heures de nuit</p>
-              <p>🔗 <strong>URL pertinente</strong> - Redirigez vers la page concernée</p>
-            </CardContent>
-          </Card>
-        </div>
+              ) : history.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p>Aucune notification envoyée</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {history.map((item) => (
+                    <div 
+                      key={item.id} 
+                      className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{item.title}</p>
+                          {item.body && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                              {item.body}
+                            </p>
+                          )}
+                        </div>
+                        <Badge variant="outline" className="flex-shrink-0 text-xs">
+                          {getTargetLabel(item.target_type, item.target_region)}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {format(new Date(item.created_at), 'dd MMM yyyy HH:mm', { locale: fr })}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-green-500">{item.success_count} ✓</span>
+                          {item.failed_count > 0 && (
+                            <span className="text-red-500">{item.failed_count} ✗</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

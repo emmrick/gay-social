@@ -207,6 +207,19 @@ serve(async (req) => {
 
     console.log(`Broadcast complete: ${successCount} success, ${failedCount} failed`);
 
+    // Save broadcast to history
+    await supabase.from('broadcast_notifications').insert({
+      title,
+      body: body || null,
+      action_url: url || '/',
+      target_type: targetType || 'all',
+      target_region: targetType === 'region' ? region : null,
+      sent_by: user.id,
+      success_count: successCount,
+      failed_count: failedCount,
+      total_subscriptions: subscriptions.length,
+    });
+
     return new Response(
       JSON.stringify({ 
         success: true, 

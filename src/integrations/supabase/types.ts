@@ -87,6 +87,48 @@ export type Database = {
           },
         ]
       }
+      broadcast_notifications: {
+        Row: {
+          action_url: string | null
+          body: string | null
+          created_at: string
+          failed_count: number | null
+          id: string
+          sent_by: string
+          success_count: number | null
+          target_region: string | null
+          target_type: string
+          title: string
+          total_subscriptions: number | null
+        }
+        Insert: {
+          action_url?: string | null
+          body?: string | null
+          created_at?: string
+          failed_count?: number | null
+          id?: string
+          sent_by: string
+          success_count?: number | null
+          target_region?: string | null
+          target_type?: string
+          title: string
+          total_subscriptions?: number | null
+        }
+        Update: {
+          action_url?: string | null
+          body?: string | null
+          created_at?: string
+          failed_count?: number | null
+          id?: string
+          sent_by?: string
+          success_count?: number | null
+          target_region?: string | null
+          target_type?: string
+          title?: string
+          total_subscriptions?: number | null
+        }
+        Relationships: []
+      }
       chat_rooms: {
         Row: {
           created_at: string

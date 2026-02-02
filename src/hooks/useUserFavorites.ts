@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { notifyNewFavorite } from '@/services/pushNotificationService';
 
 interface FavoriteUser {
   id: string;
@@ -86,6 +87,27 @@ export const useUserFavorites = () => {
         }
         throw error;
       }
+
+      // Send push notification to the favorited user
+      const { data: myProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .single();
+
+      if (myProfile?.username) {
+        notifyNewFavorite(favoriteUserId, myProfile.username);
+      }
+
+      // Also create in-app notification
+      await supabase.from('notifications').insert({
+        user_id: favoriteUserId,
+        type: 'new_favorite',
+        title: '⭐ Nouveau favori !',
+        message: `${myProfile?.username || 'Quelqu\'un'} t'a ajouté en favori`,
+        action_url: `/profile/${user.id}`,
+      });
+
       return data;
     },
     onSuccess: () => {

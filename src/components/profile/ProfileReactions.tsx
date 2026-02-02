@@ -9,6 +9,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useProfileReactions, useToggleProfileReaction, PROFILE_REACTION_EMOJIS } from '@/hooks/useProfileReactions';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCreditCheck } from '@/hooks/useCreditCheck';
+import { toast } from 'sonner';
 
 interface ProfileReactionsProps {
   profileUserId: string;
@@ -20,12 +22,33 @@ const ProfileReactions = ({ profileUserId, className }: ProfileReactionsProps) =
   const { data: reactions, isLoading } = useProfileReactions(profileUserId);
   const toggleReaction = useToggleProfileReaction();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const { checkCredits } = useCreditCheck();
 
   const isOwnProfile = user?.id === profileUserId;
 
-  const handleToggleReaction = (emoji: string) => {
+  const handleToggleReaction = async (emoji: string) => {
     if (!user || isOwnProfile) return;
-    toggleReaction.mutate({ profileUserId, emoji });
+    
+    // Check if it's an existing reaction (removing - free) or new (adding - costs credits)
+    const existingReaction = reactions?.find(r => r.emoji === emoji && r.hasReacted);
+    
+    // Only check credits if adding a new reaction
+    if (!existingReaction) {
+      if (!checkCredits('profile_reaction')) {
+        setPickerOpen(false);
+        return;
+      }
+    }
+    
+    try {
+      await toggleReaction.mutateAsync({ profileUserId, emoji });
+    } catch (error: any) {
+      if (error.message === 'INSUFFICIENT_CREDITS') {
+        // Dialog already shown by checkCredits
+      } else {
+        toast.error('Erreur lors de la réaction');
+      }
+    }
     setPickerOpen(false);
   };
 

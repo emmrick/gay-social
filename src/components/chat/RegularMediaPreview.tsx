@@ -1,4 +1,4 @@
-import { X, Send, Loader2, ShieldOff } from 'lucide-react';
+import { X, Send, Loader2, ShieldOff, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useCredits, CREDIT_COSTS } from '@/hooks/useCredits';
 
 interface RegularMediaPreviewProps {
   previewUrl: string;
@@ -16,6 +17,7 @@ interface RegularMediaPreviewProps {
   progress: number;
   onSend: () => void;
   onCancel: () => void;
+  isPrivate?: boolean;
 }
 
 const RegularMediaPreview = ({
@@ -25,7 +27,11 @@ const RegularMediaPreview = ({
   progress,
   onSend,
   onCancel,
+  isPrivate = false,
 }: RegularMediaPreviewProps) => {
+  const { totalCredits } = useCredits();
+  const creditCost = isPrivate ? CREDIT_COSTS.private_message_media : CREDIT_COSTS.group_message_media;
+  const hasEnoughCredits = totalCredits >= creditCost;
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent className="max-w-md max-h-[90vh] p-0 overflow-hidden">
@@ -56,6 +62,17 @@ const RegularMediaPreview = ({
                   controls
                 />
               )}
+            </div>
+
+            {/* Credit cost info */}
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Coins className="w-4 h-4 text-primary" />
+                <span className="text-sm text-foreground">Coût: {creditCost} crédit{creditCost > 1 ? 's' : ''}</span>
+              </div>
+              <span className={`text-sm font-medium ${hasEnoughCredits ? 'text-green-600' : 'text-destructive'}`}>
+                Solde: {totalCredits.toFixed(1)}
+              </span>
             </div>
 
             {/* Warning */}
@@ -94,14 +111,19 @@ const RegularMediaPreview = ({
             Annuler
           </Button>
           <Button
-            className="flex-1 bg-amber-500 hover:bg-amber-600"
+            className={`flex-1 ${hasEnoughCredits ? 'bg-amber-500 hover:bg-amber-600' : 'bg-muted text-muted-foreground cursor-not-allowed'}`}
             onClick={onSend}
-            disabled={isUploading}
+            disabled={isUploading || !hasEnoughCredits}
           >
             {isUploading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
                 Envoi...
+              </>
+            ) : !hasEnoughCredits ? (
+              <>
+                <Coins className="w-4 h-4 mr-2" />
+                Crédits insuffisants
               </>
             ) : (
               <>

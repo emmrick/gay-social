@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { FolderLock, Clock, Eye, X, ShieldX, Lock } from 'lucide-react';
+import { FolderLock, Clock, Eye, X, ShieldX, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,6 +15,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import { useAuth } from '@/contexts/AuthContext';
+import useEmblaCarousel from 'embla-carousel-react';
+import { cn } from '@/lib/utils';
 
 interface SharedAlbumViewerProps {
   albumId: string;
@@ -83,8 +85,55 @@ const getSignedUrl = async (mediaUrl: string): Promise<string> => {
 const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: SharedAlbumViewerProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; type: string } | null>(null);
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   const [shareRevoked, setShareRevoked] = useState(false);
+  
+  // Embla carousel for fullscreen swipe navigation
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: false,
+    dragFree: false,
+    containScroll: 'trimSnaps',
+  });
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Update carousel state
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setCanScrollPrev(emblaApi.canScrollPrev());
+    setCanScrollNext(emblaApi.canScrollNext());
+    setCurrentSlide(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  // Initialize carousel when opening fullscreen
+  useEffect(() => {
+    if (!emblaApi) return;
+    
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+    onSelect();
+    
+    return () => {
+      emblaApi.off('select', onSelect);
+      emblaApi.off('reInit', onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
+  // Jump to selected slide when opening fullscreen
+  useEffect(() => {
+    if (fullscreenIndex !== null && emblaApi) {
+      emblaApi.scrollTo(fullscreenIndex, true);
+    }
+  }, [fullscreenIndex, emblaApi]);
+
+  const scrollPrev = useCallback(() => {
+    emblaApi?.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    emblaApi?.scrollNext();
+  }, [emblaApi]);
   const notificationSentRef = useRef(false);
   
   const { 
@@ -114,7 +163,7 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
           // If sharing was stopped for this user
           if (newRecord.shared_with_user_id === user.id && !newRecord.is_active) {
             setShareRevoked(true);
-            setFullscreenMedia(null);
+            setFullscreenIndex(null);
             // Invalidate related queries
             queryClient.invalidateQueries({ queryKey: ['album-share-status'] });
             queryClient.invalidateQueries({ queryKey: ['shared-albums'] });
@@ -315,11 +364,11 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
                   <p className="text-white text-lg font-medium">Capture détectée</p>
                 </div>
               )}
-              {media.map((item) => (
+              {media.map((item, index) => (
                 <div 
                   key={item.id} 
                   className="aspect-square rounded-xl overflow-hidden bg-secondary cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
-                  onClick={() => setFullscreenMedia({ url: item.signed_url, type: item.media_type })}
+                  onClick={() => setFullscreenIndex(index)}
                   onContextMenu={preventContextMenu}
                   onDragStart={preventDrag}
                 >
@@ -343,11 +392,10 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
           )}
         </ScrollArea>
 
-        {/* Fullscreen media viewer with protection */}
-        {fullscreenMedia && (
+        {/* Fullscreen media viewer with swipe navigation */}
+        {fullscreenIndex !== null && media.length > 0 && (
           <div 
-            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
-            onClick={() => setFullscreenMedia(null)}
+            className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
             onContextMenu={preventContextMenu}
           >
             {/* Screenshot block overlay in fullscreen */}
@@ -356,35 +404,105 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
                 <p className="text-white text-lg font-medium">Capture détectée</p>
               </div>
             )}
+            
+            {/* Header with close button and counter */}
+            <div className="absolute top-0 left-0 right-0 z-[102] flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">
+              <div className="text-white text-sm font-medium">
+                {currentSlide + 1} / {media.length}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/20"
+                onClick={() => setFullscreenIndex(null)}
+              >
+                <X className="w-6 h-6" />
+              </Button>
+            </div>
+
+            {/* Carousel container */}
+            <div className="flex-1 overflow-hidden" ref={emblaRef}>
+              <div className="flex h-full">
+                {media.map((item, index) => (
+                  <div 
+                    key={item.id} 
+                    className="flex-[0_0_100%] min-w-0 h-full flex items-center justify-center p-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {item.media_type === 'image' ? (
+                      <img 
+                        src={item.signed_url} 
+                        alt="" 
+                        className="max-w-full max-h-full object-contain select-none"
+                        onContextMenu={preventContextMenu}
+                        onDragStart={preventDrag}
+                        draggable={false}
+                      />
+                    ) : (
+                      <video 
+                        src={item.signed_url} 
+                        className="max-w-full max-h-full select-none"
+                        controls
+                        autoPlay={index === currentSlide}
+                        onContextMenu={preventContextMenu}
+                        controlsList="nodownload"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Navigation buttons - hidden on mobile, visible on desktop */}
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-4 right-4 text-white hover:bg-white/20 z-[102]"
-              onClick={() => setFullscreenMedia(null)}
+              className={cn(
+                "absolute left-4 top-1/2 -translate-y-1/2 z-[102] text-white hover:bg-white/20 h-12 w-12 rounded-full hidden sm:flex",
+                !canScrollPrev && "opacity-30 pointer-events-none"
+              )}
+              onClick={scrollPrev}
+              disabled={!canScrollPrev}
             >
-              <X className="w-6 h-6" />
+              <ChevronLeft className="w-8 h-8" />
             </Button>
-            {fullscreenMedia.type === 'image' ? (
-              <img 
-                src={fullscreenMedia.url} 
-                alt="" 
-                className="max-w-full max-h-full object-contain select-none"
-                onClick={(e) => e.stopPropagation()}
-                onContextMenu={preventContextMenu}
-                onDragStart={preventDrag}
-                draggable={false}
-              />
-            ) : (
-              <video 
-                src={fullscreenMedia.url} 
-                className="max-w-full max-h-full select-none"
-                controls
-                autoPlay
-                onClick={(e) => e.stopPropagation()}
-                onContextMenu={preventContextMenu}
-                controlsList="nodownload"
-              />
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "absolute right-4 top-1/2 -translate-y-1/2 z-[102] text-white hover:bg-white/20 h-12 w-12 rounded-full hidden sm:flex",
+                !canScrollNext && "opacity-30 pointer-events-none"
+              )}
+              onClick={scrollNext}
+              disabled={!canScrollNext}
+            >
+              <ChevronRight className="w-8 h-8" />
+            </Button>
+
+            {/* Dot indicators */}
+            {media.length > 1 && media.length <= 10 && (
+              <div className="absolute bottom-6 left-0 right-0 z-[102] flex justify-center gap-2">
+                {media.map((_, index) => (
+                  <button
+                    key={index}
+                    className={cn(
+                      "w-2 h-2 rounded-full transition-all",
+                      index === currentSlide 
+                        ? "bg-white w-4" 
+                        : "bg-white/40 hover:bg-white/60"
+                    )}
+                    onClick={() => emblaApi?.scrollTo(index)}
+                  />
+                ))}
+              </div>
             )}
+
+            {/* Swipe hint for mobile - only shown briefly */}
+            <div className="absolute bottom-16 left-0 right-0 z-[102] flex justify-center sm:hidden pointer-events-none">
+              <p className="text-white/60 text-xs animate-fade-in">
+                ← Glissez pour naviguer →
+              </p>
+            </div>
           </div>
         )}
       </DialogContent>

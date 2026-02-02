@@ -5,7 +5,57 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @layer base {
+  /* Light Theme */
   :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 190 90% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 210 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens - Light */
+    --gradient-primary: linear-gradient(135deg, hsl(210 100% 50%), hsl(190 90% 45%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 20% 98%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 20% 98%));
+    --shadow-glow: 0 0 40px -10px hsl(210 100% 50% / 0.3);
+    --shadow-card: 0 8px 32px -8px hsl(222 47% 11% / 0.1);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 210 100% 50%;
+  }
+
+  /* Dark Theme */
+  .dark {
     --background: 220 35% 5%;
     --foreground: 210 20% 95%;
 
@@ -34,9 +84,7 @@
     --input: 220 25% 12%;
     --ring: 210 100% 55%;
 
-    --radius: 0.75rem;
-
-    /* Custom tokens */
+    /* Custom tokens - Dark */
     --gradient-primary: linear-gradient(135deg, hsl(210 100% 55%), hsl(190 90% 50%));
     --gradient-subtle: linear-gradient(180deg, hsl(220 30% 11%), hsl(220 35% 7%));
     --gradient-card: linear-gradient(145deg, hsl(220 30% 12%), hsl(220 30% 9%));
@@ -216,16 +264,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(220 30% 10%);
+  background: hsl(var(--muted));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(210 100% 55% / 0.4);
+  background: hsl(var(--primary) / 0.4);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(210 100% 55% / 0.6);
+  background: hsl(var(--primary) / 0.6);
 }
 
 /* Mobile-specific improvements */

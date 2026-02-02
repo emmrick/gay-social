@@ -7,6 +7,7 @@ import EphemeralMessage from './EphemeralMessage';
 import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
 import ReportMessageDialog from './ReportMessageDialog';
+import MentionHighlight from './MentionHighlight';
 import { Button } from '@/components/ui/button';
 import { useDeleteMessage } from '@/hooks/useDeleteMessage';
 import {
@@ -154,7 +155,10 @@ const ChatMessage = ({
               />
             ) : (
               <div className={`message-bubble ${isOwn ? 'message-bubble-sent' : 'message-bubble-received'}`}>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
+                <MentionHighlight 
+                  content={message.content} 
+                  className="text-sm leading-relaxed whitespace-pre-wrap break-words"
+                />
               </div>
             )}
 

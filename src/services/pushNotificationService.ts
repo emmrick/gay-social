@@ -34,6 +34,7 @@ export const sendPushNotification = async (options: SendPushOptions): Promise<bo
 export const notifyNewPrivateMessage = async (
   recipientId: string,
   senderUsername: string,
+  senderId: string,
   messagePreview?: string
 ) => {
   const preview = messagePreview 
@@ -46,7 +47,7 @@ export const notifyNewPrivateMessage = async (
     userId: recipientId,
     title: `💬 ${senderUsername}`,
     body: preview,
-    url: '/messages',
+    url: `/profile/${senderId}`,
     tag: `private-${recipientId}`,
     notificationType: 'private_message',
   });
@@ -78,13 +79,14 @@ export const notifyNewGroupMessage = async (
 // Helper for favorite notifications
 export const notifyNewFavorite = async (
   recipientId: string,
-  fromUsername: string
+  fromUsername: string,
+  fromUserId: string
 ) => {
   return sendPushNotification({
     userId: recipientId,
     title: '⭐ Nouveau favori',
     body: `${fromUsername} t'a ajouté en favori`,
-    url: '/profile',
+    url: `/profile/${fromUserId}`,
     tag: 'favorite',
     notificationType: 'favorite',
   });
@@ -94,13 +96,14 @@ export const notifyNewFavorite = async (
 export const notifyNewReaction = async (
   recipientId: string,
   fromUsername: string,
+  fromUserId: string,
   emoji: string
 ) => {
   return sendPushNotification({
     userId: recipientId,
     title: `${emoji} Nouvelle réaction`,
     body: `${fromUsername} a réagi à ton profil`,
-    url: '/profile',
+    url: `/profile/${fromUserId}`,
     tag: 'reaction',
     notificationType: 'reaction',
   });
@@ -110,13 +113,14 @@ export const notifyNewReaction = async (
 export const notifyAlbumShare = async (
   recipientId: string,
   fromUsername: string,
+  fromUserId: string,
   albumName: string
 ) => {
   return sendPushNotification({
     userId: recipientId,
     title: '📸 Album partagé',
     body: `${fromUsername} t'a partagé l'album "${albumName}"`,
-    url: '/profile',
+    url: `/profile/${fromUserId}`,
     tag: 'album-share',
     notificationType: 'album_share',
   });

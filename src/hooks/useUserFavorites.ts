@@ -96,7 +96,7 @@ export const useUserFavorites = () => {
         .single();
 
       if (myProfile?.username) {
-        notifyNewFavorite(favoriteUserId, myProfile.username);
+        notifyNewFavorite(favoriteUserId, myProfile.username, user.id);
       }
 
       // Also create in-app notification

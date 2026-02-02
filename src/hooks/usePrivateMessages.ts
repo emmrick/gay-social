@@ -225,6 +225,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
           notifyNewPrivateMessage(
             otherUserId,
             senderProfile?.username || 'Quelqu\'un',
+            user.id,
             messagePreview || undefined
           );
         }

@@ -129,7 +129,7 @@ export const useToggleProfileReaction = () => {
         // Send notification to profile owner (only if not reacting to own profile)
         if (profileUserId !== user.id) {
           // Send push notification
-          notifyNewReaction(profileUserId, profile?.username || 'Quelqu\'un', emoji);
+          notifyNewReaction(profileUserId, profile?.username || 'Quelqu\'un', user.id, emoji);
 
           // Also create in-app notification
           await supabase

@@ -139,20 +139,35 @@ export const useAlbums = (userId?: string) => {
     },
   });
 
-  // Add media to album
-  const addMedia = useMutation({
-    mutationFn: async ({ albumId, file }: { albumId: string; file: File }) => {
-      if (!user?.id) throw new Error('Not authenticated');
+  // Add media to album with progress callback
+  const addMediaWithProgress = async (
+    albumId: string, 
+    file: File, 
+    onProgress?: (progress: number) => void
+  ) => {
+    if (!user?.id) throw new Error('Not authenticated');
 
-      // Upload to storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${albumId}/${Date.now()}.${fileExt}`;
+    // Upload to storage with progress simulation (Supabase doesn't expose upload progress)
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${albumId}/${Date.now()}.${fileExt}`;
 
+    // Simulate progress for better UX
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+      progress = Math.min(progress + Math.random() * 15, 85);
+      onProgress?.(Math.round(progress));
+    }, 200);
+
+    try {
       const { error: uploadError } = await supabase.storage
         .from('media')
         .upload(fileName, file);
 
+      clearInterval(progressInterval);
+      
       if (uploadError) throw uploadError;
+
+      onProgress?.(90);
 
       // Get public URL
       const { data: urlData } = supabase.storage
@@ -171,7 +186,21 @@ export const useAlbums = (userId?: string) => {
         .single();
 
       if (error) throw error;
+      
+      onProgress?.(100);
+      queryClient.invalidateQueries({ queryKey: ['album-media', albumId] });
+      
       return data;
+    } catch (error) {
+      clearInterval(progressInterval);
+      throw error;
+    }
+  };
+
+  // Legacy mutation for backward compatibility
+  const addMedia = useMutation({
+    mutationFn: async ({ albumId, file }: { albumId: string; file: File }) => {
+      return addMediaWithProgress(albumId, file);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['album-media', variables.albumId] });
@@ -393,6 +422,7 @@ export const useAlbums = (userId?: string) => {
     createAlbum,
     deleteAlbum,
     addMedia,
+    addMediaWithProgress,
     removeMedia,
     shareAlbum,
     stopSharing,

@@ -47,6 +47,14 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
+import AlbumGalleryViewer from './AlbumGalleryViewer';
+import UploadProgressOverlay from './UploadProgressOverlay';
+
+interface UploadProgress {
+  fileName: string;
+  progress: number;
+  status: 'pending' | 'uploading' | 'complete' | 'error';
+}
 
 interface AlbumManagerProps {
   isOpen: boolean;
@@ -54,7 +62,7 @@ interface AlbumManagerProps {
 }
 
 const AlbumManager = ({ isOpen, onClose }: AlbumManagerProps) => {
-  const { albums, isLoading, createAlbum, deleteAlbum, addMedia, removeMedia, useAlbumMedia, useAlbumShares, stopSharing } = useAlbums();
+  const { albums, isLoading, createAlbum, deleteAlbum, addMediaWithProgress, removeMedia, useAlbumMedia, useAlbumShares, stopSharing } = useAlbums();
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
   const [viewingAlbum, setViewingAlbum] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -63,7 +71,9 @@ const AlbumManager = ({ isOpen, onClose }: AlbumManagerProps) => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleteMediaConfirm, setDeleteMediaConfirm] = useState<{ albumId: string; mediaId: string } | null>(null);
   const [showShares, setShowShares] = useState<string | null>(null);
-  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; type: string } | null>(null);
+  const [galleryState, setGalleryState] = useState<{ media: any[]; index: number } | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCreateAlbum = async () => {
@@ -119,15 +129,63 @@ const AlbumManager = ({ isOpen, onClose }: AlbumManagerProps) => {
 
     if (validFiles.length === 0) return;
 
-    // Upload all files
-    toast.info(`Upload de ${validFiles.length} fichier(s)...`);
-    
-    for (const file of validFiles) {
-      await addMedia.mutateAsync({ albumId, file });
+    // Initialize upload progress
+    setIsUploading(true);
+    const initialProgress: UploadProgress[] = validFiles.map(file => ({
+      fileName: file.name,
+      progress: 0,
+      status: 'pending' as const,
+    }));
+    setUploadProgress(initialProgress);
+
+    let completedCount = 0;
+
+    // Upload files sequentially with progress tracking
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i];
+      
+      // Update status to uploading
+      setUploadProgress(prev => prev.map((p, idx) => 
+        idx === i ? { ...p, status: 'uploading' as const } : p
+      ));
+
+      try {
+        await addMediaWithProgress(albumId, file, (progress) => {
+          setUploadProgress(prev => prev.map((p, idx) => 
+            idx === i ? { ...p, progress } : p
+          ));
+        });
+        
+        // Mark as complete
+        setUploadProgress(prev => prev.map((p, idx) => 
+          idx === i ? { ...p, status: 'complete' as const, progress: 100 } : p
+        ));
+        completedCount++;
+      } catch (error) {
+        // Mark as error
+        setUploadProgress(prev => prev.map((p, idx) => 
+          idx === i ? { ...p, status: 'error' as const } : p
+        ));
+        toast.error(`Erreur lors de l'upload de "${file.name}"`);
+      }
     }
     
-    toast.success(`${validFiles.length} média(s) ajouté(s) !`);
+    // Show success and cleanup after delay
+    if (completedCount > 0) {
+      toast.success(`${completedCount} média(s) ajouté(s) !`);
+    }
+    
+    setTimeout(() => {
+      setIsUploading(false);
+      setUploadProgress([]);
+    }, 1500);
+    
     e.target.value = '';
+  };
+
+  // Handle opening gallery
+  const openGallery = (media: any[], index: number) => {
+    setGalleryState({ media, index });
   };
 
   const viewingAlbumData = albums.find(a => a.id === viewingAlbum);
@@ -241,7 +299,7 @@ const AlbumManager = ({ isOpen, onClose }: AlbumManagerProps) => {
                           }}
                           useAlbumMedia={useAlbumMedia}
                           useAlbumShares={useAlbumShares}
-                          onMediaClick={(url, type) => setFullscreenMedia({ url, type })}
+                          onMediaClick={(media, index) => openGallery(media, index)}
                         />
                       </motion.div>
                     ))}
@@ -336,51 +394,35 @@ const AlbumManager = ({ isOpen, onClose }: AlbumManagerProps) => {
             setSelectedAlbum(viewingAlbum);
             fileInputRef.current?.click();
           }}
-          onMediaClick={(url, type) => setFullscreenMedia({ url, type })}
+          onMediaClick={(media, index) => openGallery(media, index)}
         />
       )}
 
-      {/* Fullscreen media viewer */}
-      <AnimatePresence>
-        {fullscreenMedia && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
-            onClick={() => setFullscreenMedia(null)}
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 text-white hover:bg-white/20 z-10"
-              onClick={() => setFullscreenMedia(null)}
-            >
-              <X className="w-6 h-6" />
-            </Button>
-            {fullscreenMedia.type === 'image' ? (
-              <motion.img
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                src={fullscreenMedia.url}
-                alt=""
-                className="max-w-full max-h-full object-contain"
-                onClick={(e) => e.stopPropagation()}
-              />
-            ) : (
-              <motion.video
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                src={fullscreenMedia.url}
-                controls
-                autoPlay
-                className="max-w-full max-h-full"
-                onClick={(e) => e.stopPropagation()}
-              />
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Gallery viewer with swipe */}
+      <AlbumGalleryViewer
+        media={galleryState?.media || []}
+        initialIndex={galleryState?.index || 0}
+        isOpen={!!galleryState}
+        onClose={() => setGalleryState(null)}
+        onDelete={(mediaId) => {
+          const currentMedia = galleryState?.media.find(m => m.id === mediaId);
+          if (currentMedia) {
+            // Find the album this media belongs to
+            const albumId = viewingAlbum || selectedAlbum;
+            if (albumId) {
+              setDeleteMediaConfirm({ albumId, mediaId });
+            }
+          }
+        }}
+      />
+
+      {/* Upload progress overlay */}
+      <UploadProgressOverlay
+        isVisible={isUploading}
+        uploads={uploadProgress}
+        totalFiles={uploadProgress.length}
+        completedFiles={uploadProgress.filter(u => u.status === 'complete').length}
+      />
     </>
   );
 };
@@ -396,7 +438,7 @@ interface AlbumCardProps {
   onAddMedia: () => void;
   useAlbumMedia: (albumId: string) => any;
   useAlbumShares: (albumId: string) => any;
-  onMediaClick: (url: string, type: string) => void;
+  onMediaClick: (media: any[], index: number) => void;
 }
 
 const AlbumCard = ({ 
@@ -487,10 +529,10 @@ const AlbumCard = ({
           animate={{ opacity: 1 }}
           className="mt-4 grid grid-cols-3 gap-2"
         >
-          {media.slice(0, 5).map((item: any) => (
+          {media.slice(0, 5).map((item: any, index: number) => (
             <button
               key={item.id}
-              onClick={() => onMediaClick(item.media_url, item.media_type)}
+              onClick={() => onMediaClick(media, index)}
               className="aspect-square rounded-xl overflow-hidden bg-secondary relative group"
             >
               {item.media_type === 'image' ? (
@@ -531,7 +573,7 @@ interface AlbumFullViewerProps {
   useAlbumMedia: (albumId: string) => any;
   onDeleteMedia: (mediaId: string) => void;
   onAddMedia: () => void;
-  onMediaClick: (url: string, type: string) => void;
+  onMediaClick: (media: any[], index: number) => void;
 }
 
 const AlbumFullViewer = ({ album, isOpen, onClose, useAlbumMedia, onDeleteMedia, onAddMedia, onMediaClick }: AlbumFullViewerProps) => {
@@ -584,7 +626,7 @@ const AlbumFullViewer = ({ album, isOpen, onClose, useAlbumMedia, onDeleteMedia,
                   className="aspect-square rounded-xl overflow-hidden bg-secondary relative group"
                 >
                   <button
-                    onClick={() => onMediaClick(item.media_url, item.media_type)}
+                    onClick={() => onMediaClick(media, index)}
                     className="w-full h-full"
                   >
                     {item.media_type === 'image' ? (

@@ -2,7 +2,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserUsage } from './useUserUsage';
+import { useCredits } from './useCredits';
+import { useCreditDialog } from '@/contexts/CreditDialogContext';
 import { toast } from 'sonner';
+
+// Credit costs for saved messages
+export const SAVED_MESSAGE_COSTS = {
+  create: 3.5,
+  update: 2.0,
+};
 
 interface SavedMessage {
   id: string;
@@ -22,6 +30,8 @@ export const useSavedMessages = () => {
     savedMessagesCount, 
     limits
   } = useUserUsage();
+  const { totalCredits, hasEnoughCredits, deductCredits } = useCredits();
+  const { showInsufficientCreditsDialog } = useCreditDialog();
 
   // Fetch saved messages from database
   const query = useQuery({
@@ -46,10 +56,22 @@ export const useSavedMessages = () => {
     mutationFn: async (content: string) => {
       if (!user) throw new Error('Not authenticated');
 
+      // Check credit balance first
+      if (!hasEnoughCredits(SAVED_MESSAGE_COSTS.create)) {
+        throw new Error('INSUFFICIENT_CREDITS');
+      }
+
       // Check limit before adding
       if (!canAddSavedMessage()) {
         throw new Error('LIMIT_REACHED');
       }
+
+      // Deduct credits first
+      await deductCredits.mutateAsync({
+        amount: SAVED_MESSAGE_COSTS.create,
+        transactionType: 'saved_message_create',
+        description: 'Création d\'un message enregistré',
+      });
 
       const { data, error } = await supabase
         .from('saved_messages')
@@ -71,15 +93,11 @@ export const useSavedMessages = () => {
       queryClient.invalidateQueries({ queryKey: ['saved-messages', user?.id] });
     },
     onError: (error: Error) => {
-      if (error.message === 'LIMIT_REACHED') {
+      if (error.message === 'INSUFFICIENT_CREDITS') {
+        showInsufficientCreditsDialog(SAVED_MESSAGE_COSTS.create, 'Créer un message enregistré');
+      } else if (error.message === 'LIMIT_REACHED') {
         toast.error(
-          `Limite atteinte ! Vous avez ${savedMessagesCount}/${limits.maxSavedMessages} message(s) enregistré(s). Achetez des crédits pour débloquer plus d'espace.`,
-          {
-            action: {
-              label: 'Acheter des crédits',
-              onClick: () => window.location.href = '/?tab=credits',
-            },
-          }
+          `Limite atteinte ! Vous avez ${savedMessagesCount}/${limits.maxSavedMessages} message(s) enregistré(s).`
         );
       } else {
         console.error('Error adding saved message:', error);
@@ -92,6 +110,18 @@ export const useSavedMessages = () => {
   const updateMutation = useMutation({
     mutationFn: async ({ id, content }: { id: string; content: string }) => {
       if (!user) throw new Error('Not authenticated');
+
+      // Check credit balance first
+      if (!hasEnoughCredits(SAVED_MESSAGE_COSTS.update)) {
+        throw new Error('INSUFFICIENT_CREDITS');
+      }
+
+      // Deduct credits first
+      await deductCredits.mutateAsync({
+        amount: SAVED_MESSAGE_COSTS.update,
+        transactionType: 'saved_message_update',
+        description: 'Modification d\'un message enregistré',
+      });
 
       const { data, error } = await supabase
         .from('saved_messages')
@@ -107,9 +137,13 @@ export const useSavedMessages = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['saved-messages', user?.id] });
     },
-    onError: (error) => {
-      console.error('Error updating saved message:', error);
-      toast.error('Erreur lors de la mise à jour du message');
+    onError: (error: Error) => {
+      if (error.message === 'INSUFFICIENT_CREDITS') {
+        showInsufficientCreditsDialog(SAVED_MESSAGE_COSTS.update, 'Modifier un message enregistré');
+      } else {
+        console.error('Error updating saved message:', error);
+        toast.error('Erreur lors de la mise à jour du message');
+      }
     },
   });
 
@@ -160,5 +194,8 @@ export const useSavedMessages = () => {
     updateMessage,
     canAddMore: canAddSavedMessage(),
     remainingSlots: Math.max(0, limits.maxSavedMessages - savedMessagesCount),
+    canAffordCreate: hasEnoughCredits(SAVED_MESSAGE_COSTS.create),
+    canAffordUpdate: hasEnoughCredits(SAVED_MESSAGE_COSTS.update),
+    totalCredits,
   };
 };

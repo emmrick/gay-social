@@ -1,85 +1,80 @@
 import { 
-  Crown, 
+  Coins, 
   Check, 
   Camera, 
   Users, 
   MessageCircle, 
   Eye, 
   FolderOpen, 
-  Shield, 
   Loader2,
   Sparkles,
   ExternalLink,
-  Calendar,
-  AlertCircle
+  Gift,
+  Heart,
+  MapPin,
+  Image,
+  Share2,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useSubscription, REVOLUT_PAYMENT_LINK } from '@/hooks/useSubscription';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { useCredits, CREDIT_COSTS } from '@/hooks/useCredits';
+import { REVOLUT_PAYMENT_LINK } from '@/hooks/useSubscription';
 import ReferralSection from './ReferralSection';
+import CreditBalanceBar from '../credits/CreditBalanceBar';
 
-interface FeatureComparisonProps {
-  feature: string;
+interface CreditCostItemProps {
   icon: React.ReactNode;
-  freeValue: string;
-  premiumValue: string;
+  label: string;
+  cost: number;
 }
 
-const FeatureComparison = ({ feature, icon, freeValue, premiumValue }: FeatureComparisonProps) => (
-  <div className="grid grid-cols-3 gap-2 py-3 border-b border-border/50 last:border-0">
-    <div className="flex items-center gap-2 col-span-1">
+const CreditCostItem = ({ icon, label, cost }: CreditCostItemProps) => (
+  <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+    <div className="flex items-center gap-2">
       {icon}
-      <span className="text-xs font-medium">{feature}</span>
+      <span className="text-sm">{label}</span>
     </div>
-    <div className="flex items-center justify-center col-span-1">
-      <span className="text-xs text-muted-foreground">{freeValue}</span>
+    <Badge variant="secondary" className="text-xs font-mono">
+      {cost} crédit{cost !== 1 ? 's' : ''}
+    </Badge>
+  </div>
+);
+
+interface FreeCreditsItemProps {
+  icon: React.ReactNode;
+  label: string;
+  credits: number;
+  description?: string;
+}
+
+const FreeCreditsItem = ({ icon, label, credits, description }: FreeCreditsItemProps) => (
+  <div className="flex items-start gap-3 py-3 border-b border-border/50 last:border-0">
+    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+      {icon}
     </div>
-    <div className="flex items-center justify-center col-span-1">
-      <span className="text-xs text-primary font-medium">{premiumValue}</span>
+    <div className="flex-1">
+      <div className="flex items-center justify-between">
+        <span className="font-medium text-sm">{label}</span>
+        <Badge className="bg-green-500/20 text-green-600 border-green-500/30 text-xs">
+          +{credits} crédits
+        </Badge>
+      </div>
+      {description && (
+        <p className="text-xs text-muted-foreground mt-1">{description}</p>
+      )}
     </div>
   </div>
 );
 
 const PremiumPage = () => {
-  const { isPremium, subscribed, subscriptionEnd, isLoading, startCheckout } = useSubscription();
+  const { totalCredits, dailyCredits, bonusCredits, purchasedCredits, isLoading } = useCredits();
 
-  const features = [
-    {
-      feature: 'Médias éphémères',
-      icon: <Camera className="w-3 h-3 text-primary" />,
-      freeValue: '1/jour',
-      premiumValue: '∞',
-    },
-    {
-      feature: 'Photos profil',
-      icon: <Eye className="w-3 h-3 text-primary" />,
-      freeValue: '10/jour',
-      premiumValue: '∞',
-    },
-    {
-      feature: 'Groupes',
-      icon: <Users className="w-3 h-3 text-primary" />,
-      freeValue: '3',
-      premiumValue: 'Tous',
-    },
-    {
-      feature: 'Conversations',
-      icon: <MessageCircle className="w-3 h-3 text-primary" />,
-      freeValue: '10/sem',
-      premiumValue: '∞',
-    },
-    {
-      feature: 'Albums',
-      icon: <FolderOpen className="w-3 h-3 text-primary" />,
-      freeValue: '1',
-      premiumValue: '∞',
-    },
-  ];
+  const handleBuyCredits = () => {
+    window.open(REVOLUT_PAYMENT_LINK, '_blank');
+  };
 
   if (isLoading) {
     return (
@@ -93,166 +88,194 @@ const PremiumPage = () => {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 via-primary/10 to-primary/20" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(251,191,36,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-primary/20" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.15),transparent_50%)]" />
         
         <div className="relative px-4 py-8 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 mb-4 shadow-lg shadow-amber-500/30">
-            <Crown className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent mb-4 shadow-lg shadow-primary/30">
+            <Coins className="w-10 h-10 text-white" />
           </div>
           
           <h1 className="text-3xl font-bold font-display mb-2">
-            GayConnect <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">Premium</span>
+            Système de <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Crédits</span>
           </h1>
           
           <p className="text-muted-foreground max-w-sm mx-auto">
-            Débloquez toutes les fonctionnalités et profitez d'une expérience sans limites
+            Utilisez des crédits pour accéder aux fonctionnalités de GayConnect
           </p>
         </div>
       </div>
 
       <div className="px-4 space-y-6">
-        {/* Current Status */}
-        {isPremium && subscribed && (
-          <Card className="border-amber-500/50 bg-gradient-to-br from-amber-500/10 to-orange-500/5">
-            <CardContent className="p-4 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-                  <Crown className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold">Vous êtes Premium !</p>
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                  </div>
-                  {subscriptionEnd && (
-                    <p className="text-sm text-muted-foreground">
-                      Valide jusqu'au {format(new Date(subscriptionEnd), 'dd MMMM yyyy', { locale: fr })}
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div className="flex flex-col gap-2">
-                <Alert className="border-amber-500/30 bg-amber-500/5">
-                  <Calendar className="w-4 h-4 text-amber-500" />
-                  <AlertDescription className="text-sm">
-                    Pour renouveler votre abonnement, cliquez sur le bouton ci-dessous avant l'expiration.
-                  </AlertDescription>
-                </Alert>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-amber-500/50 hover:bg-amber-500/10"
-                  onClick={startCheckout}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Renouveler mon abonnement
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Payment Notice */}
-        {!isPremium && (
-          <Alert className="border-primary/30 bg-primary/5">
-            <AlertCircle className="w-4 h-4" />
-            <AlertDescription className="text-sm">
-              Après votre paiement via Revolut, votre abonnement sera activé sous 24h maximum par notre équipe.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Pricing Card */}
-        {!isPremium && (
-          <Card className="border-2 border-amber-500/50 relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-            5,99 €/MOIS
-          </div>
-            <CardHeader className="text-center pb-2">
-              <CardTitle className="text-xl flex items-center justify-center gap-2">
-                <Crown className="w-5 h-5 text-amber-500" />
-                Premium
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-            <div>
-              <span className="text-3xl font-bold">5,99 €</span>
-              <span className="text-muted-foreground">/mois</span>
-            </div>
-              
-              <ul className="text-sm text-left space-y-2">
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  <span>Médias éphémères illimités</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  <span>Accès à tous les groupes (101 départements)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  <span>Conversations privées illimitées</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  <span>Albums photo illimités</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  <span>Badge Premium visible</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-primary flex-shrink-0" />
-                  <span>Support prioritaire</span>
-                </li>
-              </ul>
-              
-              <Button 
-                className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold"
-                onClick={startCheckout}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Payer avec Revolut
-              </Button>
-              
-              <p className="text-xs text-muted-foreground">
-                Paiement sécurisé via Revolut. Votre abonnement sera activé manuellement après vérification du paiement.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Feature Comparison */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              Comparaison des fonctionnalités
-            </CardTitle>
-          </CardHeader>
+        {/* Current Balance */}
+        <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
           <CardContent className="p-4">
-            {/* Header row */}
-            <div className="grid grid-cols-3 gap-2 pb-3 border-b border-border">
-              <div className="col-span-1">
-                <span className="text-xs font-semibold text-muted-foreground">Fonction</span>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <Coins className="w-6 h-6 text-white" />
               </div>
-              <div className="flex items-center justify-center col-span-1">
-                <Badge variant="secondary" className="text-xs">Gratuit</Badge>
-              </div>
-              <div className="flex items-center justify-center col-span-1">
-                <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 text-xs">
-                  <Crown className="w-3 h-3 mr-1" />
-                  Premium
-                </Badge>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold">Votre solde</p>
+                  <Sparkles className="w-4 h-4 text-primary" />
+                </div>
+                <p className="text-2xl font-bold text-primary">
+                  {totalCredits.toFixed(1)} crédits
+                </p>
               </div>
             </div>
             
-            {/* Features */}
-            {features.map((feature, index) => (
-              <FeatureComparison key={index} {...feature} />
-            ))}
+            <CreditBalanceBar showLabel={false} />
+          </CardContent>
+        </Card>
+
+        {/* Buy Credits Card */}
+        <Card className="border-2 border-primary/50 relative overflow-hidden">
+          <div className="absolute top-0 right-0 bg-gradient-to-r from-primary to-accent text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+            MEILLEURE OFFRE
+          </div>
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-xl flex items-center justify-center gap-2">
+              <Coins className="w-5 h-5 text-primary" />
+              Acheter des crédits
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <div>
+              <span className="text-4xl font-bold">100</span>
+              <span className="text-xl text-muted-foreground ml-2">crédits</span>
+            </div>
+            <div className="text-2xl font-semibold text-primary">5,99 €</div>
+            
+            <ul className="text-sm text-left space-y-2">
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span>Crédits sans date d'expiration</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span>Utilisables pour toutes les fonctionnalités</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span>Paiement sécurisé via Revolut</span>
+              </li>
+            </ul>
+            
+            <Button 
+              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold"
+              onClick={handleBuyCredits}
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Acheter maintenant
+            </Button>
+            
+            <p className="text-xs text-muted-foreground">
+              Activation manuelle sous 24h après vérification du paiement.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Free Credits */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Gift className="w-5 h-5 text-green-500" />
+              Crédits gratuits
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <FreeCreditsItem
+              icon={<Users className="w-4 h-4 text-green-500" />}
+              label="Inscription"
+              credits={15}
+              description="Bonus de bienvenue à l'inscription"
+            />
+            <FreeCreditsItem
+              icon={<Check className="w-4 h-4 text-green-500" />}
+              label="Vérification d'identité"
+              credits={30}
+              description="Après validation de votre identité"
+            />
+            <FreeCreditsItem
+              icon={<Heart className="w-4 h-4 text-green-500" />}
+              label="Parrainage"
+              credits={10}
+              description="Pour vous et votre filleul (si vérifié)"
+            />
+            <FreeCreditsItem
+              icon={<Clock className="w-4 h-4 text-green-500" />}
+              label="Crédits quotidiens"
+              credits={5}
+              description="Max 7 jours/mois, non cumulables"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Credit Costs */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              Coût des fonctionnalités
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <CreditCostItem
+              icon={<MessageCircle className="w-4 h-4 text-primary" />}
+              label="Message texte"
+              cost={CREDIT_COSTS.private_message_text}
+            />
+            <CreditCostItem
+              icon={<Image className="w-4 h-4 text-primary" />}
+              label="Photo/Vidéo simple"
+              cost={CREDIT_COSTS.private_message_media}
+            />
+            <CreditCostItem
+              icon={<Users className="w-4 h-4 text-primary" />}
+              label="Média en groupe"
+              cost={CREDIT_COSTS.group_message_media}
+            />
+            <CreditCostItem
+              icon={<Camera className="w-4 h-4 text-primary" />}
+              label="Média éphémère"
+              cost={CREDIT_COSTS.ephemeral_media}
+            />
+            <CreditCostItem
+              icon={<Share2 className="w-4 h-4 text-primary" />}
+              label="Partage d'album"
+              cost={CREDIT_COSTS.album_share}
+            />
+            <CreditCostItem
+              icon={<FolderOpen className="w-4 h-4 text-primary" />}
+              label="Nouvel album"
+              cost={CREDIT_COSTS.album_create}
+            />
+            <CreditCostItem
+              icon={<Sparkles className="w-4 h-4 text-primary" />}
+              label="Réaction sur profil"
+              cost={CREDIT_COSTS.profile_reaction}
+            />
+            <CreditCostItem
+              icon={<Eye className="w-4 h-4 text-primary" />}
+              label="Consultation de profil"
+              cost={CREDIT_COSTS.profile_view}
+            />
+            
+            <Separator className="my-4" />
+            
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Déblocages Proximité</p>
+              <CreditCostItem
+                icon={<MapPin className="w-4 h-4 text-primary" />}
+                label="30 profils (72h)"
+                cost={CREDIT_COSTS.nearby_unlock_30}
+              />
+              <CreditCostItem
+                icon={<MapPin className="w-4 h-4 text-primary" />}
+                label="130 profils (7 jours)"
+                cost={CREDIT_COSTS.nearby_unlock_130}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -266,30 +289,30 @@ const PremiumPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="font-medium text-sm">Comment fonctionne le paiement ?</p>
+              <p className="font-medium text-sm">Comment fonctionne le système de crédits ?</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Cliquez sur "Payer avec Revolut" pour effectuer un paiement de 5,99€. Après réception, notre équipe activera votre abonnement Premium pour 30 jours.
+                Chaque action sur GayConnect coûte un certain nombre de crédits. Vous pouvez gagner des crédits gratuits ou en acheter.
               </p>
             </div>
             <Separator />
             <div>
-              <p className="font-medium text-sm">Comment renouveler mon abonnement ?</p>
+              <p className="font-medium text-sm">Comment obtenir des crédits gratuits ?</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Avant l'expiration de votre abonnement, revenez sur cette page et effectuez un nouveau paiement pour prolonger votre Premium de 30 jours supplémentaires.
+                Réclamez vos 5 crédits quotidiens (max 7 fois/mois), faites vérifier votre identité (+30), ou parrainez des amis (+10 chacun).
               </p>
             </div>
             <Separator />
             <div>
-              <p className="font-medium text-sm">Combien de temps dure l'activation ?</p>
+              <p className="font-medium text-sm">Les crédits expirent-ils ?</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Votre abonnement est généralement activé dans les 24 heures suivant votre paiement. Une notification vous sera envoyée.
+                Les crédits quotidiens doivent être réclamés chaque jour et ne sont pas cumulables. Les crédits achetés et bonus n'expirent jamais.
               </p>
             </div>
             <Separator />
             <div>
-              <p className="font-medium text-sm">Les paiements sont-ils sécurisés ?</p>
+              <p className="font-medium text-sm">Dans quel ordre sont utilisés mes crédits ?</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Oui, nous utilisons Revolut, une plateforme bancaire européenne réglementée et sécurisée.
+                Priorité : Quotidiens → Bonus → Achetés. Vos crédits achetés sont donc préservés le plus longtemps possible.
               </p>
             </div>
           </CardContent>

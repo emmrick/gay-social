@@ -80,31 +80,40 @@ export const useReports = () => {
 
       if (error) throw error;
 
-      // Trigger AI moderation automatically
+      // Trigger AI moderation automatically with proper user JWT authentication
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-moderation`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({
-              report_data: {
-                report_id: data.id,
-                reported_user_id: reportedUserId,
-                reporter_id: user.id,
-                reason,
-                description: description?.trim() || null,
-                report_type: 'user',
-              },
-            }),
-          }
-        );
+        // Get the current session to use user's JWT token
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
 
-        if (!response.ok) {
-          console.error('AI moderation failed:', await response.text());
+        if (!accessToken) {
+          console.error('No access token available for AI moderation');
+        } else {
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-moderation`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                report_data: {
+                  report_id: data.id,
+                  reported_user_id: reportedUserId,
+                  reporter_id: user.id,
+                  reason,
+                  description: description?.trim() || null,
+                  report_type: 'user',
+                },
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('AI moderation failed:', errorText);
+          }
         }
       } catch (aiError) {
         console.error('Error calling AI moderation:', aiError);

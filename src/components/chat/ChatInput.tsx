@@ -162,7 +162,7 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
           onKeyDown={handleKeyDown}
           onFocus={handleInputFocus}
           placeholder="Écris ton message... (@ pour mentionner)"
-          className="flex-1 bg-secondary border-none min-h-[40px] max-h-[120px] py-2.5 px-4 resize-none rounded-2xl text-sm leading-normal"
+          className="flex-1 bg-secondary border-none min-h-[40px] max-h-[120px] py-[10px] px-4 resize-none rounded-2xl text-sm leading-5"
           rows={1}
         />
         

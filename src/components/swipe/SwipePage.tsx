@@ -107,7 +107,7 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
               </div>
 
               {/* Cards stack - takes remaining space */}
-              <div className="flex-1 relative overflow-hidden min-h-0">
+              <div className="flex-1 relative min-h-[400px]">
                 <AnimatePresence mode="popLayout">
                   {remainingProfiles.slice(0, 3).map((profile, index) => (
                     <SwipeCard

@@ -77,7 +77,7 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
 
   return (
     <motion.div
-      className="absolute inset-0 flex items-center justify-center cursor-grab active:cursor-grabbing p-2"
+      className="absolute inset-0 flex items-center justify-center cursor-grab active:cursor-grabbing p-4"
       style={{ x, y, rotate, opacity }}
       drag={isTop}
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
@@ -86,7 +86,7 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
       animate={exitDirection ? getExitAnimation() : {}}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
-      <div className="relative w-full max-w-[320px] h-full max-h-[calc(100%-8px)] rounded-2xl overflow-hidden bg-card border border-border shadow-2xl">
+      <div className="relative w-full max-w-[320px] h-[450px] rounded-2xl overflow-hidden bg-card border border-border shadow-2xl">
         {/* Profile Image */}
         <div className="absolute inset-0 z-0">
           {profile.avatar_url ? (

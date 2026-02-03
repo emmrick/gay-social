@@ -6,6 +6,7 @@ import MediaUploadButton from './MediaUploadButton';
 import SavedMessagesDialog from './SavedMessagesDialog';
 import MentionAutocomplete from './MentionAutocomplete';
 import { useMentionAutocomplete } from '@/hooks/useMentionAutocomplete';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
@@ -18,6 +19,7 @@ interface ChatInputProps {
 }
 
 const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, isSending = false, onTyping, onFocus }: ChatInputProps) => {
+  const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -103,12 +105,14 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
       }
     }
 
-    // Send on Enter only (Shift+Enter for new line)
-    // Use strict key check to avoid issues with mobile keyboards
-    const isEnterKey = e.key === 'Enter' || e.keyCode === 13;
-    if (isEnterKey && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+    // Send on Enter only on desktop (Shift+Enter for new line)
+    // On mobile, only the send button sends the message - Enter creates a new line
+    if (!isMobile) {
+      const isEnterKey = e.key === 'Enter' || e.keyCode === 13;
+      if (isEnterKey && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
     }
   };
 

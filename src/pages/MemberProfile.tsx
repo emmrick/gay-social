@@ -12,7 +12,7 @@ import { useRealtimeUserOnlineStatus } from '@/hooks/useRealtimeOnlineStatus';
 import ProfilePhotoCarousel from '@/components/chat/ProfilePhotoCarousel';
 import ReportUserDialog from '@/components/chat/ReportUserDialog';
 import ProfileReactions from '@/components/profile/ProfileReactions';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,9 @@ import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { useIsPremiumUser } from '@/hooks/usePremiumUsers';
 import { useUserSuspensionStatus } from '@/hooks/useUserSuspensionStatus';
 import { motion } from 'framer-motion';
+import { useProfileViewCheck, useRecordProfileView, CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
+import { useCreditCheck } from '@/hooks/useCreditCheck';
+import { toast } from 'sonner';
 
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {
@@ -115,7 +118,7 @@ const MemberProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { toast: toastHook } = useToast();
   const [showReportDialog, setShowReportDialog] = useState(false);
 
   const { data: profile, isLoading } = useProfile(userId || '');
@@ -123,12 +126,55 @@ const MemberProfile = () => {
   const { isFavorite, toggleFavorite, isToggling } = useUserFavorites();
   const { isPremium: isUserPremium } = useIsPremiumUser(userId);
   const { data: suspensionStatus, isLoading: suspensionLoading } = useUserSuspensionStatus(userId);
+  
+  // Credit system for profile views
+  const { data: alreadyViewed, isLoading: viewCheckLoading } = useProfileViewCheck(userId || '');
+  const recordProfileView = useRecordProfileView();
+  const { showInsufficientCreditsDialog } = useCreditCheck();
+  const [hasChargedView, setHasChargedView] = useState(false);
 
   // Subscribe to real-time online status changes for this user
   useRealtimeUserOnlineStatus(userId);
   
   // Check if user is blocked or suspended
   const isUserUnavailable = suspensionStatus?.isBlocked || suspensionStatus?.isSuspended;
+  
+  // Handle profile view credit deduction
+  useEffect(() => {
+    const chargeProfileView = async () => {
+      // Skip if: no user, viewing own profile, already viewed, already charged this session, or still loading
+      if (!user?.id || !userId || user.id === userId || alreadyViewed || hasChargedView || viewCheckLoading) {
+        return;
+      }
+
+      try {
+        // Check if user has enough credits
+        const hasCredits = await checkSufficientCredits(user.id, CREDIT_COSTS.profile_view);
+        if (!hasCredits) {
+          showInsufficientCreditsDialog(CREDIT_COSTS.profile_view, 'Voir un profil');
+          return;
+        }
+
+        // Deduct credits
+        const deductResult = await deductCredits(
+          user.id,
+          CREDIT_COSTS.profile_view,
+          'profile_view',
+          `Consultation du profil de ${profile?.username || 'membre'}`
+        );
+
+        if (deductResult.success) {
+          // Record the view to avoid charging again
+          await recordProfileView.mutateAsync(userId);
+          setHasChargedView(true);
+        }
+      } catch (error) {
+        console.error('Error charging profile view:', error);
+      }
+    };
+
+    chargeProfileView();
+  }, [user?.id, userId, alreadyViewed, hasChargedView, viewCheckLoading, profile?.username]);
 
   const extendedProfile = profile as any;
   
@@ -177,7 +223,7 @@ const MemberProfile = () => {
       navigate('/', { state: { openPrivateChat: userId } });
     } catch (error) {
       console.error('Error starting chat:', error);
-      toast({
+      toastHook({
         title: 'Erreur',
         description: 'Impossible de démarrer la conversation',
         variant: 'destructive',

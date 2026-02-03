@@ -135,7 +135,10 @@
   }
 
   .glass-card {
-    @apply backdrop-blur-xl border border-border/50;
+    @apply backdrop-blur-xl border border-border/50 bg-card/95;
+  }
+
+  .dark .glass-card {
     background: hsl(270 25% 10% / 0.8);
   }
 

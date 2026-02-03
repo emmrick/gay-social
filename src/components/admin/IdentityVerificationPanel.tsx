@@ -234,7 +234,7 @@ const IdentityVerificationPanel = () => {
           {pendingVerifications.map((verification) => (
             <div 
               key={verification.id}
-              className="glass-card rounded-xl p-4 flex items-center justify-between"
+              className="rounded-xl p-4 flex items-center justify-between bg-card border border-border shadow-sm"
             >
               <div className="flex items-center gap-3">
                 <Avatar className="w-12 h-12">
@@ -314,7 +314,7 @@ const IdentityVerificationPanel = () => {
               </div>
 
               {/* User Info */}
-              <div className="flex items-center gap-4 p-4 bg-secondary/50 rounded-xl">
+              <div className="flex items-center gap-4 p-4 bg-muted rounded-xl">
                 <Avatar className="w-16 h-16">
                   <AvatarImage src={selectedVerification.profiles?.avatar_url || ''} />
                   <AvatarFallback>

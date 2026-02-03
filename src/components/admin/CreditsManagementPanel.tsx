@@ -415,7 +415,7 @@ const UserCreditCard = ({ user, onAdd, onRemove, onViewHistory }: UserCreditCard
   const total = (user.daily_credits || 0) + (user.bonus_credits || 0) + (user.purchased_credits || 0);
 
   return (
-    <div className="p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+    <div className="p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10">
@@ -428,7 +428,7 @@ const UserCreditCard = ({ user, onAdd, onRemove, onViewHistory }: UserCreditCard
             )}
           </Avatar>
           <div>
-            <p className="font-medium text-sm">{user.profile?.username || 'Unknown'}</p>
+            <p className="font-medium text-sm text-foreground">{user.profile?.username || 'Unknown'}</p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="text-green-500">{user.daily_credits?.toFixed(1) || 0} Q</span>
               <span className="text-blue-700">{user.bonus_credits?.toFixed(1) || 0} B</span>

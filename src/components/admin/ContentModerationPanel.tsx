@@ -372,7 +372,7 @@ const ContentModerationPanel = () => {
                     className={`p-3 rounded-lg border transition-colors ${
                       msg.deleted_at 
                         ? 'border-orange-500/30 bg-orange-500/5' 
-                        : 'border-border bg-card hover:bg-secondary/30'
+                        : 'border-border bg-card hover:bg-muted/50'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -527,7 +527,7 @@ const ContentModerationPanel = () => {
                 {albums?.map((album) => (
                   <div
                     key={album.id}
-                    className="p-4 rounded-lg border border-border bg-card hover:bg-secondary/30 transition-colors"
+                    className="p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">

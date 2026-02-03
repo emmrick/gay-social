@@ -235,7 +235,7 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
             <Label className="text-xs text-muted-foreground uppercase tracking-wide">
               Utilisateur signalé
             </Label>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-destructive to-destructive/60 flex items-center justify-center text-white font-semibold">
                 {report.reported_user?.avatar_url ? (
                   <img
@@ -259,7 +259,7 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
             <Label className="text-xs text-muted-foreground uppercase tracking-wide">
               Signalé par
             </Label>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
                 {report.reporter?.avatar_url ? (
                   <img
@@ -303,7 +303,7 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
                 <MessageSquare className="w-3 h-3 inline mr-1" />
                 Description
               </Label>
-              <div className="p-3 rounded-lg bg-secondary/50">
+              <div className="p-3 rounded-lg bg-muted">
                 <p className="text-sm whitespace-pre-wrap">{report.description}</p>
               </div>
             </div>
@@ -482,7 +482,7 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
 
           {/* Resolution info for closed reports */}
           {(report.status === 'resolved' || report.status === 'dismissed') && report.resolved_at && (
-            <div className="p-3 rounded-lg bg-secondary/50 text-sm">
+            <div className="p-3 rounded-lg bg-muted text-sm">
               <p className="text-muted-foreground">
                 {report.status === 'resolved' ? 'Résolu' : 'Rejeté'} le{' '}
                 {format(new Date(report.resolved_at), 'dd MMM yyyy à HH:mm', { locale: fr })}

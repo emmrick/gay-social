@@ -276,17 +276,17 @@ const GlobalEarningsPanel = () => {
       </div>
 
       {/* Task Type Breakdown */}
-      <div className="glass-card rounded-xl p-4">
-        <h3 className="font-semibold mb-4 flex items-center gap-2">
+      <div className="rounded-xl p-4 bg-card border border-border shadow-sm">
+        <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
           <TrendingUp className="w-4 h-4 text-primary" />
           Répartition par type de tâche
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Object.entries(data?.globalStats.byType || {}).map(([type, stats]) => (
-            <div key={type} className="p-3 bg-secondary/50 rounded-lg">
+            <div key={type} className="p-3 bg-muted rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <TaskIcon type={type as ModeratorTaskType} />
-                <span className="text-xs truncate">{getTaskLabel(type as ModeratorTaskType)}</span>
+                <span className="text-xs truncate text-foreground">{getTaskLabel(type as ModeratorTaskType)}</span>
               </div>
               <p className="text-lg font-bold text-primary">{formatCents(stats.total)}</p>
               <p className="text-xs text-muted-foreground">{stats.count} tâches</p>
@@ -301,8 +301,8 @@ const GlobalEarningsPanel = () => {
       </div>
 
       {/* Moderators Leaderboard */}
-      <div className="glass-card rounded-xl p-4">
-        <h3 className="font-semibold mb-4 flex items-center gap-2">
+      <div className="rounded-xl p-4 bg-card border border-border shadow-sm">
+        <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
           <Users className="w-4 h-4 text-primary" />
           Classement des modérateurs
         </h3>
@@ -313,7 +313,7 @@ const GlobalEarningsPanel = () => {
               {data.moderators.map((mod, index) => (
                 <div
                   key={mod.user_id}
-                  className="p-4 rounded-xl border bg-card hover:bg-secondary/30 transition-colors"
+                  className="p-4 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     {/* Rank */}

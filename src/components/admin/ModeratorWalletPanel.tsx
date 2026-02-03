@@ -125,7 +125,7 @@ const ModeratorWalletPanel = () => {
       </div>
 
       {/* Balance Card */}
-      <div className="glass-card rounded-2xl p-6 bg-gradient-to-br from-primary/10 to-accent/10">
+      <div className="rounded-2xl p-6 bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 shadow-sm">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Solde disponible</p>
@@ -174,7 +174,7 @@ const ModeratorWalletPanel = () => {
               Demander un retrait
             </Button>
           ) : (
-            <div className="flex items-center gap-2 text-muted-foreground bg-secondary/50 rounded-lg p-3">
+            <div className="flex items-center gap-2 text-muted-foreground bg-muted rounded-lg p-3">
               <AlertCircle className="w-4 h-4" />
               <span className="text-sm">
                 Minimum 50€ requis pour effectuer un retrait
@@ -185,7 +185,7 @@ const ModeratorWalletPanel = () => {
       </div>
 
       {/* Today's Earnings Summary */}
-      <div className="glass-card rounded-xl p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
+      <div className="rounded-xl p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <CalendarDays className="w-4 h-4 text-green-500" />
@@ -235,7 +235,7 @@ const ModeratorWalletPanel = () => {
                   {todayEarnings.earnings.slice(0, 5).map((earning) => (
                     <div 
                       key={earning.id}
-                      className="flex items-center justify-between text-xs p-2 bg-secondary/30 rounded"
+                      className="flex items-center justify-between text-xs p-2 bg-muted rounded"
                     >
                       <span className="flex items-center gap-2 truncate flex-1">
                         <TaskIcon type={earning.task_type} />
@@ -262,17 +262,17 @@ const ModeratorWalletPanel = () => {
       </div>
 
 
-      <div className="glass-card rounded-xl p-4">
+      <div className="rounded-xl p-4 bg-card border border-border shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <Euro className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold">Tarifs par tâche</h3>
+          <h3 className="font-semibold text-foreground">Tarifs par tâche</h3>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {taskRates?.map((rate) => (
-            <div key={rate.id} className="flex items-center gap-2 p-2 bg-secondary/50 rounded-lg">
+            <div key={rate.id} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
               <TaskIcon type={rate.task_type} />
               <div className="flex-1 min-w-0">
-                <p className="text-xs truncate">{getTaskLabel(rate.task_type)}</p>
+                <p className="text-xs truncate text-foreground">{getTaskLabel(rate.task_type)}</p>
                 <p className="font-semibold text-primary">{formatCents(rate.rate_cents)}</p>
               </div>
             </div>
@@ -282,18 +282,18 @@ const ModeratorWalletPanel = () => {
 
       {/* Stats */}
       {stats && (
-        <div className="glass-card rounded-xl p-4">
+        <div className="rounded-xl p-4 bg-card border border-border shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-4 h-4 text-primary" />
-            <h3 className="font-semibold">Mes statistiques</h3>
+            <h3 className="font-semibold text-foreground">Mes statistiques</h3>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-secondary/50 rounded-lg text-center">
+            <div className="p-3 bg-muted rounded-lg text-center">
               <p className="text-2xl font-bold text-primary">{stats.totalTasks}</p>
               <p className="text-xs text-muted-foreground">Tâches effectuées</p>
             </div>
-            <div className="p-3 bg-secondary/50 rounded-lg text-center">
-              <p className="text-2xl font-bold text-green-500">{formatCents(stats.totalEarned)}</p>
+            <div className="p-3 bg-muted rounded-lg text-center">
+              <p className="text-2xl font-bold text-green-600 dark:text-green-500">{formatCents(stats.totalEarned)}</p>
               <p className="text-xs text-muted-foreground">Total gagné</p>
             </div>
           </div>
@@ -302,7 +302,7 @@ const ModeratorWalletPanel = () => {
             <div className="mt-4 space-y-2">
               {Object.entries(stats.byType).map(([type, data]) => (
                 <div key={type} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 text-foreground">
                     <TaskIcon type={type as ModeratorTaskType} />
                     {getTaskLabel(type as ModeratorTaskType)}
                   </span>
@@ -334,7 +334,7 @@ const ModeratorWalletPanel = () => {
                 {earnings.map((earning) => (
                   <div 
                     key={earning.id}
-                    className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-muted rounded-lg"
                   >
                     <div className="flex items-center gap-3">
                       <TaskIcon type={earning.task_type} />
@@ -379,7 +379,7 @@ const ModeratorWalletPanel = () => {
                 {withdrawals.map((withdrawal) => (
                   <div 
                     key={withdrawal.id}
-                    className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-muted rounded-lg"
                   >
                     <div>
                       <p className="font-medium">{formatCents(withdrawal.amount_cents)}</p>

@@ -86,7 +86,7 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
       animate={exitDirection ? getExitAnimation() : {}}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
-      <div className="relative w-full max-w-sm mx-4 aspect-[3/4] rounded-3xl overflow-hidden bg-card border border-border shadow-2xl">
+      <div className="relative w-full max-w-sm mx-4 h-full max-h-full rounded-3xl overflow-hidden bg-card border border-border shadow-2xl">
         {/* Profile Image */}
         <div className="absolute inset-0 z-0">
           {profile.avatar_url ? (

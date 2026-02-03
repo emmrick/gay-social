@@ -1152,6 +1152,36 @@ export type Database = {
           },
         ]
       }
+      swipe_actions: {
+        Row: {
+          action_type: string
+          created_at: string
+          credits_spent: number
+          expires_at: string | null
+          id: string
+          target_user_id: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          credits_spent?: number
+          expires_at?: string | null
+          id?: string
+          target_user_id: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          credits_spent?: number
+          expires_at?: string | null
+          id?: string
+          target_user_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       task_rates: {
         Row: {
           created_at: string | null

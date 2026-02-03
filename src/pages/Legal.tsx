@@ -391,6 +391,12 @@ const Legal = () => {
                   <li>Création de message enregistré : 3.5 crédits</li>
                   <li>Modification de message enregistré : 2.0 crédits</li>
                 </ul>
+                <p className="font-medium text-foreground mt-3 mb-2">Fonctionnalité Swipe :</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Aimer un profil (swipe droite) : 0.5 crédit</li>
+                  <li>Passer un profil (swipe gauche) : 0.2 crédit - le profil revient après 3 mois</li>
+                  <li>Masquer définitivement (swipe haut) : 0.1 crédit</li>
+                </ul>
               </div>
 
               <div className="bg-muted/50 rounded-xl p-4">

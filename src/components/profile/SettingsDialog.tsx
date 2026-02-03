@@ -7,6 +7,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -14,7 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Bell, Moon, Shield, HelpCircle, MessageSquare, 
   Volume2, VolumeX, Eye, EyeOff, Palette, Sparkles, ChevronRight,
-  Globe, Lock, Check, BellRing, BellOff, Settings2
+  Globe, Lock, Check, BellRing, BellOff, Settings2, User, Camera, Headphones
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -338,62 +344,115 @@ const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDi
           icon: <HelpCircle className="w-6 h-6 text-primary" />,
           gradient: 'from-orange-500/20 to-red-500/20',
           content: (
-            <div className="space-y-4">
-              {/* FAQ Section */}
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  Questions fréquentes
-                </h4>
+            <div className="space-y-5">
+              {/* FAQ Section with Accordion */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm">Questions fréquentes</h4>
+                    <p className="text-xs text-muted-foreground">Trouve rapidement des réponses</p>
+                  </div>
+                </div>
                 
-                <div className="space-y-2">
+                <Accordion type="single" collapsible className="space-y-2">
                   {[
-                    { q: "Comment modifier mon profil ?", a: "Va dans l'onglet Profil et clique sur \"Modifier le profil\"." },
-                    { q: "Comment changer ma photo de profil ?", a: "Dans Modifier le profil > Photos, touche une photo puis \"Photo de profil\"." },
-                    { q: "Comment démarrer une conversation ?", a: "Clique sur le profil d'un membre ou utilise le bouton + dans Messages." },
-                    { q: "Comment signaler un utilisateur ?", a: "Dans une conversation ou sur un profil, utilise l'icône de signalement." },
+                    { 
+                      icon: <User className="w-4 h-4" />,
+                      q: "Comment modifier mon profil ?", 
+                      a: "Va dans l'onglet Profil et clique sur l'icône des paramètres en haut à droite, puis sélectionne \"Modifier le profil\".",
+                      color: "text-blue-500 bg-blue-500/10"
+                    },
+                    { 
+                      icon: <Camera className="w-4 h-4" />,
+                      q: "Comment changer ma photo de profil ?", 
+                      a: "Dans Modifier le profil > Photos, touche une photo puis sélectionne \"Définir comme photo principale\".",
+                      color: "text-purple-500 bg-purple-500/10"
+                    },
+                    { 
+                      icon: <MessageSquare className="w-4 h-4" />,
+                      q: "Comment démarrer une conversation ?", 
+                      a: "Clique sur le profil d'un membre pour voir son profil, puis utilise le bouton \"Message\" pour lui écrire.",
+                      color: "text-green-500 bg-green-500/10"
+                    },
+                    { 
+                      icon: <Shield className="w-4 h-4" />,
+                      q: "Comment signaler un utilisateur ?", 
+                      a: "Dans une conversation ou sur un profil, utilise l'icône de signalement (drapeau) pour nous alerter d'un comportement inapproprié.",
+                      color: "text-red-500 bg-red-500/10"
+                    },
+                    { 
+                      icon: <Bell className="w-4 h-4" />,
+                      q: "Comment gérer mes notifications ?", 
+                      a: "Va dans Paramètres > Notifications pour personnaliser les alertes que tu souhaites recevoir.",
+                      color: "text-amber-500 bg-amber-500/10"
+                    },
                   ].map((faq, i) => (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      className="p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
                     >
-                      <p className="font-medium text-sm">{faq.q}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{faq.a}</p>
+                      <AccordionItem 
+                        value={`item-${i}`} 
+                        className="border border-border/50 rounded-xl px-4 bg-secondary/20 hover:bg-secondary/30 transition-colors data-[state=open]:bg-secondary/40"
+                      >
+                        <AccordionTrigger className="py-3 hover:no-underline gap-3">
+                          <div className="flex items-center gap-3 text-left">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${faq.color}`}>
+                              {faq.icon}
+                            </div>
+                            <span className="font-medium text-sm">{faq.q}</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-3 pl-11 pr-2">
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {faq.a}
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
                     </motion.div>
                   ))}
-                </div>
+                </Accordion>
               </div>
               
-              <Separator />
+              <Separator className="my-4" />
               
               {/* Contact Section */}
               <div className="space-y-3">
-                <h4 className="font-semibold">Nous contacter</h4>
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <Headphones className="w-4 h-4 text-muted-foreground" />
+                  Besoin d'aide supplémentaire ?
+                </h4>
                 <Button 
                   variant="outline" 
-                  className="w-full justify-between group"
+                  className="w-full justify-between group border-primary/20 hover:border-primary/40 hover:bg-primary/5"
                   onClick={() => {
                     onOpenChange(false);
                     onContactAdmin?.();
                   }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <MessageSquare className="w-4 h-4 text-primary" />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                      <MessageSquare className="w-5 h-5 text-primary" />
                     </div>
-                    <span>Contacter un administrateur</span>
+                    <div className="text-left">
+                      <span className="font-medium block">Contacter le support</span>
+                      <span className="text-xs text-muted-foreground">Réponse sous 24h</span>
+                    </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </Button>
               </div>
               
               {/* Version info */}
-              <div className="text-center pt-4 text-xs text-muted-foreground">
-                <p>GayConnect v1.0.0</p>
-                <p className="mt-1">© 2025 Tous droits réservés</p>
+              <div className="text-center pt-4 border-t border-border/50">
+                <p className="text-xs text-muted-foreground">
+                  GayConnect v1.0.0 • © 2025
+                </p>
               </div>
             </div>
           ),

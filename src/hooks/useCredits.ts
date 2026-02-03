@@ -7,7 +7,7 @@ import { emitCreditDeduction } from '@/components/credits/CreditDeductionAnimati
 // Credit costs for each action
 export const CREDIT_COSTS = {
   private_message_text: 0.1,
-  private_message_media: 0.02,
+  private_message_media: 0.2,
   group_message_text: 0.1,
   group_message_media: 0.2,
   ephemeral_media: 0.5,

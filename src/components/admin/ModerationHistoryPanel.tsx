@@ -62,8 +62,8 @@ interface ActionItemProps {
 
 const ActionItem = ({ action, targetUsername }: ActionItemProps) => {
   return (
-    <div className="flex items-start gap-3 p-3 border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
-      <div className="mt-0.5 p-2 rounded-full bg-secondary/50">
+    <div className="flex items-start gap-3 p-3 border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+      <div className="mt-0.5 p-2 rounded-full bg-muted">
         {getActionIcon(action.action_type)}
       </div>
       <div className="flex-1 min-w-0">

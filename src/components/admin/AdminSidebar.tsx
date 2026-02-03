@@ -108,7 +108,8 @@ const AdminSidebar = ({
   return (
     <div 
       className={cn(
-        "h-full bg-card border-r border-border flex flex-col transition-all duration-300",
+        "h-full border-r flex flex-col transition-all duration-300",
+        "bg-card dark:bg-card border-border",
         collapsed ? "w-16" : "w-64"
       )}
     >
@@ -151,10 +152,10 @@ const AdminSidebar = ({
                       onClick={() => onSectionChange(item.id)}
                       className={cn(
                         "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                        "hover:bg-secondary/80",
+                        "hover:bg-muted",
                         isActive 
                           ? "bg-primary text-primary-foreground shadow-md" 
-                          : "text-muted-foreground hover:text-foreground",
+                          : "text-foreground/70 hover:text-foreground",
                         collapsed && "justify-center px-2"
                       )}
                       title={collapsed ? item.label : undefined}

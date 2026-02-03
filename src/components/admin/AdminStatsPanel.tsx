@@ -305,34 +305,34 @@ const AdminStatsPanel = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 rounded-lg bg-secondary/50">
+            <div className="text-center p-4 rounded-lg bg-muted">
               <div className="flex items-center justify-center w-10 h-10 mx-auto rounded-full bg-green-500/20 mb-2">
                 <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
               </div>
-              <p className="text-2xl font-bold">{stats.onlineUsers}</p>
+              <p className="text-2xl font-bold text-foreground">{stats.onlineUsers}</p>
               <p className="text-xs text-muted-foreground">En ligne maintenant</p>
             </div>
-            <div className="text-center p-4 rounded-lg bg-secondary/50">
+            <div className="text-center p-4 rounded-lg bg-muted">
               <div className="flex items-center justify-center w-10 h-10 mx-auto rounded-full bg-blue-500/20 mb-2">
                 <Shield className="w-5 h-5 text-blue-500" />
               </div>
-              <p className="text-2xl font-bold">{verifiedPercentage}%</p>
+              <p className="text-2xl font-bold text-foreground">{verifiedPercentage}%</p>
               <p className="text-xs text-muted-foreground">Taux de vérification</p>
             </div>
-            <div className="text-center p-4 rounded-lg bg-secondary/50">
+            <div className="text-center p-4 rounded-lg bg-muted">
               <div className="flex items-center justify-center w-10 h-10 mx-auto rounded-full bg-amber-500/20 mb-2">
                 <TrendingUp className="w-5 h-5 text-amber-500" />
               </div>
-              <p className="text-2xl font-bold">
+              <p className="text-2xl font-bold text-foreground">
                 {stats.totalUsers > 0 ? Math.round((stats.premiumUsers / stats.totalUsers) * 100) : 0}%
               </p>
               <p className="text-xs text-muted-foreground">Taux premium</p>
             </div>
-            <div className="text-center p-4 rounded-lg bg-secondary/50">
+            <div className="text-center p-4 rounded-lg bg-muted">
               <div className="flex items-center justify-center w-10 h-10 mx-auto rounded-full bg-indigo-500/20 mb-2">
                 <MessageSquare className="w-5 h-5 text-indigo-500" />
               </div>
-              <p className="text-2xl font-bold">
+              <p className="text-2xl font-bold text-foreground">
                 {stats.totalUsers > 0 ? Math.round(stats.totalMessages / stats.totalUsers) : 0}
               </p>
               <p className="text-xs text-muted-foreground">Msg/utilisateur</p>

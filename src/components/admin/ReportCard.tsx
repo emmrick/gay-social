@@ -31,7 +31,7 @@ const ReportCard = ({ report, onClick }: ReportCardProps) => {
 
   return (
     <div
-      className="p-4 rounded-lg border border-border bg-card hover:bg-secondary/30 transition-colors cursor-pointer"
+      className="p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
       onClick={onClick}
     >
       <div className="flex items-start gap-4">

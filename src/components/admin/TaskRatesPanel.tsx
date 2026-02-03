@@ -122,7 +122,7 @@ const TaskRatesPanel = () => {
       </div>
 
       {/* Info Card */}
-      <div className="glass-card rounded-xl p-4 bg-primary/5 border border-primary/20">
+      <div className="rounded-xl p-4 bg-primary/5 border border-primary/20">
         <div className="flex items-start gap-3">
           <Euro className="w-5 h-5 text-primary mt-0.5" />
           <div>
@@ -139,7 +139,7 @@ const TaskRatesPanel = () => {
       <div className="rounded-xl border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-secondary/50">
+            <TableRow className="bg-muted">
               <TableHead className="w-[300px]">Type de tâche</TableHead>
               <TableHead>Tarif</TableHead>
               <TableHead>Statut</TableHead>
@@ -192,7 +192,7 @@ const TaskRatesPanel = () => {
         {taskRates?.map((rate) => (
           <div 
             key={rate.id}
-            className={`p-4 rounded-xl border ${rate.is_active ? 'bg-secondary/30' : 'bg-muted/30 opacity-60'}`}
+            className={`p-4 rounded-xl border ${rate.is_active ? 'bg-muted' : 'bg-muted/30 opacity-60'}`}
           >
             <div className="flex items-center gap-2 mb-2">
               <TaskIcon type={rate.task_type} />
@@ -247,7 +247,7 @@ const TaskRatesPanel = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
               <div>
                 <Label htmlFor="is_active" className="cursor-pointer">Activer ce tarif</Label>
                 <p className="text-xs text-muted-foreground">

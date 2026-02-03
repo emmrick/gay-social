@@ -6,10 +6,8 @@ import SwipeCard from './SwipeCard';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfile } from '@/hooks/useProfiles';
-import { cn } from '@/lib/utils';
 
 interface SwipePageProps {
   onStartChat: (userId: string) => void;
@@ -50,7 +48,6 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* Tabs */}
       <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as 'swipe' | 'likes')}
@@ -90,7 +87,7 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
             </div>
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
-              {/* Cards stack - takes maximum space */}
+              {/* Cards stack */}
               <div className="flex-1 relative min-h-0">
                 <AnimatePresence mode="popLayout">
                   {remainingProfiles.slice(0, 3).map((profile, index) => (
@@ -134,7 +131,7 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                 </Button>
               </div>
 
-              {/* Instructions - compact */}
+              {/* Instructions */}
               <div className="px-4 py-2 bg-muted/30 border-t border-border">
                 <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
                   <Info className="w-3 h-3 shrink-0" />

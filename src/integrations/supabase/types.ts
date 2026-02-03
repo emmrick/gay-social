@@ -841,6 +841,7 @@ export type Database = {
           relationship_status: string | null
           sexual_position: string | null
           show_face: boolean | null
+          theme_preference: string | null
           tribes: string[] | null
           updated_at: string
           user_id: string
@@ -874,6 +875,7 @@ export type Database = {
           relationship_status?: string | null
           sexual_position?: string | null
           show_face?: boolean | null
+          theme_preference?: string | null
           tribes?: string[] | null
           updated_at?: string
           user_id: string
@@ -907,6 +909,7 @@ export type Database = {
           relationship_status?: string | null
           sexual_position?: string | null
           show_face?: boolean | null
+          theme_preference?: string | null
           tribes?: string[] | null
           updated_at?: string
           user_id?: string

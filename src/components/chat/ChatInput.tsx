@@ -137,10 +137,7 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
     onSendMessage(content);
   };
 
-  // Different placeholder for private vs group chats
-  const placeholder = isPrivate 
-    ? "Écris ton message... (Shift+Entrée pour sauter une ligne)"
-    : "Écris ton message... (@ pour mentionner)";
+  const placeholder = "Écris ton message...";
 
   return (
     <div className="p-3 border-t border-border bg-card/50 backdrop-blur-lg relative">

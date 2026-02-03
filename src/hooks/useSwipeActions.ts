@@ -49,7 +49,7 @@ export const useSwipeActions = () => {
   const { checkCreditsAmount, totalCredits } = useCreditCheck();
 
   // Fetch user's swipe actions to filter profiles
-  const { data: swipeActions = [], isLoading: actionsLoading } = useQuery({
+  const { data: swipeActions = [], isLoading: actionsLoading, refetch: refetchActions } = useQuery({
     queryKey: ['swipe-actions', user?.id],
     queryFn: async (): Promise<SwipeAction[]> => {
       if (!user?.id) return [];
@@ -63,17 +63,26 @@ export const useSwipeActions = () => {
       return data as SwipeAction[];
     },
     enabled: !!user?.id,
+    staleTime: 0, // Always refetch
   });
 
   // Fetch swipeable profiles (excluding already swiped)
   const { data: profiles = [], isLoading: profilesLoading, refetch: refetchProfiles } = useQuery({
-    queryKey: ['swipeable-profiles', user?.id, swipeActions],
+    queryKey: ['swipeable-profiles', user?.id],
     queryFn: async (): Promise<SwipeableProfile[]> => {
       if (!user?.id) return [];
 
+      // First fetch current swipe actions directly
+      const { data: currentActions, error: actionsError } = await supabase
+        .from('swipe_actions')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (actionsError) throw actionsError;
+
       // Get IDs of profiles to exclude
       const now = new Date();
-      const excludedIds = swipeActions
+      const excludedIds = (currentActions || [])
         .filter(action => {
           // Always exclude 'hide' actions
           if (action.action_type === 'hide') return true;
@@ -109,8 +118,8 @@ export const useSwipeActions = () => {
 
       return (data || []) as SwipeableProfile[];
     },
-    enabled: !!user?.id && !actionsLoading,
-    staleTime: 60000,
+    enabled: !!user?.id,
+    staleTime: 0, // Always refetch to get fresh data
   });
 
   // Get profiles that user has liked
@@ -184,11 +193,14 @@ export const useSwipeActions = () => {
 
       return { actionType, targetUserId };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['swipe-actions', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['swipeable-profiles', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['liked-profiles', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
+    onSuccess: async (data) => {
+      // Immediately refetch to ensure UI is up to date
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['swipe-actions', user?.id] }),
+        queryClient.invalidateQueries({ queryKey: ['swipeable-profiles', user?.id] }),
+        queryClient.invalidateQueries({ queryKey: ['liked-profiles', user?.id] }),
+        queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] }),
+      ]);
 
       if (data.actionType === 'like') {
         toast.success('Profil aimé ! 💖', {

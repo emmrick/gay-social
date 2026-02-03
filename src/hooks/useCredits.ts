@@ -59,6 +59,9 @@ export interface UserCredits {
   can_claim_daily: boolean;
   last_daily_claim: string | null;
   monthly_reset_date: string;
+  max_daily_credits: number;
+  monthly_daily_credits_given: number;
+  monthly_daily_credits_max: number;
 }
 
 export interface CreditTransaction {

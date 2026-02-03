@@ -1474,6 +1474,7 @@ export type Database = {
           daily_claims_used: number
           daily_credits: number
           last_daily_claim: string | null
+          monthly_daily_credits_given: number | null
           monthly_reset_date: string
           purchased_credits: number
           updated_at: string
@@ -1485,6 +1486,7 @@ export type Database = {
           daily_claims_used?: number
           daily_credits?: number
           last_daily_claim?: string | null
+          monthly_daily_credits_given?: number | null
           monthly_reset_date?: string
           purchased_credits?: number
           updated_at?: string
@@ -1496,6 +1498,7 @@ export type Database = {
           daily_claims_used?: number
           daily_credits?: number
           last_daily_claim?: string | null
+          monthly_daily_credits_given?: number | null
           monthly_reset_date?: string
           purchased_credits?: number
           updated_at?: string

@@ -17,7 +17,11 @@ const CreditBalanceBar = ({
   compact = false,
   showDetails = true 
 }: CreditBalanceBarProps) => {
-  const { dailyCredits, bonusCredits, purchasedCredits, totalCredits, isLoading } = useCredits();
+  const { dailyCredits, bonusCredits, purchasedCredits, totalCredits, isLoading, credits } = useCredits();
+
+  const maxDailyCredits = credits?.max_daily_credits || 5.0;
+  const monthlyCreditsGiven = credits?.monthly_daily_credits_given || 0;
+  const monthlyCreditsMax = credits?.monthly_daily_credits_max || 35.0;
 
   if (isLoading) {
     return (
@@ -37,9 +41,10 @@ const CreditBalanceBar = ({
     { 
       name: 'Quotidien', 
       value: dailyCredits, 
+      max: maxDailyCredits,
       color: 'bg-green-500', 
       dotColor: 'bg-green-500',
-      description: 'Crédits réclamés quotidiennement (max 7x/mois)'
+      description: `${dailyCredits.toFixed(1)}/${maxDailyCredits.toFixed(1)} crédits`
     },
     { 
       name: 'Bonus', 
@@ -55,7 +60,7 @@ const CreditBalanceBar = ({
       dotColor: 'bg-sky-400',
       description: 'Crédits achetés via Revolut'
     },
-  ].filter(type => type.value > 0);
+  ];
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -124,41 +129,75 @@ const CreditBalanceBar = ({
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
 
-      {/* Detailed Legend */}
-      {showDetails && !compact && creditTypes.length > 0 && (
-        <div className="grid gap-2">
-          {creditTypes.map((type, index) => (
-            <motion.div 
-              key={type.name}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="flex items-center justify-between p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-            >
+      {/* Credit breakdown details */}
+      {!compact && (
+        <div className="space-y-2">
+          {/* Daily credits detail - always show */}
+          <div className="flex items-center justify-between p-2 rounded-lg bg-green-500/10 border border-green-500/20">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <div>
+                <span className="text-sm font-medium">Quotidien</span>
+                <p className="text-xs text-muted-foreground">
+                  Réclamez jusqu'à 5 crédits/jour (max 7 jours/mois)
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-sm font-bold tabular-nums text-green-600 dark:text-green-400">
+                {dailyCredits.toFixed(1)}/{maxDailyCredits.toFixed(1)}
+              </span>
+              <p className="text-xs text-muted-foreground">
+                {monthlyCreditsGiven.toFixed(1)}/{monthlyCreditsMax.toFixed(1)} ce mois
+              </p>
+            </div>
+          </div>
+
+          {/* Bonus credits */}
+          {bonusCredits > 0 && (
+            <div className="flex items-center justify-between p-2 rounded-lg bg-blue-600/10 border border-blue-600/20">
               <div className="flex items-center gap-2">
-                <div className={cn("w-3 h-3 rounded-full", type.dotColor)} />
+                <div className="w-3 h-3 rounded-full bg-blue-600" />
                 <div>
-                  <span className="text-sm font-medium">{type.name}</span>
-                  <p className="text-xs text-muted-foreground">{type.description}</p>
+                  <span className="text-sm font-medium">Bonus</span>
+                  <p className="text-xs text-muted-foreground">
+                    Inscription, vérification, parrainage
+                  </p>
                 </div>
               </div>
-              <span className="text-sm font-bold tabular-nums">
-                {type.value.toFixed(1)}
+              <span className="text-sm font-bold tabular-nums text-blue-600 dark:text-blue-400">
+                {bonusCredits.toFixed(1)}
               </span>
-            </motion.div>
-          ))}
+            </div>
+          )}
+
+          {/* Purchased credits */}
+          {purchasedCredits > 0 && (
+            <div className="flex items-center justify-between p-2 rounded-lg bg-sky-400/10 border border-sky-400/20">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-sky-400" />
+                <div>
+                  <span className="text-sm font-medium">Achetés</span>
+                  <p className="text-xs text-muted-foreground">
+                    Crédits achetés via Revolut
+                  </p>
+                </div>
+              </div>
+              <span className="text-sm font-bold tabular-nums text-sky-500 dark:text-sky-400">
+                {purchasedCredits.toFixed(1)}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
       {/* Simple Legend for compact mode */}
-      {!showDetails && !compact && totalCredits > 0 && (
+      {compact && totalCredits > 0 && (
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-          {dailyCredits > 0 && (
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span>Quotidien: {dailyCredits.toFixed(1)}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <span>Quotidien: {dailyCredits.toFixed(1)}/{maxDailyCredits.toFixed(1)}</span>
+          </div>
           {bonusCredits > 0 && (
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-blue-600" />

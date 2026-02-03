@@ -145,22 +145,31 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
             onClick={() => onSelectConversation(conv.otherUser.user_id)}
             className={cn(
               "w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left group",
-              "bg-secondary/30 border border-transparent",
-              "hover:bg-secondary hover:border-border",
               "active:scale-[0.98]",
-              selectedUserId === conv.otherUser.user_id && "bg-primary/10 border-primary/20",
-              "animate-fade-in"
+              "animate-fade-in",
+              // Unread state - more prominent styling
+              hasUnread 
+                ? "bg-primary/10 border-2 border-primary/30 shadow-md shadow-primary/10" 
+                : "bg-secondary/30 border border-transparent",
+              // Hover states
+              hasUnread
+                ? "hover:bg-primary/15 hover:border-primary/40"
+                : "hover:bg-secondary hover:border-border",
+              // Selected state
+              selectedUserId === conv.otherUser.user_id && "bg-primary/15 border-primary/30"
             )}
             style={{ animationDelay: `${index * 0.05}s` }}
           >
-            {/* Avatar */}
+            {/* Avatar with unread indicator ring */}
             <button
               onClick={(e) => handleAvatarClick(e, conv.otherUser.user_id)}
               className="relative flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
             >
               <div className={cn(
                 "w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden",
-                "bg-gradient-to-br from-primary to-accent"
+                "bg-gradient-to-br from-primary to-accent",
+                // Ring around avatar for unread
+                hasUnread && "ring-2 ring-primary ring-offset-2 ring-offset-background"
               )}>
                 {conv.otherUser.avatar_url ? (
                   <img
@@ -190,13 +199,18 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-0.5">
                 <h3 className={cn(
-                  "font-medium text-foreground truncate",
-                  hasUnread && "font-semibold"
+                  "truncate",
+                  hasUnread 
+                    ? "font-bold text-foreground" 
+                    : "font-medium text-foreground"
                 )}>
                   {conv.otherUser.username}
                 </h3>
                 {conv.lastMessage && (
-                  <span className="text-[11px] text-muted-foreground flex-shrink-0">
+                  <span className={cn(
+                    "text-[11px] flex-shrink-0",
+                    hasUnread ? "text-primary font-semibold" : "text-muted-foreground"
+                  )}>
                     {formatDistanceToNow(new Date(conv.lastMessage.created_at), {
                       addSuffix: false,
                       locale: fr,
@@ -207,7 +221,9 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
               <div className="flex items-center justify-between gap-2">
                 <p className={cn(
                   "text-sm truncate",
-                  hasUnread ? "text-foreground" : "text-muted-foreground"
+                  hasUnread 
+                    ? "text-foreground font-medium" 
+                    : "text-muted-foreground"
                 )}>
                   {conv.lastMessage
                     ? conv.lastMessage.message_type === 'text'
@@ -223,7 +239,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                 </p>
                 
                 {hasUnread ? (
-                  <span className="flex-shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold flex items-center justify-center">
+                  <span className="flex-shrink-0 min-w-6 h-6 px-2 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-sm animate-pulse">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 ) : (

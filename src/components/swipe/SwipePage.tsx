@@ -85,9 +85,9 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
               </Button>
             </div>
           ) : (
-            <div className="flex-1 relative overflow-hidden">
+            <div className="flex-1 relative overflow-hidden min-h-[500px]">
               {/* Cards stack */}
-              <AnimatePresence>
+              <AnimatePresence mode="popLayout">
                 {remainingProfiles.slice(0, 3).map((profile, index) => (
                   <SwipeCard
                     key={profile.id}
@@ -99,7 +99,7 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
               </AnimatePresence>
 
               {/* Credits info */}
-              <div className="absolute top-4 left-4 right-4 flex justify-center">
+              <div className="absolute top-4 left-4 right-4 flex justify-center z-10">
                 <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 shadow-lg">
                   <div className="flex items-center gap-1.5 text-xs">
                     <Heart className="w-3.5 h-3.5 text-green-500" />

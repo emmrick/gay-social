@@ -67,11 +67,13 @@ export const checkSufficientCredits = async (userId: string, amount: number): Pr
 };
 
 // Standalone utility function to deduct credits
+// Note: Animation is triggered via emitCreditDeduction - call separately if needed
 export const deductCredits = async (
   userId: string,
   amount: number,
   transactionType: string,
-  description?: string
+  description?: string,
+  showAnimation: boolean = true
 ): Promise<{ success: boolean; error?: string }> => {
   const { data, error } = await supabase.rpc('deduct_credits', {
     _user_id: userId,
@@ -87,8 +89,8 @@ export const deductCredits = async (
 
   const result = data as { success: boolean; error?: string };
   
-  // Emit animation event on successful deduction
-  if (result.success) {
+  // Emit animation event on successful deduction (only once)
+  if (result.success && showAnimation) {
     emitCreditDeduction(amount, description);
   }
 

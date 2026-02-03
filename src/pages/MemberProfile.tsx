@@ -517,7 +517,7 @@ const MemberProfile = () => {
               {extendedProfile.looking_for.map((item: string) => (
                 <Badge 
                   key={item} 
-                  className="bg-gradient-to-r from-primary/20 to-accent/20 text-primary border-primary/30 text-sm py-1.5 px-3"
+                  className="bg-primary text-primary-foreground border-0 text-sm py-1.5 px-3 shadow-sm"
                 >
                   {LOOKING_FOR_LABELS[item] || item}
                 </Badge>

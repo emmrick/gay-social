@@ -113,7 +113,7 @@ export const useReferral = () => {
     const link = `${window.location.origin}/auth?ref=${referralData.code}`;
     const shareData = {
       title: 'Rejoins GayConnect !',
-      text: 'Inscris-toi avec mon lien et obtiens 3 mois gratuits après 3 mois d\'abonnement !',
+      text: 'Inscris-toi avec mon lien et gagne 10 crédits gratuits après vérification de ton identité !',
       url: link
     };
     

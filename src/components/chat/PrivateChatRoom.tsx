@@ -63,7 +63,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   // Track if this is the initial load
   const isInitialLoad = useRef(true);
 
-  // Auto-scroll to bottom on new messages or when conversation opens
+  // Auto-scroll to bottom on new messages, typing indicator, or when conversation opens
   useEffect(() => {
     const scrollToBottom = (instant: boolean = false) => {
       if (scrollRef.current) {
@@ -90,6 +90,13 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
       scrollToBottom(false);
     }
   }, [messages]);
+
+  // Auto-scroll when the other user starts typing
+  useEffect(() => {
+    if (isOtherTyping && scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isOtherTyping]);
 
   // Scroll to bottom when input is focused (keyboard opens)
   const handleInputFocus = useCallback(() => {

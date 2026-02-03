@@ -97,6 +97,13 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
     };
   }, [messages, searchQuery]);
 
+  // Auto-scroll when someone starts typing in group chat
+  useEffect(() => {
+    if (typingUsers.length > 0 && scrollRef.current && !searchQuery) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [typingUsers.length, searchQuery]);
+
   // Handle scroll to show/hide scroll button
   const handleScroll = useCallback(() => {
     if (scrollRef.current) {

@@ -37,7 +37,7 @@ export const PREMIUM_LIMITS = {
 };
 
 // Lien de paiement Revolut
-export const REVOLUT_PAYMENT_LINK = 'https://checkout.revolut.com/pay/bd94a983-605b-47d8-b221-b4d9bf7da627';
+export const REVOLUT_PAYMENT_LINK = 'https://checkout.revolut.com/pay/e6ca921f-2793-4867-b8f1-448cbfb39ad4';
 
 export const useSubscription = () => {
   const { user } = useAuth();

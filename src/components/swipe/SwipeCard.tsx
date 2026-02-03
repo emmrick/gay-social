@@ -78,28 +78,9 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
     }
   };
 
+  // Only render the top card - hide background cards completely
   if (!isTop) {
-    // Cards behind the top card - show stacked effect
-    return (
-      <motion.div 
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        initial={{ scale: 0.95, y: 10 }}
-        animate={{ scale: 0.95, y: 10 }}
-      >
-        <div className="w-full max-w-sm mx-4 aspect-[3/4] rounded-3xl bg-card/80 border border-border/50 shadow-lg overflow-hidden">
-          {profile.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt=""
-              className="w-full h-full object-cover opacity-50"
-              draggable={false}
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/10 to-secondary/50" />
-          )}
-        </div>
-      </motion.div>
-    );
+    return null;
   }
 
   return (

@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Shield, AlertTriangle, FileText, Lock, Users, CreditCard, Ban, Scale, Mail } from 'lucide-react';
+import { ArrowLeft, Shield, AlertTriangle, FileText, Lock, Users, CreditCard, Ban, Scale, Mail, Download } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -9,10 +9,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useAuth } from '@/contexts/AuthContext';
+import DataExportDialog from '@/components/profile/DataExportDialog';
 
 const Legal = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   // Auto-open section based on hash
   useEffect(() => {
@@ -28,7 +32,9 @@ const Legal = () => {
   }, [location.hash]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <DataExportDialog open={showExportDialog} onOpenChange={setShowExportDialog} />
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
@@ -194,6 +200,27 @@ const Legal = () => {
                   En cas de suppression de compte, toutes vos données sont effacées sous 30 jours.
                 </p>
               </div>
+
+              {/* Data Export Button */}
+              {user && (
+                <div className="bg-primary/10 rounded-xl p-4 border border-primary/20">
+                  <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+                    <Download className="w-4 h-4 text-primary" />
+                    Télécharger mes données
+                  </h4>
+                  <p className="text-sm mb-3">
+                    Conformément à l'article 20 du RGPD (droit à la portabilité), vous pouvez 
+                    télécharger l'ensemble de vos données personnelles au format JSON.
+                  </p>
+                  <Button 
+                    onClick={() => setShowExportDialog(true)}
+                    className="bg-gradient-to-r from-primary to-primary/80"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Télécharger mes données
+                  </Button>
+                </div>
+              )}
             </AccordionContent>
           </AccordionItem>
 
@@ -476,6 +503,7 @@ const Legal = () => {
         </motion.div>
       </div>
     </div>
+    </>
   );
 };
 

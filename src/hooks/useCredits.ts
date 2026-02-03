@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { emitCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
 
 // Credit costs for each action
 export const CREDIT_COSTS = {
@@ -84,7 +85,14 @@ export const deductCredits = async (
     return { success: false, error: error.message };
   }
 
-  return data as { success: boolean; error?: string };
+  const result = data as { success: boolean; error?: string };
+  
+  // Emit animation event on successful deduction
+  if (result.success) {
+    emitCreditDeduction(amount, description);
+  }
+
+  return result;
 };
 
 // Standalone utility function to add credits

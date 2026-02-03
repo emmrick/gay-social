@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserUsage } from './useUserUsage';
 import { toast } from 'sonner';
-import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
+import { CREDIT_COSTS, deductCredits, checkSufficientCredits, useCredits } from '@/hooks/useCredits';
+import { useCreditDialog } from '@/contexts/CreditDialogContext';
 
 interface UploadEphemeralMediaParams {
   file: File;
@@ -21,6 +22,12 @@ export const useEphemeralMediaUpload = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { limits } = useUserUsage();
+  const { totalCredits, hasEnoughCredits } = useCredits();
+  const { showInsufficientCreditsDialog } = useCreditDialog();
+
+  // Check if user has enough credits for ephemeral media
+  const canSend = hasEnoughCredits(CREDIT_COSTS.ephemeral_media);
+  const creditsNeeded = CREDIT_COSTS.ephemeral_media;
 
   const uploadEphemeralMedia = useMutation({
     mutationFn: async ({
@@ -163,7 +170,9 @@ export const useEphemeralMediaUpload = () => {
     uploadEphemeralMedia,
     isUploading,
     progress,
-    canSend: true, // Always true - credits are the only limit now
-    remainingCount: Infinity, // No usage limit - only credit limit
+    canSend,
+    creditsNeeded,
+    totalCredits,
+    showInsufficientCreditsDialog: () => showInsufficientCreditsDialog(creditsNeeded, 'Média éphémère'),
   };
 };

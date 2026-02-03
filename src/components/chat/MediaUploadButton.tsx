@@ -55,7 +55,7 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
   
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { uploadEphemeralMedia, isUploading, progress, canSend, remainingCount } = useEphemeralMediaUpload();
+  const { uploadEphemeralMedia, isUploading, progress, canSend, creditsNeeded, totalCredits, showInsufficientCreditsDialog } = useEphemeralMediaUpload();
   const { uploadMedia, isUploading: isUploadingRegular, progress: regularProgress } = useMediaUpload();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
@@ -191,12 +191,7 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
 
   const handleMenuClick = (action: () => void) => {
     if (!canSend) {
-      toast.error('Limite atteinte ! Passez Premium pour envoyer plus de médias.', {
-        action: {
-          label: 'Premium',
-          onClick: () => window.location.href = '/?tab=premium',
-        },
-      });
+      showInsufficientCreditsDialog();
       return;
     }
     action();
@@ -414,15 +409,11 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
           <div className="px-2 py-1 mb-1">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               {canSend ? (
-                <span>{remainingCount} média(s) restant(s) aujourd'hui</span>
+                <span>Coût: {creditsNeeded} crédits (solde: {totalCredits.toFixed(1)})</span>
               ) : (
-                <div className="flex items-center gap-1 text-amber-600">
+                <div className="flex items-center gap-1 text-destructive">
                   <Lock className="w-3 h-3" />
-                  <span>Limite atteinte</span>
-                  <Badge variant="outline" className="ml-auto text-[10px] px-1 py-0 h-4">
-                    <Crown className="w-2.5 h-2.5 mr-0.5" />
-                    Premium
-                  </Badge>
+                  <span>Crédits insuffisants ({totalCredits.toFixed(1)}/{creditsNeeded})</span>
                 </div>
               )}
             </div>

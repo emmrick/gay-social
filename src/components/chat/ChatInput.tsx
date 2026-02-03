@@ -69,6 +69,12 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Ignore events during IME composition (mobile keyboards, autocomplete, predictive text)
+    // This prevents issues where space or other keys trigger unintended actions
+    if (e.nativeEvent.isComposing) {
+      return;
+    }
+
     // Handle mention autocomplete navigation (only for group chats)
     if (!isPrivate && isMentionActive && suggestions.length > 0) {
       if (e.key === 'ArrowDown') {
@@ -97,8 +103,10 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
       }
     }
 
-    // Send on Enter (Shift+Enter for new line)
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // Send on Enter only (Shift+Enter for new line)
+    // Use strict key check to avoid issues with mobile keyboards
+    const isEnterKey = e.key === 'Enter' || e.keyCode === 13;
+    if (isEnterKey && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }

@@ -53,6 +53,7 @@ export type CreditActionType = keyof typeof CREDIT_COSTS;
 
 export interface UserCredits {
   user_id: string;
+  passive_credits: number;
   daily_credits: number;
   bonus_credits: number;
   purchased_credits: number;
@@ -65,7 +66,7 @@ export interface CreditTransaction {
   id: string;
   user_id: string;
   amount: number;
-  credit_type: 'daily' | 'bonus' | 'purchased';
+  credit_type: 'passive' | 'daily' | 'bonus' | 'purchased';
   transaction_type: string;
   description: string | null;
   created_at: string;
@@ -352,6 +353,7 @@ export const useCredits = () => {
     transactions,
     transactionsLoading,
     // Balances
+    passiveCredits: query.data?.passive_credits || 0,
     dailyCredits: query.data?.daily_credits || 0,
     bonusCredits: query.data?.bonus_credits || 0,
     purchasedCredits: query.data?.purchased_credits || 0,

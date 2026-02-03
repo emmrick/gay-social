@@ -17,7 +17,7 @@ const CreditBalanceBar = ({
   compact = false,
   showDetails = true 
 }: CreditBalanceBarProps) => {
-  const { dailyCredits, bonusCredits, purchasedCredits, totalCredits, maxDailyCredits, isLoading } = useCredits();
+  const { passiveCredits, dailyCredits, bonusCredits, purchasedCredits, totalCredits, maxDailyCredits, isLoading } = useCredits();
 
   if (isLoading) {
     return (
@@ -29,6 +29,7 @@ const CreditBalanceBar = ({
 
   // Calculate percentages for the stacked bar
   const total = Math.max(totalCredits, 1); // Avoid division by zero
+  const passivePercent = (passiveCredits / total) * 100;
   const dailyPercent = (dailyCredits / total) * 100;
   const bonusPercent = (bonusCredits / total) * 100;
   const purchasedPercent = (purchasedCredits / total) * 100;
@@ -66,34 +67,45 @@ const CreditBalanceBar = ({
         "relative w-full overflow-hidden rounded-full bg-muted/50",
         compact ? "h-2" : "h-4"
       )}>
-        {/* Purchased credits - Light Blue (first) */}
+        {/* Passive credits - Yellow/Gold (FIRST - used first) */}
         <motion.div 
-          className="absolute left-0 top-0 h-full bg-gradient-to-r from-sky-400 to-sky-300"
+          className="absolute left-0 top-0 h-full bg-gradient-to-r from-amber-400 to-yellow-300"
           initial={{ width: 0 }}
-          animate={{ width: `${purchasedPercent}%` }}
+          animate={{ width: `${passivePercent}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         />
-        
-        {/* Bonus credits - Dark Blue (second) */}
-        <motion.div 
-          className="absolute top-0 h-full bg-gradient-to-r from-blue-600 to-blue-500"
-          initial={{ width: 0 }}
-          animate={{ 
-            left: `${purchasedPercent}%`,
-            width: `${bonusPercent}%` 
-          }}
-          transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
-        />
-        
-        {/* Daily credits - Green (last) */}
+
+        {/* Daily credits - Green (second) */}
         <motion.div 
           className="absolute top-0 h-full bg-gradient-to-r from-green-500 to-green-400"
           initial={{ width: 0 }}
           animate={{ 
-            left: `${purchasedPercent + bonusPercent}%`,
+            left: `${passivePercent}%`,
             width: `${dailyPercent}%` 
           }}
+          transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
+        />
+        
+        {/* Bonus credits - Dark Blue (third) */}
+        <motion.div 
+          className="absolute top-0 h-full bg-gradient-to-r from-blue-600 to-blue-500"
+          initial={{ width: 0 }}
+          animate={{ 
+            left: `${passivePercent + dailyPercent}%`,
+            width: `${bonusPercent}%` 
+          }}
           transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
+        />
+        
+        {/* Purchased credits - Light Blue (last) */}
+        <motion.div 
+          className="absolute top-0 h-full bg-gradient-to-r from-sky-400 to-sky-300"
+          initial={{ width: 0 }}
+          animate={{ 
+            left: `${passivePercent + dailyPercent + bonusPercent}%`,
+            width: `${purchasedPercent}%` 
+          }}
+          transition={{ duration: 0.5, ease: "easeOut", delay: 0.3 }}
         />
 
         {/* Shine effect */}
@@ -103,6 +115,25 @@ const CreditBalanceBar = ({
       {/* Credit breakdown details */}
       {!compact && showDetails && (
         <div className="space-y-2">
+          {/* Passive credits - always show */}
+          <div className="flex items-center justify-between p-2 rounded-lg bg-amber-400/10 border border-amber-400/20">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-amber-400" />
+              <div>
+                <span className="text-sm font-medium">Passif</span>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  +0.1 toutes les 2h (utilisé en premier)
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-sm font-bold tabular-nums text-amber-600 dark:text-amber-400">
+                {passiveCredits.toFixed(1)}/1.0
+              </span>
+            </div>
+          </div>
+
           {/* Daily credits detail - always show */}
           <div className="flex items-center justify-between p-2 rounded-lg bg-green-500/10 border border-green-500/20">
             <div className="flex items-center gap-2">
@@ -163,6 +194,12 @@ const CreditBalanceBar = ({
       {/* Simple Legend for compact mode */}
       {compact && totalCredits > 0 && (
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+          {passiveCredits > 0 && (
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-amber-400" />
+              <span>Passif: {passiveCredits.toFixed(1)}/1.0</span>
+            </div>
+          )}
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-green-500" />
             <span>Quotidien: {dailyCredits.toFixed(1)}/{maxDailyCredits}</span>

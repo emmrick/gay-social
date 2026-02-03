@@ -37,8 +37,10 @@ const getTransactionLabel = (type: string): string => {
   return labels[type] || type;
 };
 
-const getCreditTypeBadge = (type: 'daily' | 'bonus' | 'purchased') => {
+const getCreditTypeBadge = (type: 'passive' | 'daily' | 'bonus' | 'purchased') => {
   switch (type) {
+    case 'passive':
+      return <Badge variant="outline" className="text-xs bg-amber-400/10 text-amber-600 border-amber-400/30">Passif</Badge>;
     case 'daily':
       return <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">Quotidien</Badge>;
     case 'bonus':

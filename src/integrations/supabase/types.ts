@@ -1502,8 +1502,10 @@ export type Database = {
           daily_credits: number
           daily_credits_last_reset: string | null
           last_daily_claim: string | null
+          last_passive_credit_at: string | null
           monthly_daily_credits_given: number | null
           monthly_reset_date: string
+          passive_credits: number | null
           purchased_credits: number
           updated_at: string
           user_id: string
@@ -1515,8 +1517,10 @@ export type Database = {
           daily_credits?: number
           daily_credits_last_reset?: string | null
           last_daily_claim?: string | null
+          last_passive_credit_at?: string | null
           monthly_daily_credits_given?: number | null
           monthly_reset_date?: string
+          passive_credits?: number | null
           purchased_credits?: number
           updated_at?: string
           user_id: string
@@ -1528,8 +1532,10 @@ export type Database = {
           daily_credits?: number
           daily_credits_last_reset?: string | null
           last_daily_claim?: string | null
+          last_passive_credit_at?: string | null
           monthly_daily_credits_given?: number | null
           monthly_reset_date?: string
+          passive_credits?: number | null
           purchased_credits?: number
           updated_at?: string
           user_id?: string
@@ -1812,7 +1818,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
-      credit_type: "daily" | "bonus" | "purchased"
+      credit_type: "daily" | "bonus" | "purchased" | "passive"
       moderation_action_type:
         | "user_suspended"
         | "user_unblocked"
@@ -1965,7 +1971,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
-      credit_type: ["daily", "bonus", "purchased"],
+      credit_type: ["daily", "bonus", "purchased", "passive"],
       moderation_action_type: [
         "user_suspended",
         "user_unblocked",

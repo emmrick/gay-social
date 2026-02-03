@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Bell, Moon, Shield, HelpCircle, FolderLock, 
-  ChevronRight, X, Crown, Zap, Sparkles, LogOut
+  ChevronRight, X, Crown, Zap, Sparkles, LogOut, FileText, Scale
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ const ProfileSettingsDrawer = ({
   onContactAdmin,
   onSignOut
 }: ProfileSettingsDrawerProps) => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [settingsType, setSettingsType] = useState<SettingsType | null>(null);
   const [showAlbumManager, setShowAlbumManager] = useState(false);
@@ -44,6 +46,12 @@ const ProfileSettingsDrawer = ({
     { icon: Moon, label: 'Apparence', action: () => { setOpen(false); setSettingsType('appearance'); }, color: 'text-indigo-500', bgColor: 'bg-indigo-500/10' },
     { icon: Shield, label: 'Confidentialité', action: () => { setOpen(false); setSettingsType('privacy'); }, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
     { icon: HelpCircle, label: 'Aide & Support', action: () => { setOpen(false); setSettingsType('help'); }, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
+  ];
+
+  const legalItems = [
+    { icon: Scale, label: 'Mentions légales', section: 'legal', color: 'text-slate-500', bgColor: 'bg-slate-500/10' },
+    { icon: FileText, label: 'CGU & CGV', section: 'cgu', color: 'text-cyan-500', bgColor: 'bg-cyan-500/10' },
+    { icon: Shield, label: 'RGPD & Confidentialité', section: 'privacy', color: 'text-green-500', bgColor: 'bg-green-500/10' },
   ];
 
   return (
@@ -133,6 +141,33 @@ const ProfileSettingsDrawer = ({
                   </div>
                   <span className="flex-1 text-left font-medium">{item.label}</span>
                   <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </button>
+              ))}
+            </div>
+
+            {/* Legal Section */}
+            <Separator className="my-4" />
+            <div className="mb-2 px-1">
+              <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                <Scale className="w-4 h-4" />
+                Règlement & Légal
+              </h3>
+            </div>
+            <div className="space-y-2">
+              {legalItems.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => { 
+                    setOpen(false); 
+                    navigate(`/legal#${item.section}`);
+                  }}
+                  className="w-full flex items-center gap-4 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-all active:scale-[0.98]"
+                >
+                  <div className={`w-10 h-10 rounded-lg ${item.bgColor} flex items-center justify-center`}>
+                    <item.icon className={`w-5 h-5 ${item.color}`} />
+                  </div>
+                  <span className="flex-1 text-left font-medium text-sm">{item.label}</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </button>
               ))}
             </div>

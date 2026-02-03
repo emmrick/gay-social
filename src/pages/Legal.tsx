@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Shield, AlertTriangle, FileText, Lock, Users, CreditCard, Ban } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Shield, AlertTriangle, FileText, Lock, Users, CreditCard, Ban, Scale, Mail } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Accordion,
@@ -11,6 +12,20 @@ import {
 
 const Legal = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auto-open section based on hash
+  useEffect(() => {
+    const hash = location.hash.replace('#', '');
+    if (hash) {
+      const element = document.getElementById(hash);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }, [location.hash]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -44,10 +59,21 @@ const Legal = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Accordion type="single" collapsible className="space-y-4">
+        {/* Section Title */}
+        <div id="legal" className="mb-6">
+          <h2 className="text-2xl font-display font-bold flex items-center gap-3">
+            <Scale className="w-6 h-6 text-primary" />
+            Cadre juridique
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            Consultez l'ensemble des documents légaux régissant l'utilisation de GayConnect.
+          </p>
+        </div>
+
+        <Accordion type="multiple" defaultValue={[]} className="space-y-4">
           
           {/* CGU Section */}
-          <AccordionItem value="cgu" className="glass-card rounded-2xl px-6 border-border">
+          <AccordionItem id="cgu" value="cgu" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
@@ -107,7 +133,7 @@ const Legal = () => {
           </AccordionItem>
 
           {/* Privacy Policy Section */}
-          <AccordionItem value="privacy" className="glass-card rounded-2xl px-6 border-border">
+          <AccordionItem id="privacy" value="privacy" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
@@ -172,7 +198,7 @@ const Legal = () => {
           </AccordionItem>
 
           {/* Anti-Prostitution Clause */}
-          <AccordionItem value="anti-prostitution" className="glass-card rounded-2xl px-6 border-border">
+          <AccordionItem value="anti-prostitution" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-destructive/20 flex items-center justify-center">
@@ -218,8 +244,8 @@ const Legal = () => {
             </AccordionContent>
           </AccordionItem>
 
-          {/* Premium & Monetization */}
-          <AccordionItem value="premium" className="glass-card rounded-2xl px-6 border-border">
+          {/* Credits & Monetization */}
+          <AccordionItem id="cgv" value="cgv" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
@@ -273,7 +299,7 @@ const Legal = () => {
           </AccordionItem>
 
           {/* Site Rules */}
-          <AccordionItem value="rules" className="glass-card rounded-2xl px-6 border-border">
+          <AccordionItem value="rules" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
@@ -356,7 +382,7 @@ const Legal = () => {
           </AccordionItem>
 
           {/* User Protection */}
-          <AccordionItem value="protection" className="glass-card rounded-2xl px-6 border-border">
+          <AccordionItem value="protection" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
@@ -413,8 +439,11 @@ const Legal = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mt-12 text-center"
         >
-          <p className="text-sm text-muted-foreground mb-4">
-            Dernière mise à jour : Janvier 2025
+          <p className="text-sm text-muted-foreground mb-2">
+            Dernière mise à jour : Février 2026
+          </p>
+          <p className="text-xs text-muted-foreground mb-4">
+            Pour toute question, contactez-nous via la messagerie de l'application.
           </p>
           <Button variant="outline" onClick={() => navigate('/')}>
             Retour à l'accueil

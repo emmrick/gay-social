@@ -479,6 +479,34 @@ const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDi
                 </Button>
               </div>
               
+              <Separator className="my-4" />
+              
+              {/* Legal links */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-muted-foreground" />
+                  Informations légales
+                </h4>
+                <a 
+                  href="/legal"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onOpenChange(false);
+                    window.location.href = '/legal';
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-slate-500/10 flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-slate-500" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <span className="font-medium text-sm block">CGU, RGPD & Mentions légales</span>
+                    <span className="text-xs text-muted-foreground">Consulter le règlement complet</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                </a>
+              </div>
+              
               {/* Version info */}
               <div className="text-center pt-4 border-t border-border/50">
                 <p className="text-xs text-muted-foreground">

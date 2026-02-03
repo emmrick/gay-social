@@ -1,11 +1,7 @@
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useState } from 'react';
-import { Heart, X, EyeOff, MapPin, Verified, Ruler, Scale } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { MapPin, Verified, Ruler, Scale } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { SWIPE_CREDIT_COSTS } from '@/hooks/useSwipeActions';
 
 interface SwipeCardProps {
   profile: {
@@ -60,10 +56,6 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
     }
   };
 
-  const handleButtonSwipe = (direction: 'left' | 'right' | 'up') => {
-    setExitDirection(direction);
-    onSwipe(direction);
-  };
 
   const getExitAnimation = () => {
     switch (exitDirection) {
@@ -116,12 +108,20 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
         </div>
 
         {/* Online indicator */}
-        {profile.is_online && (
-          <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/20 backdrop-blur-sm border border-green-500/30">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-xs font-medium text-green-400">En ligne</span>
-          </div>
-        )}
+        <div className={`absolute top-4 right-4 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-sm border ${
+          profile.is_online 
+            ? 'bg-green-500/20 border-green-500/30' 
+            : 'bg-muted/50 border-border/50'
+        }`}>
+          <span className={`w-2 h-2 rounded-full ${
+            profile.is_online ? 'bg-green-500 animate-pulse' : 'bg-muted-foreground/50'
+          }`} />
+          <span className={`text-xs font-medium ${
+            profile.is_online ? 'text-green-400' : 'text-muted-foreground'
+          }`}>
+            {profile.is_online ? 'En ligne' : 'Hors ligne'}
+          </span>
+        </div>
 
         {/* Swipe indicators */}
         <motion.div
@@ -199,36 +199,6 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Action buttons - positioned outside the card */}
-      <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          className="w-14 h-14 rounded-full border-2 border-red-500 bg-background backdrop-blur-sm hover:bg-red-500/20 shadow-lg"
-          onClick={() => handleButtonSwipe('left')}
-        >
-          <X className="w-7 h-7 text-red-500" />
-        </Button>
-
-        <Button
-          variant="outline"
-          size="icon"
-          className="w-12 h-12 rounded-full border-2 border-purple-500 bg-background backdrop-blur-sm hover:bg-purple-500/20 shadow-lg"
-          onClick={() => handleButtonSwipe('up')}
-        >
-          <EyeOff className="w-5 h-5 text-purple-500" />
-        </Button>
-
-        <Button
-          variant="outline"
-          size="icon"
-          className="w-14 h-14 rounded-full border-2 border-green-500 bg-background backdrop-blur-sm hover:bg-green-500/20 shadow-lg"
-          onClick={() => handleButtonSwipe('right')}
-        >
-          <Heart className="w-7 h-7 text-green-500" />
-        </Button>
       </div>
     </motion.div>
   );

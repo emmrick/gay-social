@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Sparkles, MessageCircle, Loader2, RefreshCw, Info } from 'lucide-react';
+import { Heart, Sparkles, MessageCircle, Loader2, RefreshCw, Info, X, EyeOff } from 'lucide-react';
 import { useSwipeActions, SWIPE_CREDIT_COSTS } from '@/hooks/useSwipeActions';
 import SwipeCard from './SwipeCard';
 import { Button } from '@/components/ui/button';
@@ -85,21 +85,9 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
               </Button>
             </div>
           ) : (
-            <div className="flex-1 relative overflow-visible min-h-[550px] pb-24">
-              {/* Cards stack */}
-              <AnimatePresence mode="popLayout">
-                {remainingProfiles.slice(0, 3).map((profile, index) => (
-                  <SwipeCard
-                    key={profile.id}
-                    profile={profile}
-                    onSwipe={handleSwipe}
-                    isTop={index === 0}
-                  />
-                ))}
-              </AnimatePresence>
-
-              {/* Credits info */}
-              <div className="absolute top-4 left-4 right-4 flex justify-center z-10">
+            <div className="flex-1 relative overflow-visible min-h-[450px]">
+              {/* Credits info - above card */}
+              <div className="flex justify-center mb-2 z-10">
                 <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 shadow-lg">
                   <div className="flex items-center gap-1.5 text-xs">
                     <Heart className="w-3.5 h-3.5 text-green-500" />
@@ -116,6 +104,50 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                     <span>{creditCosts.hide} cr</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Cards stack */}
+              <div className="relative h-[400px]">
+                <AnimatePresence mode="popLayout">
+                  {remainingProfiles.slice(0, 3).map((profile, index) => (
+                    <SwipeCard
+                      key={profile.id}
+                      profile={profile}
+                      onSwipe={handleSwipe}
+                      isTop={index === 0}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex justify-center gap-4 mt-4">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-14 h-14 rounded-full border-2 border-red-500 bg-background hover:bg-red-500/20 shadow-lg"
+                  onClick={() => remainingProfiles[0] && handleSwipe('left')}
+                >
+                  <X className="w-7 h-7 text-red-500" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-12 h-12 rounded-full border-2 border-purple-500 bg-background hover:bg-purple-500/20 shadow-lg"
+                  onClick={() => remainingProfiles[0] && handleSwipe('up')}
+                >
+                  <EyeOff className="w-5 h-5 text-purple-500" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-14 h-14 rounded-full border-2 border-green-500 bg-background hover:bg-green-500/20 shadow-lg"
+                  onClick={() => remainingProfiles[0] && handleSwipe('right')}
+                >
+                  <Heart className="w-7 h-7 text-green-500" />
+                </Button>
               </div>
             </div>
           )}

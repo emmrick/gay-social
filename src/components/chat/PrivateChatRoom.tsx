@@ -114,7 +114,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   return (
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
       {/* Header - fixed at top with safe area */}
-      <div className="flex-shrink-0 flex items-center gap-3 p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-border bg-card/80 backdrop-blur-lg z-20">
+      <header 
+        className="flex-shrink-0 flex items-center gap-3 p-4 border-b border-border bg-card/95 backdrop-blur-lg z-20"
+        style={{
+          paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))',
+        }}
+      >
         <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0">
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -205,7 +210,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+      </header>
 
       {/* Report Dialog */}
       {otherUserProfile && (

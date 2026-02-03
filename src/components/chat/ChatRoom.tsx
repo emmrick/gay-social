@@ -344,7 +344,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
         <Button
           variant="secondary"
           size="icon"
-          className="absolute bottom-24 right-4 rounded-full shadow-lg z-10"
+          className="fixed bottom-24 right-4 rounded-full shadow-lg z-10 bg-primary text-primary-foreground hover:bg-primary/90"
           onClick={scrollToBottom}
         >
           <ChevronDown className="w-5 h-5" />

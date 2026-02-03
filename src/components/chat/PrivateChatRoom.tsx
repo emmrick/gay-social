@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, CheckCheck } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, CheckCheck, ChevronDown } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -47,6 +47,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showShareAlbum, setShowShareAlbum] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
 
   // Mobile back navigation
@@ -97,6 +98,22 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
         scrollRef.current.scrollIntoView({ behavior: 'smooth' });
       }
     }, 100);
+  }, []);
+
+  // Handle scroll to show/hide scroll button
+  const handleScroll = useCallback(() => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollButton(!isNearBottom);
+    }
+  }, []);
+
+  // Scroll to bottom button handler
+  const scrollToBottom = useCallback(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, []);
 
   const handleSendMessage = async (content: string) => {
@@ -255,7 +272,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
       />
 
       {/* Messages - scrollable middle section */}
-      <div className="flex-1 overflow-y-auto overscroll-contain p-4" ref={messagesContainerRef}>
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4 relative" ref={messagesContainerRef} onScroll={handleScroll}>
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -394,6 +411,18 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
             
             <div ref={scrollRef} />
           </div>
+        )}
+
+        {/* Scroll to bottom button */}
+        {showScrollButton && (
+          <Button
+            variant="secondary"
+            size="icon"
+            className="fixed bottom-24 right-4 rounded-full shadow-lg z-10 bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={scrollToBottom}
+          >
+            <ChevronDown className="w-5 h-5" />
+          </Button>
         )}
       </div>
 

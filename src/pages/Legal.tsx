@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Shield, AlertTriangle, FileText, Lock, Users, CreditCard, Ban, Scale, Mail, Download } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, Shield, AlertTriangle, FileText, Lock, Users, CreditCard, Ban, Scale, Mail, Download, Search, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Accordion,
   AccordionContent,
@@ -12,11 +13,35 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import DataExportDialog from '@/components/profile/DataExportDialog';
 
+// Define searchable sections
+const LEGAL_SECTIONS = [
+  { id: 'cgu', title: 'Conditions Générales d\'Utilisation (CGU)', keywords: ['cgu', 'conditions', 'utilisation', 'accès', 'inscription', 'vérification', 'identité', 'responsabilité', 'sanctions'] },
+  { id: 'privacy', title: 'Politique de confidentialité (RGPD)', keywords: ['rgpd', 'confidentialité', 'données', 'protection', 'cookies', 'droits', 'accès', 'rectification', 'effacement', 'portabilité', 'télécharger'] },
+  { id: 'anti-prostitution', title: 'Clause anti-prostitution', keywords: ['prostitution', 'escorting', 'paiement', 'argent', 'interdit', 'banni'] },
+  { id: 'cgv', title: 'Système de crédits & CGV', keywords: ['crédits', 'paiement', 'achat', 'prix', 'tarif', 'remboursement', 'cgv', 'premium', 'monétisation'] },
+  { id: 'rules', title: 'Règlement du site', keywords: ['règlement', 'règles', 'interdit', 'comportement', 'sanctions', 'signalement', 'harcèlement', 'spam'] },
+  { id: 'protection', title: 'Protection des utilisateurs', keywords: ['protection', 'sécurité', 'chiffrement', 'modération', 'capture', 'écran', 'éphémère'] },
+];
+
 const Legal = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter sections based on search
+  const filteredSections = useMemo(() => {
+    if (!searchQuery.trim()) return LEGAL_SECTIONS.map(s => s.id);
+    
+    const query = searchQuery.toLowerCase();
+    return LEGAL_SECTIONS
+      .filter(section => 
+        section.title.toLowerCase().includes(query) ||
+        section.keywords.some(keyword => keyword.includes(query))
+      )
+      .map(s => s.id);
+  }, [searchQuery]);
 
   // Auto-open section based on hash
   useEffect(() => {
@@ -76,9 +101,54 @@ const Legal = () => {
           </p>
         </div>
 
-        <Accordion type="multiple" defaultValue={[]} className="space-y-4">
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Rechercher dans la FAQ (ex: crédits, RGPD, inscription...)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 pr-12 h-12 text-base rounded-xl bg-card border-border"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+                onClick={() => setSearchQuery('')}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="text-sm text-muted-foreground mt-2">
+              {filteredSections.length} résultat{filteredSections.length > 1 ? 's' : ''} trouvé{filteredSections.length > 1 ? 's' : ''}
+            </p>
+          )}
+        </div>
+
+        {/* No results message */}
+        {searchQuery && filteredSections.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-12"
+          >
+            <Search className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-lg font-medium">Aucun résultat trouvé</p>
+            <p className="text-muted-foreground text-sm mt-1">
+              Essayez avec d'autres mots-clés
+            </p>
+          </motion.div>
+        )}
+
+        <Accordion type="multiple" defaultValue={searchQuery ? filteredSections : []} className="space-y-4">
           
           {/* CGU Section */}
+          {filteredSections.includes('cgu') && (
           <AccordionItem id="cgu" value="cgu" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
@@ -137,8 +207,10 @@ const Legal = () => {
               </div>
             </AccordionContent>
           </AccordionItem>
+          )}
 
           {/* Privacy Policy Section */}
+          {filteredSections.includes('privacy') && (
           <AccordionItem id="privacy" value="privacy" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
@@ -223,8 +295,10 @@ const Legal = () => {
               )}
             </AccordionContent>
           </AccordionItem>
+          )}
 
           {/* Anti-Prostitution Clause */}
+          {filteredSections.includes('anti-prostitution') && (
           <AccordionItem value="anti-prostitution" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
@@ -270,8 +344,10 @@ const Legal = () => {
               </div>
             </AccordionContent>
           </AccordionItem>
+          )}
 
           {/* Credits & Monetization */}
+          {filteredSections.includes('cgv') && (
           <AccordionItem id="cgv" value="cgv" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
@@ -349,8 +425,10 @@ const Legal = () => {
               </div>
             </AccordionContent>
           </AccordionItem>
+          )}
 
           {/* Site Rules */}
+          {filteredSections.includes('rules') && (
           <AccordionItem value="rules" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
@@ -432,8 +510,10 @@ const Legal = () => {
               </div>
             </AccordionContent>
           </AccordionItem>
+          )}
 
           {/* User Protection */}
+          {filteredSections.includes('protection') && (
           <AccordionItem value="protection" className="glass-card rounded-2xl px-6 border-border bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
@@ -483,6 +563,7 @@ const Legal = () => {
               </div>
             </AccordionContent>
           </AccordionItem>
+          )}
         </Accordion>
 
         {/* Footer */}

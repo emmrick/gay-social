@@ -75,8 +75,9 @@ export const useEphemeralMediaUpload = () => {
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
+        // Upload to PRIVATE ephemeral-media bucket (not the public media bucket)
         const { error: uploadError } = await supabase.storage
-          .from('media')
+          .from('ephemeral-media')
           .upload(filePath, file, {
             cacheControl: '3600',
             upsert: false,
@@ -85,9 +86,9 @@ export const useEphemeralMediaUpload = () => {
         if (uploadError) throw uploadError;
         setProgress(50);
 
-        // 2. Get signed URL (private bucket)
+        // 2. Get signed URL (private bucket ensures access control)
         const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-          .from('media')
+          .from('ephemeral-media')
           .createSignedUrl(filePath, 3600); // 1 hour expiry
 
         if (signedUrlError) throw signedUrlError;

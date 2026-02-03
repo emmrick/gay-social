@@ -27,9 +27,9 @@ export const useEphemeralMedia = (messageId: string | null) => {
       if (error) throw error;
       if (!data) return null;
 
-      // Get signed URL for the media
+      // Get signed URL for the media from the private ephemeral-media bucket
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-        .from('media')
+        .from('ephemeral-media')
         .createSignedUrl(data.media_url, 3600);
 
       if (signedUrlError) {

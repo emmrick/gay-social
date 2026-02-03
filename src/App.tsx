@@ -93,11 +93,11 @@ const AppContent = () => {
                     <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                   </Routes>
                 </Suspense>
+                <InstallPWAPrompt />
+                <PushNotificationBanner />
+                <LowCreditsAlert />
+                <AgeConfirmationModal />
               </BrowserRouter>
-              <InstallPWAPrompt />
-              <PushNotificationBanner />
-              <LowCreditsAlert />
-              <AgeConfirmationModal />
             </TooltipProvider>
           </VerificationGuard>
         </BlockedUserGuard>

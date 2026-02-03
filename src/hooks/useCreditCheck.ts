@@ -22,6 +22,10 @@ export const useCreditCheck = () => {
     profile_view: 'Voir un profil',
     nearby_unlock_30: 'Débloquer 30 profils',
     nearby_unlock_130: 'Débloquer 130 profils',
+    swipe_like: 'Aimer un profil',
+    swipe_dislike: 'Passer un profil',
+    swipe_hide: 'Masquer définitivement',
+    swipe_start_conversation: 'Démarrer une conversation',
   };
 
   /**

@@ -17,6 +17,11 @@ export const CREDIT_COSTS = {
   profile_view: 0.1,
   nearby_unlock_30: 5.0,
   nearby_unlock_130: 10.0,
+  // Swipe costs
+  swipe_like: 0.5,
+  swipe_dislike: 0.2,
+  swipe_hide: 0.1,
+  swipe_start_conversation: 0.2,
 } as const;
 
 // Credit rewards
@@ -348,6 +353,10 @@ export const useCredits = () => {
       profile_view: 'Voir un profil',
       nearby_unlock_30: 'Débloquer 30 profils',
       nearby_unlock_130: 'Débloquer 130 profils',
+      swipe_like: 'Aimer un profil',
+      swipe_dislike: 'Passer un profil',
+      swipe_hide: 'Masquer définitivement',
+      swipe_start_conversation: 'Démarrer une conversation',
     };
     return {
       hasEnough: hasEnoughCredits(cost),

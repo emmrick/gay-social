@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
-type AppView = 'landing' | 'home' | 'groups' | 'messages' | 'premium' | 'profile' | 'chat' | 'private';
-type NavTab = 'home' | 'groups' | 'messages' | 'premium' | 'profile';
+type AppView = 'landing' | 'home' | 'swipe' | 'groups' | 'messages' | 'premium' | 'profile' | 'chat' | 'private';
+type NavTab = 'home' | 'swipe' | 'groups' | 'messages' | 'premium' | 'profile';
 
 interface PersistedNavState {
   currentView: AppView;

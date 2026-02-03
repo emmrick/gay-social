@@ -8,6 +8,7 @@ import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import ProfileView from '@/components/profile/ProfileView';
 import PremiumPage from '@/components/premium/PremiumPage';
+import SwipePage from '@/components/swipe/SwipePage';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
 import MemberSearch from '@/components/chat/MemberSearch';
 import JoinedGroupsList from '@/components/chat/JoinedGroupsList';
@@ -35,10 +36,10 @@ import { Loader2, Plus, Archive, User } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
-type NavTab = 'home' | 'groups' | 'messages' | 'premium' | 'profile';
+type NavTab = 'home' | 'swipe' | 'groups' | 'messages' | 'premium' | 'profile';
 
 // Tab order for determining animation direction
-const tabOrder: NavTab[] = ['home', 'groups', 'messages', 'premium', 'profile'];
+const tabOrder: NavTab[] = ['home', 'swipe', 'groups', 'messages', 'premium', 'profile'];
 
 // Animation variants for page transitions
 const pageVariants = {
@@ -200,6 +201,8 @@ const Index = () => {
       setCurrentView('groups');
     } else if (tab === 'premium') {
       setCurrentView('premium');
+    } else if (tab === 'swipe') {
+      setCurrentView('swipe');
     } else {
       setCurrentView('home');
     }
@@ -373,6 +376,52 @@ const Index = () => {
                 onStartPrivateChat={handleStartPrivateChat}
               />
             </ScrollArea>
+          </motion.div>
+        ) : null;
+
+      case 'swipe':
+        return user ? (
+          <motion.div
+            key="swipe"
+            custom={direction}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
+            className="flex-1 flex flex-col min-h-0"
+          >
+            {/* Header */}
+            <div 
+              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
+              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
+            >
+              <div className="px-5 pb-4 flex items-center justify-between">
+                <div>
+                  <motion.h2 
+                    className="font-display text-2xl font-bold text-foreground mb-0.5"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    Swipe
+                  </motion.h2>
+                  <motion.p 
+                    className="text-sm text-muted-foreground"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.15 }}
+                  >
+                    Découvre des profils
+                  </motion.p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
+                  <NotificationsDropdown />
+                </div>
+              </div>
+            </div>
+            <SwipePage onStartChat={handleStartPrivateChat} />
           </motion.div>
         ) : null;
 

@@ -20,7 +20,8 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Bell, Moon, Shield, HelpCircle, MessageSquare, 
   Volume2, VolumeX, Eye, EyeOff, Palette, Sparkles, ChevronRight,
-  Globe, Lock, Check, BellRing, BellOff, Settings2, User, Camera, Headphones
+  Globe, Lock, Check, BellRing, BellOff, Settings2, User, Camera, Headphones,
+  Coins, Gift, CreditCard, BadgeCheck, Users, Flag
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -360,10 +361,40 @@ const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDi
                 <Accordion type="single" collapsible className="space-y-2">
                   {[
                     { 
+                      icon: <Coins className="w-4 h-4" />,
+                      q: "Comment fonctionnent les crédits ?", 
+                      a: "Les crédits sont utilisés pour chaque action : envoyer un message (0.1), partager un média (0.2-0.5), consulter un profil (0.1), etc. Tu peux réclamer 5 crédits gratuits chaque jour !",
+                      color: "text-amber-500 bg-amber-500/10"
+                    },
+                    { 
+                      icon: <Gift className="w-4 h-4" />,
+                      q: "Comment obtenir des crédits gratuits ?", 
+                      a: "Tu reçois 15 crédits à l'inscription, 30 après la vérification d'identité, 5 crédits quotidiens (max 7j/mois), et 10 crédits pour chaque parrainage réussi !",
+                      color: "text-emerald-500 bg-emerald-500/10"
+                    },
+                    { 
+                      icon: <CreditCard className="w-4 h-4" />,
+                      q: "Comment acheter des crédits ?", 
+                      a: "Va dans l'onglet Crédits et clique sur \"Acheter des crédits\". 100 crédits coûtent 5,99 €. Pas d'abonnement, tu paies uniquement ce dont tu as besoin.",
+                      color: "text-blue-500 bg-blue-500/10"
+                    },
+                    { 
+                      icon: <BadgeCheck className="w-4 h-4" />,
+                      q: "Pourquoi vérifier mon identité ?", 
+                      a: "La vérification garantit un espace sûr réservé aux adultes. Elle te donne aussi 30 crédits bonus et le badge vérifié sur ton profil !",
+                      color: "text-cyan-500 bg-cyan-500/10"
+                    },
+                    { 
+                      icon: <Shield className="w-4 h-4" />,
+                      q: "La vérification est-elle sécurisée ?", 
+                      a: "Tes documents sont chiffrés et supprimés automatiquement après validation. Seuls nos modérateurs y ont accès temporairement pour la vérification.",
+                      color: "text-indigo-500 bg-indigo-500/10"
+                    },
+                    { 
                       icon: <User className="w-4 h-4" />,
                       q: "Comment modifier mon profil ?", 
                       a: "Va dans l'onglet Profil et clique sur l'icône des paramètres en haut à droite, puis sélectionne \"Modifier le profil\".",
-                      color: "text-blue-500 bg-blue-500/10"
+                      color: "text-violet-500 bg-violet-500/10"
                     },
                     { 
                       icon: <Camera className="w-4 h-4" />,
@@ -378,16 +409,16 @@ const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDi
                       color: "text-green-500 bg-green-500/10"
                     },
                     { 
-                      icon: <Shield className="w-4 h-4" />,
+                      icon: <Users className="w-4 h-4" />,
+                      q: "Comment parrainer un ami ?", 
+                      a: "Va dans l'onglet Crédits et partage ton code de parrainage. Vous recevrez tous les deux 10 crédits quand ton filleul aura vérifié son identité !",
+                      color: "text-pink-500 bg-pink-500/10"
+                    },
+                    { 
+                      icon: <Flag className="w-4 h-4" />,
                       q: "Comment signaler un utilisateur ?", 
                       a: "Dans une conversation ou sur un profil, utilise l'icône de signalement (drapeau) pour nous alerter d'un comportement inapproprié.",
                       color: "text-red-500 bg-red-500/10"
-                    },
-                    { 
-                      icon: <Bell className="w-4 h-4" />,
-                      q: "Comment gérer mes notifications ?", 
-                      a: "Va dans Paramètres > Notifications pour personnaliser les alertes que tu souhaites recevoir.",
-                      color: "text-amber-500 bg-amber-500/10"
                     },
                   ].map((faq, i) => (
                     <motion.div

@@ -65,7 +65,15 @@ Deno.serve(async (req) => {
         .eq("user_id", share.shared_by_user_id)
         .single();
 
+      // Get recipient username
+      const { data: recipientProfile } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("user_id", share.shared_with_user_id)
+        .single();
+
       const ownerName = ownerProfile?.username || "Un utilisateur";
+      const recipientName = recipientProfile?.username || "Votre correspondant";
 
       // Notify recipient that access has expired
       notifications.push({
@@ -74,6 +82,15 @@ Deno.serve(async (req) => {
         title: "⏰ Accès album expiré",
         message: `L'accès à l'album "${albumName}" partagé par ${ownerName} a expiré.`,
         action_url: "/",
+      });
+
+      // Notify owner that the share has ended
+      notifications.push({
+        user_id: share.shared_by_user_id,
+        type: "album_share_ended",
+        title: "📁 Partage d'album terminé",
+        message: `Le partage de votre album "${albumName}" est terminé. ${recipientName} ne peut plus consulter l'album.`,
+        action_url: "/?tab=profile",
       });
 
       shareIdsToDeactivate.push(share.id);

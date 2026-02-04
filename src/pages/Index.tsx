@@ -740,24 +740,24 @@ const Index = () => {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation Bar with fade animation */}
-      <AnimatePresence>
-        {showBottomNav && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          >
-            <BottomNavBar
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-              unreadCount={getTotalUnreadCount()}
-              isPremium={isPremium}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Bottom Navigation Bar - use CSS visibility instead of AnimatePresence to prevent flicker */}
+      {user && currentView !== 'landing' && (
+        <div
+          className={cn(
+            "transition-all duration-200",
+            showBottomNav 
+              ? "opacity-100 translate-y-0 pointer-events-auto" 
+              : "opacity-0 translate-y-4 pointer-events-none"
+          )}
+        >
+          <BottomNavBar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            unreadCount={getTotalUnreadCount()}
+            isPremium={isPremium}
+          />
+        </div>
+      )}
 
       {/* Identity Verification Dialog */}
       {showVerificationDialog && (

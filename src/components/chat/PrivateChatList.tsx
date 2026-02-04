@@ -227,8 +227,8 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                 )}>
                   {conv.lastMessage
                     ? conv.lastMessage.message_type === 'text'
-                      ? (conv.lastMessage.content && conv.lastMessage.content.length > 25
-                          ? conv.lastMessage.content.substring(0, 25) + '...'
+                      ? (conv.lastMessage.content && conv.lastMessage.content.length > 35
+                          ? conv.lastMessage.content.substring(0, 35) + '...'
                           : conv.lastMessage.content)
                       : conv.lastMessage.message_type === 'image'
                       ? '📷 Photo'
@@ -236,8 +236,8 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                       ? '🎥 Vidéo'
                       : conv.lastMessage.message_type === 'album_share'
                       ? '📁 Album partagé'
-                      : (conv.lastMessage.content && conv.lastMessage.content.length > 25
-                          ? conv.lastMessage.content.substring(0, 25) + '...'
+                      : (conv.lastMessage.content && conv.lastMessage.content.length > 35
+                          ? conv.lastMessage.content.substring(0, 35) + '...'
                           : conv.lastMessage.content)
                     : 'Nouvelle conversation'}
                 </p>

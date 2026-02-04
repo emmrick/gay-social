@@ -19,7 +19,9 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCw,
-  Maximize2
+  Maximize2,
+  Move,
+  RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -52,6 +54,11 @@ interface ImageViewerState {
   title: string;
   zoom: number;
   rotation: number;
+  panX: number;
+  panY: number;
+  isDragging: boolean;
+  startX: number;
+  startY: number;
 }
 
 const IdentityVerificationPanel = () => {
@@ -73,6 +80,11 @@ const IdentityVerificationPanel = () => {
     title: '',
     zoom: 1,
     rotation: 0,
+    panX: 0,
+    panY: 0,
+    isDragging: false,
+    startX: 0,
+    startY: 0,
   });
   
   const recordEarning = useRecordEarning();
@@ -88,6 +100,11 @@ const IdentityVerificationPanel = () => {
       title,
       zoom: 1,
       rotation: 0,
+      panX: 0,
+      panY: 0,
+      isDragging: false,
+      startX: 0,
+      startY: 0,
     });
   };
 
@@ -98,6 +115,11 @@ const IdentityVerificationPanel = () => {
       title: '',
       zoom: 1,
       rotation: 0,
+      panX: 0,
+      panY: 0,
+      isDragging: false,
+      startX: 0,
+      startY: 0,
     });
   };
 
@@ -106,11 +128,91 @@ const IdentityVerificationPanel = () => {
   };
 
   const handleZoomOut = () => {
-    setImageViewer(prev => ({ ...prev, zoom: Math.max(prev.zoom - 0.5, 0.5) }));
+    setImageViewer(prev => {
+      const newZoom = Math.max(prev.zoom - 0.5, 0.5);
+      // Reset pan when zooming out to minimum
+      if (newZoom <= 1) {
+        return { ...prev, zoom: newZoom, panX: 0, panY: 0 };
+      }
+      return { ...prev, zoom: newZoom };
+    });
   };
 
   const handleRotate = () => {
-    setImageViewer(prev => ({ ...prev, rotation: (prev.rotation + 90) % 360 }));
+    setImageViewer(prev => ({ ...prev, rotation: (prev.rotation + 90) % 360, panX: 0, panY: 0 }));
+  };
+
+  const handleResetView = () => {
+    setImageViewer(prev => ({ ...prev, zoom: 1, rotation: 0, panX: 0, panY: 0 }));
+  };
+
+  // Pan handlers for dragging the image
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (imageViewer.zoom > 1) {
+      e.preventDefault();
+      setImageViewer(prev => ({
+        ...prev,
+        isDragging: true,
+        startX: e.clientX - prev.panX,
+        startY: e.clientY - prev.panY,
+      }));
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (imageViewer.isDragging && imageViewer.zoom > 1) {
+      e.preventDefault();
+      setImageViewer(prev => ({
+        ...prev,
+        panX: e.clientX - prev.startX,
+        panY: e.clientY - prev.startY,
+      }));
+    }
+  };
+
+  const handleMouseUp = () => {
+    setImageViewer(prev => ({ ...prev, isDragging: false }));
+  };
+
+  // Touch handlers for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (imageViewer.zoom > 1 && e.touches.length === 1) {
+      const touch = e.touches[0];
+      setImageViewer(prev => ({
+        ...prev,
+        isDragging: true,
+        startX: touch.clientX - prev.panX,
+        startY: touch.clientY - prev.panY,
+      }));
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (imageViewer.isDragging && imageViewer.zoom > 1 && e.touches.length === 1) {
+      const touch = e.touches[0];
+      setImageViewer(prev => ({
+        ...prev,
+        panX: touch.clientX - prev.startX,
+        panY: touch.clientY - prev.startY,
+      }));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setImageViewer(prev => ({ ...prev, isDragging: false }));
+  };
+
+  // Wheel zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.25 : 0.25;
+    setImageViewer(prev => {
+      const newZoom = Math.max(0.5, Math.min(4, prev.zoom + delta));
+      if (newZoom <= 1) {
+        return { ...prev, zoom: newZoom, panX: 0, panY: 0 };
+      }
+      return { ...prev, zoom: newZoom };
+    });
   };
 
   // Screenshot detection for admin
@@ -592,23 +694,45 @@ const IdentityVerificationPanel = () => {
               </Button>
             </div>
 
-            {/* Image */}
+            {/* Image Container with Pan/Zoom */}
             <div 
-              className="flex-1 flex items-center justify-center overflow-auto p-8 pt-16 pb-20"
+              className={`flex-1 flex items-center justify-center overflow-hidden p-8 pt-16 pb-20 ${
+                imageViewer.zoom > 1 ? 'cursor-grab' : 'cursor-default'
+              } ${imageViewer.isDragging ? 'cursor-grabbing' : ''}`}
               style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onWheel={handleWheel}
             >
               {imageViewer.imageUrl && (
                 <img
                   src={imageViewer.imageUrl}
                   alt={imageViewer.title}
-                  className="max-w-none transition-transform duration-200 pointer-events-none select-none"
+                  className="max-w-full max-h-full object-contain select-none"
                   style={{
-                    transform: `scale(${imageViewer.zoom}) rotate(${imageViewer.rotation}deg)`,
+                    transform: `translate(${imageViewer.panX}px, ${imageViewer.panY}px) scale(${imageViewer.zoom}) rotate(${imageViewer.rotation}deg)`,
+                    transition: imageViewer.isDragging ? 'none' : 'transform 0.2s ease-out',
+                    pointerEvents: 'none',
                   }}
                   draggable={false}
                 />
               )}
             </div>
+
+            {/* Instructions for pan */}
+            {imageViewer.zoom > 1 && (
+              <div className="absolute top-16 left-0 right-0 flex justify-center pointer-events-none">
+                <div className="bg-white/20 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-sm">
+                  <Move className="w-3 h-3" />
+                  Glissez pour déplacer l'image
+                </div>
+              </div>
+            )}
 
             {/* Controls */}
             <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center gap-2 p-4 bg-gradient-to-t from-black/80 to-transparent">
@@ -618,6 +742,7 @@ const IdentityVerificationPanel = () => {
                 onClick={handleZoomOut}
                 disabled={imageViewer.zoom <= 0.5}
                 className="bg-white/20 hover:bg-white/30 text-white border-none"
+                title="Dézoomer"
               >
                 <ZoomOut className="w-5 h-5" />
               </Button>
@@ -627,6 +752,7 @@ const IdentityVerificationPanel = () => {
                 onClick={handleZoomIn}
                 disabled={imageViewer.zoom >= 4}
                 className="bg-white/20 hover:bg-white/30 text-white border-none"
+                title="Zoomer"
               >
                 <ZoomIn className="w-5 h-5" />
               </Button>
@@ -635,8 +761,18 @@ const IdentityVerificationPanel = () => {
                 size="icon"
                 onClick={handleRotate}
                 className="bg-white/20 hover:bg-white/30 text-white border-none"
+                title="Rotation 90°"
               >
                 <RotateCw className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={handleResetView}
+                className="bg-white/20 hover:bg-white/30 text-white border-none"
+                title="Réinitialiser la vue"
+              >
+                <RotateCcw className="w-5 h-5" />
               </Button>
             </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, CheckCheck, ChevronDown } from 'lucide-react';
@@ -75,72 +75,60 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   }, [otherUserId]);
 
-  // Auto-scroll to bottom on initial load or new messages
-  useEffect(() => {
-    // Don't scroll while loading
-    if (isLoading) return;
-    
-    const scrollToBottom = (instant: boolean = false) => {
-      // Prefer scrolling the container directly (more reliable on mobile)
-      const container = messagesContainerRef.current;
-      if (container) {
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: instant ? 'auto' : 'smooth',
-        });
-        return;
+  // Helper to scroll container to absolute bottom
+  const scrollToBottom = useCallback((instant: boolean = false) => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+      if (!instant) {
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
       }
+    }
+  }, []);
 
-      // Fallback
-      if (scrollRef.current) {
-        scrollRef.current.scrollIntoView({ behavior: instant ? 'auto' : 'smooth' });
-      }
-    };
+  // Use useLayoutEffect for initial scroll - fires synchronously after DOM mutations
+  useLayoutEffect(() => {
+    if (isLoading || messages.length === 0) return;
     
-    // On initial load, scroll instantly without animation
-    if (isInitialLoad.current && messages.length > 0) {
-      // Use requestAnimationFrame to ensure DOM is ready
-      requestAnimationFrame(() => {
-        scrollToBottom(true);
-        // Additional delayed scroll to handle media loading
-        setTimeout(() => {
-          scrollToBottom(true);
-          isInitialLoad.current = false;
-          previousMessagesLength.current = messages.length;
-        }, 200);
-      });
-    } else if (!isInitialLoad.current && messages.length > previousMessagesLength.current) {
-      // New message received - smooth scroll
+    if (isInitialLoad.current) {
+      // Immediate scroll (no animation)
+      scrollToBottom(true);
+      
+      // Multiple delayed scrolls to handle lazy-loaded images/media
+      const timers = [50, 150, 300, 500].map((delay) =>
+        setTimeout(() => scrollToBottom(true), delay)
+      );
+
+      // Mark as loaded after last scroll
+      setTimeout(() => {
+        isInitialLoad.current = false;
+        previousMessagesLength.current = messages.length;
+      }, 550);
+
+      return () => timers.forEach(clearTimeout);
+    }
+  }, [messages, isLoading, scrollToBottom]);
+
+  // Smooth scroll for new incoming messages (after initial load)
+  useEffect(() => {
+    if (isLoading || isInitialLoad.current) return;
+
+    if (messages.length > previousMessagesLength.current) {
       scrollToBottom(false);
       previousMessagesLength.current = messages.length;
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, scrollToBottom]);
 
   // Auto-scroll when the other user starts typing
   useEffect(() => {
     if (!isOtherTyping) return;
-
-    const container = messagesContainerRef.current;
-    if (container) {
-      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-      return;
-    }
-
-    if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-  }, [isOtherTyping]);
+    scrollToBottom(false);
+  }, [isOtherTyping, scrollToBottom]);
 
   // Scroll to bottom when input is focused (keyboard opens)
   const handleInputFocus = useCallback(() => {
-    setTimeout(() => {
-      const container = messagesContainerRef.current;
-      if (container) {
-        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-        return;
-      }
-
-      if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  }, []);
+    setTimeout(() => scrollToBottom(false), 100);
+  }, [scrollToBottom]);
 
   // Handle scroll to show/hide scroll button
   const handleScroll = useCallback(() => {
@@ -151,16 +139,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   }, []);
 
-  // Scroll to bottom button handler
-  const scrollToBottom = useCallback(() => {
-    const container = messagesContainerRef.current;
-    if (container) {
-      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-      return;
-    }
-
-    if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-  }, []);
+  // Scroll to bottom button handler (wraps scrollToBottom for onClick)
+  const handleScrollToBottomClick = useCallback(() => {
+    scrollToBottom(false);
+  }, [scrollToBottom]);
 
   const handleSendMessage = async (content: string) => {
     if (content.trim()) {
@@ -472,7 +454,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
             variant="secondary"
             size="icon"
             className="fixed bottom-24 right-4 rounded-full shadow-lg z-10 bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={scrollToBottom}
+            onClick={handleScrollToBottomClick}
           >
             <ChevronDown className="w-5 h-5" />
           </Button>

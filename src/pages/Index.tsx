@@ -28,6 +28,7 @@ import { useIdentityVerification } from '@/hooks/useIdentityVerification';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useRealtimeOnlineStatus } from '@/hooks/useRealtimeOnlineStatus';
 import { usePersistedNavigation } from '@/hooks/usePersistedNavigation';
+import { useNotificationRedirect } from '@/hooks/useNotificationRedirect';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -105,6 +106,9 @@ const Index = () => {
 
   // Subscribe to real-time online status changes globally
   useRealtimeOnlineStatus();
+
+  // Handle push notification redirects
+  useNotificationRedirect();
 
   // Handle deep link to open private chat from navigation state
   useEffect(() => {

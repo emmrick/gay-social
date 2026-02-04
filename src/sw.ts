@@ -115,25 +115,41 @@ self.addEventListener('notificationclick', function(event: NotificationEvent) {
     return;
   }
 
-  const urlToOpen = (event.notification.data as { url?: string })?.url || '/';
+  const targetPath = (event.notification.data as { url?: string })?.url || '/';
+  
+  // For SPA routing: encode the target path as a query parameter
+  // This ensures the app loads first, then navigates internally
+  const getNavigationUrl = (path: string) => {
+    if (path === '/' || path === '') {
+      return '/';
+    }
+    // Encode the path as a query param so the SPA can handle internal navigation
+    return `/?redirect=${encodeURIComponent(path)}`;
+  };
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then(function(clientList) {
         console.log('[SW] Found', clientList.length, 'windows');
-        // Check if there's already a window open
+        
+        // Check if there's already a window open with our app
         for (let i = 0; i < clientList.length; i++) {
           const client = clientList[i] as WindowClient;
           if (client.url.includes(self.location.origin) && 'focus' in client) {
-            console.log('[SW] Focusing existing window');
-            client.focus();
-            if (urlToOpen !== '/') {
-              client.navigate(urlToOpen);
-            }
-            return;
+            console.log('[SW] Focusing existing window and posting navigation message');
+            
+            // Post a message to the client to handle internal navigation
+            client.postMessage({
+              type: 'NOTIFICATION_CLICK',
+              url: targetPath
+            });
+            
+            return client.focus();
           }
         }
-        // Open new window if none exists
+        
+        // Open new window if none exists - use encoded URL for SPA routing
+        const urlToOpen = getNavigationUrl(targetPath);
         console.log('[SW] Opening new window:', urlToOpen);
         if (self.clients.openWindow) {
           return self.clients.openWindow(urlToOpen);

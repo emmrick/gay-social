@@ -81,8 +81,19 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     if (isLoading) return;
     
     const scrollToBottom = (instant: boolean = false) => {
+      // Prefer scrolling the container directly (more reliable on mobile)
+      const container = messagesContainerRef.current;
+      if (container) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: instant ? 'auto' : 'smooth',
+        });
+        return;
+      }
+
+      // Fallback
       if (scrollRef.current) {
-        scrollRef.current.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' });
+        scrollRef.current.scrollIntoView({ behavior: instant ? 'auto' : 'smooth' });
       }
     };
     
@@ -107,17 +118,27 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
   // Auto-scroll when the other user starts typing
   useEffect(() => {
-    if (isOtherTyping && scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (!isOtherTyping) return;
+
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+      return;
     }
+
+    if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: 'smooth' });
   }, [isOtherTyping]);
 
   // Scroll to bottom when input is focused (keyboard opens)
   const handleInputFocus = useCallback(() => {
     setTimeout(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+      const container = messagesContainerRef.current;
+      if (container) {
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        return;
       }
+
+      if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   }, []);
 
@@ -132,9 +153,13 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
   // Scroll to bottom button handler
   const scrollToBottom = useCallback(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+      return;
     }
+
+    if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
   const handleSendMessage = async (content: string) => {

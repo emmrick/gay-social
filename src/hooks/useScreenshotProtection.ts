@@ -2,17 +2,20 @@ import { useEffect, useCallback, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMobileScreenshotDetection } from './useMobileScreenshotDetection';
+import { enableScreenshotProtection, disableScreenshotProtection } from '@/plugins/ScreenshotBlocker';
 
 interface ScreenshotViolation {
   count: number;
   suspendedUntil: Date | null;
 }
 
-export const useScreenshotProtection = () => {
+export const useScreenshotProtection = (enableNativeBlock = false) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isBlocked, setIsBlocked] = useState(false);
   const blockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isProtectionActive, setIsProtectionActive] = useState(false);
 
   // Fetch violations from database
   const { data: dbViolation } = useQuery({
@@ -30,7 +33,7 @@ export const useScreenshotProtection = () => {
       return data;
     },
     enabled: !!user?.id,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000,
   });
 
   // Calculate suspension status
@@ -118,6 +121,39 @@ export const useScreenshotProtection = () => {
     }, 5000);
   }, [recordViolation]);
 
+  // Use advanced mobile screenshot detection
+  useMobileScreenshotDetection({
+    enabled: isProtectionActive,
+    onScreenshotDetected: () => {
+      console.log('[ScreenshotProtection] Mobile screenshot detected!');
+      handleViolation();
+    },
+  });
+
+  // Enable/disable native screenshot blocking (Capacitor)
+  const enableProtection = useCallback(async () => {
+    setIsProtectionActive(true);
+    if (enableNativeBlock) {
+      await enableScreenshotProtection();
+    }
+  }, [enableNativeBlock]);
+
+  const disableProtection = useCallback(async () => {
+    setIsProtectionActive(false);
+    if (enableNativeBlock) {
+      await disableScreenshotProtection();
+    }
+  }, [enableNativeBlock]);
+
+  // Cleanup native protection on unmount
+  useEffect(() => {
+    return () => {
+      if (isProtectionActive && enableNativeBlock) {
+        disableScreenshotProtection();
+      }
+    };
+  }, [isProtectionActive, enableNativeBlock]);
+
   // Detect screenshot attempts (keyboard shortcuts)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -132,16 +168,6 @@ export const useScreenshotProtection = () => {
         e.stopPropagation();
         handleViolation();
         return false;
-      }
-    };
-
-    // Detect visibility changes (user switching apps - potential screenshot on mobile)
-    const handleVisibilityChange = () => {
-      // Only trigger if document becomes hidden (user switching apps)
-      // This is especially important for mobile screenshot detection
-      if (document.hidden) {
-        // We don't auto-trigger violation here as it would be too aggressive
-        // The EphemeralMediaViewer handles this specifically when viewing sensitive content
       }
     };
 
@@ -160,12 +186,10 @@ export const useScreenshotProtection = () => {
     };
 
     window.addEventListener('keydown', handleKeyDown, true);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     document.addEventListener('contextmenu', handleContextMenu);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown, true);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       document.removeEventListener('contextmenu', handleContextMenu);
       if (blockTimeoutRef.current) {
         clearTimeout(blockTimeoutRef.current);
@@ -207,12 +231,15 @@ export const useScreenshotProtection = () => {
 
   return {
     isSuspended: isSuspended(),
-    isBlocked, // Immediate visual block on screenshot attempt
+    isBlocked,
+    isProtectionActive,
     violationCount: dbViolation?.violation_count || 0,
     suspendedUntil: dbViolation?.suspended_until ? new Date(dbViolation.suspended_until) : null,
     getSuspensionTimeLeft,
     preventContextMenu,
     preventDrag,
     handleViolation,
+    enableProtection,
+    disableProtection,
   };
 };

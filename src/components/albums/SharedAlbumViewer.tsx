@@ -249,22 +249,22 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
     preventContextMenu, 
     preventDrag,
     handleViolation,
-  } = useScreenshotProtection();
+    enableProtection,
+    disableProtection,
+  } = useScreenshotProtection(true); // Enable native blocking on Capacitor
 
-  // Mobile screenshot detection via visibility change
+  // Enable/disable protection based on viewer state
   useEffect(() => {
-    if (!isOpen) return;
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // User switched apps while viewing - potential screenshot on mobile
-        handleViolation();
-      }
+    if (isOpen) {
+      enableProtection();
+    } else {
+      disableProtection();
+    }
+    
+    return () => {
+      disableProtection();
     };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isOpen, handleViolation]);
+  }, [isOpen, enableProtection, disableProtection]);
 
   // Subscribe to album_shares changes in real-time
   useEffect(() => {

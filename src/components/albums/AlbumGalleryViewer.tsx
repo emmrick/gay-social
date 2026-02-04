@@ -49,7 +49,7 @@ const AlbumGalleryViewer = ({
   const [videoPlaying, setVideoPlaying] = useState<string | null>(null);
   const [zoomState, setZoomState] = useState<ZoomState>({ scale: 1, x: 0, y: 0 });
   
-  // Screenshot protection
+  // Screenshot protection with mobile detection
   const {
     isSuspended,
     isBlocked,
@@ -57,7 +57,9 @@ const AlbumGalleryViewer = ({
     preventContextMenu,
     preventDrag,
     handleViolation,
-  } = useScreenshotProtection();
+    enableProtection,
+    disableProtection,
+  } = useScreenshotProtection(true); // Enable native blocking on Capacitor
   
   // Touch/gesture refs
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -66,20 +68,18 @@ const AlbumGalleryViewer = ({
   const initialScaleRef = useRef<number>(1);
   const lastPanRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   
-  // Mobile screenshot detection via visibility change
+  // Enable/disable protection based on viewer state
   useEffect(() => {
-    if (!isOpen) return;
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // User switched apps while viewing - potential screenshot on mobile
-        handleViolation();
-      }
+    if (isOpen) {
+      enableProtection();
+    } else {
+      disableProtection();
+    }
+    
+    return () => {
+      disableProtection();
     };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isOpen, handleViolation]);
+  }, [isOpen, enableProtection, disableProtection]);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;

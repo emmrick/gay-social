@@ -40,11 +40,22 @@ const EphemeralMediaViewer = ({
     isBlocked, 
     preventContextMenu, 
     getSuspensionTimeLeft,
-    handleViolation 
-  } = useScreenshotProtection();
+    handleViolation,
+    enableProtection,
+    disableProtection,
+  } = useScreenshotProtection(true); // Enable native blocking on Capacitor
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasCalledOnViewed = useRef(false);
+
+  // Enable protection when viewing starts
+  useEffect(() => {
+    if (isViewing && isOpen) {
+      enableProtection();
+    } else {
+      disableProtection();
+    }
+  }, [isViewing, isOpen, enableProtection, disableProtection]);
 
   // Reset state when opening
   useEffect(() => {

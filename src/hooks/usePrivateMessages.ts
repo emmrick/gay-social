@@ -236,6 +236,10 @@ export const usePrivateMessages = (otherUserId: string | null) => {
           }
         );
 
+        // CRITICAL: Immediately invalidate conversations to update last message preview
+        // This ensures the preview updates instantly when leaving the conversation
+        queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
+
         // Send push notification to recipient
         if (otherUserId && user) {
           // Get sender's username

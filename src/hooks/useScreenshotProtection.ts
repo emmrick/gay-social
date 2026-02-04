@@ -135,25 +135,38 @@ export const useScreenshotProtection = () => {
       }
     };
 
-    // Detect when window loses focus (potential screenshot on mobile or screen recording)
-    const handleBlur = () => {
-      // Only trigger if content is currently being viewed
-      // This is a heuristic - not always a screenshot
+    // Detect visibility changes (user switching apps - potential screenshot on mobile)
+    const handleVisibilityChange = () => {
+      // Only trigger if document becomes hidden (user switching apps)
+      // This is especially important for mobile screenshot detection
+      if (document.hidden) {
+        // We don't auto-trigger violation here as it would be too aggressive
+        // The EphemeralMediaViewer handles this specifically when viewing sensitive content
+      }
     };
 
-    // Detect visibility changes (user switching apps - potential screenshot)
-    const handleVisibilityChange = () => {
-      // Could be combined with other signals for mobile detection
+    // Prevent right-click globally on protected content
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Only prevent on media elements or protected containers
+      if (
+        target.tagName === 'IMG' ||
+        target.tagName === 'VIDEO' ||
+        target.closest('[data-protected]')
+      ) {
+        e.preventDefault();
+        return false;
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown, true);
-    window.addEventListener('blur', handleBlur);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('contextmenu', handleContextMenu);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown, true);
-      window.removeEventListener('blur', handleBlur);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('contextmenu', handleContextMenu);
       if (blockTimeoutRef.current) {
         clearTimeout(blockTimeoutRef.current);
       }

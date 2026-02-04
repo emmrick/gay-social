@@ -2,9 +2,10 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useIdentityVerification } from '@/hooks/useIdentityVerification';
-import { Camera, Upload, Check, Loader2, AlertTriangle, Shield, Trash2, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Camera, Upload, Check, Loader2, AlertTriangle, Shield, Trash2, Clock, CheckCircle2, XCircle, Lightbulb, User, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import CaptureGuideOverlay from './CaptureGuideOverlay';
 
 interface IdentityVerificationDialogProps {
   open: boolean;
@@ -323,94 +324,200 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
     description: string,
     preview: string | null,
     onRetake: () => void
-  ) => (
-    <div className="space-y-4">
-      <div className="text-center">
-        <h3 className="font-display text-lg font-semibold mb-1">{title}</h3>
-        <p className="text-muted-foreground text-sm">{description}</p>
-      </div>
-
-      {isCameraActive ? (
-        <div className="relative aspect-[3/4] bg-black rounded-xl overflow-hidden flex items-center justify-center">
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            className="w-full h-full object-cover"
-          />
-          <canvas ref={canvasRef} className="hidden" />
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={stopCamera}
-              className="rounded-full bg-background/80"
-            >
-              <XCircle className="w-5 h-5" />
-            </Button>
-            <Button 
-              size="icon" 
-              onClick={capturePhoto}
-              className="rounded-full w-16 h-16 bg-white hover:bg-white/90"
-            >
-              <div className="w-12 h-12 rounded-full border-4 border-primary" />
-            </Button>
-          </div>
+  ) => {
+    const currentStepType = step as 'selfie' | 'id_front' | 'id_back';
+    const isSelfie = currentStepType === 'selfie';
+    
+    return (
+      <div className="space-y-4">
+        <div className="text-center">
+          <h3 className="font-display text-lg font-semibold mb-1">{title}</h3>
+          <p className="text-muted-foreground text-sm">{description}</p>
         </div>
-      ) : preview ? (
-        <div className="relative aspect-[4/3] bg-secondary rounded-xl overflow-hidden">
-          <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-          <div className="absolute top-2 right-2">
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              onClick={onRetake}
-              className="rounded-full"
-            >
-              Reprendre
-            </Button>
-          </div>
-          <div className="absolute bottom-2 left-2">
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/90 text-white text-xs">
-              <Check className="w-3 h-3" />
-              Photo capturée
+
+        {/* Tips before capture */}
+        {!isCameraActive && !preview && (
+          <div className={cn(
+            "rounded-xl p-4 border",
+            isSelfie 
+              ? "bg-primary/10 border-primary/20" 
+              : "bg-amber-500/10 border-amber-500/20"
+          )}>
+            <div className="flex items-start gap-3">
+              <Lightbulb className={cn(
+                "w-5 h-5 flex-shrink-0 mt-0.5",
+                isSelfie ? "text-primary" : "text-amber-500"
+              )} />
+              <div className="space-y-2">
+                <p className={cn(
+                  "text-sm font-medium",
+                  isSelfie ? "text-primary" : "text-amber-600 dark:text-amber-400"
+                )}>
+                  {isSelfie ? "Conseils pour le selfie" : "Conseils pour la pièce d'identité"}
+                </p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  {isSelfie ? (
+                    <>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        Tiens ton téléphone à bout de bras (~40cm)
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        Garde une expression neutre, regarde la caméra
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        Assure-toi d'avoir un bon éclairage sur le visage
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        Pose le document sur une surface plate et claire
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        Éclaire bien pour que le texte soit lisible
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        Évite les reflets, ombres et zones floues
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="aspect-[4/3] bg-secondary/50 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-4">
-          <Camera className="w-12 h-12 text-muted-foreground" />
-          <Button variant="outline" onClick={startCamera}>
-            <Camera className="w-4 h-4 mr-2" />
-            Prendre une photo
+        )}
+
+        {isCameraActive ? (
+          <div className="relative aspect-[3/4] bg-black rounded-xl overflow-hidden flex items-center justify-center">
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted
+              className={cn(
+                "w-full h-full object-cover",
+                isSelfie && "scale-x-[-1]" // Mirror for selfie
+              )}
+            />
+            <canvas ref={canvasRef} className="hidden" />
+            
+            {/* Capture guide overlay */}
+            <CaptureGuideOverlay type={currentStepType} isGoodDistance={true} />
+            
+            {/* Capture buttons */}
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 z-10">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={stopCamera}
+                className="rounded-full bg-background/80 hover:bg-background"
+              >
+                <XCircle className="w-5 h-5" />
+              </Button>
+              <Button 
+                size="icon" 
+                onClick={capturePhoto}
+                className="rounded-full w-16 h-16 bg-white hover:bg-white/90 shadow-lg"
+              >
+                <div className="w-12 h-12 rounded-full border-4 border-primary" />
+              </Button>
+            </div>
+          </div>
+        ) : preview ? (
+          <div className={cn(
+            "relative bg-secondary rounded-xl overflow-hidden",
+            isSelfie ? "aspect-[3/4]" : "aspect-[4/3]"
+          )}>
+            <img 
+              src={preview} 
+              alt="Preview" 
+              className={cn(
+                "w-full h-full object-cover",
+                isSelfie && "scale-x-[-1]" // Mirror for selfie preview
+              )} 
+            />
+            <div className="absolute top-2 right-2">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={onRetake}
+                className="rounded-full shadow-lg"
+              >
+                <Camera className="w-4 h-4 mr-1" />
+                Reprendre
+              </Button>
+            </div>
+            <div className="absolute bottom-2 left-2">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500 text-white text-xs font-medium shadow-lg">
+                <Check className="w-3.5 h-3.5" />
+                Photo capturée
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className={cn(
+            "bg-secondary/50 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-4",
+            isSelfie ? "aspect-[3/4]" : "aspect-[4/3]"
+          )}>
+            <div className={cn(
+              "w-20 h-20 rounded-full flex items-center justify-center",
+              isSelfie ? "bg-primary/20" : "bg-amber-500/20"
+            )}>
+              {isSelfie ? (
+                <User className="w-10 h-10 text-primary" />
+              ) : (
+                <CreditCard className="w-10 h-10 text-amber-500" />
+              )}
+            </div>
+            <div className="text-center px-4">
+              <p className="text-sm font-medium mb-1">
+                {isSelfie ? "Prends un selfie" : `Photo du ${currentStepType === 'id_front' ? 'RECTO' : 'VERSO'}`}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {isSelfie 
+                  ? "Ton visage doit être clairement visible" 
+                  : "Toutes les informations doivent être lisibles"
+                }
+              </p>
+            </div>
+            <Button variant="hero" onClick={startCamera} className="gap-2">
+              <Camera className="w-4 h-4" />
+              Ouvrir la caméra
+            </Button>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            className="flex-1"
+            onClick={() => {
+              stopCamera();
+              if (step === 'selfie') setStep('intro');
+              else if (step === 'id_front') setStep('selfie');
+              else if (step === 'id_back') setStep('id_front');
+            }}
+          >
+            Retour
+          </Button>
+          <Button 
+            variant="hero" 
+            className="flex-1"
+            onClick={handleNext}
+            disabled={!preview}
+          >
+            Continuer
           </Button>
         </div>
-      )}
-
-      <div className="flex gap-2">
-        <Button 
-          variant="outline" 
-          className="flex-1"
-          onClick={() => {
-            stopCamera();
-            if (step === 'selfie') setStep('intro');
-            else if (step === 'id_front') setStep('selfie');
-            else if (step === 'id_back') setStep('id_front');
-          }}
-        >
-          Retour
-        </Button>
-        <Button 
-          variant="hero" 
-          className="flex-1"
-          onClick={handleNext}
-          disabled={!preview}
-        >
-          Continuer
-        </Button>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderUploadStatus = (status: 'pending' | 'uploading' | 'done' | 'error') => {
     switch (status) {

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { 
   Coins, 
   Check, 
@@ -24,6 +25,15 @@ import { useCredits, CREDIT_COSTS } from '@/hooks/useCredits';
 import { REVOLUT_PAYMENT_LINK } from '@/hooks/useSubscription';
 import ReferralSection from './ReferralSection';
 import CreditBalanceBar from '../credits/CreditBalanceBar';
+import ContactCreditIssueDialog from '../credits/ContactCreditIssueDialog';
+
+// Promotional offer
+const PROMO_OFFER = {
+  credits: 250,
+  price: 10.99,
+  originalPrice: 15.99,
+  paymentLink: 'https://checkout.revolut.com/pay/45dd2e98-7ab4-40e7-ad01-5a64dedee6dd',
+};
 
 interface CreditCostItemProps {
   icon: React.ReactNode;
@@ -70,10 +80,15 @@ const FreeCreditsItem = ({ icon, label, credits, description }: FreeCreditsItemP
 );
 
 const PremiumPage = () => {
-  const { totalCredits, dailyCredits, bonusCredits, purchasedCredits, isLoading } = useCredits();
+  const { totalCredits, isLoading } = useCredits();
+  const [showContactDialog, setShowContactDialog] = useState(false);
 
   const handleBuyCredits = () => {
     window.open(REVOLUT_PAYMENT_LINK, '_blank');
+  };
+
+  const handleBuyPromo = () => {
+    window.open(PROMO_OFFER.paymentLink, '_blank');
   };
 
   if (isLoading) {
@@ -129,32 +144,38 @@ const PremiumPage = () => {
           </CardContent>
         </Card>
 
-        {/* Buy Credits Card */}
-        <Card className="border-2 border-primary/50 relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-gradient-to-r from-primary to-accent text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-            MEILLEURE OFFRE
+        {/* Promo Offer Card */}
+        <Card className="border-2 border-green-500/50 relative overflow-hidden bg-gradient-to-br from-green-500/10 to-emerald-500/10">
+          <div className="absolute top-0 right-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+            🔥 OFFRE SPÉCIALE
           </div>
-          <CardHeader className="text-center pb-2">
+          <CardHeader className="text-center pb-2 pt-6">
             <CardTitle className="text-xl flex items-center justify-center gap-2">
-              <Coins className="w-5 h-5 text-primary" />
-              Acheter des crédits
+              <Sparkles className="w-5 h-5 text-green-500" />
+              Offre promotionnelle
             </CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <div>
-              <span className="text-4xl font-bold">100</span>
+              <span className="text-4xl font-bold text-green-600">{PROMO_OFFER.credits}</span>
               <span className="text-xl text-muted-foreground ml-2">crédits</span>
             </div>
-            <div className="text-2xl font-semibold text-primary">5,99 €</div>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-2xl font-semibold text-green-600">{PROMO_OFFER.price.toFixed(2).replace('.', ',')} €</span>
+              <span className="text-lg text-muted-foreground line-through">{PROMO_OFFER.originalPrice.toFixed(2).replace('.', ',')} €</span>
+            </div>
+            <Badge className="bg-green-500/20 text-green-600 border-green-500/30">
+              Un prix plus agréable !
+            </Badge>
             
             <ul className="text-sm text-left space-y-2">
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                <span>Crédits sans date d'expiration</span>
+                <span>Économisez 5€ sur cette offre</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                <span>Utilisables pour toutes les fonctionnalités</span>
+                <span>Crédits sans date d'expiration</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
@@ -163,11 +184,37 @@ const PremiumPage = () => {
             </ul>
             
             <Button 
-              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold"
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:opacity-90 text-white font-semibold"
+              onClick={handleBuyPromo}
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Profiter de l'offre
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Standard Offer Card */}
+        <Card className="border border-border/50">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-lg flex items-center justify-center gap-2">
+              <Coins className="w-5 h-5 text-primary" />
+              Offre standard
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <div>
+              <span className="text-3xl font-bold">100</span>
+              <span className="text-lg text-muted-foreground ml-2">crédits</span>
+            </div>
+            <div className="text-xl font-semibold text-primary">5,99 €</div>
+            
+            <Button 
+              variant="outline"
+              className="w-full"
               onClick={handleBuyCredits}
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              Acheter maintenant
+              Acheter
             </Button>
             
             <p className="text-xs text-muted-foreground">
@@ -175,6 +222,27 @@ const PremiumPage = () => {
             </p>
           </CardContent>
         </Card>
+
+        {/* Contact for credit issues */}
+        <Card className="border-dashed border-2 border-muted-foreground/30">
+          <CardContent className="p-4 text-center space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Vous avez acheté des crédits mais ils n'apparaissent pas ?
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowContactDialog(true)}
+            >
+              Contacter un administrateur
+            </Button>
+          </CardContent>
+        </Card>
+
+        <ContactCreditIssueDialog 
+          open={showContactDialog} 
+          onOpenChange={setShowContactDialog} 
+        />
 
         {/* Free Credits */}
         <Card>

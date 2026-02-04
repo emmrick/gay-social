@@ -28,11 +28,17 @@ import { toast } from 'sonner';
 
 interface ContactCreditIssueDialogProps {
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const ContactCreditIssueDialog = ({ trigger }: ContactCreditIssueDialogProps) => {
+const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange }: ContactCreditIssueDialogProps) => {
   const { user } = useAuth();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use controlled or uncontrolled open state
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setIsOpen = onOpenChange || setInternalOpen;
   
   // Form state
   const [last4Digits, setLast4Digits] = useState('');
@@ -108,7 +114,7 @@ const ContactCreditIssueDialog = ({ trigger }: ContactCreditIssueDialogProps) =>
       toast.success('Demande envoyée !', {
         description: 'Un administrateur examinera votre demande rapidement.',
       });
-      setOpen(false);
+      setIsOpen(false);
       // Reset form
       setLast4Digits('');
       setLastName('');
@@ -124,7 +130,7 @@ const ContactCreditIssueDialog = ({ trigger }: ContactCreditIssueDialogProps) =>
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="outline" className="gap-2 w-full">
@@ -252,7 +258,7 @@ const ContactCreditIssueDialog = ({ trigger }: ContactCreditIssueDialogProps) =>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>
             Annuler
           </Button>
           <Button

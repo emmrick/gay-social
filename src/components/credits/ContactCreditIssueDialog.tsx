@@ -125,6 +125,22 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
         });
 
       if (msgError) throw msgError;
+
+      // Send push notification to admin
+      try {
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            userId: ADMIN_USER_ID,
+            title: '💳 Nouvelle demande de crédits',
+            body: `${profile.username} a envoyé une demande de crédits`,
+            url: `/?tab=messages&conversation=${user.id}`,
+            notificationType: 'private_message',
+          },
+        });
+      } catch (notifError) {
+        console.error('Error sending push notification:', notifError);
+        // Don't fail the request if notification fails
+      }
     },
     onSuccess: () => {
       toast.success('Demande envoyée !', {

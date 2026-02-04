@@ -268,9 +268,40 @@ const Legal = () => {
                 <h4 className="font-semibold text-foreground mb-2">5. Conservation des données</h4>
                 <p>
                   Les données de votre compte sont conservées tant que votre compte est actif. 
-                  Les documents d'identité sont supprimés immédiatement après vérification. 
                   En cas de suppression de compte, toutes vos données sont effacées sous 30 jours.
                 </p>
+              </div>
+
+              <div className="bg-primary/10 rounded-xl p-4 border border-primary/20">
+                <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  6. Documents d'identité - Rétention limitée (72h)
+                </h4>
+                <p className="text-sm mb-3">
+                  Conformément au principe de minimisation des données du RGPD, nous appliquons une politique 
+                  stricte de conservation des documents d'identité :
+                </p>
+                <ul className="list-disc pl-5 space-y-2 text-sm">
+                  <li>
+                    <strong>Délai maximum de 72 heures</strong> : Vos documents (selfie, pièce d'identité) 
+                    sont conservés uniquement pendant le temps nécessaire à la vérification, avec un maximum 
+                    absolu de 72 heures.
+                  </li>
+                  <li>
+                    <strong>Suppression automatique après validation</strong> : Dès que votre identité est 
+                    approuvée ou refusée par nos équipes, vos documents sont immédiatement et définitivement 
+                    supprimés de nos serveurs.
+                  </li>
+                  <li>
+                    <strong>Suppression automatique après 72h</strong> : Si la vérification n'a pas été 
+                    traitée dans les 72 heures, une tâche automatique supprime vos documents et vous invite 
+                    à soumettre une nouvelle demande.
+                  </li>
+                  <li>
+                    <strong>Aucune conservation</strong> : Seul le statut de vérification (vérifié/non vérifié) 
+                    est conservé. Vos documents d'identité ne sont jamais archivés.
+                  </li>
+                </ul>
               </div>
 
               {/* Data Export Button */}

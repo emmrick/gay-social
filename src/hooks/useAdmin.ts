@@ -2,6 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { 
+  notifyUserSuspended, 
+  notifyUserBanned, 
+  notifyUserUnblocked 
+} from '@/services/pushNotificationService';
 
 export type ReportStatus = 'pending' | 'reviewed' | 'resolved' | 'dismissed';
 
@@ -341,6 +346,13 @@ export const useSuspendUser = () => {
 
         if (error) throw error;
       }
+
+      // Send notification to the user
+      if (isPermanent) {
+        await notifyUserBanned(userId, reason || 'Violation des règles de la communauté');
+      } else {
+        await notifyUserSuspended(userId, reason || 'Violation des règles de la communauté', durationConfig.label);
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['blocked-users'] });
@@ -430,6 +442,9 @@ export const useBlockUser = () => {
 
         if (error) throw error;
       }
+
+      // Send notification to the banned user
+      await notifyUserBanned(userId, reason || 'Violation des règles de la communauté');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blocked-users'] });
@@ -458,6 +473,9 @@ export const useUnblockUser = () => {
         .eq('is_active', true);
 
       if (error) throw error;
+
+      // Notify user they've been unblocked
+      await notifyUserUnblocked(userId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blocked-users'] });

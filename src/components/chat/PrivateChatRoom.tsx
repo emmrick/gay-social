@@ -62,9 +62,13 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
   // Track if this is the initial load
   const isInitialLoad = useRef(true);
+  const previousMessagesLength = useRef(0);
 
-  // Auto-scroll to bottom on new messages, typing indicator, or when conversation opens
+  // Auto-scroll to bottom on initial load or new messages
   useEffect(() => {
+    // Don't scroll while loading
+    if (isLoading) return;
+    
     const scrollToBottom = (instant: boolean = false) => {
       if (scrollRef.current) {
         scrollRef.current.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' });
@@ -72,24 +76,23 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     };
     
     // On initial load, scroll instantly without animation
-    if (isInitialLoad.current) {
-      scrollToBottom(true);
-      // Delayed instant scroll to handle media loading
-      const timeoutId = setTimeout(() => scrollToBottom(true), 100);
-      const timeoutId2 = setTimeout(() => {
+    if (isInitialLoad.current && messages.length > 0) {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
         scrollToBottom(true);
-        isInitialLoad.current = false;
-      }, 300);
-      
-      return () => {
-        clearTimeout(timeoutId);
-        clearTimeout(timeoutId2);
-      };
-    } else {
-      // For new messages, use smooth scroll
+        // Additional delayed scroll to handle media loading
+        setTimeout(() => {
+          scrollToBottom(true);
+          isInitialLoad.current = false;
+          previousMessagesLength.current = messages.length;
+        }, 150);
+      });
+    } else if (!isInitialLoad.current && messages.length > previousMessagesLength.current) {
+      // New message received - smooth scroll
       scrollToBottom(false);
+      previousMessagesLength.current = messages.length;
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   // Auto-scroll when the other user starts typing
   useEffect(() => {

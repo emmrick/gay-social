@@ -279,6 +279,23 @@ export const useAdminVerifications = () => {
 
       if (fetchError) throw fetchError;
 
+      const targetUserId = userId || verification?.user_id;
+
+      // RGPD Compliance: Delete documents from storage on rejection
+      if (targetUserId) {
+        const { data: files } = await supabase.storage
+          .from('identity-documents')
+          .list(targetUserId);
+
+        if (files && files.length > 0) {
+          const filePaths = files.map(f => `${targetUserId}/${f.name}`);
+          await supabase.storage
+            .from('identity-documents')
+            .remove(filePaths);
+        }
+      }
+
+      // Update verification status and clear document URLs
       const { error } = await supabase
         .from('identity_verifications')
         .update({
@@ -286,13 +303,16 @@ export const useAdminVerifications = () => {
           reviewed_at: new Date().toISOString(),
           reviewed_by: (await supabase.auth.getUser()).data.user?.id,
           rejection_reason: reason,
+          documents_deleted: true,
+          selfie_url: null,
+          id_front_url: null,
+          id_back_url: null,
         })
         .eq('id', verificationId);
 
       if (error) throw error;
 
       // Notify user that verification was rejected
-      const targetUserId = userId || verification?.user_id;
       if (targetUserId) {
         await notifyVerificationRejected(targetUserId, reason);
       }

@@ -47,6 +47,7 @@ interface Profile {
   username: string;
   avatar_url: string | null;
   region: string;
+  age: number | null;
 }
 
 interface UserCreditsData {
@@ -96,7 +97,7 @@ const CreditsManagementPanel = () => {
       const userIds = credits?.map(c => c.user_id) || [];
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, username, avatar_url, region')
+        .select('user_id, username, avatar_url, region, age')
         .in('user_id', userIds);
 
       if (profilesError) throw profilesError;
@@ -414,6 +415,9 @@ interface UserCreditCardProps {
 const UserCreditCard = ({ user, onAdd, onRemove, onViewHistory }: UserCreditCardProps) => {
   const total = (user.daily_credits || 0) + (user.bonus_credits || 0) + (user.purchased_credits || 0);
 
+  // Extract department code from region (e.g., "75 - Paris" -> "75")
+  const departmentCode = user.profile?.region?.split(' ')[0] || user.profile?.region || '-';
+
   return (
     <div className="p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors">
       <div className="flex items-center justify-between">
@@ -433,6 +437,17 @@ const UserCreditCard = ({ user, onAdd, onRemove, onViewHistory }: UserCreditCard
               <span className="text-green-500">{user.daily_credits?.toFixed(1) || 0} Q</span>
               <span className="text-blue-700">{user.bonus_credits?.toFixed(1) || 0} B</span>
               <span className="text-sky-400">{user.purchased_credits?.toFixed(1) || 0} A</span>
+            </div>
+            {/* Age and Department info */}
+            <div className="flex items-center gap-2 text-xs mt-1">
+              {user.profile?.age && (
+                <Badge variant="outline" className="text-xs py-0 px-1">
+                  {user.profile.age} ans
+                </Badge>
+              )}
+              <Badge variant="outline" className="text-xs py-0 px-1">
+                Dép. {departmentCode}
+              </Badge>
             </div>
           </div>
         </div>

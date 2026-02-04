@@ -7,7 +7,9 @@ import {
   Loader2, 
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,6 +38,7 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import ContactCreditIssueDialog from './ContactCreditIssueDialog';
 
 // Credit packages
 const CREDIT_PACKAGES = [
@@ -44,6 +47,14 @@ const CREDIT_PACKAGES = [
   { credits: 300, price: 19.99 },
   { credits: 700, price: 39.99 },
 ];
+
+// Special offer - Revolut direct payment
+const SPECIAL_OFFER = {
+  credits: 250,
+  price: 10.99,
+  originalPrice: 15.99,
+  paymentLink: 'https://checkout.revolut.com/pay/45dd2e98-7ab4-40e7-ad01-5a64dedee6dd',
+};
 
 const PAYMENT_METHODS = [
   { value: 'paypal', label: 'PayPal' },
@@ -186,6 +197,37 @@ const BuyCreditDialog = ({ trigger }: BuyCreditDialogProps) => {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Special Offer - Highlighted */}
+            <div className="relative p-4 rounded-lg border-2 border-amber-500 bg-gradient-to-r from-amber-500/10 to-orange-500/10">
+              <div className="absolute -top-2 left-3">
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Offre spéciale
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Coins className="w-5 h-5 text-amber-500" />
+                    <span className="font-bold text-lg">{SPECIAL_OFFER.credits} crédits</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-primary">{SPECIAL_OFFER.price.toFixed(2)}€</span>
+                    <span className="text-sm text-muted-foreground line-through">{SPECIAL_OFFER.originalPrice.toFixed(2)}€</span>
+                    <Badge variant="secondary" className="text-xs">-31%</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Un prix plus agréable !</p>
+                </div>
+                <Button 
+                  onClick={() => window.open(SPECIAL_OFFER.paymentLink, '_blank')}
+                  className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Acheter
+                </Button>
+              </div>
+            </div>
+
             {/* Credit Packages */}
             <div className="grid grid-cols-2 gap-2">
               {CREDIT_PACKAGES.map((pkg) => (
@@ -314,6 +356,11 @@ const BuyCreditDialog = ({ trigger }: BuyCreditDialogProps) => {
             </div>
           </div>
         )}
+
+        {/* Contact for credit issues */}
+        <div className="pt-4 border-t">
+          <ContactCreditIssueDialog />
+        </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>

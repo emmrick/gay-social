@@ -120,8 +120,8 @@ serve(async (req) => {
       );
     }
 
-    // Check user's notification preferences
-    if (notificationType) {
+    // Check user's notification preferences (skip for system notifications)
+    if (notificationType && notificationType !== 'system') {
       const { data: prefs } = await supabase
         .from("notification_preferences")
         .select("*")

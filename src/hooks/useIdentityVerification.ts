@@ -1,6 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { 
+  notifyVerificationSubmitted, 
+  notifyVerificationApproved, 
+  notifyVerificationRejected 
+} from '@/services/pushNotificationService';
 
 export interface IdentityVerification {
   id: string;
@@ -141,6 +146,9 @@ export const useIdentityVerification = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Send confirmation notification to the user
+      await notifyVerificationSubmitted(user.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['identity-verification'] });
@@ -252,6 +260,9 @@ export const useAdminVerifications = () => {
           .from('identity-documents')
           .remove(filePaths);
       }
+
+      // Notify user that verification is approved
+      await notifyVerificationApproved(userId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verifications'] });
@@ -259,7 +270,15 @@ export const useAdminVerifications = () => {
   });
 
   const rejectVerification = useMutation({
-    mutationFn: async ({ verificationId, reason }: { verificationId: string; reason: string }) => {
+    mutationFn: async ({ verificationId, reason, userId }: { verificationId: string; reason: string; userId?: string }) => {
+      const { data: verification, error: fetchError } = await supabase
+        .from('identity_verifications')
+        .select('user_id')
+        .eq('id', verificationId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from('identity_verifications')
         .update({
@@ -271,6 +290,12 @@ export const useAdminVerifications = () => {
         .eq('id', verificationId);
 
       if (error) throw error;
+
+      // Notify user that verification was rejected
+      const targetUserId = userId || verification?.user_id;
+      if (targetUserId) {
+        await notifyVerificationRejected(targetUserId, reason);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verifications'] });

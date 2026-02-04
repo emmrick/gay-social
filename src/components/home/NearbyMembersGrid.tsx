@@ -7,9 +7,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyProfiles } from '@/hooks/useNearbyProfiles';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePremiumUsers } from '@/hooks/usePremiumUsers';
+
 import { shouldShowOnlineIndicator, getLastSeenText } from '@/hooks/useOnlineStatus';
-import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
+
 import { cn } from '@/lib/utils';
 
 interface NearbyMembersGridProps {
@@ -111,10 +111,6 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
     
     return result;
   }, [currentUserProfile, profiles]);
-
-  // Get user IDs for premium check - stable dependency
-  const userIds = useMemo(() => allProfiles.map(p => p.user_id), [allProfiles]);
-  const { data: premiumMap = {} } = usePremiumUsers(userIds);
 
   // ---------- HELPER FUNCTIONS ----------
 
@@ -357,12 +353,6 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
                   </div>
                 )}
 
-                {/* Premium badge */}
-                {!profile.isCurrentUser && premiumMap[profile.user_id] && (
-                  <div className="absolute top-2 left-2">
-                    <PremiumUserBadge size="sm" />
-                  </div>
-                )}
 
                 {/* Online/Offline indicator */}
                 {!profile.isCurrentUser && (

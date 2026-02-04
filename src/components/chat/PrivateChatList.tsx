@@ -3,7 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
-import { usePremiumUsers } from '@/hooks/usePremiumUsers';
+
 import { useConversationStatus } from '@/hooks/useConversationStatus';
 import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { MessageCircle, ChevronRight, MoreVertical, Archive, Trash2, ArchiveRestore, Mail, MailOpen } from 'lucide-react';
-import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
+
 import UserProfilePreview from './UserProfilePreview';
 import { cn } from '@/lib/utils';
 
@@ -46,12 +46,6 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
   // Use archived or active conversations based on prop
   const displayConversations = showArchived ? archivedConversations : conversations;
 
-  // Get user IDs for premium check
-  const userIds = useMemo(
-    () => displayConversations.map(conv => conv.otherUser.user_id),
-    [displayConversations]
-  );
-  const { data: premiumMap = {} } = usePremiumUsers(userIds);
 
   const handleAvatarClick = (e: React.MouseEvent, userId: string) => {
     e.stopPropagation();
@@ -137,7 +131,6 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
       {displayConversations.map((conv, index) => {
         const unreadCount = getUnreadCount(conv.otherUser.user_id);
         const hasUnread = unreadCount > 0;
-        const isPremium = premiumMap[conv.otherUser.user_id] || false;
         
         return (
           <button
@@ -186,12 +179,6 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
               ) : (
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-gray-400 rounded-full border-2 border-background" />
-              )}
-              {/* Premium badge */}
-              {isPremium && (
-                <div className="absolute -top-1 -left-1">
-                  <PremiumUserBadge size="xs" />
-                </div>
               )}
             </button>
 

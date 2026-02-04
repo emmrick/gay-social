@@ -93,9 +93,6 @@ const UserProfileDialog = ({ user, open, onOpenChange }: UserProfileDialogProps)
                   {user.is_verified && (
                     <ShieldCheck className="w-5 h-5 text-primary" />
                   )}
-                  {user.is_premium && (
-                    <Crown className="w-5 h-5 text-yellow-500" />
-                  )}
                 </h3>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                   {user.age && <span>{user.age} ans</span>}

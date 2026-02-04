@@ -34,7 +34,9 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         .or(
           `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
         )
-        .order('created_at', { ascending: true })
+        // IMPORTANT: We want the latest messages. If we order ASC + limit,
+        // we end up fetching the 100 oldest ones.
+        .order('created_at', { ascending: false })
         .limit(100);
 
       if (error) throw error;
@@ -48,7 +50,10 @@ export const usePrivateMessages = (otherUserId: string | null) => {
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-      return messages.map(msg => ({
+      // We fetched DESC for correct pagination, now re-sort for display (old -> new)
+      const ordered = [...messages].reverse();
+
+      return ordered.map(msg => ({
         ...msg,
         senderUsername: profileMap.get(msg.sender_id)?.username || 'Anonyme',
         senderAvatar: profileMap.get(msg.sender_id)?.avatar_url || null,

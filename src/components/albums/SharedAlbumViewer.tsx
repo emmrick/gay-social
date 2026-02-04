@@ -247,8 +247,24 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
     isBlocked, 
     getSuspensionTimeLeft, 
     preventContextMenu, 
-    preventDrag 
+    preventDrag,
+    handleViolation,
   } = useScreenshotProtection();
+
+  // Mobile screenshot detection via visibility change
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // User switched apps while viewing - potential screenshot on mobile
+        handleViolation();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isOpen, handleViolation]);
 
   // Subscribe to album_shares changes in real-time
   useEffect(() => {

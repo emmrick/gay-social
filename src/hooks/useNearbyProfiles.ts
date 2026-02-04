@@ -55,6 +55,7 @@ export const useNearbyProfiles = (
       // Use explicit null/undefined checks (0 is a valid coordinate).
       if (latitude == null || longitude == null) {
         // Fallback: get online profiles or recently active
+        // Fetch more profiles to account for potential filtering
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
@@ -62,28 +63,36 @@ export const useNearbyProfiles = (
           .or(`is_online.eq.true,last_seen.gte.${offlineThreshold}`)
           .order('is_online', { ascending: false })
           .order('last_seen', { ascending: false })
-          .range(offset, offset + effectiveLimit - 1);
+          .range(offset, offset + effectiveLimit + 10); // Fetch extra to compensate for filtered
 
         if (error) throw error;
         
-        // Filter out blocked/suspended users client-side for fallback query
-        const filteredProfiles = [];
-        for (const profile of data || []) {
-          const { data: isBlocked } = await supabase.rpc('is_user_blocked', { _user_id: profile.user_id });
-          const { data: isSuspended } = await supabase.rpc('is_user_suspended', { _user_id: profile.user_id });
-          if (!isBlocked && !isSuspended) {
-            filteredProfiles.push(profile);
-          }
-        }
+        // Filter out blocked/suspended users in parallel (much faster!)
+        const profilesWithStatus = await Promise.all(
+          (data || []).map(async (profile) => {
+            const [blockedRes, suspendedRes] = await Promise.all([
+              supabase.rpc('is_user_blocked', { _user_id: profile.user_id }),
+              supabase.rpc('is_user_suspended', { _user_id: profile.user_id })
+            ]);
+            return {
+              profile,
+              isBlocked: blockedRes.data,
+              isSuspended: suspendedRes.data
+            };
+          })
+        );
         
-        const profiles = filteredProfiles.map(profile => ({
-          ...profile,
-          distance_km: null,
-        }));
+        const filteredProfiles = profilesWithStatus
+          .filter(({ isBlocked, isSuspended }) => !isBlocked && !isSuspended)
+          .slice(0, effectiveLimit)
+          .map(({ profile }) => ({
+            ...profile,
+            distance_km: null,
+          }));
 
-        const hasMore = profiles.length === effectiveLimit && (offset + profiles.length) < maxProfilesAllowed;
+        const hasMore = filteredProfiles.length === effectiveLimit && (offset + filteredProfiles.length) < maxProfilesAllowed;
         return { 
-          profiles, 
+          profiles: filteredProfiles, 
           nextPage: hasMore ? pageParam + 1 : null 
         };
       }

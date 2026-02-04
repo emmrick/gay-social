@@ -126,8 +126,8 @@ export const useUserUsage = () => {
   };
 
   const canAddSavedMessage = (): boolean => {
-    if (isPremium) return true;
-    return (query.data?.saved_messages_count || 0) < limits.maxSavedMessages;
+    // No premium check - credits are the limiter, but we still have a max of 10
+    return (query.data?.saved_messages_count || 0) < 10;
   };
 
   const canCreateAlbum = (): boolean => {

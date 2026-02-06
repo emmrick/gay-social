@@ -34,7 +34,9 @@ export const usePendingVerifications = () => {
       const { count, error } = await supabase
         .from('identity_verifications')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+        .eq('status', 'pending')
+        .not('submitted_at', 'is', null);
+
 
       if (error) throw error;
       return count || 0;

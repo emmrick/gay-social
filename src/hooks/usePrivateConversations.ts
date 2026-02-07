@@ -154,7 +154,8 @@ export const usePrivateConversations = () => {
     })
   );
 
-  // Real-time subscription for new conversations, new messages AND online status changes
+  // Real-time subscription for new conversations and new messages
+  // Profile changes (avatar, username, online status) are handled by useRealtimeProfileSync
   useEffect(() => {
     if (!user) return;
 
@@ -199,27 +200,6 @@ export const usePrivateConversations = () => {
         (payload) => {
           const msg = payload.new as { is_private: boolean };
           if (msg.is_private) {
-            queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
-          }
-        }
-      )
-      // Listen for profile changes (online status, avatar, username, etc.)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-        },
-        (payload) => {
-          const { old: oldData, new: newData } = payload;
-          // Refresh if online status, avatar, or username changed
-          if (
-            oldData?.is_online !== newData?.is_online || 
-            oldData?.last_seen !== newData?.last_seen ||
-            oldData?.avatar_url !== newData?.avatar_url ||
-            oldData?.username !== newData?.username
-          ) {
             queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
           }
         }

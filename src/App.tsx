@@ -18,6 +18,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
 import { PageFallback } from "@/components/loading/LazyPageLoader";
 import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoticeDialog";
+import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 import { toast } from "sonner";
 
 // Lazy load pages for better initial bundle size
@@ -78,6 +79,7 @@ const useGlobalErrorHandler = () => {
 
 const AppContent = () => {
   useGlobalErrorHandler();
+  useRealtimeProfileSync();
   
   return (
     <AuthProvider>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Camera, Loader2, User, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -113,6 +114,7 @@ const HIV_STATUS_OPTIONS = [
 
 const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
   const { user, profile, updateProfile } = useAuth();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -234,7 +236,8 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
         .from('avatars')
         .getPublicUrl(fileName);
 
-      return publicUrl;
+      // Add cache-busting parameter to force browser to reload the image
+      return `${publicUrl}?t=${Date.now()}`;
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({
@@ -324,6 +327,12 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
       } as any);
 
       if (error) throw error;
+
+      // Invalidate all caches that display profile data
+      queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['nearby-profiles'] });
 
       toast({
         title: 'Profil mis à jour',

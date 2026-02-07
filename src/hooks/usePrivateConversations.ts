@@ -203,7 +203,7 @@ export const usePrivateConversations = () => {
           }
         }
       )
-      // Listen for online status changes on profiles
+      // Listen for profile changes (online status, avatar, username, etc.)
       .on(
         'postgres_changes',
         {
@@ -213,8 +213,13 @@ export const usePrivateConversations = () => {
         },
         (payload) => {
           const { old: oldData, new: newData } = payload;
-          // Only refresh if online status or last_seen changed
-          if (oldData?.is_online !== newData?.is_online || oldData?.last_seen !== newData?.last_seen) {
+          // Refresh if online status, avatar, or username changed
+          if (
+            oldData?.is_online !== newData?.is_online || 
+            oldData?.last_seen !== newData?.last_seen ||
+            oldData?.avatar_url !== newData?.avatar_url ||
+            oldData?.username !== newData?.username
+          ) {
             queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
           }
         }

@@ -77,43 +77,51 @@ const useGlobalErrorHandler = () => {
   }, []);
 };
 
-const AppContent = () => {
-  useGlobalErrorHandler();
+// Inner component that uses hooks requiring AuthProvider
+const AuthenticatedApp = () => {
   useRealtimeProfileSync();
   
   return (
+    <CreditDialogProvider>
+      <CreditDeductionProvider>
+        <BlockedUserGuard>
+          <VerificationGuard>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={<AppLoadingSkeleton />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/profile/:userId" element={<Suspense fallback={<PageFallback />}><MemberProfile /></Suspense>} />
+                    <Route path="/auth" element={<Suspense fallback={<PageFallback />}><Auth /></Suspense>} />
+                    <Route path="/admin" element={<Suspense fallback={<PageFallback />}><Admin /></Suspense>} />
+                    <Route path="/about" element={<Suspense fallback={<PageFallback />}><About /></Suspense>} />
+                    <Route path="/legal" element={<Suspense fallback={<PageFallback />}><Legal /></Suspense>} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
+                  </Routes>
+                </Suspense>
+                <InstallPWAPrompt />
+                <PushNotificationBanner />
+                <LowCreditsAlert />
+                <AgeConfirmationModal />
+                <InvestigationNoticeDialog />
+              </BrowserRouter>
+            </TooltipProvider>
+          </VerificationGuard>
+        </BlockedUserGuard>
+      </CreditDeductionProvider>
+    </CreditDialogProvider>
+  );
+};
+
+const AppContent = () => {
+  useGlobalErrorHandler();
+  
+  return (
     <AuthProvider>
-      <CreditDialogProvider>
-        <CreditDeductionProvider>
-          <BlockedUserGuard>
-            <VerificationGuard>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Suspense fallback={<AppLoadingSkeleton />}>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/profile/:userId" element={<Suspense fallback={<PageFallback />}><MemberProfile /></Suspense>} />
-                      <Route path="/auth" element={<Suspense fallback={<PageFallback />}><Auth /></Suspense>} />
-                      <Route path="/admin" element={<Suspense fallback={<PageFallback />}><Admin /></Suspense>} />
-                      <Route path="/about" element={<Suspense fallback={<PageFallback />}><About /></Suspense>} />
-                      <Route path="/legal" element={<Suspense fallback={<PageFallback />}><Legal /></Suspense>} />
-                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                      <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
-                    </Routes>
-                  </Suspense>
-                  <InstallPWAPrompt />
-                  <PushNotificationBanner />
-                  <LowCreditsAlert />
-                  <AgeConfirmationModal />
-                  <InvestigationNoticeDialog />
-                </BrowserRouter>
-              </TooltipProvider>
-            </VerificationGuard>
-          </BlockedUserGuard>
-        </CreditDeductionProvider>
-      </CreditDialogProvider>
+      <AuthenticatedApp />
     </AuthProvider>
   );
 };

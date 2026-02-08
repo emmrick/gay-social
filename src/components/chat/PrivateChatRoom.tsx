@@ -182,10 +182,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               onClick={() => setShowProfilePreview(true)}
               className="relative cursor-pointer hover:scale-105 transition-transform"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold overflow-hidden">
                 {otherUserProfile?.avatar_url ? (
                   <img
-                    src={otherUserProfile.avatar_url}
+                    src={`${otherUserProfile.avatar_url}${otherUserProfile.avatar_url.includes('?') ? '&' : '?'}v=${otherUserProfile.updated_at || ''}`}
                     alt={otherUserProfile.username}
                     className="w-full h-full rounded-full object-cover"
                   />
@@ -349,20 +349,20 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                   key={message.id}
                   className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : 'flex-row'} animate-slide-up`}
                 >
-                  {/* Avatar */}
+                  {/* Avatar - always use live profile data instead of cached message data */}
                   {!isOwn && (
                     <button
                       onClick={() => setShowProfilePreview(true)}
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                      className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 cursor-pointer hover:scale-105 transition-transform overflow-hidden"
                     >
-                      {message.senderAvatar ? (
+                      {otherUserProfile?.avatar_url ? (
                         <img
-                          src={message.senderAvatar}
-                          alt={message.senderUsername}
+                          src={otherUserProfile.avatar_url}
+                          alt={otherUserProfile.username}
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
-                        message.senderUsername.charAt(0).toUpperCase()
+                        (otherUserProfile?.username || message.senderUsername).charAt(0).toUpperCase()
                       )}
                     </button>
                   )}
@@ -450,14 +450,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
         {/* Scroll to bottom button */}
         {showScrollButton && (
-          <Button
-            variant="secondary"
-            size="icon"
-            className="fixed bottom-24 right-4 rounded-full shadow-lg z-10 bg-primary text-primary-foreground hover:bg-primary/90"
+          <button
+            className="absolute bottom-4 right-4 rounded-full shadow-lg z-10 bg-primary text-primary-foreground hover:bg-primary/90 w-10 h-10 flex items-center justify-center"
             onClick={handleScrollToBottomClick}
           >
             <ChevronDown className="w-5 h-5" />
-          </Button>
+          </button>
         )}
       </div>
 

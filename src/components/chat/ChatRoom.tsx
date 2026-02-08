@@ -319,6 +319,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
                 content: message.content || '',
                 senderId: message.sender_id,
                 senderName: message.senderUsername || 'Anonyme',
+                senderAvatar: message.senderAvatar || undefined,
                 timestamp: new Date(message.created_at),
                 type: message.message_type as 'text' | 'image',
                 replyToMessage: message.replyToMessage,

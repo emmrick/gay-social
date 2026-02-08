@@ -45,15 +45,17 @@ export const useRealtimeProfileSync = () => {
           if (isProfileDataChange) {
             const changedUserId = newData?.user_id;
 
-            // Invalidate specific profile query
+            // Invalidate specific profile query and force refetch
             queryClient.invalidateQueries({ queryKey: ['profile', changedUserId] });
             
             // Invalidate all list-based queries that display profile data
             queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
+            queryClient.invalidateQueries({ queryKey: ['private-messages'] });
             queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
             queryClient.invalidateQueries({ queryKey: ['nearby-profiles'] });
             queryClient.invalidateQueries({ queryKey: ['profiles'] });
             queryClient.invalidateQueries({ queryKey: ['profile-photos'] });
+            queryClient.invalidateQueries({ queryKey: ['messages'] });
           }
 
           // For online status changes only, just update conversations and favorites

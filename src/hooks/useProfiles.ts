@@ -36,5 +36,6 @@ export const useProfile = (userId: string) => {
       return data;
     },
     enabled: !!userId,
+    staleTime: 30_000, // Consider data fresh for 30 seconds to avoid excessive refetches
   });
 };

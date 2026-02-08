@@ -91,9 +91,18 @@ const ChatMessage = ({
         {!isOwn && (
           <button
             onClick={handleAvatarClick}
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 hover:scale-105 transition-transform cursor-pointer"
+            className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 hover:scale-105 transition-transform cursor-pointer overflow-hidden"
           >
-            {message.senderName.charAt(0).toUpperCase()}
+            {message.senderAvatar ? (
+              <img
+                src={message.senderAvatar}
+                alt={message.senderName}
+                className="w-full h-full rounded-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              message.senderName.charAt(0).toUpperCase()
+            )}
           </button>
         )}
         

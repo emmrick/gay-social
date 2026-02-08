@@ -166,9 +166,10 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
               )}>
                 {conv.otherUser.avatar_url ? (
                   <img
-                    src={conv.otherUser.avatar_url}
+                    src={`${conv.otherUser.avatar_url}${conv.otherUser.avatar_url.includes('?') ? '&' : '?'}v=${Date.now()}`}
                     alt={conv.otherUser.username}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   conv.otherUser.username.charAt(0).toUpperCase()

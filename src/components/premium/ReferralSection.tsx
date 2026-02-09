@@ -238,7 +238,7 @@ const ReferralSection = () => {
         {referrals.length > 0 && (
           <div className="pt-2">
             <h4 className="text-sm font-medium mb-2">Vos filleuls</h4>
-            <ScrollArea className="max-h-48">
+            <ScrollArea className="h-48">
               <div className="space-y-2">
                 {referrals.map((referral) => (
                   <div 

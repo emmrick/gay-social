@@ -43,6 +43,7 @@ export const CREDIT_COSTS = {
   chatbot_message: 0.2, // Per message with someone's chatbot
   chatbot_info: 2.5, // Per info added (first 10)
   chatbot_info_extra: 20.0, // Per info added (after 10)
+  chatbot_activate: 10.0, // Activation cost
 } as const;
 
 // Credit rewards
@@ -346,6 +347,7 @@ export const useCredits = () => {
       chatbot_message: 'Message chatbot',
       chatbot_info: 'Info chatbot',
       chatbot_info_extra: 'Info chatbot (extra)',
+      chatbot_activate: 'Activer le chatbot',
     };
     return {
       hasEnough: hasEnoughCredits(cost),

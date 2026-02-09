@@ -23,8 +23,26 @@ const ChatBotConfigSection = () => {
   const infos = config?.chatbot_info || [];
   const greeting = config?.greeting_message || 'Salut ! Je suis le chatbot de ce profil. Pose-moi des questions pour en savoir plus ! 😊';
 
-  const handleToggle = () => {
-    updateConfig.mutate({ is_active: !isActive });
+  const handleToggle = async () => {
+    if (!isActive) {
+      // Activation costs 10 credits
+      if (!hasEnoughCredits(CREDIT_COSTS.chatbot_activate)) {
+        toast.error(`Crédits insuffisants (${CREDIT_COSTS.chatbot_activate} crédits pour activer)`);
+        return;
+      }
+      try {
+        await deductCredits.mutateAsync({
+          amount: CREDIT_COSTS.chatbot_activate,
+          transactionType: 'chatbot_activate',
+          description: 'Activation du ChatBot personnel',
+        });
+        updateConfig.mutate({ is_active: true });
+      } catch {
+        toast.error('Erreur lors de l\'activation');
+      }
+    } else {
+      updateConfig.mutate({ is_active: false });
+    }
   };
 
   const handleAddInfo = async () => {
@@ -93,6 +111,20 @@ const ChatBotConfigSection = () => {
             onCheckedChange={handleToggle}
             disabled={updateConfig.isPending}
           />
+        </div>
+
+        {/* Description */}
+        <div className="mb-3 p-2.5 rounded-lg bg-secondary/30 border border-border/30">
+          <p className="text-xs text-foreground leading-relaxed">
+            🤖 <span className="font-medium">Votre assistant IA personnel</span> répond automatiquement aux visiteurs de votre profil. 
+            Partagez vos préférences, ce que vous recherchez, et laissez votre bot faire le premier contact à votre place. 
+            Les visiteurs intéressés pourront ensuite vous écrire directement.
+          </p>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            <Badge variant="outline" className="text-[10px]">🔓 Activation : {CREDIT_COSTS.chatbot_activate} crédits</Badge>
+            <Badge variant="outline" className="text-[10px]">💬 Message : {CREDIT_COSTS.chatbot_message} crédit</Badge>
+            <Badge variant="outline" className="text-[10px]">📝 Info : {CREDIT_COSTS.chatbot_info} crédits</Badge>
+          </div>
         </div>
 
         {/* Greeting message */}

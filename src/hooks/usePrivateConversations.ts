@@ -225,7 +225,20 @@ export const usePrivateConversations = () => {
         )
         .maybeSingle();
 
-      if (existing) return existing;
+      if (existing) {
+        // Reset status (in case it was deleted/archived) so it reappears in active list
+        await supabase
+          .from('private_conversation_status')
+          .upsert({
+            conversation_id: existing.id,
+            user_id: user.id,
+            is_archived: false,
+            is_deleted: false,
+          }, {
+            onConflict: 'conversation_id,user_id',
+          });
+        return existing;
+      }
 
       // Check limit before creating new conversation
       if (!canStartConversation()) {
@@ -251,6 +264,7 @@ export const usePrivateConversations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversation-status', user?.id] });
     },
     onError: (error: Error) => {
       if (error.message === 'LIMIT_REACHED') {

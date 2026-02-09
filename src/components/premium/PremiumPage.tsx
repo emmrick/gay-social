@@ -300,6 +300,29 @@ const PremiumPage = () => {
                 ))}
               </div>
             </div>
+
+            <Separator />
+
+            {/* Chatbot */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">🤖 Chatbot</p>
+              <div className="space-y-0">
+                {[
+                  { icon: <MessageCircle className="w-4 h-4 text-violet-500" />, label: 'Message au chatbot', cost: CREDIT_COSTS.chatbot_message },
+                  { icon: <PenLine className="w-4 h-4 text-violet-500" />, label: 'Ajouter une info (1-10)', cost: CREDIT_COSTS.chatbot_info },
+                  { icon: <PenLine className="w-4 h-4 text-violet-500" />, label: 'Ajouter une info (11+)', cost: CREDIT_COSTS.chatbot_info_extra },
+                  { icon: <Zap className="w-4 h-4 text-violet-500" />, label: 'Activer le chatbot', cost: CREDIT_COSTS.chatbot_activate },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
+                    <div className="flex items-center gap-2.5">
+                      {item.icon}
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs font-mono text-red-500 border-red-500/30">-{item.cost}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

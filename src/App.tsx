@@ -9,6 +9,7 @@ import { CreditDialogProvider } from "@/contexts/CreditDialogContext";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import BlockedUserGuard from "@/components/BlockedUserGuard";
 import VerificationGuard from "@/components/verification/VerificationGuard";
+import ProfilePhotoGuard from "@/components/profile/ProfilePhotoGuard";
 import InstallPWAPrompt from "@/components/pwa/InstallPWAPrompt";
 import PushNotificationBanner from "@/components/notifications/PushNotificationBanner";
 import LowCreditsAlert from "@/components/credits/LowCreditsAlert";
@@ -86,6 +87,7 @@ const AuthenticatedApp = () => {
       <CreditDeductionProvider>
         <BlockedUserGuard>
           <VerificationGuard>
+          <ProfilePhotoGuard>
             <TooltipProvider>
               <Toaster />
               <Sonner />
@@ -109,6 +111,7 @@ const AuthenticatedApp = () => {
                 <InvestigationNoticeDialog />
               </BrowserRouter>
             </TooltipProvider>
+          </ProfilePhotoGuard>
           </VerificationGuard>
         </BlockedUserGuard>
       </CreditDeductionProvider>

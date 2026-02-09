@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChatbotConfig, useChatbotConversation, useSendChatbotMessage } from '@/hooks/useChatbotConfig';
 import { cn } from '@/lib/utils';
+import { useCredits, CREDIT_COSTS } from '@/hooks/useCredits';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatBotDialogProps {
@@ -19,9 +22,12 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
   const { data: config } = useChatbotConfig(profileUserId);
   const { data: history = [] } = useChatbotConversation(profileUserId);
   const sendMessage = useSendChatbotMessage();
+  const { deductCredits, hasEnoughCredits } = useCredits();
+  const { user } = useAuth();
   const [input, setInput] = useState('');
   const [localMessages, setLocalMessages] = useState<{ role: string; content: string }[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const pendingRef = useRef(false);
 
   const greeting = config?.greeting_message || `Salut ! Je suis le chatbot de ${profileUsername}. Pose-moi des questions ! 😊`;
 
@@ -45,12 +51,27 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
 
   const handleSend = async () => {
     const msg = input.trim();
-    if (!msg || sendMessage.isPending) return;
+    if (!msg || sendMessage.isPending || pendingRef.current) return;
+    pendingRef.current = true;
+
+    // Check credits
+    if (!hasEnoughCredits(CREDIT_COSTS.chatbot_message)) {
+      toast.error('Crédits insuffisants (0.2 crédits par message)');
+      pendingRef.current = false;
+      return;
+    }
 
     setInput('');
     setLocalMessages(prev => [...prev, { role: 'user', content: msg }]);
 
     try {
+      // Deduct credits
+      await deductCredits.mutateAsync({
+        amount: CREDIT_COSTS.chatbot_message,
+        transactionType: 'chatbot_message',
+        description: `Message chatbot de ${profileUsername}`,
+      });
+
       const reply = await sendMessage.mutateAsync({
         profileUserId,
         message: msg,
@@ -62,6 +83,8 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
         ...prev,
         { role: 'assistant', content: 'Désolé, je rencontre un problème technique. Essaie de contacter directement cette personne ! 😅' },
       ]);
+    } finally {
+      pendingRef.current = false;
     }
   };
 
@@ -180,7 +203,7 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
             </Button>
           </form>
           <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-            🤖 Réponses générées automatiquement • Contactez directement pour plus d'infos
+            🤖 Réponses automatiques • {CREDIT_COSTS.chatbot_message} crédit/message
           </p>
         </div>
       </DialogContent>

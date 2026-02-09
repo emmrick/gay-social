@@ -27,6 +27,9 @@ export const useCreditCheck = () => {
     swipe_hide: 'Masquer définitivement',
     swipe_start_conversation: 'Démarrer une conversation',
     join_extra_group: 'Rejoindre un groupe',
+    chatbot_message: 'Message chatbot',
+    chatbot_info: 'Info chatbot',
+    chatbot_info_extra: 'Info chatbot (extra)',
   };
 
   /**

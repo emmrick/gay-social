@@ -148,8 +148,8 @@ export const useSendChatbotMessage = () => {
       const data = await response.json();
       return data.reply as string;
     },
-    onSuccess: (_, { profileUserId }) => {
-      queryClient.invalidateQueries({ queryKey: ['chatbot-conversation', user?.id, profileUserId] });
+    onSuccess: (reply, { profileUserId }) => {
+      // Don't invalidate - we manage local state to avoid duplicates
     },
   });
 };

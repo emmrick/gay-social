@@ -7,11 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useChatbotConfig, useUpdateChatbotConfig } from '@/hooks/useChatbotConfig';
+import { useCredits, CREDIT_COSTS } from '@/hooks/useCredits';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
 const ChatBotConfigSection = () => {
   const { data: config, isLoading } = useChatbotConfig();
   const updateConfig = useUpdateChatbotConfig();
+  const { deductCredits, hasEnoughCredits } = useCredits();
   const [newInfo, setNewInfo] = useState('');
   const [editGreeting, setEditGreeting] = useState(false);
   const [greetingText, setGreetingText] = useState('');
@@ -24,11 +27,27 @@ const ChatBotConfigSection = () => {
     updateConfig.mutate({ is_active: !isActive });
   };
 
-  const handleAddInfo = () => {
+  const handleAddInfo = async () => {
     const trimmed = newInfo.trim();
     if (!trimmed) return;
-    updateConfig.mutate({ chatbot_info: [...infos, trimmed] });
-    setNewInfo('');
+    
+    const cost = infos.length >= 10 ? CREDIT_COSTS.chatbot_info_extra : CREDIT_COSTS.chatbot_info;
+    if (!hasEnoughCredits(cost)) {
+      toast.error(`Crédits insuffisants (${cost} crédits par information)`);
+      return;
+    }
+
+    try {
+      await deductCredits.mutateAsync({
+        amount: cost,
+        transactionType: infos.length >= 10 ? 'chatbot_info_extra' : 'chatbot_info',
+        description: `Info chatbot (${infos.length + 1}${infos.length >= 10 ? ' - extra' : ''})`,
+      });
+      updateConfig.mutate({ chatbot_info: [...infos, trimmed] });
+      setNewInfo('');
+    } catch {
+      toast.error('Erreur lors de la déduction des crédits');
+    }
   };
 
   const handleRemoveInfo = (index: number) => {
@@ -113,7 +132,10 @@ const ChatBotConfigSection = () => {
         {/* Info messages */}
         <div>
           <p className="text-xs text-muted-foreground mb-2">
-            Informations pour le chatbot ({infos.length}/10)
+            Informations pour le chatbot ({infos.length}) — 
+            <span className="text-primary font-medium">
+              {infos.length >= 10 ? `${CREDIT_COSTS.chatbot_info_extra}` : `${CREDIT_COSTS.chatbot_info}`} crédits/info
+            </span>
           </p>
 
           {infos.length > 0 && (
@@ -137,7 +159,7 @@ const ChatBotConfigSection = () => {
             </div>
           )}
 
-          {infos.length < 10 && (
+          {(
             <div className="flex gap-2">
               <Input
                 value={newInfo}

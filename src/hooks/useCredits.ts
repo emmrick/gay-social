@@ -39,6 +39,10 @@ export const CREDIT_COSTS = {
   swipe_start_conversation: 0.2,
   // Group costs
   join_extra_group: 5.0, // Joining a group outside home department
+  // Chatbot costs
+  chatbot_message: 0.2, // Per message with someone's chatbot
+  chatbot_info: 2.5, // Per info added (first 10)
+  chatbot_info_extra: 20.0, // Per info added (after 10)
 } as const;
 
 // Credit rewards
@@ -339,6 +343,9 @@ export const useCredits = () => {
       swipe_hide: 'Masquer définitivement',
       swipe_start_conversation: 'Démarrer une conversation',
       join_extra_group: 'Rejoindre un groupe',
+      chatbot_message: 'Message chatbot',
+      chatbot_info: 'Info chatbot',
+      chatbot_info_extra: 'Info chatbot (extra)',
     };
     return {
       hasEnough: hasEnoughCredits(cost),

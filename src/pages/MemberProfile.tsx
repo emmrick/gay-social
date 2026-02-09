@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Ban, Sparkles, Info } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Ban, Sparkles, Info, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
@@ -23,6 +23,8 @@ import { motion } from 'framer-motion';
 import { useProfileViewCheck, useRecordProfileView, CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
 import { useCreditCheck } from '@/hooks/useCreditCheck';
 import { toast } from 'sonner';
+import { useChatbotConfig } from '@/hooks/useChatbotConfig';
+import ChatBotDialog from '@/components/chatbot/ChatBotDialog';
 
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {
@@ -120,12 +122,15 @@ const MemberProfile = () => {
   const { user } = useAuth();
   const { toast: toastHook } = useToast();
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showChatBot, setShowChatBot] = useState(false);
 
   const { data: profile, isLoading } = useProfile(userId || '');
   const { photos } = useProfilePhotos(userId || '');
   const { isFavorite, toggleFavorite, isToggling } = useUserFavorites();
   // Premium badge removed from other users' profiles
   const { data: suspensionStatus, isLoading: suspensionLoading } = useUserSuspensionStatus(userId);
+  const { data: chatbotConfig } = useChatbotConfig(userId);
+  const hasChatBot = chatbotConfig?.is_active === true;
   
   // Credit system for profile views
   const { data: alreadyViewed, isLoading: viewCheckLoading } = useProfileViewCheck(userId || '');
@@ -560,7 +565,7 @@ const MemberProfile = () => {
         transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 30 }}
         className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-background/80 backdrop-blur-xl border-t border-border/50"
       >
-        <div className="flex gap-3 max-w-lg mx-auto">
+        <div className="flex gap-2 max-w-lg mx-auto">
           <Button
             variant="outline"
             size="icon"
@@ -585,12 +590,22 @@ const MemberProfile = () => {
               <Star className={cn("w-5 h-5", isFavorite(userId || '') && "fill-current")} />
             )}
           </Button>
+          {hasChatBot && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="flex-shrink-0 rounded-xl h-12 w-12 text-blue-500 border-blue-500/30 hover:bg-blue-500/10"
+              onClick={() => setShowChatBot(true)}
+            >
+              <Bot className="w-5 h-5" />
+            </Button>
+          )}
           <Button
             className="flex-1 h-12 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-base font-semibold rounded-xl shadow-lg shadow-primary/30"
             onClick={handleStartChat}
           >
             <MessageCircle className="w-5 h-5 mr-2" />
-            Envoyer un message
+            Message
           </Button>
         </div>
       </motion.div>
@@ -602,6 +617,16 @@ const MemberProfile = () => {
         userId={userId || ''}
         username={profile.username}
       />
+
+      {/* ChatBot Dialog */}
+      {userId && (
+        <ChatBotDialog
+          profileUserId={userId}
+          profileUsername={profile.username}
+          open={showChatBot}
+          onOpenChange={setShowChatBot}
+        />
+      )}
     </div>
   );
 };

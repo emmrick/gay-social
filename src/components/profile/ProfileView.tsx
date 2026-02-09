@@ -18,6 +18,7 @@ import ProfileEditDialog from './ProfileEditDialog';
 import ProfileReactions from './ProfileReactions';
 import ProfileSettingsDrawer from './ProfileSettingsDrawer';
 import ProfileAlbumsSection from './ProfileAlbumsSection';
+import ChatBotConfigSection from '@/components/chatbot/ChatBotConfigSection';
 import { motion } from 'framer-motion';
 
 // Labels
@@ -288,6 +289,16 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
           className="mt-3"
         >
           <ProfileAlbumsSection />
+        </motion.div>
+
+        {/* ChatBot Section */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.12 }}
+          className="mt-3"
+        >
+          <ChatBotConfigSection />
         </motion.div>
       </div>
 

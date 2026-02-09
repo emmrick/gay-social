@@ -218,6 +218,33 @@ export type Database = {
         }
         Relationships: []
       }
+      chatbot_conversations: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          profile_user_id: string
+          role: string
+          visitor_user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          profile_user_id: string
+          role: string
+          visitor_user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          profile_user_id?: string
+          role?: string
+          visitor_user_id?: string
+        }
+        Relationships: []
+      }
       credit_purchase_requests: {
         Row: {
           admin_notes: string | null
@@ -1490,6 +1517,36 @@ export type Database = {
           suspension_ends_at?: string | null
           suspension_type?: string | null
           unblocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_chatbot_config: {
+        Row: {
+          chatbot_info: string[] | null
+          created_at: string
+          greeting_message: string | null
+          id: string
+          is_active: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chatbot_info?: string[] | null
+          created_at?: string
+          greeting_message?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chatbot_info?: string[] | null
+          created_at?: string
+          greeting_message?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

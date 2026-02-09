@@ -19,7 +19,14 @@ import {
   Shield,
   HelpCircle,
   TrendingDown,
-  AlertTriangle
+  AlertTriangle,
+  Sparkles,
+  ThumbsUp,
+  ThumbsDown,
+  EyeOff,
+  MessageSquarePlus,
+  Bookmark,
+  PenLine
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -157,7 +164,7 @@ const PremiumPage = () => {
         {/* Referral Section */}
         <ReferralSection />
 
-        {/* Credit Costs - Collapsible */}
+        {/* Credit Costs */}
         <Card>
           <CardHeader className="pb-2 pt-3.5 px-3.5">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -165,44 +172,133 @@ const PremiumPage = () => {
               Coût des actions
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-3.5 pb-3.5">
-            <div className="space-y-0">
-              {[
-                { icon: <MessageCircle className="w-3.5 h-3.5 text-primary" />, label: 'Message texte', cost: CREDIT_COSTS.private_message_text },
-                { icon: <Image className="w-3.5 h-3.5 text-primary" />, label: 'Photo/Vidéo', cost: CREDIT_COSTS.private_message_media },
-                { icon: <Camera className="w-3.5 h-3.5 text-purple-500" />, label: 'Média éphémère', cost: CREDIT_COSTS.ephemeral_media },
-                { icon: <Users className="w-3.5 h-3.5 text-primary" />, label: 'Média en groupe', cost: CREDIT_COSTS.group_message_media },
-                { icon: <Eye className="w-3.5 h-3.5 text-primary" />, label: 'Consulter un profil', cost: CREDIT_COSTS.profile_view },
-                { icon: <Heart className="w-3.5 h-3.5 text-pink-500" />, label: 'Réaction profil', cost: CREDIT_COSTS.profile_reaction },
-                { icon: <Share2 className="w-3.5 h-3.5 text-primary" />, label: 'Partage d\'album', cost: CREDIT_COSTS.album_share },
-                { icon: <FolderOpen className="w-3.5 h-3.5 text-amber-500" />, label: 'Créer album (2ème+)', cost: CREDIT_COSTS.album_create },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
-                  <div className="flex items-center gap-2">
-                    {item.icon}
-                    <span className="text-xs">{item.label}</span>
+          <CardContent className="px-3.5 pb-3.5 space-y-4">
+            {/* Messages */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">💬 Messages</p>
+              <div className="space-y-0">
+                {[
+                  { icon: <MessageCircle className="w-4 h-4 text-primary" />, label: 'Message texte (privé ou groupe)', cost: CREDIT_COSTS.private_message_text },
+                  { icon: <Image className="w-4 h-4 text-primary" />, label: 'Photo / Vidéo (privé ou groupe)', cost: CREDIT_COSTS.private_message_media },
+                  { icon: <Camera className="w-4 h-4 text-purple-500" />, label: 'Média éphémère', cost: CREDIT_COSTS.ephemeral_media },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
+                    <div className="flex items-center gap-2.5">
+                      {item.icon}
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs font-mono text-red-500 border-red-500/30">-{item.cost}</Badge>
                   </div>
-                  <span className="text-xs font-mono text-muted-foreground">-{item.cost}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-            
-            <Separator className="my-2.5" />
-            
-            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Déblocages Proximité</p>
-            <div className="space-y-0">
-              {[
-                { label: '+30 profils (72h)', cost: CREDIT_COSTS.nearby_unlock_30 },
-                { label: '+130 profils (7 jours)', cost: CREDIT_COSTS.nearby_unlock_130 },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="text-xs">{item.label}</span>
+
+            <Separator />
+
+            {/* Profils & Social */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">👤 Profils & Social</p>
+              <div className="space-y-0">
+                {[
+                  { icon: <Eye className="w-4 h-4 text-primary" />, label: 'Consulter un profil', cost: CREDIT_COSTS.profile_view },
+                  { icon: <Heart className="w-4 h-4 text-pink-500" />, label: 'Réaction sur un profil', cost: CREDIT_COSTS.profile_reaction },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
+                    <div className="flex items-center gap-2.5">
+                      {item.icon}
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs font-mono text-red-500 border-red-500/30">-{item.cost}</Badge>
                   </div>
-                  <span className="text-xs font-mono text-muted-foreground">-{item.cost}</span>
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Swipe */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">✨ Swipe</p>
+              <div className="space-y-0">
+                {[
+                  { icon: <ThumbsUp className="w-4 h-4 text-green-500" />, label: 'Aimer (swipe droite)', cost: CREDIT_COSTS.swipe_like },
+                  { icon: <ThumbsDown className="w-4 h-4 text-red-400" />, label: 'Passer (swipe gauche)', cost: CREDIT_COSTS.swipe_dislike },
+                  { icon: <EyeOff className="w-4 h-4 text-muted-foreground" />, label: 'Masquer définitivement', cost: CREDIT_COSTS.swipe_hide },
+                  { icon: <MessageSquarePlus className="w-4 h-4 text-primary" />, label: 'Engager la conversation', cost: CREDIT_COSTS.swipe_start_conversation },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
+                    <div className="flex items-center gap-2.5">
+                      {item.icon}
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs font-mono text-red-500 border-red-500/30">-{item.cost}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Albums & Groupes */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">📁 Albums & Groupes</p>
+              <div className="space-y-0">
+                {[
+                  { icon: <Share2 className="w-4 h-4 text-primary" />, label: 'Partage d\'album', cost: CREDIT_COSTS.album_share },
+                  { icon: <FolderOpen className="w-4 h-4 text-amber-500" />, label: 'Créer un album (2ème+)', cost: CREDIT_COSTS.album_create },
+                  { icon: <Users className="w-4 h-4 text-primary" />, label: 'Rejoindre un groupe supplémentaire', cost: CREDIT_COSTS.join_extra_group },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
+                    <div className="flex items-center gap-2.5">
+                      {item.icon}
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs font-mono text-red-500 border-red-500/30">-{item.cost}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Messages enregistrés */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">📌 Messages enregistrés</p>
+              <div className="space-y-0">
+                {[
+                  { icon: <Bookmark className="w-4 h-4 text-blue-500" />, label: 'Créer un message enregistré', cost: 3.5 },
+                  { icon: <PenLine className="w-4 h-4 text-amber-500" />, label: 'Modifier un message enregistré', cost: 2.0 },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
+                    <div className="flex items-center gap-2.5">
+                      {item.icon}
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs font-mono text-red-500 border-red-500/30">-{item.cost}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Proximité */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">📍 Déblocages Proximité</p>
+              <div className="space-y-0">
+                {[
+                  { icon: <MapPin className="w-4 h-4 text-emerald-500" />, label: '+30 profils (72h)', cost: CREDIT_COSTS.nearby_unlock_30 },
+                  { icon: <MapPin className="w-4 h-4 text-emerald-500" />, label: '+130 profils (7 jours)', cost: CREDIT_COSTS.nearby_unlock_130 },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
+                    <div className="flex items-center gap-2.5">
+                      {item.icon}
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs font-mono text-red-500 border-red-500/30">-{item.cost}</Badge>
+                  </div>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>

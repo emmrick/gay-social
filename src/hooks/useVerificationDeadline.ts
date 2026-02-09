@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIdentityVerification } from '@/hooks/useIdentityVerification';
 
-const VERIFICATION_DEADLINE_HOURS = 12;
+const VERIFICATION_DEADLINE_HOURS = 0;
 
 export interface VerificationDeadlineStatus {
   isDeadlinePassed: boolean;

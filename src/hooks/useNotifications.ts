@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 export interface Notification {
   id: string;
@@ -17,6 +17,9 @@ export interface Notification {
 export const useNotifications = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const pollIntervalRef = useRef(2000);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  const lastSyncRef = useRef<string | null>(null);
 
   const query = useQuery({
     queryKey: ['notifications', user?.id],
@@ -31,17 +34,26 @@ export const useNotifications = () => {
         .limit(50);
 
       if (error) throw error;
+      if (data?.length) {
+        lastSyncRef.current = data[0].created_at;
+      }
       return data || [];
     },
     enabled: !!user?.id,
   });
 
-  // Subscribe to realtime notifications
+  const invalidateAll = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
+    queryClient.invalidateQueries({ queryKey: ['notifications-unread-count', user?.id] });
+  }, [queryClient, user?.id]);
+
+  // Realtime subscription + polling fallback
   useEffect(() => {
     if (!user?.id) return;
 
+    // Primary: Realtime
     const channel = supabase
-      .channel('notifications-realtime')
+      .channel(`notifications-rt-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -51,15 +63,46 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+          pollIntervalRef.current = 2000; // Reset backoff
+          invalidateAll();
         }
       )
       .subscribe();
 
+    // Fallback: Polling with exponential backoff
+    const poll = async () => {
+      try {
+        let q = supabase
+          .from('notifications')
+          .select('id, created_at', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        if (lastSyncRef.current) {
+          q = q.gt('created_at', lastSyncRef.current);
+        }
+
+        const { count } = await q;
+
+        if (count && count > 0) {
+          pollIntervalRef.current = 2000;
+          invalidateAll();
+        } else {
+          pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.5, 30000);
+        }
+      } catch {
+        pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.5, 30000);
+      } finally {
+        timeoutRef.current = setTimeout(poll, pollIntervalRef.current);
+      }
+    };
+
+    timeoutRef.current = setTimeout(poll, pollIntervalRef.current);
+
     return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       supabase.removeChannel(channel);
     };
-  }, [user?.id, queryClient]);
+  }, [user?.id, invalidateAll]);
 
   return query;
 };

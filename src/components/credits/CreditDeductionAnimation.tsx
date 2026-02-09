@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coins } from 'lucide-react';
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
 
 interface DeductionEvent {
   id: string;
@@ -36,8 +36,15 @@ interface CreditDeductionProviderProps {
 
 export const CreditDeductionProvider = ({ children }: CreditDeductionProviderProps) => {
   const [deductions, setDeductions] = useState<DeductionEvent[]>([]);
+  const recentRef = useRef<Set<string>>(new Set());
 
   const showDeduction = useCallback((amount: number, label?: string) => {
+    // Deduplicate: create a key from amount+label, ignore if seen within 500ms
+    const dedupeKey = `${amount}-${label || ''}`;
+    if (recentRef.current.has(dedupeKey)) return;
+    recentRef.current.add(dedupeKey);
+    setTimeout(() => recentRef.current.delete(dedupeKey), 500);
+
     const id = `${Date.now()}-${Math.random()}`;
     setDeductions(prev => [...prev, { id, amount, label }]);
     

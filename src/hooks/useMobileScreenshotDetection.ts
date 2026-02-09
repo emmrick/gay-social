@@ -9,24 +9,27 @@ interface MobileScreenshotDetectionOptions {
  * Advanced mobile screenshot detection hook
  * Detects screenshots taken via physical buttons (volume + power) on iOS/Android
  * Uses multiple detection methods:
- * 1. Window blur (app loses focus briefly during screenshot)
- * 2. Window resize (some devices resize during screenshot animation)
- * 3. Touch cancel (touch events are cancelled during screenshot)
- * 4. Page hide (iOS Safari triggers this during screenshot)
- * 5. Focus/Blur rapid succession
+ * 1. Window blur/focus rapid succession (screenshot causes brief blur)
+ * 2. Window resize snap-back (some devices resize during screenshot)
+ * 3. Page hide/show rapid cycle (iOS Safari)
+ * 4. Keyboard shortcuts (desktop)
+ * 5. Visibility change with short duration (mobile screenshot flash)
  */
 export const useMobileScreenshotDetection = ({
   enabled = true,
   onScreenshotDetected,
 }: MobileScreenshotDetectionOptions = {}) => {
   const lastBlurTimeRef = useRef<number>(0);
-  const lastFocusTimeRef = useRef<number>(0);
-  const blurCountRef = useRef<number>(0);
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const initialDimensionsRef = useRef<{ width: number; height: number } | null>(null);
-  const touchActiveRef = useRef<boolean>(false);
+  const cooldownRef = useRef<boolean>(false);
 
   const triggerDetection = useCallback(() => {
+    // Cooldown to prevent multiple triggers in quick succession
+    if (cooldownRef.current) return;
+    cooldownRef.current = true;
+    setTimeout(() => { cooldownRef.current = false; }, 3000);
+
     if (onScreenshotDetected) {
       onScreenshotDetected();
     }
@@ -42,37 +45,35 @@ export const useMobileScreenshotDetection = ({
     };
 
     // 1. BLUR/FOCUS DETECTION
-    // On iOS/Android, taking a screenshot briefly blurs the window
-    // Use much stricter thresholds to avoid false positives
+    // On iOS/Android, taking a screenshot briefly blurs the window (100-400ms)
     const handleBlur = () => {
       lastBlurTimeRef.current = Date.now();
     };
 
     const handleFocus = () => {
-      lastFocusTimeRef.current = Date.now();
-      const timeBetween = lastFocusTimeRef.current - lastBlurTimeRef.current;
-      
-      // Only very specific timing range (100-300ms is typical for screenshot)
-      if (timeBetween > 100 && timeBetween < 300) {
-        blurCountRef.current++;
-        // Require 2+ rapid cycles to reduce false positives
-        if (blurCountRef.current >= 2) {
-          console.log('[Screenshot Detection] Multiple rapid blur-focus cycles detected');
-          triggerDetection();
-          blurCountRef.current = 0;
-        }
-        // Reset counter after 2 seconds if no more cycles
-        setTimeout(() => {
-          blurCountRef.current = 0;
-        }, 2000);
+      const timeBetween = Date.now() - lastBlurTimeRef.current;
+      // Screenshot timing: blur lasts 100-400ms typically
+      if (timeBetween > 80 && timeBetween < 400) {
+        console.log('[Screenshot Detection] Blur-focus cycle:', timeBetween, 'ms');
+        triggerDetection();
       }
     };
 
-    // 2. VISIBILITY CHANGE - DISABLED for regular browsing
-    // This caused too many false positives (switching tabs, apps, etc.)
-    // Only keyboard shortcuts are reliable for desktop detection
+    // 2. VISIBILITY CHANGE
+    // On mobile, screenshot can briefly hide the page (< 800ms)
+    let hiddenTimestamp = 0;
     const handleVisibilityChange = () => {
-      // No-op: removed to prevent false positives
+      if (document.visibilityState === 'hidden') {
+        hiddenTimestamp = Date.now();
+      } else if (hiddenTimestamp > 0) {
+        const duration = Date.now() - hiddenTimestamp;
+        // Very quick hidden→visible (< 800ms) suggests screenshot, not app switch
+        if (duration > 50 && duration < 800) {
+          console.log('[Screenshot Detection] Quick visibility change:', duration, 'ms');
+          triggerDetection();
+        }
+        hiddenTimestamp = 0;
+      }
     };
 
     // 3. RESIZE DETECTION
@@ -80,7 +81,6 @@ export const useMobileScreenshotDetection = ({
     const handleResize = () => {
       if (!initialDimensionsRef.current) return;
       
-      // Clear existing timeout
       if (resizeTimeoutRef.current) {
         clearTimeout(resizeTimeoutRef.current);
       }
@@ -89,17 +89,14 @@ export const useMobileScreenshotDetection = ({
       const currentHeight = window.innerHeight;
       const { width: initialWidth, height: initialHeight } = initialDimensionsRef.current;
       
-      // Check for tiny resize (1-5px difference is suspicious)
       const widthDiff = Math.abs(currentWidth - initialWidth);
       const heightDiff = Math.abs(currentHeight - initialHeight);
       
+      // Tiny resize (1-5px) that snaps back = screenshot animation
       if (widthDiff > 0 && widthDiff < 10 && heightDiff < 10) {
-        // Wait to see if it snaps back (screenshot animation)
         resizeTimeoutRef.current = setTimeout(() => {
           const newWidth = window.innerWidth;
           const newHeight = window.innerHeight;
-          
-          // If dimensions returned to original, it was likely a screenshot
           if (newWidth === initialWidth && newHeight === initialHeight) {
             console.log('[Screenshot Detection] Resize snap-back detected');
             triggerDetection();
@@ -108,37 +105,16 @@ export const useMobileScreenshotDetection = ({
       }
     };
 
-    // 4. TOUCH CANCEL DETECTION
-    // Screenshot during touch can cancel touch events
-    const handleTouchStart = () => {
-      touchActiveRef.current = true;
-    };
-
-    const handleTouchEnd = () => {
-      touchActiveRef.current = false;
-    };
-
-    const handleTouchCancel = () => {
-      if (touchActiveRef.current) {
-        console.log('[Screenshot Detection] Touch cancelled (potential screenshot)');
-        // Touch cancel alone is not conclusive, but combined with other signals is suspicious
-        touchActiveRef.current = false;
-      }
-    };
-
-    // 5. PAGE HIDE (iOS specific)
+    // 4. PAGE HIDE/SHOW (iOS specific)
     const handlePageHide = () => {
-      const now = Date.now();
-      // Store and check on pageshow
-      (window as any).__pageHideTime = now;
+      (window as any).__pageHideTime = Date.now();
     };
 
     const handlePageShow = () => {
       const hideTime = (window as any).__pageHideTime;
       if (hideTime) {
         const duration = Date.now() - hideTime;
-        // Very quick hide/show (< 500ms) is suspicious
-        if (duration < 500) {
+        if (duration > 50 && duration < 600) {
           console.log('[Screenshot Detection] Quick page hide/show:', duration, 'ms');
           triggerDetection();
         }
@@ -146,9 +122,8 @@ export const useMobileScreenshotDetection = ({
       }
     };
 
-    // 6. KEYBOARD SHORTCUT DETECTION (desktop + some mobile)
+    // 5. KEYBOARD SHORTCUT DETECTION (desktop)
     const handleKeyDown = (e: KeyboardEvent) => {
-      // PrintScreen key
       if (e.key === 'PrintScreen') {
         e.preventDefault();
         console.log('[Screenshot Detection] PrintScreen key');
@@ -164,14 +139,7 @@ export const useMobileScreenshotDetection = ({
         return;
       }
       
-      // Windows: Win+PrintScreen, Win+Shift+S
-      if ((e.metaKey || e.key === 'Meta') && e.key === 'PrintScreen') {
-        e.preventDefault();
-        console.log('[Screenshot Detection] Windows screenshot shortcut');
-        triggerDetection();
-        return;
-      }
-      
+      // Windows: Win+Shift+S
       if (e.metaKey && e.shiftKey && e.key.toLowerCase() === 's') {
         e.preventDefault();
         console.log('[Screenshot Detection] Win+Shift+S detected');
@@ -185,9 +153,6 @@ export const useMobileScreenshotDetection = ({
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('resize', handleResize);
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
-    document.addEventListener('touchcancel', handleTouchCancel, { passive: true });
     window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('pageshow', handlePageShow);
     window.addEventListener('keydown', handleKeyDown, true);
@@ -197,9 +162,6 @@ export const useMobileScreenshotDetection = ({
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('resize', handleResize);
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
-      document.removeEventListener('touchcancel', handleTouchCancel);
       window.removeEventListener('pagehide', handlePageHide);
       window.removeEventListener('pageshow', handlePageShow);
       window.removeEventListener('keydown', handleKeyDown, true);

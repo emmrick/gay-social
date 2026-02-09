@@ -5,9 +5,8 @@ import { useEffect, useRef, useCallback, useState } from 'react';
  * Uses banking-app techniques to make screenshots black/unusable:
  * 
  * 1. Rapid RAF loop that detects frame drops (screenshot causes frame skip)
- * 2. Adds invisible overlay that appears in screenshots
- * 3. Uses CSS filter tricks that show differently in screenshots
- * 4. Monitors for screen recording via MediaDevices API
+ * 2. Monitors for screen recording via MediaDevices API
+ * 3. Visibility-based protection for active viewing sessions
  */
 
 interface PreventiveBlurOptions {
@@ -24,32 +23,42 @@ export const usePreventiveScreenshotBlur = ({
   const frameDropCountRef = useRef<number>(0);
   const isRecordingRef = useRef<boolean>(false);
   const [showProtection, setShowProtection] = useState(false);
+  const cooldownRef = useRef<boolean>(false);
+
+  const triggerProtection = useCallback(() => {
+    // Cooldown to prevent rapid re-triggers
+    if (cooldownRef.current) return;
+    cooldownRef.current = true;
+
+    setShowProtection(true);
+    onThreatDetected?.();
+
+    setTimeout(() => {
+      setShowProtection(false);
+      cooldownRef.current = false;
+    }, 3000);
+  }, [onThreatDetected]);
 
   // Detect screen recording via navigator.mediaDevices
   const checkScreenRecording = useCallback(async () => {
     try {
-      // Check if getDisplayMedia is being used (screen recording indicator)
       if ('mediaDevices' in navigator) {
-        // This doesn't directly detect, but we can check for active captures
         const devices = await navigator.mediaDevices.enumerateDevices();
-        // If there are unusual video inputs, might be screen recording
         const hasScreenCapture = devices.some(
           d => d.kind === 'videoinput' && d.label.toLowerCase().includes('screen')
         );
         if (hasScreenCapture && !isRecordingRef.current) {
           isRecordingRef.current = true;
           console.log('[PreventiveBlur] Screen recording detected');
-          onThreatDetected?.();
-          setShowProtection(true);
+          triggerProtection();
         }
       }
     } catch (e) {
-      // Silently fail - not all browsers support this
+      // Silently fail
     }
-  }, [onThreatDetected]);
+  }, [triggerProtection]);
 
   // Frame monitoring - screenshots cause frame drops
-  // Require multiple consecutive significant drops to avoid false positives
   const monitorFrames = useCallback(() => {
     if (!enabled) return;
 
@@ -57,32 +66,26 @@ export const usePreventiveScreenshotBlur = ({
     const delta = now - lastFrameTimeRef.current;
     lastFrameTimeRef.current = now;
 
-    // Normal frame: ~16ms (60fps)
     // Screenshot typically causes 200ms+ frame drop
-    // Use a much higher threshold to avoid false positives from normal lag
-    if (delta > 300) {
+    // Use 200ms threshold - high enough to avoid scroll lag, low enough to catch screenshots
+    if (delta > 200) {
       frameDropCountRef.current++;
-      console.log('[PreventiveBlur] Significant frame drop:', delta.toFixed(0), 'ms');
+      console.log('[PreventiveBlur] Frame drop:', delta.toFixed(0), 'ms, count:', frameDropCountRef.current);
       
-      // Require 3+ significant drops in quick succession to trigger
-      if (frameDropCountRef.current >= 3) {
-        setShowProtection(true);
-        onThreatDetected?.();
-        
-        setTimeout(() => {
-          setShowProtection(false);
-          frameDropCountRef.current = 0;
-        }, 2000);
-      }
-    } else {
-      // Reset counter if we get a normal frame (drops weren't consecutive)
-      if (frameDropCountRef.current > 0) {
+      // Require 2 significant drops within a short window
+      if (frameDropCountRef.current >= 2) {
+        triggerProtection();
         frameDropCountRef.current = 0;
       }
+      
+      // Reset counter after 1 second if no more drops
+      setTimeout(() => {
+        frameDropCountRef.current = 0;
+      }, 1000);
     }
 
     rafIdRef.current = requestAnimationFrame(monitorFrames);
-  }, [enabled, onThreatDetected]);
+  }, [enabled, triggerProtection]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -93,13 +96,17 @@ export const usePreventiveScreenshotBlur = ({
     // Check for screen recording periodically
     const recordingCheckInterval = setInterval(checkScreenRecording, 2000);
 
-    // Only trigger on visibility changes for screen recording scenarios
-    // Do NOT trigger the black screen just because the user switched tabs
+    // Visibility change: show protection when app goes to background
+    // This protects content in the app switcher/recent apps view
     const handleVisibility = () => {
-      // No longer triggering protection on simple visibility changes
-      // This was causing false positives when users switch apps or tabs
-      if (document.visibilityState === 'visible') {
-        setShowProtection(false);
+      if (document.visibilityState === 'hidden') {
+        // Show protection immediately when going to background
+        // This ensures the screenshot in app switcher shows black
+        setShowProtection(true);
+        onThreatDetected?.();
+      } else {
+        // When returning, keep protection briefly then remove
+        setTimeout(() => setShowProtection(false), 500);
       }
     };
 

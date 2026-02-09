@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { cn } from '@/lib/utils';
 import { Image, Video, Camera, X, Send, Clock, Loader2, Aperture, Lock, Crown, ShieldOff, ImagePlus, VideoIcon, Infinity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -388,16 +389,17 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={`text-muted-foreground hover:text-primary relative ${!canSend ? 'opacity-60' : ''}`}
-          >
-            <Camera className="w-5 h-5" />
-            {!canSend && (
-              <Lock className="w-3 h-3 absolute -bottom-0.5 -right-0.5 text-amber-500" />
+          <button 
+            className={cn(
+              "w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors relative",
+              !canSend && 'opacity-60'
             )}
-          </Button>
+          >
+            <Camera className="w-6 h-6 text-primary" />
+            {!canSend && (
+              <Lock className="w-3 h-3 absolute bottom-0 right-0 text-amber-500" />
+            )}
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           {/* Ephemeral media section */}

@@ -78,24 +78,26 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
     <div className="border-t border-border bg-card/50 backdrop-blur-lg relative">
       {/* Expanded options panel */}
       {showOptions && (
-        <div className="px-3 pt-3 pb-1 flex items-center gap-3 border-b border-border/50 animate-in slide-in-from-bottom-2 duration-200">
-          <div className="flex flex-col items-center gap-1">
+        <div className="px-4 py-4 flex items-center justify-center gap-8 border-b border-border/50 animate-in slide-in-from-bottom-2 duration-200">
+          <div className="flex flex-col items-center gap-1.5">
             <SavedMessagesDialog onSelectMessage={handleSelectSavedMessage} />
+            <span className="text-[10px] text-muted-foreground">Messages</span>
           </div>
 
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-1.5">
             <MediaUploadButton
               recipientId={recipientId}
               isPrivate={true}
             />
+            <span className="text-[10px] text-muted-foreground">Médias</span>
           </div>
 
           <button
-            className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl hover:bg-muted transition-colors"
+            className="flex flex-col items-center gap-1.5"
             onClick={() => { setShowShareAlbum(true); setShowOptions(false); }}
           >
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <FolderLock className="w-5 h-5 text-primary" />
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+              <FolderLock className="w-6 h-6 text-primary" />
             </div>
             <span className="text-[10px] text-muted-foreground">Album</span>
           </button>

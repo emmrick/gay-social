@@ -127,13 +127,9 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
       }
     }}>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-primary flex-shrink-0 h-10 w-10"
-        >
-          <ClipboardList className="w-5 h-5" />
-        </Button>
+        <button className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+          <ClipboardList className="w-6 h-6 text-primary" />
+        </button>
       </DialogTrigger>
       <DialogContent className="max-w-md w-[calc(100vw-2rem)] max-h-[80vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl">
         {/* Header */}

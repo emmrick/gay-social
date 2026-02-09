@@ -49,6 +49,7 @@ export const usePreventiveScreenshotBlur = ({
   }, [onThreatDetected]);
 
   // Frame monitoring - screenshots cause frame drops
+  // Require multiple consecutive significant drops to avoid false positives
   const monitorFrames = useCallback(() => {
     if (!enabled) return;
 
@@ -57,21 +58,26 @@ export const usePreventiveScreenshotBlur = ({
     lastFrameTimeRef.current = now;
 
     // Normal frame: ~16ms (60fps)
-    // Screenshot typically causes 50-200ms frame drop
-    if (delta > 100) {
+    // Screenshot typically causes 200ms+ frame drop
+    // Use a much higher threshold to avoid false positives from normal lag
+    if (delta > 300) {
       frameDropCountRef.current++;
-      console.log('[PreventiveBlur] Frame drop detected:', delta.toFixed(0), 'ms');
+      console.log('[PreventiveBlur] Significant frame drop:', delta.toFixed(0), 'ms');
       
-      // If we get frame drops, show protection and trigger detection
-      if (frameDropCountRef.current >= 1) {
+      // Require 3+ significant drops in quick succession to trigger
+      if (frameDropCountRef.current >= 3) {
         setShowProtection(true);
         onThreatDetected?.();
         
-        // Reset after showing protection
         setTimeout(() => {
           setShowProtection(false);
           frameDropCountRef.current = 0;
         }, 2000);
+      }
+    } else {
+      // Reset counter if we get a normal frame (drops weren't consecutive)
+      if (frameDropCountRef.current > 0) {
+        frameDropCountRef.current = 0;
       }
     }
 
@@ -87,15 +93,13 @@ export const usePreventiveScreenshotBlur = ({
     // Check for screen recording periodically
     const recordingCheckInterval = setInterval(checkScreenRecording, 2000);
 
-    // Also check on visibility changes (aggressive)
+    // Only trigger on visibility changes for screen recording scenarios
+    // Do NOT trigger the black screen just because the user switched tabs
     const handleVisibility = () => {
-      if (document.visibilityState === 'hidden') {
-        // IMMEDIATELY show protection when app goes to background
-        setShowProtection(true);
-        onThreatDetected?.();
-      } else {
-        // Keep protection for a bit after returning
-        setTimeout(() => setShowProtection(false), 1000);
+      // No longer triggering protection on simple visibility changes
+      // This was causing false positives when users switch apps or tabs
+      if (document.visibilityState === 'visible') {
+        setShowProtection(false);
       }
     };
 

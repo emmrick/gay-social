@@ -43,58 +43,36 @@ export const useMobileScreenshotDetection = ({
 
     // 1. BLUR/FOCUS DETECTION
     // On iOS/Android, taking a screenshot briefly blurs the window
+    // Use much stricter thresholds to avoid false positives
     const handleBlur = () => {
-      const now = Date.now();
-      lastBlurTimeRef.current = now;
-      
-      // Track rapid blur events (suspicious pattern)
-      setTimeout(() => {
-        const timeSinceBlur = Date.now() - now;
-        // If focus returned very quickly (50-500ms), it's likely a screenshot
-        if (timeSinceBlur < 500 && lastFocusTimeRef.current > lastBlurTimeRef.current) {
-          blurCountRef.current++;
-          // Multiple rapid blur/focus cycles = almost certainly a screenshot
-          if (blurCountRef.current >= 1) {
-            console.log('[Screenshot Detection] Blur/Focus pattern detected');
-            triggerDetection();
-            blurCountRef.current = 0;
-          }
-        }
-      }, 600);
+      lastBlurTimeRef.current = Date.now();
     };
 
     const handleFocus = () => {
       lastFocusTimeRef.current = Date.now();
       const timeBetween = lastFocusTimeRef.current - lastBlurTimeRef.current;
       
-      // Rapid focus after blur (100-400ms is typical for screenshot)
-      if (timeBetween > 50 && timeBetween < 400) {
-        console.log('[Screenshot Detection] Quick blur-focus cycle:', timeBetween, 'ms');
-        triggerDetection();
+      // Only very specific timing range (100-300ms is typical for screenshot)
+      if (timeBetween > 100 && timeBetween < 300) {
+        blurCountRef.current++;
+        // Require 2+ rapid cycles to reduce false positives
+        if (blurCountRef.current >= 2) {
+          console.log('[Screenshot Detection] Multiple rapid blur-focus cycles detected');
+          triggerDetection();
+          blurCountRef.current = 0;
+        }
+        // Reset counter after 2 seconds if no more cycles
+        setTimeout(() => {
+          blurCountRef.current = 0;
+        }, 2000);
       }
     };
 
-    // 2. VISIBILITY CHANGE (covers most mobile scenarios)
+    // 2. VISIBILITY CHANGE - DISABLED for regular browsing
+    // This caused too many false positives (switching tabs, apps, etc.)
+    // Only keyboard shortcuts are reliable for desktop detection
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Store time when hidden
-        const hiddenTime = Date.now();
-        
-        // Check if visible again very quickly (screenshot flash)
-        const checkQuickReturn = () => {
-          if (!document.hidden) {
-            const visibleTime = Date.now() - hiddenTime;
-            if (visibleTime < 1000) {
-              console.log('[Screenshot Detection] Quick visibility change:', visibleTime, 'ms');
-              triggerDetection();
-            }
-          }
-        };
-        
-        setTimeout(checkQuickReturn, 100);
-        setTimeout(checkQuickReturn, 300);
-        setTimeout(checkQuickReturn, 500);
-      }
+      // No-op: removed to prevent false positives
     };
 
     // 3. RESIZE DETECTION

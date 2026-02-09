@@ -147,8 +147,8 @@
   }
 
   .message-bubble {
-    @apply rounded-2xl px-4 py-2.5;
-    max-width: min(80%, 320px);
+    @apply rounded-2xl px-3 py-2;
+    max-width: min(80%, 340px);
     min-width: fit-content;
     word-break: break-word;
     overflow-wrap: break-word;
@@ -160,7 +160,7 @@
   }
 
   .message-bubble-received {
-    @apply bg-secondary text-secondary-foreground rounded-bl-md;
+    @apply bg-card text-foreground border border-border rounded-bl-md;
   }
 
   .message-bubble p {

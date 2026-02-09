@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
-import { format } from 'date-fns';
+import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, CheckCheck, ChevronDown } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
@@ -11,7 +11,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useHasBlockedUser, useUnblockUserAction } from '@/hooks/useUserBlock';
 import { usePrivateTypingIndicator } from '@/hooks/usePrivateTypingIndicator';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
@@ -29,11 +28,19 @@ import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 import UserProfilePreview from './UserProfilePreview';
+import { cn } from '@/lib/utils';
 
 interface PrivateChatRoomProps {
   otherUserId: string;
   onBack: () => void;
 }
+
+// Format date for separator labels
+const formatDateLabel = (date: Date): string => {
+  if (isToday(date)) return "Aujourd'hui";
+  if (isYesterday(date)) return 'Hier';
+  return format(date, 'd MMMM yyyy', { locale: fr });
+};
 
 const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { user } = useAuth();
@@ -50,22 +57,17 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
 
-  // Mobile back navigation
   useMobileNavigation({ onBack, enabled: true });
 
-  // Mark messages as read when entering the conversation
+  // Mark as read on enter
   useEffect(() => {
-    if (otherUserId) {
-      markAsRead.mutate(otherUserId);
-    }
+    if (otherUserId) markAsRead.mutate(otherUserId);
   }, [otherUserId]);
 
-  // Track if this is the initial load
   const isInitialLoad = useRef(true);
   const previousMessagesLength = useRef(0);
   const previousOtherUserId = useRef(otherUserId);
 
-  // Reset initial load when changing conversation
   useEffect(() => {
     if (previousOtherUserId.current !== otherUserId) {
       isInitialLoad.current = true;
@@ -74,7 +76,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   }, [otherUserId]);
 
-  // Helper to scroll container to absolute bottom
   const scrollToBottom = useCallback((instant: boolean = false) => {
     const container = messagesContainerRef.current;
     if (container) {
@@ -85,63 +86,41 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   }, []);
 
-  // Use useLayoutEffect for initial scroll - fires synchronously after DOM mutations
   useLayoutEffect(() => {
     if (isLoading || messages.length === 0) return;
-    
     if (isInitialLoad.current) {
-      // Immediate scroll (no animation)
       scrollToBottom(true);
-      
-      // Multiple delayed scrolls to handle lazy-loaded images/media
-      const timers = [50, 150, 300, 500].map((delay) =>
-        setTimeout(() => scrollToBottom(true), delay)
-      );
-
-      // Mark as loaded after last scroll
+      const timers = [50, 150, 300, 500].map((d) => setTimeout(() => scrollToBottom(true), d));
       setTimeout(() => {
         isInitialLoad.current = false;
         previousMessagesLength.current = messages.length;
       }, 550);
-
       return () => timers.forEach(clearTimeout);
     }
   }, [messages, isLoading, scrollToBottom]);
 
-  // Smooth scroll for new incoming messages (after initial load)
   useEffect(() => {
     if (isLoading || isInitialLoad.current) return;
-
     if (messages.length > previousMessagesLength.current) {
       scrollToBottom(false);
       previousMessagesLength.current = messages.length;
     }
   }, [messages, isLoading, scrollToBottom]);
 
-  // Auto-scroll when the other user starts typing
   useEffect(() => {
-    if (!isOtherTyping) return;
-    scrollToBottom(false);
+    if (isOtherTyping) scrollToBottom(false);
   }, [isOtherTyping, scrollToBottom]);
 
-  // Scroll to bottom when input is focused (keyboard opens)
   const handleInputFocus = useCallback(() => {
     setTimeout(() => scrollToBottom(false), 100);
   }, [scrollToBottom]);
 
-  // Handle scroll to show/hide scroll button
   const handleScroll = useCallback(() => {
     if (messagesContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-      setShowScrollButton(!isNearBottom);
+      setShowScrollButton(scrollHeight - scrollTop - clientHeight > 100);
     }
   }, []);
-
-  // Scroll to bottom button handler (wraps scrollToBottom for onClick)
-  const handleScrollToBottomClick = useCallback(() => {
-    scrollToBottom(false);
-  }, [scrollToBottom]);
 
   const handleSendMessage = async (content: string) => {
     if (content.trim()) {
@@ -155,70 +134,73 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     refetchBlockStatus();
   };
 
+  // Determine if we should show a date separator before this message
+  const shouldShowDateSeparator = (index: number): boolean => {
+    if (index === 0) return true;
+    const current = new Date(messages[index].created_at);
+    const previous = new Date(messages[index - 1].created_at);
+    return !isSameDay(current, previous);
+  };
+
   return (
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
-      {/* Header - fixed at top with safe area */}
-      <header 
-        className="flex-shrink-0 flex items-center gap-3 p-4 border-b border-border bg-card/95 backdrop-blur-lg z-20"
-        style={{
-          paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))',
-        }}
+      {/* Header */}
+      <header
+        className="flex-shrink-0 flex items-center gap-2 px-2 py-2 border-b border-border bg-card z-20"
+        style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))' }}
       >
-        <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0">
+        <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0 h-10 w-10">
           <ArrowLeft className="w-5 h-5" />
         </Button>
 
         {profileLoading ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1">
             <Skeleton className="w-10 h-10 rounded-full" />
-            <div className="space-y-1">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-3 w-16" />
-            </div>
+            <Skeleton className="h-4 w-24" />
           </div>
         ) : (
-          <>
-            <button
-              onClick={() => setShowProfilePreview(true)}
-              className="relative cursor-pointer hover:scale-105 transition-transform"
-            >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold overflow-hidden">
+          <button
+            onClick={() => setShowProfilePreview(true)}
+            className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+          >
+            <div className="relative flex-shrink-0">
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-muted">
                 {otherUserProfile?.avatar_url ? (
                   <img
                     src={`${otherUserProfile.avatar_url}${otherUserProfile.avatar_url.includes('?') ? '&' : '?'}v=${otherUserProfile.updated_at || ''}`}
                     alt={otherUserProfile.username}
-                    className="w-full h-full rounded-full object-cover"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  otherUserProfile?.username.charAt(0).toUpperCase()
+                  <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                    {otherUserProfile?.username.charAt(0).toUpperCase()}
+                  </div>
                 )}
               </div>
               {isUserTrulyOnline(otherUserProfile) && (
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
               )}
-            </button>
-
-            <button
-              onClick={() => setShowProfilePreview(true)}
-              className="flex-1 text-left cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              <h2 className="font-semibold text-foreground">
+            </div>
+            <div className="min-w-0">
+              <h2 className="font-semibold text-[15px] text-foreground truncate">
                 {otherUserProfile?.username}
               </h2>
               <p className="text-xs text-muted-foreground">
-                {isUserTrulyOnline(otherUserProfile) ? (
+                {isOtherTyping ? (
+                  <span className="text-primary">écrit…</span>
+                ) : isUserTrulyOnline(otherUserProfile) ? (
                   <span className="text-green-500">En ligne</span>
                 ) : (
                   'Hors ligne'
                 )}
               </p>
-            </button>
-          </>
+            </div>
+          </button>
         )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0">
               <MoreVertical className="w-5 h-5" />
             </Button>
           </DropdownMenuTrigger>
@@ -229,240 +211,192 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {hasBlocked ? (
-              <DropdownMenuItem 
-                onClick={handleUnblock}
-                disabled={unblockUser.isPending}
-              >
+              <DropdownMenuItem onClick={handleUnblock} disabled={unblockUser.isPending}>
                 <UserCheck className="w-4 h-4 mr-2" />
-                Débloquer {otherUserProfile?.username}
+                Débloquer
               </DropdownMenuItem>
             ) : (
-              <DropdownMenuItem 
-                className="text-destructive focus:text-destructive"
-                onClick={() => setShowBlockDialog(true)}
-              >
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setShowBlockDialog(true)}>
                 <Ban className="w-4 h-4 mr-2" />
-                Bloquer {otherUserProfile?.username}
+                Bloquer
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem 
-              className="text-destructive focus:text-destructive"
-              onClick={() => setShowReportDialog(true)}
-            >
+            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setShowReportDialog(true)}>
               <Flag className="w-4 h-4 mr-2" />
-              Signaler {otherUserProfile?.username}
+              Signaler
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
 
-      {/* Report Dialog */}
+      {/* Dialogs */}
       {otherUserProfile && (
-        <ReportUserDialog
-          open={showReportDialog}
-          onOpenChange={setShowReportDialog}
-          userId={otherUserId}
-          username={otherUserProfile.username}
-        />
+        <>
+          <ReportUserDialog open={showReportDialog} onOpenChange={setShowReportDialog} userId={otherUserId} username={otherUserProfile.username} />
+          <BlockUserDialog open={showBlockDialog} onOpenChange={setShowBlockDialog} userId={otherUserId} username={otherUserProfile.username} onBlocked={() => { refetchBlockStatus(); onBack(); }} />
+          <ShareAlbumDialog isOpen={showShareAlbum} onClose={() => setShowShareAlbum(false)} recipientId={otherUserId} recipientName={otherUserProfile.username} />
+        </>
       )}
+      <UserProfilePreview userId={otherUserId} isOpen={showProfilePreview} onClose={() => setShowProfilePreview(false)} onStartPrivateChat={() => setShowProfilePreview(false)} />
 
-      {/* Block Dialog */}
-      {otherUserProfile && (
-        <BlockUserDialog
-          open={showBlockDialog}
-          onOpenChange={setShowBlockDialog}
-          userId={otherUserId}
-          username={otherUserProfile.username}
-          onBlocked={() => {
-            refetchBlockStatus();
-            onBack();
-          }}
-        />
-      )}
-
-      {/* Share Album Dialog */}
-      {otherUserProfile && (
-        <ShareAlbumDialog
-          isOpen={showShareAlbum}
-          onClose={() => setShowShareAlbum(false)}
-          recipientId={otherUserId}
-          recipientName={otherUserProfile.username}
-        />
-      )}
-
-      {/* User Profile Preview */}
-      <UserProfilePreview
-        userId={otherUserId}
-        isOpen={showProfilePreview}
-        onClose={() => setShowProfilePreview(false)}
-        onStartPrivateChat={() => setShowProfilePreview(false)}
-      />
-
-      {/* Messages - scrollable middle section */}
-      <div className="flex-1 overflow-y-auto overscroll-contain p-4 relative" ref={messagesContainerRef} onScroll={handleScroll}>
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className={`flex gap-3 ${i % 2 === 0 ? 'flex-row-reverse' : ''}`}>
-                <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
-                <Skeleton className="h-16 w-48 rounded-2xl" />
-              </div>
-            ))}
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <p className="text-muted-foreground">
-              Commence la conversation avec {otherUserProfile?.username}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {messages.map((message) => {
+      {/* Messages area */}
+      <div
+        className="flex-1 overflow-y-auto overscroll-contain relative"
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        style={{ background: 'var(--gradient-subtle, hsl(var(--background)))' }}
+      >
+        <div className="px-3 py-2 space-y-0.5">
+          {isLoading ? (
+            <div className="space-y-4 p-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+                  <Skeleton className="h-12 w-48 rounded-2xl" />
+                </div>
+              ))}
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full py-20 text-center">
+              <p className="text-muted-foreground text-sm">
+                Envoyer un message à {otherUserProfile?.username}
+              </p>
+            </div>
+          ) : (
+            messages.map((message, index) => {
               const isOwn = message.sender_id === user?.id;
-              const isEphemeralMedia = (message.message_type === 'image' || message.message_type === 'video') && 
-                                       message.content && !message.content.startsWith('http');
-              const isRegularMedia = (message.message_type === 'image' || message.message_type === 'video') && 
-                                     message.content && message.content.startsWith('http');
+              const showDate = shouldShowDateSeparator(index);
+              const isEphemeralMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && !message.content.startsWith('http');
+              const isRegularMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && message.content.startsWith('http');
               const isAlbumShare = message.message_type === 'album_share';
               const isCreditRequest = message.message_type === 'credit_request';
 
-              // Parse album share data if applicable
               let albumShareData: { shareId: string; albumId: string; albumName: string; expiresAt: string | null } | null = null;
               if (isAlbumShare && message.content) {
                 try {
                   const parsed = JSON.parse(message.content);
-                  // Handle different response structures safely
-                  if (parsed.shareId && parsed.albumId) {
-                    albumShareData = parsed;
-                  } else if (parsed.data?.shareId && parsed.data?.albumId) {
-                    albumShareData = parsed.data;
-                  } else {
-                    console.error('Invalid album share structure:', Object.keys(parsed));
-                  }
-                } catch (e) {
-                  console.error('Failed to parse album share data:', e, message.content);
-                }
+                  albumShareData = parsed.shareId ? parsed : parsed.data || null;
+                } catch { /* ignore */ }
               }
 
+              // Check if next message is same sender and within 2min for grouping
+              const nextMsg = messages[index + 1];
+              const isLastInGroup = !nextMsg ||
+                nextMsg.sender_id !== message.sender_id ||
+                new Date(nextMsg.created_at).getTime() - new Date(message.created_at).getTime() > 120000;
+
               return (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : 'flex-row'} animate-slide-up`}
-                >
-                  {/* Avatar - always use live profile data instead of cached message data */}
-                  {!isOwn && (
-                    <button
-                      onClick={() => setShowProfilePreview(true)}
-                      className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 cursor-pointer hover:scale-105 transition-transform overflow-hidden"
-                    >
-                      {otherUserProfile?.avatar_url ? (
-                        <img
-                          src={otherUserProfile.avatar_url}
-                          alt={otherUserProfile.username}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        (otherUserProfile?.username || message.senderUsername).charAt(0).toUpperCase()
-                      )}
-                    </button>
+                <div key={message.id}>
+                  {/* Date separator */}
+                  {showDate && (
+                    <div className="flex justify-center py-3">
+                      <span className="text-[11px] font-medium text-muted-foreground bg-muted/80 px-3 py-1 rounded-full">
+                        {formatDateLabel(new Date(message.created_at))}
+                      </span>
+                    </div>
                   )}
 
-                  <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
-                    {/* Message content */}
-                    {isAlbumShare && albumShareData ? (
-                      <SharedAlbumMessage
-                        shareId={albumShareData.shareId}
-                        albumId={albumShareData.albumId}
-                        albumName={albumShareData.albumName}
-                        expiresAt={albumShareData.expiresAt}
-                        sharedByUserId={message.sender_id}
-                        isOwn={isOwn}
-                      />
-                    ) : isCreditRequest ? (
-                      <CreditRequestMessage
-                        messageId={message.id}
-                        content={message.content || ''}
-                        senderId={message.sender_id}
-                        isOwn={isOwn}
-                      />
-                    ) : isEphemeralMedia ? (
-                      <EphemeralMessage
-                        messageId={message.id}
-                        messageType={message.message_type as 'image' | 'video'}
-                        senderName={message.senderUsername}
-                        isOwn={isOwn}
-                        recipientId={otherUserId}
-                      />
-                    ) : isRegularMedia ? (
-                      <RegularMediaMessage
-                        mediaUrl={message.content!}
-                        mediaType={message.message_type as 'image' | 'video'}
-                        isOwn={isOwn}
-                      />
-                    ) : (
-                      <div
-                        className={`message-bubble ${
-                          isOwn ? 'message-bubble-sent' : 'message-bubble-received'
-                        }`}
-                      >
-                        <p className="text-sm leading-relaxed">{message.content}</p>
-                      </div>
-                    )}
+                  {/* Message bubble */}
+                  <div className={cn(
+                    "flex",
+                    isOwn ? "justify-end" : "justify-start",
+                    isLastInGroup ? "mb-2" : "mb-0.5"
+                  )}>
+                    <div className={cn("max-w-[80%]", isOwn ? "items-end" : "items-start")}>
+                      {isAlbumShare && albumShareData ? (
+                        <SharedAlbumMessage
+                          shareId={albumShareData.shareId}
+                          albumId={albumShareData.albumId}
+                          albumName={albumShareData.albumName}
+                          expiresAt={albumShareData.expiresAt}
+                          sharedByUserId={message.sender_id}
+                          isOwn={isOwn}
+                        />
+                      ) : isCreditRequest ? (
+                        <CreditRequestMessage
+                          messageId={message.id}
+                          content={message.content || ''}
+                          senderId={message.sender_id}
+                          isOwn={isOwn}
+                        />
+                      ) : isEphemeralMedia ? (
+                        <EphemeralMessage
+                          messageId={message.id}
+                          messageType={message.message_type as 'image' | 'video'}
+                          senderName={message.senderUsername}
+                          isOwn={isOwn}
+                          recipientId={otherUserId}
+                        />
+                      ) : isRegularMedia ? (
+                        <RegularMediaMessage
+                          mediaUrl={message.content!}
+                          mediaType={message.message_type as 'image' | 'video'}
+                          isOwn={isOwn}
+                        />
+                      ) : (
+                        <div className={cn(
+                          "px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words",
+                          isOwn
+                            ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
+                            : "bg-card border border-border text-foreground rounded-2xl rounded-bl-md",
+                          "max-w-full"
+                        )}
+                        style={{ wordBreak: 'break-word' }}
+                        >
+                          {message.content}
+                        </div>
+                      )}
 
-                    {/* Timestamp and read status */}
-                    <div className={`flex items-center gap-1 mt-1 px-1 ${isOwn ? 'justify-end' : ''}`}>
-                      <span className="text-[10px] text-muted-foreground">
-                        {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
-                      </span>
-                      {/* Read status indicator - only for own messages */}
-                      {isOwn && (
-                        <span className="flex items-center">
-                          {message.read_at ? (
-                            <CheckCheck className="w-3.5 h-3.5 text-primary animate-message-read" />
-                          ) : (
-                            <CheckCheck className="w-3.5 h-3.5 text-muted-foreground transition-colors duration-300" />
+                      {/* Timestamp + read status - only on last in group */}
+                      {isLastInGroup && (
+                        <div className={cn(
+                          "flex items-center gap-1 mt-0.5 px-1",
+                          isOwn ? "justify-end" : "justify-start"
+                        )}>
+                          <span className="text-[10px] text-muted-foreground">
+                            {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
+                          </span>
+                          {isOwn && (
+                            <CheckCheck className={cn(
+                              "w-3.5 h-3.5",
+                              message.read_at ? "text-primary" : "text-muted-foreground/50"
+                            )} />
                           )}
-                        </span>
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
               );
-            })}
-            
-            {/* Typing indicator */}
-            {isOtherTyping && (
-              <div className="flex items-center gap-2 px-2 py-1 animate-fade-in">
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-                <span className="text-sm text-muted-foreground">
-                  {otherUserProfile?.username} écrit...
-                </span>
-              </div>
-            )}
-            
-            
-          </div>
-        )}
+            })
+          )}
 
-        {/* Scroll to bottom button */}
+          {/* Typing indicator */}
+          {isOtherTyping && (
+            <div className="flex justify-start mb-2">
+              <div className="bg-card border border-border rounded-2xl rounded-bl-md px-4 py-2.5 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Scroll to bottom */}
         {showScrollButton && (
           <button
-            className="absolute bottom-4 right-4 rounded-full shadow-lg z-10 bg-primary text-primary-foreground hover:bg-primary/90 w-10 h-10 flex items-center justify-center"
-            onClick={handleScrollToBottomClick}
+            className="absolute bottom-3 right-3 rounded-full shadow-lg z-10 bg-card border border-border text-foreground hover:bg-muted w-9 h-9 flex items-center justify-center"
+            onClick={() => scrollToBottom(false)}
           >
-            <ChevronDown className="w-5 h-5" />
+            <ChevronDown className="w-4 h-4" />
           </button>
         )}
       </div>
 
-      {/* Input - fixed at bottom */}
+      {/* Input */}
       <div className="flex-shrink-0">
-        <ChatInput 
-          onSendMessage={handleSendMessage} 
+        <ChatInput
+          onSendMessage={handleSendMessage}
           recipientId={otherUserId}
           isPrivate={true}
           isSending={sendMessage.isPending}

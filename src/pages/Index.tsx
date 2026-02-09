@@ -8,6 +8,7 @@ import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import ProfileView from '@/components/profile/ProfileView';
 import PremiumPage from '@/components/premium/PremiumPage';
+import ReferralDialog from '@/components/premium/ReferralDialog';
 import SwipePage from '@/components/swipe/SwipePage';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
 import MemberSearch from '@/components/chat/MemberSearch';
@@ -684,7 +685,10 @@ const Index = () => {
                     Débloquer toutes les fonctionnalités
                   </motion.p>
                 </div>
-                <NotificationsDropdown />
+                <div className="flex items-center gap-2">
+                  <ReferralDialog />
+                  <NotificationsDropdown />
+                </div>
               </div>
             </div>
             <ScrollArea className="flex-1 min-h-0">

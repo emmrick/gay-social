@@ -161,8 +161,7 @@ const PremiumPage = () => {
           </CardContent>
         </Card>
 
-        {/* Referral Section */}
-        <ReferralSection />
+        {/* Referral moved to header icon */}
 
         {/* Credit Costs */}
         <Card>

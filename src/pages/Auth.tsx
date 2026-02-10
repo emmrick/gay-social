@@ -23,6 +23,9 @@ const Auth = () => {
   const [referralCode, setReferralCode] = useState('');
   const [referralValidation, setReferralValidation] = useState<{ valid: boolean; message: string } | null>(null);
   const [isValidatingReferral, setIsValidatingReferral] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { data: rooms, isLoading: roomsLoading } = useChatRooms();
@@ -58,6 +61,27 @@ const Auth = () => {
       setReferralValidation({ valid: false, message: 'Erreur de validation' });
     } finally {
       setIsValidatingReferral(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!resetEmail.trim()) {
+      toast.error('Veuillez entrer votre adresse email');
+      return;
+    }
+    setIsResetting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      if (error) throw error;
+      toast.success('Un email de réinitialisation a été envoyé ! Vérifie ta boîte de réception.');
+      setShowForgotPassword(false);
+      setResetEmail('');
+    } catch (error: any) {
+      toast.error(error.message || 'Erreur lors de l\'envoi de l\'email');
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -182,6 +206,15 @@ const Auth = () => {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {isLogin && (
+                <button
+                  type="button"
+                  onClick={() => { setResetEmail(email); setShowForgotPassword(true); }}
+                  className="text-xs text-primary hover:underline mt-1"
+                >
+                  Mot de passe oublié ?
+                </button>
+              )}
             </div>
 
             {/* Signup fields */}
@@ -337,6 +370,49 @@ const Auth = () => {
               )}
             </button>
           </div>
+
+          {/* Forgot Password Modal */}
+          {showForgotPassword && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+              <div className="w-full max-w-sm bg-card border border-border rounded-2xl shadow-xl p-6 space-y-4 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg">Réinitialiser le mot de passe</h3>
+                  <button onClick={() => setShowForgotPassword(false)} className="p-1 text-muted-foreground hover:text-foreground">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Entre ton adresse email et nous t'enverrons un lien pour réinitialiser ton mot de passe.
+                </p>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="ton@email.com"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="pl-10 h-11 bg-secondary/50 border-border/50 rounded-xl"
+                    autoFocus
+                  />
+                </div>
+                <Button
+                  onClick={handleForgotPassword}
+                  variant="hero"
+                  className="w-full h-11 rounded-xl"
+                  disabled={isResetting}
+                >
+                  {isResetting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    'Envoyer le lien'
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

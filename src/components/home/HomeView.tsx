@@ -1,6 +1,7 @@
 import { MapPin } from 'lucide-react';
 import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesMembers from './FavoritesMembers';
+import ReferralBanner from './ReferralBanner';
 
 interface HomeViewProps {
   onViewProfile?: (userId: string) => void;
@@ -23,6 +24,9 @@ const HomeView = ({
     <div className="pb-4">
       {/* Main Content */}
       <div className="px-4 py-4 space-y-5">
+        {/* Referral Banner */}
+        <ReferralBanner />
+
         {/* Favorites Section */}
         <FavoritesMembers onStartChat={handleStartChat} />
 

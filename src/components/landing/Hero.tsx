@@ -125,6 +125,10 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
               À propos
             </Link>
             <span className="hidden md:inline">•</span>
+            <Link to="/regions" className="hover:text-primary transition-colors">
+              Toutes les régions
+            </Link>
+            <span className="hidden md:inline">•</span>
             <span className="flex items-center gap-1">
               <AlertTriangle className="w-4 h-4 text-destructive" />
               Réservé aux +18 ans

@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription, FREE_LIMITS, PREMIUM_LIMITS } from './useSubscription';
+import { useSubscription } from './useSubscription';
 import { useMemo } from 'react';
 
 interface NearbyProfile {
@@ -39,33 +39,20 @@ const fixStaleOnlineStatus = (profile: NearbyProfile): NearbyProfile => {
 export const useNearbyProfiles = (
   latitude: number | null,
   longitude: number | null,
-  maxDistance: number = 1000
+  maxDistance: number = 50000
 ) => {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
 
-  const maxProfilesAllowed = isPremium 
-    ? PREMIUM_LIMITS.nearbyProfiles 
-    : FREE_LIMITS.nearbyProfiles;
-
   const query = useInfiniteQuery({
-    queryKey: ['nearby-profiles', latitude, longitude, maxDistance, isPremium],
+    queryKey: ['nearby-profiles', latitude, longitude, maxDistance],
     queryFn: async ({ pageParam = 0 }): Promise<{ profiles: NearbyProfile[]; nextPage: number | null }> => {
       const offset = pageParam * PAGE_SIZE;
-      
-      // Apply limit based on subscription for total profiles
-      const remainingAllowed = Math.max(0, maxProfilesAllowed - offset);
-      const effectiveLimit = Math.min(PAGE_SIZE, remainingAllowed);
-      
-      if (effectiveLimit <= 0) {
-        return { profiles: [], nextPage: null };
-      }
 
       // Use explicit null/undefined checks (0 is a valid coordinate).
       if (latitude == null || longitude == null) {
-        // Fallback: get all profiles, not just recently active
-        // Fetch extra to account for blocked/suspended filtering
-        const fetchCount = effectiveLimit + 15;
+        // Fallback: get all profiles sorted by last_seen
+        const fetchCount = PAGE_SIZE + 15;
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
@@ -93,39 +80,37 @@ export const useNearbyProfiles = (
         
         const filteredProfiles = profilesWithStatus
           .filter(({ isBlocked, isSuspended }) => !isBlocked && !isSuspended)
-          .slice(0, effectiveLimit)
+          .slice(0, PAGE_SIZE)
           .map(({ profile }) => fixStaleOnlineStatus({
             ...profile,
             distance_km: null,
           }));
 
-        const hasMore = filteredProfiles.length === effectiveLimit && (offset + filteredProfiles.length) < maxProfilesAllowed;
+        const hasMore = filteredProfiles.length === PAGE_SIZE;
         return { 
           profiles: filteredProfiles, 
           nextPage: hasMore ? pageParam + 1 : null 
         };
       }
 
-      // With geolocation: fetch ALL profiles within range from RPC (no artificial JS limit)
-      // Use a high limit to get all profiles, then paginate client-side
+      // With geolocation: fetch all profiles sorted by distance (closest first)
       const { data, error } = await supabase
         .rpc('get_nearby_profiles', {
           user_lat: latitude,
           user_lon: longitude,
           max_distance_km: maxDistance,
-          limit_count: maxProfilesAllowed, // Get all allowed profiles at once
+          limit_count: 1000,
         });
 
       if (error) throw error;
       
-      // Fix stale online status but do NOT filter out offline profiles
-      // All profiles within range should be shown, sorted by online status then distance
+      // Fix stale online status, keep sorted by distance (RPC already sorts)
       const correctedProfiles = (data || []).map(fixStaleOnlineStatus);
       
       // Apply pagination
-      const paginatedProfiles = correctedProfiles.slice(offset, offset + effectiveLimit);
+      const paginatedProfiles = correctedProfiles.slice(offset, offset + PAGE_SIZE);
       
-      const hasMore = paginatedProfiles.length === effectiveLimit && (offset + paginatedProfiles.length) < maxProfilesAllowed;
+      const hasMore = paginatedProfiles.length === PAGE_SIZE && (offset + PAGE_SIZE) < correctedProfiles.length;
       return { 
         profiles: paginatedProfiles, 
         nextPage: hasMore ? pageParam + 1 : null 
@@ -145,8 +130,6 @@ export const useNearbyProfiles = (
     return query.data?.pages.flatMap(page => page.profiles) ?? [];
   }, [query.data]);
 
-  const isLimited = !isPremium && allProfiles.length >= FREE_LIMITS.nearbyProfiles;
-
   return {
     data: allProfiles,
     isLoading: query.isLoading,
@@ -155,9 +138,7 @@ export const useNearbyProfiles = (
     fetchNextPage: query.fetchNextPage,
     error: query.error,
     refetch: query.refetch,
-    maxProfilesAllowed,
     isPremium,
-    isLimited,
   };
 };
 

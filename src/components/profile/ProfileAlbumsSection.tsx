@@ -6,10 +6,12 @@ import { useAlbums } from '@/hooks/useAlbums';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import AlbumManager from '@/components/albums/AlbumManager';
+import AlbumGalleryViewer from '@/components/albums/AlbumGalleryViewer';
 
 const ProfileAlbumsSection = () => {
   const { albums, isLoading, useAlbumMedia } = useAlbums();
   const [showAlbumManager, setShowAlbumManager] = useState(false);
+  const [galleryState, setGalleryState] = useState<{ albumId: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -66,7 +68,7 @@ const ProfileAlbumsSection = () => {
                   album={album} 
                   index={index}
                   useAlbumMedia={useAlbumMedia}
-                  onClick={() => setShowAlbumManager(true)}
+                  onClick={() => setGalleryState({ albumId: album.id })}
                 />
               ))}
               {albums.length > 6 && (
@@ -83,7 +85,38 @@ const ProfileAlbumsSection = () => {
       </Card>
 
       <AlbumManager isOpen={showAlbumManager} onClose={() => setShowAlbumManager(false)} />
+
+      {/* Direct gallery viewer for clicked album */}
+      {galleryState && (
+        <AlbumGalleryMediaBridge
+          albumId={galleryState.albumId}
+          useAlbumMedia={useAlbumMedia}
+          onClose={() => setGalleryState(null)}
+        />
+      )}
     </>
+  );
+};
+
+/** Bridge component to fetch album media and pass to gallery viewer */
+const AlbumGalleryMediaBridge = ({
+  albumId,
+  useAlbumMedia,
+  onClose,
+}: {
+  albumId: string;
+  useAlbumMedia: (albumId: string) => any;
+  onClose: () => void;
+}) => {
+  const { data: media = [] } = useAlbumMedia(albumId);
+
+  return (
+    <AlbumGalleryViewer
+      media={media}
+      initialIndex={0}
+      isOpen={true}
+      onClose={onClose}
+    />
   );
 };
 

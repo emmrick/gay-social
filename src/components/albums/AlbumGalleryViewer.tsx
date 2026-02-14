@@ -383,7 +383,7 @@ const AlbumGalleryViewer = ({
                       onDoubleClick={index === selectedIndex ? handleDoubleTap : undefined}
                     >
                       <motion.img
-                        initial={{ scale: 0.9, opacity: 0 }}
+                        initial={{ scale: 1, opacity: 1 }}
                         animate={{ 
                           scale: index === selectedIndex ? zoomState.scale : 1, 
                           opacity: isBlocked ? 0 : 1,
@@ -419,7 +419,7 @@ const AlbumGalleryViewer = ({
                   ) : (
                     <div className="relative max-w-full max-h-full flex items-center justify-center">
                       <motion.video
-                        initial={{ scale: 0.9, opacity: 0 }}
+                        initial={{ scale: 1, opacity: 1 }}
                         animate={{ scale: 1, opacity: isBlocked ? 0 : 1 }}
                         transition={{ duration: 0.1 }}
                         src={item.media_url}

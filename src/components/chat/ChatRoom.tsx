@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useMessages } from '@/hooks/useMessages';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { useMessageReactions } from '@/hooks/useMessageReactions';
+import { useGroupReadReceipts } from '@/hooks/useGroupReadReceipts';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { useUnreadMentions } from '@/hooks/useUnreadMentions';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,6 +58,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
   const { messages, searchResults, isLoading, sendMessage } = useMessages(roomId, searchQuery);
   const { typingUsers, startTyping, stopTyping } = useTypingIndicator(roomId);
   const { getReactionsForMessage, toggleReaction } = useMessageReactions(roomId);
+  const { getReaders, markAsRead } = useGroupReadReceipts(roomId);
   const { markMentionsAsRead } = useUnreadMentions();
   
   // Mark mentions as read when opening the room
@@ -65,6 +67,18 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
       markMentionsAsRead(roomId);
     }
   }, [roomId, markMentionsAsRead]);
+
+  // Mark messages as read when viewing
+  useEffect(() => {
+    if (messages.length > 0 && user?.id) {
+      const otherMessages = messages
+        .filter(m => m.sender_id !== user.id)
+        .map(m => m.id);
+      if (otherMessages.length > 0) {
+        markAsRead(otherMessages);
+      }
+    }
+  }, [messages, user?.id, markAsRead]);
   
   const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
   const [showMembers, setShowMembers] = useState(false);
@@ -327,6 +341,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
               isOwn={message.sender_id === user?.id}
               isHighlighted={searchResults.includes(message.id) && searchResults[searchIndex] === message.id}
               reactions={getReactionsForMessage(message.id)}
+              readers={getReaders(message.id)}
+              totalMembers={memberCount}
               chatRoomId={roomId}
               onReply={handleReply}
               onAvatarClick={handleAvatarClick}

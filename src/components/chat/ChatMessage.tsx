@@ -6,6 +6,7 @@ import { Reply, CornerUpLeft, Flag, Trash2, Loader2 } from 'lucide-react';
 import EphemeralMessage from './EphemeralMessage';
 import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
+import MessageReadReceipts from './MessageReadReceipts';
 import ReportMessageDialog from './ReportMessageDialog';
 import MentionHighlight from './MentionHighlight';
 import { Button } from '@/components/ui/button';
@@ -20,10 +21,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+
 interface ReplyToMessage {
   id: string;
   content: string;
   senderUsername: string;
+}
+
+interface ReadReceipt {
+  user_id: string;
+  read_at: string;
+  username?: string;
+  avatar_url?: string | null;
 }
 
 interface Reaction {
@@ -37,6 +46,8 @@ interface ChatMessageProps {
   isOwn: boolean;
   isHighlighted?: boolean;
   reactions?: Reaction[];
+  readers?: ReadReceipt[];
+  totalMembers?: number;
   chatRoomId?: string;
   onReply?: (message: { id: string; content: string; senderName: string }) => void;
   onAvatarClick?: (userId: string) => void;
@@ -48,6 +59,8 @@ const ChatMessage = ({
   isOwn, 
   isHighlighted, 
   reactions = [],
+  readers = [],
+  totalMembers,
   chatRoomId,
   onReply, 
   onAvatarClick,
@@ -203,6 +216,14 @@ const ChatMessage = ({
             isOwn={isOwn}
           />
           
+          {/* Read receipts */}
+          <MessageReadReceipts
+            readers={readers}
+            isOwn={isOwn}
+            totalMembers={totalMembers}
+            senderId={message.senderId}
+          />
+
           {/* Timestamp */}
           <span className="text-[10px] text-muted-foreground mt-1 px-1">
             {format(message.timestamp, 'HH:mm', { locale: fr })}

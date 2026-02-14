@@ -14,6 +14,7 @@ import BottomNavBar from '@/components/navigation/BottomNavBar';
 import MemberSearch from '@/components/chat/MemberSearch';
 import JoinedGroupsList from '@/components/chat/JoinedGroupsList';
 import GroupPickerDialog from '@/components/chat/GroupPickerDialog';
+import CreateGroupDialog from '@/components/chat/CreateGroupDialog';
 import IdentityVerificationDialog from '@/components/verification/IdentityVerificationDialog';
 import VerificationReminderBanner from '@/components/verification/VerificationReminderBanner';
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
@@ -91,6 +92,7 @@ const Index = () => {
 
   const [showMemberSearch, setShowMemberSearch] = useState(false);
   const [showGroupPicker, setShowGroupPicker] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [messageSubTab, setMessageSubTab] = useState<'conversations' | 'groups' | 'archived'>('conversations');
   const { data: isAdmin } = useIsAdmin();
@@ -472,13 +474,25 @@ const Index = () => {
                   <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
                   <NotificationsDropdown />
                   {messageSubTab === 'groups' ? (
-                    <Button
-                      onClick={() => setShowGroupPicker(true)}
-                      size="icon"
-                      className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        onClick={() => setShowCreateGroup(true)}
+                        size="icon"
+                        variant="outline"
+                        className="rounded-full"
+                        title="Créer un groupe"
+                      >
+                        <Users className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        onClick={() => setShowGroupPicker(true)}
+                        size="icon"
+                        className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+                        title="Rejoindre un groupe régional"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </Button>
+                    </div>
                   ) : (
                     <Button
                       onClick={() => setShowMemberSearch(true)}
@@ -527,6 +541,17 @@ const Index = () => {
               open={showGroupPicker}
               onOpenChange={setShowGroupPicker}
               onGroupJoined={handleSelectRegion}
+            />
+
+            {/* Create custom group dialog */}
+            <CreateGroupDialog
+              open={showCreateGroup}
+              onOpenChange={setShowCreateGroup}
+              onGroupCreated={(groupId) => {
+                // Navigate to the custom group chat
+                setSelectedRegion(groupId);
+                setCurrentView('chat');
+              }}
             />
 
             <AnimatePresence>

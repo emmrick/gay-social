@@ -197,22 +197,69 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_room_members: {
+        Row: {
+          chat_room_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          chat_room_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          chat_room_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_room_members_chat_room_id_fkey"
+            columns: ["chat_room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_rooms: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          created_by: string | null
+          custom_name: string | null
+          description: string | null
           id: string
+          is_custom: boolean
           region_code: string
           region_name: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          created_by?: string | null
+          custom_name?: string | null
+          description?: string | null
           id?: string
+          is_custom?: boolean
           region_code: string
           region_name: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          created_by?: string | null
+          custom_name?: string | null
+          description?: string | null
           id?: string
+          is_custom?: boolean
           region_code?: string
           region_name?: string
         }
@@ -384,6 +431,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      group_message_reads: {
+        Row: {
+          id: string
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_message_reads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       group_mute_preferences: {
         Row: {

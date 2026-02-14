@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Shield, AlertTriangle, FileText, Lock, Users, CreditCard, Ban, Scale, Mail, Download, Search, X } from 'lucide-react';
+import { ArrowLeft, Shield, AlertTriangle, FileText, Lock, Users, CreditCard, Ban, Scale, Mail, Download, Search, X, Trash2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -18,6 +18,7 @@ import SEOHead from '@/components/seo/SEOHead';
 const LEGAL_SECTIONS = [
   { id: 'cgu', title: 'Conditions Générales d\'Utilisation (CGU)', keywords: ['cgu', 'conditions', 'utilisation', 'accès', 'inscription', 'vérification', 'identité', 'responsabilité', 'sanctions'] },
   { id: 'privacy', title: 'Politique de confidentialité (RGPD)', keywords: ['rgpd', 'confidentialité', 'données', 'protection', 'cookies', 'droits', 'accès', 'rectification', 'effacement', 'portabilité', 'télécharger'] },
+  { id: 'purge-policy', title: 'Suppression des comptes non vérifiés (30 jours)', keywords: ['suppression', 'purge', '30 jours', 'non vérifié', 'destruction', 'données', 'compte', 'automatique', 'vérification'] },
   { id: 'anti-prostitution', title: 'Clause anti-prostitution', keywords: ['prostitution', 'escorting', 'paiement', 'argent', 'interdit', 'banni'] },
   { id: 'cgv', title: 'Système de crédits & CGV', keywords: ['crédits', 'paiement', 'achat', 'prix', 'tarif', 'remboursement', 'cgv', 'premium', 'monétisation'] },
   { id: 'rules', title: 'Règlement du site', keywords: ['règlement', 'règles', 'interdit', 'comportement', 'sanctions', 'signalement', 'harcèlement', 'spam'] },
@@ -330,6 +331,93 @@ const Legal = () => {
                   </Button>
                 </div>
               )}
+            </AccordionContent>
+          </AccordionItem>
+          )}
+
+          {/* Purge Policy - 30 days */}
+          {filteredSections.includes('purge-policy') && (
+          <AccordionItem id="purge-policy" value="purge-policy" className="glass-card rounded-2xl px-6 border-border bg-card">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-destructive/20 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-destructive" />
+                </div>
+                <span className="font-display font-semibold text-lg">Suppression des comptes non vérifiés (30 jours)</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground space-y-4 pt-4">
+              <div className="bg-destructive/10 rounded-xl p-4 border border-destructive/20">
+                <p className="font-semibold text-destructive">
+                  ⚠️ Tout compte non vérifié dans un délai de 30 jours après l'inscription sera 
+                  définitivement supprimé, ainsi que l'intégralité des données associées.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">1. Principe</h4>
+                <p>
+                  La vérification d'identité est obligatoire pour utiliser GayConnect. Afin de garantir 
+                  la sécurité de notre communauté et le respect de la législation sur les contenus adultes, 
+                  tout utilisateur dispose d'un délai de <strong className="text-foreground">30 jours calendaires</strong> à 
+                  compter de son inscription pour compléter sa vérification d'identité.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">2. Notifications de rappel</h4>
+                <p>Avant la suppression, l'utilisateur reçoit des notifications de rappel :</p>
+                <ul className="list-disc pl-5 space-y-2 mt-2">
+                  <li>
+                    <strong>J-7</strong> : Première notification de rappel indiquant qu'il reste 7 jours 
+                    avant la suppression du compte.
+                  </li>
+                  <li>
+                    <strong>J-3</strong> : Notification d'avertissement urgente avec 3 jours restants.
+                  </li>
+                  <li>
+                    <strong>J-1</strong> : Dernière notification critique indiquant la suppression imminente 
+                    dans les 24 heures.
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">3. Données supprimées</h4>
+                <p>
+                  En cas de non-vérification dans le délai imparti, les éléments suivants sont 
+                  <strong className="text-destructive"> définitivement et irréversiblement supprimés</strong> de 
+                  tous nos serveurs :
+                </p>
+                <ul className="list-disc pl-5 space-y-1 mt-2">
+                  <li>Profil utilisateur et toutes les informations personnelles</li>
+                  <li>Photos de profil et albums photos</li>
+                  <li>Messages privés et messages de groupe</li>
+                  <li>Médias éphémères et fichiers partagés</li>
+                  <li>Historique de crédits et transactions</li>
+                  <li>Favoris, réactions et préférences</li>
+                  <li>Compte d'authentification</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">4. Caractère irréversible</h4>
+                <p>
+                  La suppression est <strong className="text-foreground">totale et définitive</strong>. 
+                  Aucune récupération de données ne sera possible après l'exécution de la purge. 
+                  L'utilisateur devra créer un nouveau compte et recommencer le processus d'inscription 
+                  et de vérification.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">5. Exceptions</h4>
+                <p>
+                  Les comptes dont la vérification est <strong className="text-foreground">en cours de traitement</strong> (soumise 
+                  et en attente de validation par notre équipe) ne sont pas concernés par cette politique 
+                  de suppression automatique tant que le dossier est à l'étude.
+                </p>
+              </div>
             </AccordionContent>
           </AccordionItem>
           )}

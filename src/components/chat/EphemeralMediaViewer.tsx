@@ -42,7 +42,7 @@ const EphemeralMediaViewer = ({
     handleViolation,
     enableProtection,
     disableProtection,
-  } = useScreenshotProtection(true); // Enable native blocking on Capacitor
+  } = useScreenshotProtection(true, true); // Enable native blocking + aggressive detection for ephemeral media
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasCalledOnViewed = useRef(false);

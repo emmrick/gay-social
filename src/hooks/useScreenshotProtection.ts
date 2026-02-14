@@ -7,7 +7,7 @@ import { enableScreenshotProtection, disableScreenshotProtection } from '@/plugi
  * Screenshot protection hook - Shows black screen on detection
  * No suspension/sanctions, just visual protection
  */
-export const useScreenshotProtection = (enableNativeBlock = false) => {
+export const useScreenshotProtection = (enableNativeBlock = false, aggressiveDetection = false) => {
   const [isBlocked, setIsBlocked] = useState(false);
   const blockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isProtectionActive, setIsProtectionActive] = useState(false);
@@ -26,18 +26,18 @@ export const useScreenshotProtection = (enableNativeBlock = false) => {
     }, 10000);
   }, []);
 
-  // Use advanced mobile screenshot detection
+  // Use advanced mobile screenshot detection - ONLY when aggressive mode is on (ephemeral media)
   useMobileScreenshotDetection({
-    enabled: isProtectionActive,
+    enabled: isProtectionActive && aggressiveDetection,
     onScreenshotDetected: () => {
       console.log('[ScreenshotProtection] Mobile screenshot detected!');
       handleViolation();
     },
   });
 
-  // Use preventive blur (banking-style frame detection) - just triggers black screen
+  // Use preventive blur (banking-style frame detection) - ONLY when aggressive mode is on
   usePreventiveScreenshotBlur({
-    enabled: isProtectionActive,
+    enabled: isProtectionActive && aggressiveDetection,
     onThreatDetected: () => {
       console.log('[ScreenshotProtection] Preventive blur triggered!');
       handleViolation();

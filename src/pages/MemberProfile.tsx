@@ -179,7 +179,8 @@ const MemberProfile = () => {
     };
 
     chargeProfileView();
-  }, [user?.id, userId, alreadyViewed, hasChargedView, viewCheckLoading, profile?.username]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, userId, alreadyViewed, hasChargedView, viewCheckLoading]);
 
   const extendedProfile = profile as any;
   

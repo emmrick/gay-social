@@ -44,32 +44,23 @@ type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'profile';
 // Tab order for determining animation direction
 const tabOrder: NavTab[] = ['home', 'swipe', 'messages', 'premium', 'profile'];
 
-// Animation variants for page transitions
+// Animation variants for page transitions - snappy crossfade
 const pageVariants = {
-  initial: (direction: number) => ({
-    x: direction > 0 ? 60 : -60,
-    opacity: 0,
-  }),
-  animate: {
-    x: 0,
-    opacity: 1,
-  },
-  exit: (direction: number) => ({
-    x: direction > 0 ? -60 : 60,
-    opacity: 0,
-  }),
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
 };
 
 const fadeVariants = {
-  initial: { opacity: 0, scale: 0.98 },
-  animate: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 0.98 },
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
 };
 
 const slideUpVariants = {
-  initial: { opacity: 0, y: 40 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
 };
 
 const Index = () => {
@@ -321,12 +312,11 @@ const Index = () => {
         return user ? (
           <motion.div
             key="home"
-            custom={direction}
             variants={pageVariants}
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1 flex flex-col min-h-0"
           >
             {/* Header */}
@@ -389,12 +379,11 @@ const Index = () => {
         return user ? (
           <motion.div
             key="swipe"
-            custom={direction}
             variants={pageVariants}
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1 flex flex-col min-h-0"
           >
             {/* Header */}
@@ -435,12 +424,11 @@ const Index = () => {
         return (
           <motion.div
             key="messages"
-            custom={direction}
             variants={pageVariants}
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1 flex flex-col relative min-h-0"
           >
             {/* Header */}
@@ -572,12 +560,11 @@ const Index = () => {
         return user ? (
           <motion.div
             key="profile"
-            custom={direction}
             variants={pageVariants}
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1 flex flex-col min-h-0"
           >
             {/* Header */}
@@ -631,12 +618,11 @@ const Index = () => {
         return user ? (
           <motion.div
             key="premium"
-            custom={direction}
             variants={pageVariants}
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1 flex flex-col min-h-0"
           >
             {/* Header */}
@@ -702,7 +688,7 @@ const Index = () => {
         paddingBottom: showBottomNav ? 'calc(96px + env(safe-area-inset-bottom, 0px))' : undefined,
       }}
       >
-        <AnimatePresence mode="wait" custom={direction}>
+        <AnimatePresence mode="popLayout">
           {content ?? (
             <motion.div
               key="fallback"

@@ -66,15 +66,41 @@ Deno.serve(async (req) => {
 
           if (!existingNotif || existingNotif.length === 0) {
             const urgency = daysBefore === 1 ? '🚨 DERNIER JOUR' : daysBefore === 3 ? '⚠️ Attention' : '⏰ Rappel'
+            const title = `${urgency} — Suppression dans ${daysBefore} jour${daysBefore > 1 ? 's' : ''} !`
+            const message = `Ton compte sera définitivement supprimé dans ${daysBefore} jour${daysBefore > 1 ? 's' : ''} si tu ne vérifies pas ton identité. Toutes tes données, messages, photos et albums seront détruits de nos serveurs sans possibilité de récupération.`
+
             await supabase.from('notifications').insert({
               user_id: user.user_id,
               type: 'purge_warning',
-              title: `${urgency} — Suppression dans ${daysBefore} jour${daysBefore > 1 ? 's' : ''} !`,
-              message: `Ton compte sera définitivement supprimé dans ${daysBefore} jour${daysBefore > 1 ? 's' : ''} si tu ne vérifies pas ton identité. Toutes tes données, messages, photos et albums seront détruits de nos serveurs sans possibilité de récupération.`,
+              title,
+              message,
               action_url: '/',
               is_read: false,
             })
             warningsSent++
+
+            // Send push notification for J-3 and J-1
+            if (daysBefore <= 3) {
+              try {
+                await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${supabaseServiceKey}`,
+                  },
+                  body: JSON.stringify({
+                    userId: user.user_id,
+                    title,
+                    body: message,
+                    url: '/',
+                    notificationType: 'system',
+                  }),
+                })
+                console.log(`[PURGE] Push notification sent to ${user.user_id} (J-${daysBefore})`)
+              } catch (pushErr) {
+                console.warn(`[PURGE] Failed to send push to ${user.user_id}:`, pushErr)
+              }
+            }
           }
         }
       }

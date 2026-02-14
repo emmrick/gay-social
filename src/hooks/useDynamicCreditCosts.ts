@@ -79,21 +79,61 @@ export const useUpdateCreditCost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, cost_value }: { id: string; cost_value: number }) => {
+    mutationFn: async ({ id, cost_key, old_value, cost_value }: { id: string; cost_key: string; old_value: number; cost_value: number }) => {
       const { error } = await supabase
         .from('credit_costs' as any)
         .update({ cost_value } as any)
         .eq('id', id);
 
       if (error) throw error;
+
+      // Log the change in audit table
+      const { error: auditError } = await supabase
+        .from('credit_cost_audit_log' as any)
+        .insert({
+          credit_cost_id: id,
+          cost_key,
+          old_value,
+          new_value: cost_value,
+          changed_by: (await supabase.auth.getUser()).data.user?.id,
+        } as any);
+
+      if (auditError) console.error('Audit log error:', auditError);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-credit-costs'] });
       queryClient.invalidateQueries({ queryKey: ['credit-costs'] });
+      queryClient.invalidateQueries({ queryKey: ['credit-cost-audit-log'] });
       toast.success('Tarif mis à jour');
     },
     onError: () => {
       toast.error('Erreur lors de la mise à jour');
+    },
+  });
+};
+
+interface AuditLogEntry {
+  id: string;
+  credit_cost_id: string;
+  cost_key: string;
+  old_value: number;
+  new_value: number;
+  changed_by: string;
+  changed_at: string;
+}
+
+export const useCreditCostAuditLog = () => {
+  return useQuery({
+    queryKey: ['credit-cost-audit-log'],
+    queryFn: async (): Promise<AuditLogEntry[]> => {
+      const { data, error } = await supabase
+        .from('credit_cost_audit_log' as any)
+        .select('*')
+        .order('changed_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      return (data || []) as any as AuditLogEntry[];
     },
   });
 };

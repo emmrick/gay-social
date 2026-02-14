@@ -715,6 +715,7 @@ const Legal = () => {
                   <li><strong>Nom :</strong> BAYART Emmrick</li>
                   <li><strong>Statut :</strong> Auto-entrepreneur</li>
                   <li><strong>Adresse de domiciliation :</strong> 61 Rue de Lion, 75012 Paris, France</li>
+                  <li><strong>SIRET :</strong> 977 861 665 00015</li>
                 </ul>
               </div>
 

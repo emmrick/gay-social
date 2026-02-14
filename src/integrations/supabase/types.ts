@@ -292,6 +292,36 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_costs: {
+        Row: {
+          category: string
+          cost_key: string
+          cost_value: number
+          created_at: string
+          id: string
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          cost_key: string
+          cost_value?: number
+          created_at?: string
+          id?: string
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cost_key?: string
+          cost_value?: number
+          created_at?: string
+          id?: string
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_purchase_requests: {
         Row: {
           admin_notes: string | null

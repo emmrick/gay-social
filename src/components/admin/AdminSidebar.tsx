@@ -49,7 +49,8 @@ export type AdminSection =
   | 'ai-moderation'
   | 'screenshot-sanctions'
   | 'moderators'
-  | 'swipe-stats';
+  | 'swipe-stats'
+  | 'credit-costs';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -93,8 +94,10 @@ const navItems: NavItem[] = [
   
   // Paramètres
   { id: 'moderators', label: 'Modérateurs', icon: UserCog, group: 'settings' },
+  { id: 'credit-costs', label: 'Tarifs crédits', icon: Coins, group: 'settings' },
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'settings' },
   { id: 'broadcast', label: 'Notifications', icon: Bell, group: 'settings' },
+  { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'settings' },
   { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'settings' },
 ];
 

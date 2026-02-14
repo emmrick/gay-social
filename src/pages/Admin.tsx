@@ -52,6 +52,7 @@ import AIModerationPanel from '@/components/admin/AIModerationPanel';
 import ScreenshotSanctionsPanel from '@/components/admin/ScreenshotSanctionsPanel';
 import ModeratorManagementPanel from '@/components/admin/ModeratorManagementPanel';
 import SwipeStatsPanel from '@/components/admin/SwipeStatsPanel';
+import CreditCostsPanel from '@/components/admin/CreditCostsPanel';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -287,6 +288,9 @@ const Admin = () => {
       
       case 'swipe-stats':
         return <SwipeStatsPanel />;
+      
+      case 'credit-costs':
+        return <CreditCostsPanel />;
       
       default:
         return null;

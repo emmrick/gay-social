@@ -22,7 +22,8 @@ import {
   ShoppingCart,
   Camera,
   Heart,
-  UserCog
+  UserCog,
+  Tag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -79,6 +80,7 @@ const navItems: NavItem[] = [
   
   // Paramètres
   { id: 'moderators', label: 'Modérateurs', icon: UserCog, group: 'settings' },
+  { id: 'credit-costs', label: 'Tarifs crédits', icon: Coins, group: 'settings' },
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'settings' },
   { id: 'broadcast', label: 'Notifications', icon: Bell, group: 'settings' },
   { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'settings' },

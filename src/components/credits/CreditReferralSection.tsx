@@ -1,132 +1,39 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { 
   Users, 
   Copy, 
   CheckCircle, 
   Clock, 
-  Share2, 
-  Gift,
-  Shield,
+  Share2,
   Loader2
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { toast } from 'sonner';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useReferral } from '@/hooks/useReferral';
 import { CREDIT_REWARDS } from '@/hooks/useCredits';
 
-interface ReferralInfo {
-  id: string;
-  referred_user_id: string;
-  status: string;
-  created_at: string;
-  referred_profile?: {
-    username: string;
-    avatar_url: string | null;
-    is_verified: boolean;
-  };
-}
-
 const CreditReferralSection = () => {
-  const { user } = useAuth();
+  const { 
+    referralCode, 
+    stats, 
+    referrals, 
+    isLoading, 
+    copyReferralLink, 
+    shareReferralLink 
+  } = useReferral();
   const [copied, setCopied] = useState(false);
 
-  // Get or create referral code
-  const { data: referralCode, isLoading: codeLoading } = useQuery({
-    queryKey: ['referral-code', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-
-      const { data, error } = await supabase.rpc('get_or_create_referral_code', {
-        _user_id: user.id,
-      });
-
-      if (error) throw error;
-      return data as string;
-    },
-    enabled: !!user?.id,
-  });
-
-  // Get referrals for this user
-  const { data: referrals = [], isLoading: referralsLoading } = useQuery({
-    queryKey: ['my-referrals', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-
-      const { data, error } = await supabase
-        .from('referrals')
-        .select(`
-          id,
-          referred_user_id,
-          status,
-          created_at
-        `)
-        .eq('referrer_user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Get profiles for referred users
-      const referredIds = data.map(r => r.referred_user_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, username, avatar_url, is_verified')
-        .in('user_id', referredIds);
-
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]));
-
-      return data.map(r => ({
-        ...r,
-        referred_profile: profileMap.get(r.referred_user_id),
-      })) as ReferralInfo[];
-    },
-    enabled: !!user?.id,
-  });
-
-  const shareUrl = referralCode 
-    ? `${window.location.origin}/auth?ref=${referralCode}` 
-    : '';
-
-  const copyToClipboard = async () => {
-    if (!referralCode) return;
-    
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      toast.success('Lien copié !');
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error('Erreur lors de la copie');
-    }
+  const handleCopy = () => {
+    copyReferralLink();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  const shareLink = async () => {
-    if (!referralCode) return;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Rejoins GayConnect !',
-          text: `Inscris-toi sur GayConnect avec mon lien et gagne ${CREDIT_REWARDS.referral_success} crédits gratuits après vérification !`,
-          url: shareUrl,
-        });
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          copyToClipboard();
-        }
-      }
-    } else {
-      copyToClipboard();
-    }
-  };
-
-  const verifiedCount = referrals.filter(r => r.referred_profile?.is_verified).length;
-  const pendingCount = referrals.filter(r => !r.referred_profile?.is_verified).length;
+  const verifiedCount = stats?.successful_referrals || 0;
+  const pendingCount = (stats?.total_referrals || 0) - verifiedCount;
 
   return (
     <Card>
@@ -157,7 +64,7 @@ const CreditReferralSection = () => {
         </div>
 
         {/* Referral Code */}
-        {codeLoading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-4">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
@@ -167,7 +74,7 @@ const CreditReferralSection = () => {
               <div className="flex-1 p-3 rounded-lg bg-muted font-mono text-sm truncate">
                 {referralCode}
               </div>
-              <Button size="icon" variant="outline" onClick={copyToClipboard}>
+              <Button size="icon" variant="outline" onClick={handleCopy}>
                 {copied ? (
                   <CheckCircle className="w-4 h-4 text-green-500" />
                 ) : (
@@ -178,7 +85,7 @@ const CreditReferralSection = () => {
             
             <Button 
               className="w-full" 
-              onClick={shareLink}
+              onClick={shareReferralLink}
               variant="outline"
             >
               <Share2 className="w-4 h-4 mr-2" />
@@ -212,19 +119,15 @@ const CreditReferralSection = () => {
                   >
                     <div className="flex items-center gap-2">
                       <Avatar className="w-8 h-8">
-                        {referral.referred_profile?.avatar_url ? (
-                          <AvatarImage src={referral.referred_profile.avatar_url} />
-                        ) : (
-                          <AvatarFallback>
-                            {referral.referred_profile?.username?.charAt(0).toUpperCase() || '?'}
-                          </AvatarFallback>
-                        )}
+                        <AvatarFallback>
+                          {referral.username?.charAt(0).toUpperCase() || '?'}
+                        </AvatarFallback>
                       </Avatar>
                       <span className="text-sm font-medium">
-                        {referral.referred_profile?.username || 'Utilisateur'}
+                        {referral.username || 'Utilisateur'}
                       </span>
                     </div>
-                    {referral.referred_profile?.is_verified ? (
+                    {referral.referrer_reward_applied ? (
                       <Badge className="bg-green-500 text-xs">
                         <CheckCircle className="w-3 h-3 mr-1" />
                         Vérifié

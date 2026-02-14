@@ -37,30 +37,91 @@ export const useReferral = () => {
     queryFn: async () => {
       if (!user) return null;
       
-      const { data, error } = await supabase.functions.invoke('manage-referrals', {
-        body: { action: 'get-code' }
+      // Get or create referral code via RPC
+      const { data: code, error: codeError } = await supabase.rpc('get_or_create_referral_code', {
+        _user_id: user.id,
       });
       
-      if (error) throw error;
-      return data as { code: string; stats: ReferralStats; referrals: Referral[] };
+      if (codeError) throw codeError;
+
+      // Get stats
+      const { data: statsData } = await supabase
+        .from('referral_codes')
+        .select('total_referrals, successful_referrals')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // Get referrals
+      const { data: referralsData } = await supabase
+        .from('referrals')
+        .select('id, referred_user_id, status, referrer_reward_applied, created_at')
+        .eq('referrer_user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      // Get profiles for referred users
+      const referredIds = (referralsData || []).map(r => r.referred_user_id);
+      let referrals: { target_user_id: string; username: string; consecutive_payments: number; status: string; referrer_reward_applied: boolean; created_at: string; id: string; referred_user_id: string }[] = [];
+      
+      if (referredIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, username')
+          .in('user_id', referredIds);
+        
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p.username]));
+        referrals = (referralsData || []).map(r => ({
+          ...r,
+          target_user_id: r.referred_user_id,
+          username: profileMap.get(r.referred_user_id) || 'Utilisateur',
+          consecutive_payments: 0,
+        }));
+      }
+
+      return {
+        code: code as string,
+        stats: {
+          total_referrals: statsData?.total_referrals || 0,
+          successful_referrals: statsData?.successful_referrals || 0,
+        },
+        referrals,
+      };
     },
-    enabled: !!user
+    enabled: !!user,
+    staleTime: 60_000,
   });
 
   // Check if current user was referred
   const { data: myReferralStatus, isLoading: isLoadingStatus } = useQuery({
     queryKey: ['my-referral-status', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<MyReferralStatus | null> => {
       if (!user) return null;
       
-      const { data, error } = await supabase.functions.invoke('manage-referrals', {
-        body: { action: 'check-my-referral' }
-      });
+      const { data, error } = await supabase
+        .from('referrals')
+        .select('id, referrer_user_id, status, consecutive_payments, referred_reward_applied')
+        .eq('referred_user_id', user.id)
+        .maybeSingle();
       
       if (error) throw error;
-      return data as MyReferralStatus;
+      if (!data) return { isReferred: false };
+
+      // Get referrer username
+      const { data: referrerProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', data.referrer_user_id)
+        .maybeSingle();
+
+      return {
+        isReferred: true,
+        referrerUsername: referrerProfile?.username,
+        consecutivePayments: data.consecutive_payments,
+        rewardApplied: data.referred_reward_applied,
+        status: data.status,
+      };
     },
-    enabled: !!user
+    enabled: !!user,
+    staleTime: 60_000,
   });
 
   // Validate a referral code using the secure database function
@@ -79,8 +140,9 @@ export const useReferral = () => {
   // Register a referral after signup
   const registerReferral = useMutation({
     mutationFn: async ({ userId, referralCode }: { userId: string; referralCode: string }) => {
-      const { data, error } = await supabase.functions.invoke('manage-referrals', {
-        body: { action: 'register-referral', userId, referralCode }
+      const { data, error } = await supabase.rpc('register_referral', {
+        _referred_user_id: userId,
+        _referral_code: referralCode.toUpperCase(),
       });
       
       if (error) throw error;

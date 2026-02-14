@@ -22,6 +22,7 @@ import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoti
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 import { useScreenshotProtection } from "@/hooks/useScreenshotProtection";
 import ScreenshotProtectionOverlay from "@/components/security/ScreenshotProtectionOverlay";
+import BackgroundRefreshIndicator from "@/components/loading/BackgroundRefreshIndicator";
 import { toast } from "sonner";
 
 // Lazy load pages for better initial bundle size
@@ -99,6 +100,7 @@ const AuthenticatedApp = () => {
           <VerificationGuard>
           <ProfilePhotoGuard>
             <TooltipProvider>
+              <BackgroundRefreshIndicator />
               <Toaster />
               <Sonner />
               {/* Global screenshot protection overlay */}

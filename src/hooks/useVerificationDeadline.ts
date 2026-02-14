@@ -2,12 +2,13 @@ import { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIdentityVerification } from '@/hooks/useIdentityVerification';
 
-const VERIFICATION_DEADLINE_HOURS = 0;
+const PURGE_AFTER_DAYS = 30;
 
 export interface VerificationDeadlineStatus {
   isDeadlinePassed: boolean;
   hoursRemaining: number | null;
   minutesRemaining: number | null;
+  daysUntilPurge: number | null;
   isVerificationComplete: boolean;
   isVerificationPending: boolean;
   isVerificationRejected: boolean;
@@ -26,6 +27,7 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
         isDeadlinePassed: false,
         hoursRemaining: null,
         minutesRemaining: null,
+        daysUntilPurge: null,
         isVerificationComplete: false,
         isVerificationPending: false,
         isVerificationRejected: false,
@@ -41,6 +43,7 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
         isDeadlinePassed: false,
         hoursRemaining: null,
         minutesRemaining: null,
+        daysUntilPurge: null,
         isVerificationComplete: true,
         isVerificationPending: false,
         isVerificationRejected: false,
@@ -56,6 +59,7 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
         isDeadlinePassed: false,
         hoursRemaining: null,
         minutesRemaining: null,
+        daysUntilPurge: null,
         isVerificationComplete: false,
         isVerificationPending: true,
         isVerificationRejected: false,
@@ -67,24 +71,33 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
 
     // If verification was rejected - user must retry, block access
     if (verification?.status === 'rejected') {
+      // Still calculate days until purge for rejected users
+      const createdAt = new Date(profile.created_at);
+      const purgeDate = new Date(createdAt.getTime() + PURGE_AFTER_DAYS * 24 * 60 * 60 * 1000);
+      const now = new Date();
+      const daysUntilPurge = Math.max(0, Math.ceil((purgeDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+
       return {
-        isDeadlinePassed: true, // Treat as deadline passed to show verification screen
+        isDeadlinePassed: true,
         hoursRemaining: 0,
         minutesRemaining: 0,
+        daysUntilPurge,
         isVerificationComplete: false,
         isVerificationPending: false,
         isVerificationRejected: true,
-        canAccessApp: false, // Block access until they retry
-        deadlineDate: null,
+        canAccessApp: false,
+        deadlineDate: purgeDate,
         isLoading: false,
       };
     }
 
-    // Calculate deadline from account creation
+    // Calculate deadline from account creation (0 hours grace = immediate block)
     const createdAt = new Date(profile.created_at);
-    const deadlineDate = new Date(createdAt.getTime() + VERIFICATION_DEADLINE_HOURS * 60 * 60 * 1000);
+    const deadlineDate = new Date(createdAt.getTime());
+    const purgeDate = new Date(createdAt.getTime() + PURGE_AFTER_DAYS * 24 * 60 * 60 * 1000);
     const now = new Date();
     const timeDiff = deadlineDate.getTime() - now.getTime();
+    const daysUntilPurge = Math.max(0, Math.ceil((purgeDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
     
     const isDeadlinePassed = timeDiff <= 0;
     const hoursRemaining = isDeadlinePassed ? 0 : Math.floor(timeDiff / (1000 * 60 * 60));
@@ -94,6 +107,7 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
       isDeadlinePassed,
       hoursRemaining,
       minutesRemaining,
+      daysUntilPurge,
       isVerificationComplete: false,
       isVerificationPending: false,
       isVerificationRejected: false,

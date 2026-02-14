@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { Shield, AlertTriangle, LogOut, XCircle } from 'lucide-react';
+import { Shield, AlertTriangle, LogOut, XCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIdentityVerification } from '@/hooks/useIdentityVerification';
+import { useVerificationDeadline } from '@/hooks/useVerificationDeadline';
 import IdentityVerificationDialog from './IdentityVerificationDialog';
 
 const VerificationRequiredScreen = () => {
   const { signOut, profile } = useAuth();
   const { verification } = useIdentityVerification();
+  const { daysUntilPurge } = useVerificationDeadline();
   const isVerificationRejected = verification?.status === 'rejected';
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
 
@@ -55,6 +57,36 @@ const VerificationRequiredScreen = () => {
                   <p className="text-sm font-medium text-destructive">Motif du refus</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     {verification.rejection_reason}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Purge warning */}
+          {daysUntilPurge !== null && daysUntilPurge <= 30 && (
+            <div className={`rounded-xl p-4 border ${
+              daysUntilPurge <= 3 
+                ? 'bg-destructive/10 border-destructive/40' 
+                : daysUntilPurge <= 7 
+                  ? 'bg-yellow-500/10 border-yellow-500/40' 
+                  : 'bg-orange-500/10 border-orange-500/30'
+            }`}>
+              <div className="flex items-start gap-3">
+                <Trash2 className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                  daysUntilPurge <= 3 ? 'text-destructive' : 'text-orange-500'
+                }`} />
+                <div>
+                  <p className={`text-sm font-bold ${
+                    daysUntilPurge <= 3 ? 'text-destructive' : 'text-orange-600 dark:text-orange-400'
+                  }`}>
+                    {daysUntilPurge <= 0 
+                      ? '🚨 Suppression imminente !' 
+                      : `⏰ Suppression dans ${daysUntilPurge} jour${daysUntilPurge > 1 ? 's' : ''}`
+                    }
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Si tu ne vérifies pas ton identité, toutes tes données (profil, messages, photos, albums) seront <strong>définitivement supprimées</strong> de tous nos serveurs sans possibilité de récupération.
                   </p>
                 </div>
               </div>

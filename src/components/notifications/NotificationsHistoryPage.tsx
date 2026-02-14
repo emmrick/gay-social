@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
   BellOff,
+  Bot,
   Check,
   CheckCheck,
   Trash2,
@@ -79,6 +80,8 @@ const getNotificationStyle = (type: string) => {
       return { icon: AlertTriangle, gradient: 'from-red-600 to-red-700', bg: 'bg-red-500/10', text: 'text-red-500' };
     case 'account_unblocked':
       return { icon: ShieldCheck, gradient: 'from-emerald-500 to-green-600', bg: 'bg-emerald-500/10', text: 'text-emerald-500' };
+    case 'chatbot_unanswered':
+      return { icon: Bot, gradient: 'from-blue-500 to-cyan-600', bg: 'bg-blue-500/10', text: 'text-blue-500' };
     case 'welcome':
       return { icon: Gift, gradient: 'from-purple-500 to-violet-600', bg: 'bg-purple-500/10', text: 'text-purple-500' };
     case 'subscription_activated':

@@ -40,6 +40,7 @@ export const useNotifications = () => {
       return data || [];
     },
     enabled: !!user?.id,
+    staleTime: 15_000,
   });
 
   const invalidateAll = useCallback(() => {
@@ -125,6 +126,7 @@ export const useUnreadNotificationsCount = () => {
       return count || 0;
     },
     enabled: !!user?.id,
+    staleTime: 15_000,
   });
 };
 

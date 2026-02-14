@@ -190,6 +190,7 @@ export const useCredits = () => {
       return data as CreditTransaction[];
     },
     enabled: !!user?.id,
+    staleTime: 30_000,
   });
 
   // Check if user has enough credits

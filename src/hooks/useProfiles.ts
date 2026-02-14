@@ -19,6 +19,7 @@ export const useProfilesByRegion = (region: string) => {
       return data || [];
     },
     enabled: !!region,
+    staleTime: 30_000,
   });
 };
 

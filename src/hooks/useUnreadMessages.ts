@@ -65,7 +65,8 @@ export const useUnreadMessages = () => {
       return unreadCounts;
     },
     enabled: !!user,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 15_000,
+    refetchInterval: 30000,
   });
 
   // Real-time subscription for new messages

@@ -104,8 +104,8 @@ export const useSubscription = () => {
   useEffect(() => {
     checkSubscription();
     
-    // Refresh every minute
-    const interval = setInterval(checkSubscription, 60000);
+    // Refresh every 2 minutes instead of every minute
+    const interval = setInterval(checkSubscription, 120000);
     return () => clearInterval(interval);
   }, [checkSubscription]);
 

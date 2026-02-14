@@ -50,6 +50,7 @@ export const usePrivateConversations = () => {
       return data || [];
     },
     enabled: !!user,
+    staleTime: 30_000,
   });
 
   const query = useQuery({
@@ -132,6 +133,7 @@ export const usePrivateConversations = () => {
       });
     },
     enabled: !!user,
+    staleTime: 30_000,
   });
 
   // Filter conversations based on status

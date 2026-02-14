@@ -292,6 +292,44 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_cost_audit_log: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          cost_key: string
+          credit_cost_id: string
+          id: string
+          new_value: number
+          old_value: number
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          cost_key: string
+          credit_cost_id: string
+          id?: string
+          new_value: number
+          old_value: number
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          cost_key?: string
+          credit_cost_id?: string
+          id?: string
+          new_value?: number
+          old_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_cost_audit_log_credit_cost_id_fkey"
+            columns: ["credit_cost_id"]
+            isOneToOne: false
+            referencedRelation: "credit_costs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_costs: {
         Row: {
           category: string

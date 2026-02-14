@@ -301,7 +301,7 @@ const Index = () => {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1"
           >
             <Hero onGetStarted={handleGetStarted} />

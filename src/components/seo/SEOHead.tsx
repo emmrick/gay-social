@@ -14,8 +14,8 @@ const BASE_URL = 'https://gay-connect.lovable.app';
 const DEFAULT_OG_IMAGE = 'https://lovable.dev/opengraph-image-p98pqg.png';
 
 const SEOHead = ({
-  title = 'Gay Connect - Rencontres & Chat Gay en France',
-  description = 'Rejoins la communauté gay de ta région. Chat, échanges de photos et vidéos en groupe ou en privé. +18 ans uniquement.',
+  title = 'Gay Connect - Site de Rencontre Gay & Tchat Gay France',
+  description = 'Gay Connect : le site gay n°1 pour les rencontres entre hommes en France. Tchat gay gratuit, plan gay par département, échanges de photos et vidéos. Communauté gay vérifiée. +18 ans.',
   canonical,
   ogImage = DEFAULT_OG_IMAGE,
   ogType = 'website',
@@ -118,8 +118,9 @@ export const websiteJsonLd = {
   '@type': 'WebSite',
   name: 'Gay Connect',
   url: BASE_URL,
-  description: 'Communauté gay de rencontres et chat par région en France.',
+  description: 'Site de rencontre gay et tchat gay gratuit en France. Rencontres entre hommes par département, plan gay local, échanges de photos et vidéos. Communauté gay vérifiée.',
   inLanguage: 'fr-FR',
+  keywords: 'site gay, rencontre gay, chat gay, tchat gay, plan gay, site de rencontre gay, gay france, communauté gay, annonce gay, homme gay',
   potentialAction: {
     '@type': 'SearchAction',
     target: `${BASE_URL}/auth`,

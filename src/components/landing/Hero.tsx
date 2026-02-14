@@ -49,8 +49,8 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden">
       <SEOHead
-        title="Gay Connect - Rencontres & Chat Gay en France"
-        description="Rejoins la communauté gay de ta région. Chat, échanges de photos et vidéos en groupe ou en privé. Membres vérifiés, espace sécurisé. +18 ans."
+        title="Gay Connect - Site de Rencontre Gay & Tchat Gay France"
+        description="Gay Connect : le site gay n°1 pour les rencontres entre hommes en France. Tchat gay gratuit, plan gay par département, échanges de photos et vidéos. Communauté gay vérifiée. +18 ans."
         canonical="https://gay-connect.lovable.app/"
         jsonLd={{ ...websiteJsonLd, ...organizationJsonLd }}
       />

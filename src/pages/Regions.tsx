@@ -10,8 +10,8 @@ const Regions = () => {
   const { data: rooms, isLoading } = useChatRooms();
   const { data: counts } = useRegionMemberCounts();
 
-  const pageTitle = 'Toutes les régions - Gay Connect | Chat Gay par département';
-  const pageDescription = 'Explore les 101 départements français sur Gay Connect. Rejoins le groupe de ta région pour des rencontres gay locales, chat de groupe et échanges privés. +18 ans.';
+  const pageTitle = 'Rencontre Gay par Département - Tchat Gay Local | Gay Connect';
+  const pageDescription = 'Trouve des hommes gay près de chez toi. 101 départements, tchat gay gratuit, plan gay local, profils vérifiés. Le site de rencontre gay n°1 en France. +18 ans.';
   const canonical = 'https://gay-connect.lovable.app/regions';
 
   const jsonLd = {

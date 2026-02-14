@@ -37,7 +37,7 @@ const ProfileDetailDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md [&>button.absolute]:top-3 [&>button.absolute]:right-3">
         <DialogHeader>
           <DialogTitle className="sr-only">Profil de {profile.username}</DialogTitle>
         </DialogHeader>

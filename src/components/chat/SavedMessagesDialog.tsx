@@ -135,7 +135,7 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
           <ClipboardList className="w-6 h-6 text-primary" />
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-md w-[calc(100vw-2rem)] h-[80vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)] h-[80vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl [&>button.absolute]:hidden">
         {/* Header */}
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border/40 flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -150,18 +150,28 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
                 </p>
               </div>
             </div>
-            {!showNewForm && !editingMessage && (
+            <div className="flex items-center gap-1.5">
+              {!showNewForm && !editingMessage && (
+                <Button
+                  variant={canCreate ? "default" : "secondary"}
+                  size="sm"
+                  onClick={handleShowNewForm}
+                  disabled={!canCreate}
+                  className="gap-1 h-8 text-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Nouveau
+                </Button>
+              )}
               <Button
-                variant={canCreate ? "default" : "secondary"}
-                size="sm"
-                onClick={handleShowNewForm}
-                disabled={!canCreate}
-                className="gap-1 h-8 text-xs"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-lg"
+                onClick={() => setOpen(false)}
               >
-                <Plus className="w-3.5 h-3.5" />
-                Nouveau
+                <X className="w-4 h-4" />
               </Button>
-            )}
+            </div>
           </div>
         </DialogHeader>
 

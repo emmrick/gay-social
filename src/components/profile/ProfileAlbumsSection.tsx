@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
-import { FolderLock, Plus, ImageIcon, Loader2, ChevronRight, EyeOff, Eye } from 'lucide-react';
+import { useState } from 'react';
+import { FolderLock, Plus, ImageIcon, Loader2, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useAlbums } from '@/hooks/useAlbums';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -11,19 +10,6 @@ import AlbumManager from '@/components/albums/AlbumManager';
 const ProfileAlbumsSection = () => {
   const { albums, isLoading, useAlbumMedia } = useAlbums();
   const [showAlbumManager, setShowAlbumManager] = useState(false);
-  const [hidePreview, setHidePreview] = useState(() => {
-    try {
-      return localStorage.getItem('album-hide-preview') === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('album-hide-preview', hidePreview ? 'true' : 'false');
-    } catch {}
-  }, [hidePreview]);
 
   if (isLoading) {
     return (
@@ -52,26 +38,15 @@ const ProfileAlbumsSection = () => {
                 <p className="text-xs text-muted-foreground">{albums.length} album(s)</p>
               </div>
             </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground"
-                onClick={() => setHidePreview(!hidePreview)}
-                title={hidePreview ? 'Afficher les aperçus' : 'Masquer les aperçus'}
-              >
-                {hidePreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs gap-1"
-                onClick={() => setShowAlbumManager(true)}
-              >
-                Gérer
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1"
+              onClick={() => setShowAlbumManager(true)}
+            >
+              Gérer
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
           </div>
 
           {/* Albums grid */}
@@ -92,7 +67,6 @@ const ProfileAlbumsSection = () => {
                   index={index}
                   useAlbumMedia={useAlbumMedia}
                   onClick={() => setShowAlbumManager(true)}
-                  hidePreview={hidePreview}
                 />
               ))}
               {albums.length > 6 && (
@@ -108,7 +82,6 @@ const ProfileAlbumsSection = () => {
         </CardContent>
       </Card>
 
-      {/* Album Manager Sheet */}
       <AlbumManager isOpen={showAlbumManager} onClose={() => setShowAlbumManager(false)} />
     </>
   );
@@ -119,10 +92,9 @@ interface AlbumThumbnailProps {
   index: number;
   useAlbumMedia: (albumId: string) => any;
   onClick: () => void;
-  hidePreview?: boolean;
 }
 
-const AlbumThumbnail = ({ album, index, useAlbumMedia, onClick, hidePreview }: AlbumThumbnailProps) => {
+const AlbumThumbnail = ({ album, index, useAlbumMedia, onClick }: AlbumThumbnailProps) => {
   const { data: media = [] } = useAlbumMedia(album.id);
   const coverImage = media[0]?.media_url;
 
@@ -137,12 +109,7 @@ const AlbumThumbnail = ({ album, index, useAlbumMedia, onClick, hidePreview }: A
         "bg-secondary/50 hover:ring-2 hover:ring-primary/50 transition-all"
       )}
     >
-      {hidePreview ? (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 bg-secondary/80">
-          <EyeOff className="w-5 h-5 text-muted-foreground/50" />
-          <p className="text-[10px] text-muted-foreground/70 font-medium truncate max-w-full px-1">{album.name}</p>
-        </div>
-      ) : coverImage ? (
+      {coverImage ? (
         <img 
           src={coverImage} 
           alt={album.name}
@@ -154,21 +121,11 @@ const AlbumThumbnail = ({ album, index, useAlbumMedia, onClick, hidePreview }: A
         </div>
       )}
       
-      {/* Overlay with album name and count - only when not hidden */}
-      {!hidePreview && (
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
-          <p className="text-white text-xs font-medium truncate">{album.name}</p>
-          <p className="text-white/70 text-[10px]">{media.length} média(s)</p>
-        </div>
-      )}
-
-      {/* Media count badge */}
-      <Badge 
-        variant="secondary" 
-        className="absolute top-1.5 right-1.5 text-[10px] py-0 px-1.5 bg-black/50 text-white border-0"
-      >
-        {media.length}
-      </Badge>
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-2">
+        <p className="text-white text-xs font-medium truncate">{album.name}</p>
+        <p className="text-white/70 text-[10px]">{media.length} média(s)</p>
+      </div>
     </motion.button>
   );
 };

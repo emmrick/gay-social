@@ -292,7 +292,7 @@ const AlbumGalleryViewer = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm"
+        className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm"
         data-protected="true"
         onContextMenu={preventContextMenu}
       >

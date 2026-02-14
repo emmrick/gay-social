@@ -23,6 +23,7 @@ const LEGAL_SECTIONS = [
   { id: 'cgv', title: 'Système de crédits & CGV', keywords: ['crédits', 'paiement', 'achat', 'prix', 'tarif', 'remboursement', 'cgv', 'premium', 'monétisation'] },
   { id: 'rules', title: 'Règlement du site', keywords: ['règlement', 'règles', 'interdit', 'comportement', 'sanctions', 'signalement', 'harcèlement', 'spam'] },
   { id: 'protection', title: 'Protection des utilisateurs', keywords: ['protection', 'sécurité', 'chiffrement', 'modération', 'capture', 'écran', 'éphémère'] },
+  { id: 'mentions-legales', title: 'Mentions légales - Éditeur & Développeur', keywords: ['mentions', 'légales', 'éditeur', 'développeur', 'bayart', 'emmrick', 'auto-entrepreneur', 'adresse', 'contact', 'hébergeur'] },
 ];
 
 const Legal = () => {
@@ -690,6 +691,61 @@ const Legal = () => {
                   Pour toute question relative à vos données ou pour exercer vos droits RGPD, 
                   vous pouvez nous contacter via le formulaire de contact du site ou par 
                   email à l'adresse indiquée dans votre espace membre.
+                </p>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+          )}
+
+          {/* Mentions légales - Éditeur & Développeur */}
+          {filteredSections.includes('mentions-legales') && (
+          <AccordionItem id="mentions-legales" value="mentions-legales" className="glass-card rounded-2xl px-6 border-border bg-card">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <Scale className="w-5 h-5 text-primary" />
+                </div>
+                <span className="font-display font-semibold text-lg">Mentions légales - Éditeur & Développeur</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground space-y-4 pt-4">
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">1. Éditeur et développeur du site</h4>
+                <ul className="space-y-2">
+                  <li><strong>Nom :</strong> BAYART Emmrick</li>
+                  <li><strong>Statut :</strong> Auto-entrepreneur</li>
+                  <li><strong>Adresse de domiciliation :</strong> 61 Rue de Lion, 75012 Paris, France</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">2. Directeur de la publication</h4>
+                <p>BAYART Emmrick</p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">3. Contact</h4>
+                <p>
+                  Pour toute question relative au site, vous pouvez nous contacter via 
+                  la messagerie intégrée à l'application ou par email à l'adresse indiquée 
+                  dans votre espace membre.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">4. Hébergement</h4>
+                <p>
+                  Le site est hébergé par Lovable Cloud. Les données sont stockées sur des 
+                  serveurs sécurisés conformément aux normes en vigueur.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">5. Propriété intellectuelle</h4>
+                <p>
+                  L'ensemble du contenu du site Gay Connect (textes, images, logos, code source) 
+                  est la propriété exclusive de BAYART Emmrick. Toute reproduction, même partielle, 
+                  est interdite sans autorisation préalable.
                 </p>
               </div>
             </AccordionContent>

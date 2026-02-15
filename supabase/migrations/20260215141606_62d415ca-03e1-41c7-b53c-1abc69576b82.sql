@@ -1,0 +1,1 @@
+ALTER TABLE public.maintenance_mode ADD COLUMN estimated_end_at TIMESTAMPTZ DEFAULT NULL;

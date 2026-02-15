@@ -29,7 +29,7 @@ const MaintenanceGuard = ({ children }: MaintenanceGuardProps) => {
 
   // If maintenance is active and user is NOT staff, show maintenance screen
   if (maintenance?.is_active && !isStaff) {
-    return <MaintenanceScreen message={maintenance.message} />;
+    return <MaintenanceScreen message={maintenance.message} estimatedEndAt={maintenance.estimated_end_at} />;
   }
 
   return <>{children}</>;

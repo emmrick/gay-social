@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Wrench, AlertTriangle } from 'lucide-react';
+import { Wrench, AlertTriangle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { useMaintenanceMode, useToggleMaintenance } from '@/hooks/useMaintenanceMode';
 import {
   AlertDialog,
@@ -22,6 +23,7 @@ const MaintenanceTogglePanel = () => {
   const { data: maintenance, isLoading } = useMaintenanceMode();
   const toggleMutation = useToggleMaintenance();
   const [message, setMessage] = useState('');
+  const [estimatedHours, setEstimatedHours] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingState, setPendingState] = useState(false);
 
@@ -29,21 +31,31 @@ const MaintenanceTogglePanel = () => {
     if (maintenance?.message) {
       setMessage(maintenance.message);
     }
-  }, [maintenance?.message]);
+    if (maintenance?.estimated_end_at) {
+      const diff = new Date(maintenance.estimated_end_at).getTime() - Date.now();
+      if (diff > 0) {
+        setEstimatedHours(String(Math.round(diff / (1000 * 60 * 60) * 10) / 10));
+      }
+    }
+  }, [maintenance?.message, maintenance?.estimated_end_at]);
+
+  const getEstimatedEndAt = () => {
+    const hours = parseFloat(estimatedHours);
+    if (!hours || hours <= 0) return null;
+    return new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+  };
 
   const handleToggle = (checked: boolean) => {
     if (checked) {
-      // Activating - show confirmation
       setPendingState(true);
       setShowConfirm(true);
     } else {
-      // Deactivating - no confirmation needed
-      toggleMutation.mutate({ isActive: false, message });
+      toggleMutation.mutate({ isActive: false, message, estimatedEndAt: null });
     }
   };
 
   const confirmActivation = () => {
-    toggleMutation.mutate({ isActive: true, message });
+    toggleMutation.mutate({ isActive: true, message, estimatedEndAt: getEstimatedEndAt() });
     setShowConfirm(false);
   };
 
@@ -90,17 +102,38 @@ const MaintenanceTogglePanel = () => {
                 placeholder="Le site est en maintenance..."
                 rows={3}
               />
-              {maintenance?.is_active && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => toggleMutation.mutate({ isActive: true, message })}
-                  disabled={toggleMutation.isPending}
-                >
-                  Mettre à jour le message
-                </Button>
-              )}
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="estimated-hours" className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" />
+                Durée estimée (heures)
+              </Label>
+              <Input
+                id="estimated-hours"
+                type="number"
+                min="0.5"
+                step="0.5"
+                value={estimatedHours}
+                onChange={(e) => setEstimatedHours(e.target.value)}
+                placeholder="Ex: 2"
+                className="max-w-[200px]"
+              />
+              <p className="text-xs text-muted-foreground">
+                Laissez vide pour ne pas afficher de compteur
+              </p>
+            </div>
+
+            {maintenance?.is_active && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => toggleMutation.mutate({ isActive: true, message, estimatedEndAt: getEstimatedEndAt() })}
+                disabled={toggleMutation.isPending}
+              >
+                Mettre à jour
+              </Button>
+            )}
 
             {maintenance?.activated_at && maintenance.is_active && (
               <p className="text-xs text-muted-foreground">

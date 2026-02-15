@@ -655,6 +655,7 @@ export type Database = {
         Row: {
           activated_at: string | null
           activated_by: string | null
+          estimated_end_at: string | null
           id: string
           is_active: boolean
           message: string | null
@@ -663,6 +664,7 @@ export type Database = {
         Insert: {
           activated_at?: string | null
           activated_by?: string | null
+          estimated_end_at?: string | null
           id?: string
           is_active?: boolean
           message?: string | null
@@ -671,6 +673,7 @@ export type Database = {
         Update: {
           activated_at?: string | null
           activated_by?: string | null
+          estimated_end_at?: string | null
           id?: string
           is_active?: boolean
           message?: string | null

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Wrench, HardHat, Settings, LogIn, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Wrench, HardHat, Settings, LogIn, Loader2, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,14 +9,31 @@ import { toast } from 'sonner';
 
 interface MaintenanceScreenProps {
   message?: string | null;
+  estimatedEndAt?: string | null;
   onStaffLogin?: () => void;
 }
 
-const MaintenanceScreen = ({ message, onStaffLogin }: MaintenanceScreenProps) => {
+const MaintenanceScreen = ({ message, estimatedEndAt, onStaffLogin }: MaintenanceScreenProps) => {
   const [showLogin, setShowLogin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    if (!estimatedEndAt) { setTimeLeft(''); return; }
+    const update = () => {
+      const diff = new Date(estimatedEndAt).getTime() - Date.now();
+      if (diff <= 0) { setTimeLeft('Bientôt terminé…'); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${h > 0 ? `${h}h ` : ''}${String(m).padStart(2, '0')}min ${String(s).padStart(2, '0')}s`);
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [estimatedEndAt]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,6 +186,20 @@ const MaintenanceScreen = ({ message, onStaffLogin }: MaintenanceScreenProps) =>
             </p>
           )}
         </motion.div>
+
+        {/* Countdown timer */}
+        {timeLeft && (
+          <motion.div
+            className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary/10 border border-primary/20"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Clock className="w-5 h-5 text-primary" />
+            <span className="text-sm text-muted-foreground">Temps restant estimé :</span>
+            <span className="font-bold text-primary text-lg tabular-nums">{timeLeft}</span>
+          </motion.div>
+        )}
 
         {/* Animated progress dots */}
         <motion.div

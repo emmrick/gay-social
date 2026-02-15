@@ -24,6 +24,7 @@ import { useScreenshotProtection } from "@/hooks/useScreenshotProtection";
 import ScreenshotProtectionOverlay from "@/components/security/ScreenshotProtectionOverlay";
 import BackgroundRefreshIndicator from "@/components/loading/BackgroundRefreshIndicator";
 import MaintenanceGuard from "@/components/maintenance/MaintenanceGuard";
+import MaintenanceBanner from "@/components/maintenance/MaintenanceBanner";
 import InitialLoadingScreen from "@/components/loading/InitialLoadingScreen";
 import { toast } from "sonner";
 
@@ -103,6 +104,7 @@ const AuthenticatedApp = () => {
           <VerificationGuard>
           <ProfilePhotoGuard>
             <TooltipProvider>
+              <MaintenanceBanner />
               <BackgroundRefreshIndicator />
               <Toaster />
               <Sonner />

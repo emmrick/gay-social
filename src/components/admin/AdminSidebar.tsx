@@ -22,7 +22,8 @@ import {
   Camera,
   Heart,
   UserCog,
-  Wrench
+  Wrench,
+  ListOrdered
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -52,7 +53,8 @@ export type AdminSection =
   | 'moderators'
   | 'swipe-stats'
   | 'credit-costs'
-  | 'maintenance';
+  | 'maintenance'
+  | 'pending-tasks';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -93,6 +95,7 @@ const navItems: NavItem[] = [
   { id: 'verification', label: 'Vérifications', icon: IdCard, group: 'moderation' },
   { id: 'screenshot-sanctions', label: 'Captures écran', icon: Camera, group: 'moderation' },
   { id: 'history', label: 'Historique', icon: History, group: 'moderation' },
+  { id: 'pending-tasks', label: 'File d\'attente', icon: ListOrdered, group: 'moderation' },
   
   // Paramètres
   { id: 'moderators', label: 'Modérateurs', icon: UserCog, group: 'settings' },

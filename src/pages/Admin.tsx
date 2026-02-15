@@ -55,6 +55,7 @@ import SwipeStatsPanel from '@/components/admin/SwipeStatsPanel';
 import CreditCostsPanel from '@/components/admin/CreditCostsPanel';
 import MaintenanceTogglePanel from '@/components/admin/MaintenanceTogglePanel';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
+import PendingTasksPanel from '@/components/admin/PendingTasksPanel';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -297,6 +298,8 @@ const Admin = () => {
       case 'maintenance':
         return <MaintenanceTogglePanel />;
       
+      case 'pending-tasks':
+        return <PendingTasksPanel />;
       default:
         return null;
     }

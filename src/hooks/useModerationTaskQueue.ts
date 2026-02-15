@@ -45,6 +45,65 @@ export const formatCentsReward = (cents: number) => {
   return (cents / 100).toFixed(2).replace('.', ',') + ' €';
 };
 
+// Hook to manage mission availability toggle (persisted in localStorage)
+const MISSION_ACTIVE_KEY = 'moderation-missions-active';
+
+export const useMissionToggle = () => {
+  const [isActive, setIsActive] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem(MISSION_ACTIVE_KEY);
+      return stored === null ? true : stored === 'true';
+    } catch {
+      return true;
+    }
+  });
+
+  const toggle = useCallback(() => {
+    setIsActive(prev => {
+      const next = !prev;
+      try { localStorage.setItem(MISSION_ACTIVE_KEY, String(next)); } catch {}
+      if (next) {
+        toast.success('Missions activées — vous recevrez de nouvelles missions.');
+      } else {
+        toast.info('Missions désactivées — vous ne recevrez plus de nouvelles missions après la mission en cours.');
+      }
+      return next;
+    });
+  }, []);
+
+  return { isActive, toggle };
+};
+
+// Hook to get ALL pending tasks (for admin history panel)
+export const usePendingTasksHistory = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['moderation-tasks-pending-all'],
+    queryFn: async (): Promise<ModerationTask[]> => {
+      if (!user?.id) return [];
+
+      await supabase.rpc('expire_stale_moderation_tasks');
+
+      const { data, error } = await supabase
+        .from('moderation_tasks')
+        .select('*')
+        .in('status', ['pending', 'reserved'])
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      return (data || []).map((t: any) => ({
+        ...t,
+        refused_by: t.refused_by || [],
+        metadata: t.metadata || {},
+      })) as ModerationTask[];
+    },
+    enabled: !!user?.id,
+    refetchInterval: 15000,
+  });
+};
+
 // Hook to get available tasks for the current user
 export const useAvailableTasks = () => {
   const { user } = useAuth();

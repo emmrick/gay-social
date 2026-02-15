@@ -8,17 +8,19 @@ import {
   Euro, 
   ChevronRight, 
   Loader2,
-  AlertCircle 
+  AlertCircle,
+  Power
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
 import {
   useAvailableTasks,
   useActiveTask,
   useReserveTask,
   useRefuseTask,
-  useCompleteTask,
+  useMissionToggle,
   getTaskTypeLabel,
   getTaskTypeSection,
   formatCentsReward,
@@ -36,17 +38,16 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
   const { data: activeTask } = useActiveTask();
   const reserveTask = useReserveTask();
   const refuseTask = useRefuseTask();
-  const completeTask = useCompleteTask();
+  const { isActive: missionsActive, toggle: toggleMissions } = useMissionToggle();
 
   const [showPopup, setShowPopup] = useState(false);
   const [currentOffer, setCurrentOffer] = useState<ModerationTask | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
-  // Show popup when there's a new available task
+  // Show popup only when missions are active AND no active task
   useEffect(() => {
-    if (activeTask) {
-      // User has an active task, don't show new offers
+    if (activeTask || !missionsActive) {
       setShowPopup(false);
       setCurrentOffer(null);
       return;
@@ -62,7 +63,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
       setShowPopup(false);
       setCurrentOffer(null);
     }
-  }, [availableTasks, activeTask, dismissed, currentOffer]);
+  }, [availableTasks, activeTask, dismissed, currentOffer, missionsActive]);
 
   // Countdown timer for active task
   useEffect(() => {
@@ -118,9 +119,33 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
 
   return (
     <>
+      {/* Mission Toggle */}
+      <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3 mb-4">
+        <div className="flex items-center gap-2">
+          <Power className={`w-4 h-4 ${missionsActive ? 'text-primary' : 'text-muted-foreground'}`} />
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              {missionsActive ? 'Missions actives' : 'Missions désactivées'}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {missionsActive 
+                ? activeTask 
+                  ? 'Vous ne recevrez plus de missions après celle en cours' 
+                  : 'Vous recevez les nouvelles missions'
+                : 'Activez pour recevoir des missions'
+              }
+            </p>
+          </div>
+        </div>
+        <Switch 
+          checked={missionsActive} 
+          onCheckedChange={toggleMissions}
+        />
+      </div>
+
       {/* New Task Offer Popup */}
       <AnimatePresence>
-        {showPopup && currentOffer && !activeTask && (
+        {showPopup && currentOffer && !activeTask && missionsActive && (
           <motion.div
             initial={{ opacity: 0, y: -100, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -186,7 +211,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
         )}
       </AnimatePresence>
 
-      {/* Active Task Banner (sticky at top of admin panel) */}
+      {/* Active Task Banner */}
       <AnimatePresence>
         {activeTask && (
           <motion.div
@@ -222,11 +247,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                 </div>
               </div>
 
-              {/* Timer progress bar */}
-              <Progress 
-                value={progressPercent} 
-                className="h-1.5" 
-              />
+              <Progress value={progressPercent} className="h-1.5" />
 
               {timeRemaining < 60000 && timeRemaining > 0 && (
                 <div className="flex items-center gap-1.5 text-xs text-destructive">
@@ -235,7 +256,13 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                 </div>
               )}
 
-              {/* Actions */}
+              {!missionsActive && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-lg p-2">
+                  <Power className="w-3 h-3" />
+                  <span>Missions désactivées — aucune nouvelle mission après celle-ci</span>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <Button
                   variant="outline"

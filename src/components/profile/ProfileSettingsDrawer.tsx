@@ -17,6 +17,7 @@ interface ProfileSettingsDrawerProps {
   isPremium?: boolean; // Kept for backwards compatibility but no longer used
   subscriptionEnd?: string | null; // Kept for backwards compatibility but no longer used
   isAdmin?: boolean;
+  isModerator?: boolean;
   onNavigateToAdmin?: () => void;
   onNavigateToCredits?: () => void;
   onContactAdmin?: () => void;
@@ -25,6 +26,7 @@ interface ProfileSettingsDrawerProps {
 
 const ProfileSettingsDrawer = ({
   isAdmin,
+  isModerator,
   onNavigateToAdmin,
   onNavigateToCredits,
   onContactAdmin,
@@ -129,19 +131,31 @@ const ProfileSettingsDrawer = ({
               ))}
             </div>
 
-            {/* Admin button */}
-            {isAdmin && onNavigateToAdmin && (
+            {/* Admin / Moderator button */}
+            {(isAdmin || isModerator) && onNavigateToAdmin && (
               <>
                 <Separator className="my-4" />
                 <button
                   onClick={() => { setOpen(false); onNavigateToAdmin(); }}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 transition-colors"
+                  className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-colors ${
+                    isAdmin 
+                      ? 'bg-amber-500/10 hover:bg-amber-500/20' 
+                      : 'bg-blue-500/10 hover:bg-blue-500/20'
+                  }`}
                 >
-                  <div className="w-11 h-11 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-amber-500" />
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
+                    isAdmin ? 'bg-amber-500/20' : 'bg-blue-500/20'
+                  }`}>
+                    <Shield className={`w-5 h-5 ${isAdmin ? 'text-amber-500' : 'text-blue-500'}`} />
                   </div>
-                  <span className="flex-1 text-left font-medium text-amber-600 dark:text-amber-400">Administration</span>
-                  <ChevronRight className="w-5 h-5 text-amber-500" />
+                  <span className={`flex-1 text-left font-medium ${
+                    isAdmin 
+                      ? 'text-amber-600 dark:text-amber-400' 
+                      : 'text-blue-600 dark:text-blue-400'
+                  }`}>
+                    {isAdmin ? 'Administration' : 'Modération'}
+                  </span>
+                  <ChevronRight className={`w-5 h-5 ${isAdmin ? 'text-amber-500' : 'text-blue-500'}`} />
                 </button>
               </>
             )}

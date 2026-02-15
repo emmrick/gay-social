@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Hero from '@/components/landing/Hero';
@@ -87,6 +89,15 @@ const Index = () => {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [messageSubTab, setMessageSubTab] = useState<'conversations' | 'groups' | 'archived'>('conversations');
   const { data: isAdmin } = useIsAdmin();
+  const { data: isModerator } = useQuery({
+    queryKey: ['is-moderator', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { data } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'moderator' });
+      return data === true;
+    },
+    enabled: !!user?.id,
+  });
   const { isPremium } = useSubscription();
   const { verification, isLoading: verificationLoading } = useIdentityVerification();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
@@ -609,6 +620,7 @@ const Index = () => {
                   setCurrentView('private');
                 }}
                 isAdmin={isAdmin}
+                isModerator={isModerator}
               />
             </ScrollArea>
           </motion.div>

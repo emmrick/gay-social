@@ -80,9 +80,10 @@ interface ProfileViewProps {
   onNavigateToCredits?: () => void;
   onContactAdmin?: () => void;
   isAdmin?: boolean;
+  isModerator?: boolean;
 }
 
-const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, isAdmin }: ProfileViewProps) => {
+const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, isAdmin, isModerator }: ProfileViewProps) => {
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
   const { data: isAdminUser } = useIsAdmin();
@@ -162,6 +163,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
                 </div>
                 <ProfileSettingsDrawer
                   isAdmin={isAdmin}
+                  isModerator={isModerator}
                   onNavigateToAdmin={onNavigateToAdmin}
                   onNavigateToCredits={onNavigateToCredits}
                   onContactAdmin={onContactAdmin}
@@ -174,6 +176,11 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
                 {isAdminUser && (
                   <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-sm text-xs">
                     ⚡ Admin
+                  </Badge>
+                )}
+                {!isAdminUser && isModerator && (
+                  <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 shadow-sm text-xs">
+                    🛡️ Modérateur
                   </Badge>
                 )}
                 {/* Removed Premium badge - credits system is now used */}

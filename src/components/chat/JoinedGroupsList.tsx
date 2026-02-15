@@ -127,9 +127,9 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                 onClick={() => onSelectGroup(group.regionCode)}
                 className="flex-1 min-w-0 text-left"
               >
-                <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-foreground truncate">
+                <div className="flex items-center justify-between gap-1 mb-0.5">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <h3 className="font-medium text-foreground truncate text-sm">
                       {group.regionName}
                     </h3>
                     {group.isHomeGroup && (
@@ -140,7 +140,7 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                   </div>
                   {mentionCount > 0 && (
                     <span className="flex-shrink-0 px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full">
-                      {mentionCount} mention{mentionCount > 1 ? 's' : ''}
+                      {mentionCount}
                     </span>
                   )}
                 </div>

@@ -223,19 +223,19 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
           <ArrowLeft className="w-5 h-5" />
         </Button>
         
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white text-sm flex-shrink-0">
           {regionCode.startsWith('GRP-') ? regionName.charAt(0).toUpperCase() : regionCode}
         </div>
         
-        <div className="flex-1">
-          <h1 className="font-display font-semibold text-foreground">
-            {regionCode.startsWith('GRP-') ? regionName : `Groupe ${regionCode}`}
+        <div className="flex-1 min-w-0">
+          <h1 className="font-display font-semibold text-foreground truncate text-sm">
+            {regionCode.startsWith('GRP-') ? regionName : `${regionName} (${regionCode})`}
           </h1>
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Users className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Users className="w-3.5 h-3.5 flex-shrink-0" />
             <span>{memberCount} membres</span>
             {typingUsers.length > 0 && (
-              <span className="text-primary animate-pulse">• en train d'écrire...</span>
+              <span className="text-primary animate-pulse truncate">• écrit...</span>
             )}
           </div>
         </div>

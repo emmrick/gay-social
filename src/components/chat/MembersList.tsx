@@ -24,6 +24,8 @@ import {
   shouldShowOnlineIndicator, 
   getLastSeenText 
 } from '@/hooks/useOnlineStatus';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 type Profile = Tables<'profiles'>;
 
@@ -32,9 +34,56 @@ interface MembersListProps {
   onStartPrivateChat: (userId: string) => void;
 }
 
+// Hook to load members from chat_room_members for custom groups
+const useGroupMembers = (regionCode: string) => {
+  const isCustomGroup = regionCode.startsWith('GRP-') || regionCode.length > 10;
+  
+  return useQuery({
+    queryKey: ['group-members', regionCode],
+    queryFn: async (): Promise<Profile[]> => {
+      // Find the chat room by region_code or id
+      const { data: room } = await supabase
+        .from('chat_rooms')
+        .select('id')
+        .or(`region_code.eq.${regionCode},id.eq.${regionCode}`)
+        .maybeSingle();
+
+      if (!room) return [];
+
+      // Get member user_ids
+      const { data: members } = await supabase
+        .from('chat_room_members')
+        .select('user_id')
+        .eq('chat_room_id', room.id);
+
+      if (!members || members.length === 0) return [];
+
+      const userIds = members.map(m => m.user_id);
+
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('user_id', userIds)
+        .order('is_online', { ascending: false })
+        .order('last_seen', { ascending: false });
+
+      if (error) throw error;
+      return profiles || [];
+    },
+    enabled: isCustomGroup && !!regionCode,
+    staleTime: 30_000,
+  });
+};
+
 const MembersList = ({ regionCode, onStartPrivateChat }: MembersListProps) => {
   const { user } = useAuth();
-  const { data: profiles, isLoading } = useProfilesByRegion(regionCode);
+  const isCustomGroup = regionCode.startsWith('GRP-') || regionCode.length > 10;
+  
+  const { data: regionProfiles, isLoading: regionLoading } = useProfilesByRegion(isCustomGroup ? '' : regionCode);
+  const { data: groupProfiles, isLoading: groupLoading } = useGroupMembers(regionCode);
+  
+  const profiles = isCustomGroup ? groupProfiles : regionProfiles;
+  const isLoading = isCustomGroup ? groupLoading : regionLoading;
 
   // Filter out current user
   const otherMembers = profiles?.filter((p) => p.user_id !== user?.id) || [];
@@ -42,7 +91,7 @@ const MembersList = ({ regionCode, onStartPrivateChat }: MembersListProps) => {
   if (isLoading) {
     return (
       <div className="p-4 space-y-3">
-        <h2 className="font-display font-semibold text-lg mb-4">Membres en ligne</h2>
+        <h2 className="font-display font-semibold text-lg mb-4">Membres</h2>
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex items-center gap-3 p-3">
             <Skeleton className="w-12 h-12 rounded-full" />
@@ -64,7 +113,7 @@ const MembersList = ({ regionCode, onStartPrivateChat }: MembersListProps) => {
 
       {otherMembers.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-8">
-          Aucun autre membre dans cette région pour le moment
+          Aucun autre membre dans ce groupe pour le moment
         </p>
       ) : (
         <div className="space-y-2">

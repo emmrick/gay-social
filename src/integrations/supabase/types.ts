@@ -2204,6 +2204,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      recycle_fully_refused_tasks: { Args: never; Returns: undefined }
       refuse_moderation_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: Json

@@ -2244,6 +2244,10 @@ export type Database = {
         | "private_message_response"
         | "verification_request"
         | "credit_management"
+        | "content_moderation"
+        | "withdrawal_management"
+        | "promo_validation"
+        | "support_chat"
       report_reason:
         | "harassment"
         | "inappropriate_content"
@@ -2400,6 +2404,10 @@ export const Constants = {
         "private_message_response",
         "verification_request",
         "credit_management",
+        "content_moderation",
+        "withdrawal_management",
+        "promo_validation",
+        "support_chat",
       ],
       report_reason: [
         "harassment",

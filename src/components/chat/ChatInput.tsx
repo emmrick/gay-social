@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Mic } from 'lucide-react';
 import MediaUploadButton from './MediaUploadButton';
 import SavedMessagesDialog from './SavedMessagesDialog';
 import MentionAutocomplete from './MentionAutocomplete';
@@ -16,9 +16,11 @@ interface ChatInputProps {
   isSending?: boolean;
   onTyping?: (hasText: boolean) => void;
   onFocus?: () => void;
+  onVoiceToggle?: () => void;
+  showVoiceButton?: boolean;
 }
 
-const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, isSending = false, onTyping, onFocus }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, isSending = false, onTyping, onFocus, onVoiceToggle, showVoiceButton }: ChatInputProps) => {
   const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
@@ -167,6 +169,18 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
 
         {/* Saved messages button */}
         <SavedMessagesDialog onSelectMessage={handleSelectSavedMessage} />
+
+        {/* Voice button */}
+        {showVoiceButton && onVoiceToggle && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 flex-shrink-0 text-muted-foreground hover:text-primary"
+            onClick={onVoiceToggle}
+          >
+            <Mic className="w-5 h-5" />
+          </Button>
+        )}
         
         {/* Message input - Textarea for multiline */}
         <Textarea

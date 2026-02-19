@@ -500,6 +500,82 @@ export type Database = {
         }
         Relationships: []
       }
+      group_event_rsvps: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_event_rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "group_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_events: {
+        Row: {
+          chat_room_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          event_date: string
+          id: string
+          location: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          chat_room_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          event_date: string
+          id?: string
+          location?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          chat_room_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          event_date?: string
+          id?: string
+          location?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_events_chat_room_id_fkey"
+            columns: ["chat_room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_message_reads: {
         Row: {
           id: string
@@ -1147,6 +1223,45 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      pinned_messages: {
+        Row: {
+          chat_room_id: string
+          id: string
+          message_id: string
+          pinned_at: string
+          pinned_by: string
+        }
+        Insert: {
+          chat_room_id: string
+          id?: string
+          message_id: string
+          pinned_at?: string
+          pinned_by: string
+        }
+        Update: {
+          chat_room_id?: string
+          id?: string
+          message_id?: string
+          pinned_at?: string
+          pinned_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pinned_messages_chat_room_id_fkey"
+            columns: ["chat_room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pinned_messages_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       premium_subscriptions: {
         Row: {

@@ -5,6 +5,7 @@ import { useMessageReactions } from '@/hooks/useMessageReactions';
 import { useGroupReadReceipts } from '@/hooks/useGroupReadReceipts';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { useUnreadMentions } from '@/hooks/useUnreadMentions';
+import { usePinnedMessages } from '@/hooks/usePinnedMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
@@ -15,7 +16,11 @@ import MessageReply from './MessageReply';
 import MessageSearch from './MessageSearch';
 import UserProfilePreview from './UserProfilePreview';
 import MediaGallerySheet from './MediaGallerySheet';
-import { ArrowLeft, Users, Search, Image, Loader2, X, ChevronDown } from 'lucide-react';
+import PinnedMessagesBanner from './PinnedMessagesBanner';
+import GroupSettingsDialog from './GroupSettingsDialog';
+import GroupEventsSheet from './GroupEventsSheet';
+import VoiceRecorder from './VoiceRecorder';
+import { ArrowLeft, Users, Search, Image, Loader2, X, ChevronDown, Settings, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
@@ -61,6 +66,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const { getReactionsForMessage, toggleReaction } = useMessageReactions(roomId);
   const { getReaders, markAsRead } = useGroupReadReceipts(roomId);
   const { markMentionsAsRead } = useUnreadMentions();
+  const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } = usePinnedMessages(roomId);
   
   // Mark mentions as read when opening the room
   useEffect(() => {
@@ -84,7 +90,10 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
   const [showMembers, setShowMembers] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showEvents, setShowEvents] = useState(false);
   const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [previewUserId, setPreviewUserId] = useState<string | null>(null);
   
@@ -270,10 +279,49 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           </SheetContent>
         </Sheet>
 
+        {/* Events button */}
+        <Button variant="ghost" size="icon" onClick={() => setShowEvents(true)}>
+          <CalendarDays className="w-5 h-5" />
+        </Button>
+
         <Button variant="ghost" size="icon" onClick={() => setShowMediaGallery(true)}>
           <Image className="w-5 h-5" />
         </Button>
+
+        {/* Settings (custom groups only) */}
+        {isCustomGroup && (
+          <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)}>
+            <Settings className="w-5 h-5" />
+          </Button>
+        )}
       </header>
+
+      {/* Pinned messages banner */}
+      <PinnedMessagesBanner
+        pinnedMessages={pinnedMessages}
+        onScrollToMessage={(messageId) => {
+          const el = document.getElementById(`message-${messageId}`);
+          el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }}
+      />
+
+      {/* Group Settings Dialog */}
+      {isCustomGroup && (
+        <GroupSettingsDialog
+          open={showSettings}
+          onOpenChange={setShowSettings}
+          roomId={roomId}
+          currentName={regionName}
+          onGroupDeleted={onBack}
+        />
+      )}
+
+      {/* Group Events */}
+      <GroupEventsSheet
+        open={showEvents}
+        onOpenChange={setShowEvents}
+        roomId={roomId}
+      />
 
       {/* Media Gallery */}
       <MediaGallerySheet
@@ -380,6 +428,17 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
         </div>
       )}
 
+      {/* Voice recorder */}
+      {showVoiceRecorder && (
+        <div className="flex-shrink-0 px-4 pb-2">
+          <VoiceRecorder
+            chatRoomId={roomId}
+            isPrivate={false}
+            onMessageSent={() => setShowVoiceRecorder(false)}
+          />
+        </div>
+      )}
+
       {/* Input - fixed at bottom */}
       <div className="flex-shrink-0">
         <ChatInput 
@@ -389,6 +448,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           isSending={sendMessage.isPending}
           onTyping={handleTyping}
           onFocus={handleInputFocus}
+          onVoiceToggle={() => setShowVoiceRecorder(!showVoiceRecorder)}
+          showVoiceButton
         />
       </div>
     </div>

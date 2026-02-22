@@ -134,7 +134,7 @@ export const useIdentityVerification = () => {
     }) => {
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('identity_verifications')
         .update({
           selfie_url: selfieUrl,
@@ -143,9 +143,12 @@ export const useIdentityVerification = () => {
           submitted_at: new Date().toISOString(),
           status: 'pending',
         })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select()
+        .single();
 
       if (error) throw error;
+      if (!data) throw new Error('La mise à jour a échoué. Veuillez réessayer.');
 
       // Send confirmation notification to the user
       await notifyVerificationSubmitted(user.id);

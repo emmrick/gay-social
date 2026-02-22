@@ -209,7 +209,13 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
 
   const handleNext = async () => {
     if (step === 'intro') {
-      if (!verification) {
+      // If verification was rejected, delete it first to allow a fresh start
+      if (verification?.status === 'rejected') {
+        await deleteRejectedVerification.mutateAsync();
+        // Wait for refetch to clear the old record
+        await refetch();
+        await createVerification.mutateAsync();
+      } else if (!verification) {
         await createVerification.mutateAsync();
       }
       setStep('selfie');

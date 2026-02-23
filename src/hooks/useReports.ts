@@ -80,45 +80,8 @@ export const useReports = () => {
 
       if (error) throw error;
 
-      // Trigger AI moderation automatically with proper user JWT authentication
-      try {
-        // Get the current session to use user's JWT token
-        const { data: sessionData } = await supabase.auth.getSession();
-        const accessToken = sessionData?.session?.access_token;
-
-        if (!accessToken) {
-          console.error('No access token available for AI moderation');
-        } else {
-          const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-moderation`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`,
-              },
-              body: JSON.stringify({
-                report_data: {
-                  report_id: data.id,
-                  reported_user_id: reportedUserId,
-                  reporter_id: user.id,
-                  reason,
-                  description: description?.trim() || null,
-                  report_type: 'user',
-                },
-              }),
-            }
-          );
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('AI moderation failed:', errorText);
-          }
-        }
-      } catch (aiError) {
-        console.error('Error calling AI moderation:', aiError);
-        // Don't throw - report was still created successfully
-      }
+      // AI moderation disabled
+      // The report is created and will be handled manually by moderators
 
       return data;
     },
@@ -126,7 +89,7 @@ export const useReports = () => {
       queryClient.invalidateQueries({ queryKey: ['has-reported', user?.id, variables.reportedUserId] });
       queryClient.invalidateQueries({ queryKey: ['my-reports', user?.id] });
       toast.success('Signalement envoyé', {
-        description: 'Merci pour votre signalement. Notre système IA analyse la situation et un agent humain interviendra si nécessaire.',
+        description: 'Merci pour votre signalement. Un modérateur analysera la situation dans les plus brefs délais.',
       });
     },
     onError: (error) => {

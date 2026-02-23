@@ -99,7 +99,7 @@ const AdminSupportChatPanel = ({ onBack }: AdminSupportChatPanelProps) => {
   }
 
   return (
-    <div className="h-[calc(100dvh-200px)] sm:h-[calc(100vh-140px)] -mx-4 sm:-m-6 rounded-xl overflow-hidden border border-border">
+    <div className="h-[calc(100dvh-180px)] sm:h-[calc(100vh-100px)] -mx-4 -mt-2 sm:-m-6 rounded-xl overflow-hidden border border-border bg-background">
       <SupportChatRoom ticket={ticket} onBack={onBack} isAgent />
     </div>
   );

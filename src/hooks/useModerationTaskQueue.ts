@@ -118,7 +118,8 @@ export const usePendingTasksHistory = () => {
   });
 };
 
-// ─── Available tasks for current moderator (FIFO queue) ───
+// ─── Exclusive next task for current moderator (Uber Eats style) ───
+// Uses get_exclusive_next_task RPC which atomically offers ONE task to ONE moderator
 export const useAvailableTasks = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -128,29 +129,25 @@ export const useAvailableTasks = () => {
     queryFn: async (): Promise<ModerationTask[]> => {
       if (!user?.id) return [];
 
-      // First expire stale tasks, then recycle fully refused ones
+      // First expire stale tasks and recycle fully refused ones
       await supabase.rpc('expire_stale_moderation_tasks');
       await supabase.rpc('recycle_fully_refused_tasks');
 
-      const { data, error } = await supabase
-        .from('moderation_tasks')
-        .select('*')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: true });
+      // Use exclusive offering: atomically assigns ONE task to this user only
+      const { data, error } = await supabase.rpc('get_exclusive_next_task', {
+        _user_id: user.id,
+      });
 
       if (error) throw error;
 
-      // FIFO: filter out tasks this user already refused
-      return (data || [])
-        .filter((t: any) => !t.refused_by?.includes(user.id))
-        .map((t: any) => ({
-          ...t,
-          refused_by: t.refused_by || [],
-          metadata: t.metadata || {},
-        })) as ModerationTask[];
+      return (data || []).map((t: any) => ({
+        ...t,
+        refused_by: t.refused_by || [],
+        metadata: t.metadata || {},
+      })) as ModerationTask[];
     },
     enabled: !!user?.id,
-    refetchInterval: 15000,
+    refetchInterval: 10000, // Poll every 10s to check for new exclusive offers
   });
 
   // Realtime: instant refresh on any task change
@@ -180,10 +177,11 @@ export const useAvailableTasks = () => {
   return query;
 };
 
-// ─── Next task in the queue (first available FIFO) ───
+// ─── Next task in the queue (exclusive to this moderator) ───
 export const useNextTask = () => {
   const { data: availableTasks, isLoading } = useAvailableTasks();
   const nextTask = availableTasks && availableTasks.length > 0 ? availableTasks[0] : null;
+  // Queue length is always 0 or 1 since we only get our exclusive offer
   const queueLength = availableTasks?.length ?? 0;
   return { nextTask, queueLength, isLoading };
 };

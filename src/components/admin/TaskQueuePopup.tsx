@@ -177,7 +177,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                   : activeTask
                     ? 'Mission en cours de traitement'
                     : queueLength > 0
-                      ? `${queueLength} mission${queueLength > 1 ? 's' : ''} en file d'attente`
+                      ? 'Une mission vous est proposée'
                       : 'En attente de nouvelles missions…'
                 }
               </p>
@@ -193,19 +193,9 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
         {/* Queue position indicator */}
         {missionsActive && !activeTask && queueLength > 0 && queueState !== 'transitioning' && (
           <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
-            <div className="flex gap-0.5">
-              {Array.from({ length: Math.min(queueLength, 5) }).map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`w-1.5 h-4 rounded-full ${i === 0 ? 'bg-primary animate-pulse' : 'bg-primary/30'}`}
-                />
-              ))}
-              {queueLength > 5 && (
-                <span className="text-[10px] text-primary ml-1">+{queueLength - 5}</span>
-              )}
-            </div>
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="text-xs text-primary font-medium">
-              Prochaine mission prête
+              Mission disponible — proposée exclusivement pour vous
             </span>
           </div>
         )}
@@ -257,11 +247,9 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                     <span className="font-semibold text-xs sm:text-sm text-foreground block">
                       Mission entrante
                     </span>
-                    {queueLength > 1 && (
-                      <span className="text-[10px] text-muted-foreground">
-                        +{queueLength - 1} en file d'attente
-                      </span>
-                    )}
+                    <span className="text-[10px] text-muted-foreground">
+                      Proposée exclusivement pour vous
+                    </span>
                   </div>
                 </div>
                 <Badge variant="outline" className="border-primary/50 text-primary font-bold text-xs shrink-0">
@@ -354,13 +342,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                 </div>
               )}
 
-              {/* Queue info while working */}
-              {queueLength > 0 && (
-                <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground bg-muted/50 rounded-lg p-2">
-                  <Phone className="w-3 h-3 shrink-0 text-primary" />
-                  <span>{queueLength} mission{queueLength > 1 ? 's' : ''} en attente après celle-ci</span>
-                </div>
-              )}
+              {/* Exclusive distribution notice */}
 
               <div className="grid grid-cols-3 gap-2">
                 <Button

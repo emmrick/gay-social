@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -51,7 +51,7 @@ export const formatCentsReward = (cents: number) => {
   return (cents / 100).toFixed(2).replace('.', ',') + ' €';
 };
 
-// Hook to manage mission availability toggle (persisted in localStorage)
+// ─── Mission toggle (persisted in localStorage) ───
 const MISSION_ACTIVE_KEY = 'moderation-missions-active';
 
 export const useMissionToggle = () => {
@@ -80,7 +80,14 @@ export const useMissionToggle = () => {
   return { isActive, toggle };
 };
 
-// Hook to get ALL pending tasks (for admin history panel)
+// ─── Shared invalidation helper ───
+const invalidateAllTaskQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
+  queryClient.invalidateQueries({ queryKey: ['moderation-task-active'] });
+  queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });
+};
+
+// ─── Admin: all pending/reserved tasks ───
 export const usePendingTasksHistory = () => {
   const { user } = useAuth();
 
@@ -111,7 +118,7 @@ export const usePendingTasksHistory = () => {
   });
 };
 
-// Hook to get available tasks for the current user
+// ─── Available tasks for current moderator (FIFO queue) ───
 export const useAvailableTasks = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -133,7 +140,7 @@ export const useAvailableTasks = () => {
 
       if (error) throw error;
 
-      // Filter out tasks refused by this user
+      // FIFO: filter out tasks this user already refused
       return (data || [])
         .filter((t: any) => !t.refused_by?.includes(user.id))
         .map((t: any) => ({
@@ -143,10 +150,10 @@ export const useAvailableTasks = () => {
         })) as ModerationTask[];
     },
     enabled: !!user?.id,
-    refetchInterval: 15000, // Poll every 15s
+    refetchInterval: 15000,
   });
 
-  // Realtime subscription for instant updates
+  // Realtime: instant refresh on any task change
   useEffect(() => {
     if (!user?.id) return;
 
@@ -160,9 +167,7 @@ export const useAvailableTasks = () => {
           table: 'moderation_tasks',
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
-          queryClient.invalidateQueries({ queryKey: ['moderation-task-active'] });
-          queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });
+          invalidateAllTaskQueries(queryClient);
         }
       )
       .subscribe();
@@ -175,7 +180,15 @@ export const useAvailableTasks = () => {
   return query;
 };
 
-// Hook to get the current user's active (reserved) task
+// ─── Next task in the queue (first available FIFO) ───
+export const useNextTask = () => {
+  const { data: availableTasks, isLoading } = useAvailableTasks();
+  const nextTask = availableTasks && availableTasks.length > 0 ? availableTasks[0] : null;
+  const queueLength = availableTasks?.length ?? 0;
+  return { nextTask, queueLength, isLoading };
+};
+
+// ─── Current user's active (reserved) task ───
 export const useActiveTask = () => {
   const { user } = useAuth();
 
@@ -207,7 +220,7 @@ export const useActiveTask = () => {
   });
 };
 
-// Reserve a task
+// ─── Reserve (accept) a task ───
 export const useReserveTask = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -227,18 +240,17 @@ export const useReserveTask = () => {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
-      queryClient.invalidateQueries({ queryKey: ['moderation-task-active'] });
-      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });
-      toast.success('Tâche réservée ! Vous avez 5 minutes pour l\'exécuter.');
+      invalidateAllTaskQueries(queryClient);
+      toast.success('Mission acceptée ! Vous avez 5 minutes pour l\'exécuter.');
     },
     onError: (error: Error) => {
+      invalidateAllTaskQueries(queryClient);
       toast.error(error.message);
     },
   });
 };
 
-// Refuse a task
+// ─── Refuse (skip) a task — backend call so it's durable ───
 export const useRefuseTask = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -258,18 +270,17 @@ export const useRefuseTask = () => {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
-      queryClient.invalidateQueries({ queryKey: ['moderation-task-active'] });
-      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });
-      toast.info('Tâche refusée, elle sera proposée à un autre modérateur.');
+      invalidateAllTaskQueries(queryClient);
+      toast.info('Mission passée — la suivante arrive.');
     },
     onError: (error: Error) => {
+      invalidateAllTaskQueries(queryClient);
       toast.error(error.message);
     },
   });
 };
 
-// Complete a task
+// ─── Complete a task ───
 export const useCompleteTask = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -289,22 +300,21 @@ export const useCompleteTask = () => {
       return result;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
-      queryClient.invalidateQueries({ queryKey: ['moderation-task-active'] });
-      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });
+      invalidateAllTaskQueries(queryClient);
       if (data.reward_cents > 0) {
-        toast.success(`Tâche terminée ! +${formatCentsReward(data.reward_cents)}`);
+        toast.success(`Mission terminée ! +${formatCentsReward(data.reward_cents)}`);
       } else {
-        toast.success('Tâche terminée !');
+        toast.success('Mission terminée !');
       }
     },
     onError: (error: Error) => {
+      invalidateAllTaskQueries(queryClient);
       toast.error(error.message);
     },
   });
 };
 
-// Create a task in the queue
+// ─── Create a task in the queue ───
 export const useCreateModerationTask = () => {
   const queryClient = useQueryClient();
 
@@ -331,8 +341,7 @@ export const useCreateModerationTask = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
-      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });
+      invalidateAllTaskQueries(queryClient);
     },
   });
 };

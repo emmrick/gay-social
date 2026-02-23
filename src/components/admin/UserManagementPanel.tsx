@@ -71,6 +71,7 @@ import {
 import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModeratorEarnings';
 import { useLogModerationAction } from '@/hooks/useModerationActions';
 import { useAuth } from '@/contexts/AuthContext';
+import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 
 interface UserProfile {
   id: string;
@@ -106,7 +107,8 @@ const useAllUsers = (search: string, filter: string) => {
       }
 
       if (filter === 'online') {
-        query = query.eq('is_online', true);
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        query = query.eq('is_online', true).gte('last_seen', fiveMinutesAgo);
       } else if (filter === 'verified') {
         query = query.eq('is_verified', true);
       } else if (filter === 'unverified') {
@@ -717,7 +719,7 @@ const UserCard = ({
               {user.username?.charAt(0).toUpperCase() || '?'}
             </AvatarFallback>
           </Avatar>
-          {user.is_online && (
+          {isUserTrulyOnline(user) && (
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
           )}
         </div>

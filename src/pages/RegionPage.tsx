@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Users, MessageCircle, ArrowLeft, Shield, Star, AlertTriangle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 
 const DEPARTMENTS: Record<string, { name: string; description: string }> = {
   '01': { name: 'Ain', description: 'Bourg-en-Bresse et environs' },
@@ -274,7 +275,7 @@ const RegionPage = () => {
                         <span className="text-xs font-medium text-foreground truncate">
                           {profile.username}
                         </span>
-                        {profile.is_online && (
+                        {isUserTrulyOnline(profile) && (
                           <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
                         )}
                       </div>

@@ -2,6 +2,7 @@ import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useState } from 'react';
 import { MapPin, Verified, Ruler, Scale, Heart, X, EyeOff, Flame, Rocket } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 
 interface SwipeCardProps {
   profile: {
@@ -12,6 +13,8 @@ interface SwipeCardProps {
     bio: string | null;
     age: number | null;
     is_online: boolean | null;
+    last_seen: string | null;
+    hide_online_status?: boolean | null;
     region: string;
     is_verified: boolean;
     looking_for: string[] | null;
@@ -127,20 +130,25 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
           )}
           
           {/* Online indicator */}
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-xl border ml-auto ${
-            profile.is_online 
-              ? 'bg-green-500/15 border-green-400/25' 
-              : 'bg-white/8 border-white/10'
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${
-              profile.is_online ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.7)] animate-pulse' : 'bg-white/25'
-            }`} />
-            <span className={`text-[11px] font-medium ${
-              profile.is_online ? 'text-green-300' : 'text-white/40'
-            }`}>
-              {profile.is_online ? 'En ligne' : 'Hors ligne'}
-            </span>
-          </div>
+          {(() => {
+            const isTrulyOnline = isUserTrulyOnline(profile);
+            return (
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-xl border ml-auto ${
+                isTrulyOnline 
+                  ? 'bg-green-500/15 border-green-400/25' 
+                  : 'bg-white/8 border-white/10'
+              }`}>
+                <span className={`w-2 h-2 rounded-full ${
+                  isTrulyOnline ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.7)] animate-pulse' : 'bg-white/25'
+                }`} />
+                <span className={`text-[11px] font-medium ${
+                  isTrulyOnline ? 'text-green-300' : 'text-white/40'
+                }`}>
+                  {isTrulyOnline ? 'En ligne' : 'Hors ligne'}
+                </span>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Swipe indicators */}

@@ -316,3 +316,137 @@ export const notifyCreditPurchaseRejected = async (
     { notificationType: 'credit' }
   );
 };
+
+// === SUPPORT NOTIFICATIONS ===
+
+// Notify user when an agent replies to their support ticket
+export const notifySupportAgentReply = async (
+  userId: string,
+  agentUsername: string,
+  ticketNumber: string
+) => {
+  await createNotificationAndPush(
+    userId,
+    'support_reply',
+    '🎧 Réponse du support',
+    `${agentUsername} a répondu à votre ticket #${ticketNumber}.`,
+    '/?tab=support',
+    { notificationType: 'system', tag: `support-${ticketNumber}` }
+  );
+};
+
+// Notify user when their support ticket is closed
+export const notifySupportTicketClosed = async (
+  userId: string,
+  ticketNumber: string
+) => {
+  await createNotificationAndPush(
+    userId,
+    'support_closed',
+    '✅ Ticket résolu',
+    `Votre ticket de support #${ticketNumber} a été clôturé. Merci pour votre patience !`,
+    '/?tab=support',
+    { notificationType: 'system' }
+  );
+};
+
+// Notify user when their support ticket is assigned to an agent
+export const notifySupportTicketAssigned = async (
+  userId: string,
+  ticketNumber: string
+) => {
+  await createNotificationAndPush(
+    userId,
+    'support_assigned',
+    '🎧 Agent assigné',
+    `Un agent a pris en charge votre ticket #${ticketNumber}. Vous recevrez une réponse sous peu.`,
+    '/?tab=support',
+    { notificationType: 'system' }
+  );
+};
+
+// === WITHDRAWAL NOTIFICATIONS ===
+
+// Notify moderator when their withdrawal is approved
+export const notifyWithdrawalApproved = async (
+  userId: string,
+  amountCents: number
+) => {
+  const amountEuros = (amountCents / 100).toFixed(2);
+  await createNotificationAndPush(
+    userId,
+    'withdrawal_approved',
+    '✅ Retrait approuvé',
+    `Votre demande de retrait de ${amountEuros}€ a été approuvée. Le paiement sera effectué prochainement.`,
+    '/admin',
+    { notificationType: 'system' }
+  );
+};
+
+// Notify moderator when their withdrawal is rejected
+export const notifyWithdrawalRejected = async (
+  userId: string,
+  amountCents: number,
+  reason?: string
+) => {
+  const amountEuros = (amountCents / 100).toFixed(2);
+  const reasonText = reason ? ` Raison : ${reason}` : '';
+  await createNotificationAndPush(
+    userId,
+    'withdrawal_rejected',
+    '❌ Retrait refusé',
+    `Votre demande de retrait de ${amountEuros}€ a été refusée.${reasonText} Le montant a été recrédité.`,
+    '/admin',
+    { notificationType: 'system' }
+  );
+};
+
+// Notify moderator when their withdrawal is completed (paid)
+export const notifyWithdrawalCompleted = async (
+  userId: string,
+  amountCents: number
+) => {
+  const amountEuros = (amountCents / 100).toFixed(2);
+  await createNotificationAndPush(
+    userId,
+    'withdrawal_completed',
+    '💸 Paiement effectué',
+    `Votre retrait de ${amountEuros}€ a été payé avec succès !`,
+    '/admin',
+    { notificationType: 'system' }
+  );
+};
+
+// === SCREENSHOT SANCTION NOTIFICATIONS ===
+
+// Notify user when they receive a screenshot sanction
+export const notifyScreenshotSanction = async (
+  userId: string,
+  violationCount: number,
+  suspendedUntil?: string
+) => {
+  const message = suspendedUntil
+    ? `Vous avez été sanctionné pour capture d'écran (${violationCount} violation${violationCount > 1 ? 's' : ''}). Votre compte est temporairement suspendu.`
+    : `Attention : capture d'écran détectée (${violationCount} violation${violationCount > 1 ? 's' : ''}). Des sanctions peuvent s'appliquer.`;
+  
+  await createNotificationAndPush(
+    userId,
+    'screenshot_sanction',
+    '📸 Sanction capture d\'écran',
+    message,
+    '/',
+    { notificationType: 'system' }
+  );
+};
+
+// Notify user when their screenshot sanction is lifted
+export const notifyScreenshotSanctionLifted = async (userId: string) => {
+  await createNotificationAndPush(
+    userId,
+    'screenshot_sanction_lifted',
+    '✅ Sanction levée',
+    'Votre sanction pour capture d\'écran a été levée. Veuillez respecter la vie privée des autres membres.',
+    '/',
+    { notificationType: 'system' }
+  );
+};

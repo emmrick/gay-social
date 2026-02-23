@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { notifyWithdrawalApproved, notifyWithdrawalRejected, notifyWithdrawalCompleted } from '@/services/pushNotificationService';
 
 export type ModeratorTaskType = 
   | 'identity_verification' 
@@ -395,6 +396,23 @@ export const useProcessWithdrawal = () => {
         .eq('id', requestId);
 
       if (error) throw error;
+
+      // Send notification to the moderator
+      const { data: reqData } = await supabase
+        .from('withdrawal_requests')
+        .select('user_id, amount_cents')
+        .eq('id', requestId)
+        .single();
+
+      if (reqData) {
+        if (status === 'approved') {
+          await notifyWithdrawalApproved(reqData.user_id, reqData.amount_cents);
+        } else if (status === 'rejected') {
+          await notifyWithdrawalRejected(reqData.user_id, reqData.amount_cents, rejectionReason);
+        } else if (status === 'completed') {
+          await notifyWithdrawalCompleted(reqData.user_id, reqData.amount_cents);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-withdrawal-requests'] });

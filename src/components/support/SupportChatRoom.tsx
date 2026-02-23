@@ -4,6 +4,7 @@ import { fr } from 'date-fns/locale';
 import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info } from 'lucide-react';
 import CreditRequestMessage from '@/components/chat/CreditRequestMessage';
 import { useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
+import { notifySupportAgentReply } from '@/services/pushNotificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,6 +83,13 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
     if (!text) return;
     setInputValue('');
     await sendMessage.mutateAsync({ content: text });
+
+    // If agent is replying, notify the ticket owner
+    if (isAgent && ticket.user_id !== user?.id) {
+      const senderProfile = senderProfiles?.[user?.id || ''];
+      const agentName = senderProfile?.username || 'Un agent';
+      notifySupportAgentReply(ticket.user_id, agentName, ticket.ticket_number);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

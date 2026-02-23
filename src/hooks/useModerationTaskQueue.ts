@@ -289,6 +289,13 @@ export const useCompleteTask = () => {
     mutationFn: async (taskId: string) => {
       if (!user?.id) throw new Error('Not authenticated');
 
+      // Get task details before completing (for support ticket closing)
+      const { data: taskData } = await supabase
+        .from('moderation_tasks')
+        .select('task_type, metadata, target_user_id')
+        .eq('id', taskId)
+        .single();
+
       const { data, error } = await supabase.rpc('complete_moderation_task', {
         _task_id: taskId,
         _user_id: user.id,
@@ -297,6 +304,26 @@ export const useCompleteTask = () => {
       if (error) throw error;
       const result = data as any;
       if (!result.success) throw new Error(result.error);
+
+      // If support_chat task, close the ticket and notify user
+      if (taskData?.task_type === 'support_chat') {
+        const metadata = taskData.metadata as any;
+        const ticketId = metadata?.ticket_id;
+        const ticketNumber = metadata?.ticket_number;
+        if (ticketId) {
+          await supabase
+            .from('support_tickets' as any)
+            .update({ status: 'closed', closed_at: new Date().toISOString() } as any)
+            .eq('id', ticketId);
+
+          // Import dynamically to avoid circular deps
+          const { notifySupportTicketClosed } = await import('@/services/pushNotificationService');
+          if (taskData.target_user_id && ticketNumber) {
+            await notifySupportTicketClosed(taskData.target_user_id, ticketNumber);
+          }
+        }
+      }
+
       return result;
     },
     onSuccess: (data) => {

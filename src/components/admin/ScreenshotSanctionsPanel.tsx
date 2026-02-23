@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Camera, Shield, Clock, AlertTriangle, Trash2, Search, Loader2, User } from 'lucide-react';
+import { notifyScreenshotSanctionLifted } from '@/services/pushNotificationService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -69,16 +70,19 @@ const ScreenshotSanctionsPanel = () => {
 
   // Lift sanction mutation
   const liftSanction = useMutation({
-    mutationFn: async (violationId: string) => {
+    mutationFn: async (violation: ScreenshotViolation) => {
       const { error } = await supabase
         .from('screenshot_violations')
         .update({
           suspended_until: null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', violationId);
+        .eq('id', violation.id);
 
       if (error) throw error;
+      
+      // Notify user that their sanction has been lifted
+      await notifyScreenshotSanctionLifted(violation.user_id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-screenshot-violations'] });
@@ -306,7 +310,7 @@ const ScreenshotSanctionsPanel = () => {
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Annuler</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => liftSanction.mutate(violation.id)}
+                                    onClick={() => liftSanction.mutate(violation)}
                                     disabled={liftSanction.isPending}
                                   >
                                     {liftSanction.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

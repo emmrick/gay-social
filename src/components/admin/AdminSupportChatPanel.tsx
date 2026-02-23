@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { notifySupportTicketAssigned } from '@/services/pushNotificationService';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
 import { SupportTicket, useSupportMessages } from '@/hooks/useSupportTickets';
@@ -59,6 +60,9 @@ const AdminSupportChatPanel = ({ onBack }: AdminSupportChatPanelProps) => {
           .from('support_tickets' as any)
           .update({ status: 'assigned', assigned_to: activeTask.reserved_by } as any)
           .eq('id', ticket.id);
+
+        // Send push + in-app notification to user
+        await notifySupportTicketAssigned(ticket.user_id, ticket.ticket_number);
       }
 
       // Send automatic greeting message

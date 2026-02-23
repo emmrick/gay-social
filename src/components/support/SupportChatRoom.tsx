@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, Headphones, ChevronDown, Hash } from 'lucide-react';
+import { ArrowLeft, Headphones, ChevronDown, Hash, Send } from 'lucide-react';
 import { useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -10,12 +10,13 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import SavedRepliesSheet from '@/components/support/SavedRepliesSheet';
 
 interface SupportChatRoomProps {
   ticket: SupportTicket;
   onBack: () => void;
+  isAgent?: boolean;
 }
 
 const formatDateLabel = (date: Date): string => {
@@ -24,7 +25,7 @@ const formatDateLabel = (date: Date): string => {
   return format(date, 'd MMMM yyyy', { locale: fr });
 };
 
-const SupportChatRoom = ({ ticket, onBack }: SupportChatRoomProps) => {
+const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomProps) => {
   const { user } = useAuth();
   const { messages, isLoading, sendMessage } = useSupportMessages(ticket.id);
   const [inputValue, setInputValue] = useState('');
@@ -249,11 +250,14 @@ const SupportChatRoom = ({ ticket, onBack }: SupportChatRoomProps) => {
           style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
         >
           <div className="flex items-end gap-2">
+            {isAgent && (
+              <SavedRepliesSheet onSelect={(content) => setInputValue(prev => prev ? prev + '\n' + content : content)} />
+            )}
             <Textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Décrivez votre problème..."
+              placeholder={isAgent ? "Répondre au client..." : "Décrivez votre problème..."}
               className="min-h-[40px] max-h-[120px] resize-none text-sm"
               rows={1}
             />

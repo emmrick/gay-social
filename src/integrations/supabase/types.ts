@@ -1080,6 +1080,36 @@ export type Database = {
         }
         Relationships: []
       }
+      moderator_saved_replies: {
+        Row: {
+          content: string
+          created_at: string
+          display_order: number
+          id: string
+          label: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          label?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          label?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       moderator_wallets: {
         Row: {
           balance_cents: number

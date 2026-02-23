@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
-import { SupportTicket } from '@/hooks/useSupportTickets';
+import { SupportTicket, useSupportMessages } from '@/hooks/useSupportTickets';
+import { useAuth } from '@/contexts/AuthContext';
 import { Headphones, Loader2 } from 'lucide-react';
 
 interface AdminSupportChatPanelProps {
@@ -11,8 +12,10 @@ interface AdminSupportChatPanelProps {
 }
 
 const AdminSupportChatPanel = ({ onBack }: AdminSupportChatPanelProps) => {
+  const { user } = useAuth();
   const { data: activeTask } = useActiveTask();
   const ticketId = (activeTask?.metadata as any)?.ticket_id as string | undefined;
+  const autoMessageSentRef = useRef<string | null>(null);
 
   const { data: ticket, isLoading } = useQuery({
     queryKey: ['support-ticket-detail', ticketId],
@@ -29,16 +32,49 @@ const AdminSupportChatPanel = ({ onBack }: AdminSupportChatPanelProps) => {
     enabled: !!ticketId,
   });
 
-  // Auto-assign ticket when moderator opens it
+  // Fetch moderator profile for auto-message
+  const { data: moderatorProfile } = useQuery({
+    queryKey: ['moderator-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Auto-assign ticket + send welcome message when moderator opens it
   useEffect(() => {
-    if (ticket && ticket.status === 'open' && activeTask?.reserved_by) {
-      supabase
-        .from('support_tickets' as any)
-        .update({ status: 'assigned', assigned_to: activeTask.reserved_by } as any)
-        .eq('id', ticket.id)
-        .then();
-    }
-  }, [ticket?.id, ticket?.status, activeTask?.reserved_by]);
+    if (!ticket || !activeTask?.reserved_by || !moderatorProfile?.username) return;
+    if (autoMessageSentRef.current === ticket.id) return;
+
+    const assignAndNotify = async () => {
+      // Assign ticket
+      if (ticket.status === 'open') {
+        await supabase
+          .from('support_tickets' as any)
+          .update({ status: 'assigned', assigned_to: activeTask.reserved_by } as any)
+          .eq('id', ticket.id);
+      }
+
+      // Send automatic greeting message
+      autoMessageSentRef.current = ticket.id;
+      await supabase
+        .from('support_messages' as any)
+        .insert({
+          ticket_id: ticket.id,
+          sender_id: activeTask.reserved_by,
+          content: `Votre conseiller ${moderatorProfile.username} est actuellement en train de regarder le motif de votre demande. Merci de patienter quelques instants, il va vous répondre dans quelques minutes. 🙏`,
+          message_type: 'system',
+        } as any);
+    };
+
+    assignAndNotify();
+  }, [ticket?.id, ticket?.status, activeTask?.reserved_by, moderatorProfile?.username]);
 
   if (isLoading) {
     return (
@@ -64,7 +100,7 @@ const AdminSupportChatPanel = ({ onBack }: AdminSupportChatPanelProps) => {
 
   return (
     <div className="h-[calc(100vh-140px)] -m-4 sm:-m-6">
-      <SupportChatRoom ticket={ticket} onBack={onBack} />
+      <SupportChatRoom ticket={ticket} onBack={onBack} isAgent />
     </div>
   );
 };

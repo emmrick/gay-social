@@ -357,14 +357,21 @@ const Admin = () => {
 
       {/* Main Content */}
         <main className="flex-1 overflow-hidden">
-          <div className="h-full p-6">
-            <Card className="h-full">
-              <CardContent className="p-6 h-full overflow-auto">
-                <TaskQueuePopup onNavigateToSection={handleSectionChange} />
-                {renderContent()}
-              </CardContent>
-            </Card>
-          </div>
+          {activeSection === 'support' ? (
+            <div className="h-full p-4">
+              <TaskQueuePopup onNavigateToSection={handleSectionChange} />
+              {renderContent()}
+            </div>
+          ) : (
+            <div className="h-full p-6">
+              <Card className="h-full">
+                <CardContent className="p-6 h-full overflow-auto">
+                  <TaskQueuePopup onNavigateToSection={handleSectionChange} />
+                  {renderContent()}
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </main>
 
       {/* Report Detail Dialog */}

@@ -2,13 +2,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, 
-  Clock, 
   Check, 
   X, 
   Euro, 
   ChevronRight, 
   Loader2,
-  AlertCircle,
   Power,
   CheckCircle2,
   Phone,
@@ -17,7 +15,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import {
   useNextTask,
@@ -35,7 +32,6 @@ interface TaskQueuePopupProps {
   onNavigateToSection: (section: string) => void;
 }
 
-const RESERVATION_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 const TRANSITION_DELAY_MS = 1500; // Brief pause between tasks
 
 type QueueState = 'idle' | 'offering' | 'transitioning' | 'active';
@@ -49,7 +45,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
   const { isActive: missionsActive, toggle: toggleMissions } = useMissionToggle();
 
   const [queueState, setQueueState] = useState<QueueState>('idle');
-  const [timeRemaining, setTimeRemaining] = useState(0);
+  
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevActiveTaskIdRef = useRef<string | null>(null);
 
@@ -96,23 +92,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
     };
   }, [activeTask, nextTask, missionsActive]);
 
-  // ── Countdown timer for active task ──
-  useEffect(() => {
-    if (!activeTask?.reserved_at) {
-      setTimeRemaining(0);
-      return;
-    }
-
-    const updateTimer = () => {
-      const elapsed = Date.now() - new Date(activeTask.reserved_at!).getTime();
-      const remaining = Math.max(0, RESERVATION_DURATION_MS - elapsed);
-      setTimeRemaining(remaining);
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [activeTask]);
+  // Timer removed — no time limit on tasks
 
   // ── Actions ──
   const handleAccept = useCallback(() => {
@@ -146,16 +126,6 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
     const section = getTaskTypeSection(activeTask.task_type);
     onNavigateToSection(section);
   }, [activeTask, onNavigateToSection]);
-
-  const formatTime = (ms: number) => {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const progressPercent = activeTask 
-    ? (timeRemaining / RESERVATION_DURATION_MS) * 100 
-    : 0;
 
   return (
     <>
@@ -344,27 +314,12 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <Badge 
-                    variant={timeRemaining < 60000 ? 'destructive' : 'outline'}
-                    className="font-mono tabular-nums text-[10px] sm:text-xs"
-                  >
-                    <Clock className="w-3 h-3 mr-1" />
-                    {formatTime(timeRemaining)}
-                  </Badge>
-                  <p className="text-[10px] sm:text-xs text-primary font-medium mt-1">
+                  <Badge variant="outline" className="text-[10px] sm:text-xs">
+                    <Euro className="w-3 h-3 mr-1" />
                     +{formatCentsReward(activeTask.reward_cents)}
-                  </p>
+                  </Badge>
                 </div>
               </div>
-
-              <Progress value={progressPercent} className="h-1.5" />
-
-              {timeRemaining < 60000 && timeRemaining > 0 && (
-                <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-destructive">
-                  <AlertCircle className="w-3 h-3 shrink-0" />
-                  <span>Moins d'une minute restante !</span>
-                </div>
-              )}
 
               {!missionsActive && (
                 <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground bg-muted rounded-lg p-2">

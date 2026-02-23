@@ -8,7 +8,7 @@ const InitialLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   useEffect(() => {
     let frame: number;
     let start: number | null = null;
-    const duration = 800; // Reduced from 2200ms to 800ms
+    const duration = 500; // Fast splash
 
     const tick = (timestamp: number) => {
       if (!start) start = timestamp;

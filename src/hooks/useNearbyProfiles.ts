@@ -104,10 +104,10 @@ export const useNearbyProfiles = (
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 0,
     enabled: !!user,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    staleTime: 30000,
-    gcTime: 60000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    staleTime: 45000,
+    gcTime: 120000,
   });
 
   // Flatten all pages into single array

@@ -18,51 +18,28 @@ export const useUnreadMessages = () => {
     queryFn: async (): Promise<UnreadCount[]> => {
       if (!user) return [];
 
-      // Get all private conversations
-      const { data: conversations } = await supabase
-        .from('private_conversations')
-        .select('id, user1_id, user2_id')
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
+      // Single query: get all unread private messages sent TO this user that haven't been read
+      const { data: unreadMessages, error } = await supabase
+        .from('messages')
+        .select('sender_id')
+        .eq('is_private', true)
+        .eq('recipient_id', user.id)
+        .is('read_at', null)
+        .is('deleted_at', null);
 
-      if (!conversations?.length) return [];
+      if (error) throw error;
+      if (!unreadMessages?.length) return [];
 
-      // Get read status for all conversations
-      const { data: readStatuses } = await supabase
-        .from('message_read_status')
-        .select('conversation_partner_id, last_read_at')
-        .eq('user_id', user.id);
-
-      const readStatusMap = new Map(
-        readStatuses?.map(rs => [rs.conversation_partner_id, new Date(rs.last_read_at)]) || []
-      );
-
-      // Count unread messages for each conversation
-      const unreadCounts: UnreadCount[] = [];
-
-      for (const conv of conversations) {
-        const partnerId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
-        const lastReadAt = readStatusMap.get(partnerId);
-
-        // Build query for unread messages from this partner
-        let query = supabase
-          .from('messages')
-          .select('id', { count: 'exact', head: true })
-          .eq('is_private', true)
-          .eq('sender_id', partnerId)
-          .eq('recipient_id', user.id);
-
-        if (lastReadAt) {
-          query = query.gt('created_at', lastReadAt.toISOString());
-        }
-
-        const { count } = await query;
-
-        if (count && count > 0) {
-          unreadCounts.push({ partnerId, count });
-        }
+      // Count per sender in memory (much faster than N queries)
+      const countMap = new Map<string, number>();
+      for (const msg of unreadMessages) {
+        countMap.set(msg.sender_id, (countMap.get(msg.sender_id) || 0) + 1);
       }
 
-      return unreadCounts;
+      return Array.from(countMap.entries()).map(([partnerId, count]) => ({
+        partnerId,
+        count,
+      }));
     },
     enabled: !!user,
     staleTime: 15_000,

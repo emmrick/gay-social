@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.warn('[AuthContext] Auth initialization timeout - forcing completion');
           setIsLoading(false);
         }
-      }, 8000); // 8 second max wait
+      }, 5000); // 5 second max wait
 
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -127,7 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           try {
             // Profile loading with its own timeout
             const profilePromise = loadProfile(session.user.id);
-            const profileTimeout = new Promise<void>((resolve) => setTimeout(resolve, 5000));
+            const profileTimeout = new Promise<void>((resolve) => setTimeout(resolve, 3000));
             
             await Promise.race([profilePromise, profileTimeout]);
           } catch (profileError) {

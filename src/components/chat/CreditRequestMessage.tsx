@@ -36,6 +36,8 @@ interface CreditRequestMessageProps {
   senderId: string;
   recipientId?: string;
   isOwn: boolean;
+  isSupportContext?: boolean;
+  ticketId?: string;
 }
 
 const CREDIT_OPTIONS = [
@@ -51,7 +53,7 @@ const REJECTION_REASONS = [
   'Paiement expiré ou annulé',
 ];
 
-const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn }: CreditRequestMessageProps) => {
+const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn, isSupportContext, ticketId }: CreditRequestMessageProps) => {
   const { data: isAdmin } = useIsAdmin();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -86,14 +88,19 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
 
   // Helper to update message content with new status
   const updateMessageStatus = async (updatedData: CreditRequestData) => {
-    const { error } = await supabase
-      .from('messages')
-      .update({ content: JSON.stringify(updatedData) })
-      .eq('id', messageId);
-    
-    if (error) {
-      console.error('Error updating message status:', error);
-      throw error;
+    if (isSupportContext) {
+      // In support context, update support_messages table
+      const { error } = await supabase
+        .from('support_messages' as any)
+        .update({ content: JSON.stringify(updatedData) } as any)
+        .eq('id', messageId);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('messages')
+        .update({ content: JSON.stringify(updatedData) })
+        .eq('id', messageId);
+      if (error) throw error;
     }
   };
 
@@ -112,9 +119,18 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
 
       if (error) throw error;
 
-      // Send confirmation message to the user from the admin
+      // Send confirmation message
       const adminId = user?.id;
-      if (adminId) {
+      if (adminId && isSupportContext && ticketId) {
+        await supabase
+          .from('support_messages' as any)
+          .insert({
+            ticket_id: ticketId,
+            sender_id: adminId,
+            content: `✅ Votre demande de crédits a été approuvée ! ${credits} crédits ont été ajoutés à votre compte.`,
+            message_type: 'text',
+          } as any);
+      } else if (adminId && !isSupportContext) {
         await supabase.from('messages').insert({
           sender_id: adminId,
           recipient_id: requestData.userId,
@@ -136,6 +152,7 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
       toast.success(`${credits} crédits attribués à ${requestData.username} !`);
       queryClient.invalidateQueries({ queryKey: ['user-credits'] });
       queryClient.invalidateQueries({ queryKey: ['private-messages'] });
+      queryClient.invalidateQueries({ queryKey: ['support-messages'] });
     } catch (error) {
       console.error('Error crediting user:', error);
       toast.error('Erreur lors de l\'attribution des crédits');
@@ -155,16 +172,28 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
     
     setIsProcessing(true);
     try {
-      // Send rejection message to the user from the admin
-      const { error } = await supabase.from('messages').insert({
-        sender_id: adminId,
-        recipient_id: requestData.userId,
-        content: `❌ Votre demande de crédits a été refusée.\n\n📋 Motif : ${reason}\n\nSi vous pensez qu'il s'agit d'une erreur, veuillez nous recontacter avec plus de détails sur votre paiement.`,
-        message_type: 'text',
-        is_private: true,
-      });
-
-      if (error) throw error;
+      // Send rejection message
+      const agentId = user?.id;
+      if (isSupportContext && ticketId && agentId) {
+        const { error } = await supabase
+          .from('support_messages' as any)
+          .insert({
+            ticket_id: ticketId,
+            sender_id: agentId,
+            content: `❌ Votre demande de crédits a été refusée.\n\n📋 Motif : ${reason}\n\nSi vous pensez qu'il s'agit d'une erreur, veuillez nous recontacter avec plus de détails sur votre paiement.`,
+            message_type: 'text',
+          } as any);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('messages').insert({
+          sender_id: adminId,
+          recipient_id: requestData.userId,
+          content: `❌ Votre demande de crédits a été refusée.\n\n📋 Motif : ${reason}\n\nSi vous pensez qu'il s'agit d'une erreur, veuillez nous recontacter avec plus de détails sur votre paiement.`,
+          message_type: 'text',
+          is_private: true,
+        });
+        if (error) throw error;
+      }
 
       // Update the original message with rejected status
       const updatedData: CreditRequestData = {
@@ -177,6 +206,7 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
 
       toast.success('Message de refus envoyé');
       queryClient.invalidateQueries({ queryKey: ['private-messages'] });
+      queryClient.invalidateQueries({ queryKey: ['support-messages'] });
     } catch (error) {
       console.error('Error rejecting credit request:', error);
       toast.error('Erreur lors de l\'envoi du message de refus');
@@ -232,8 +262,8 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
         </div>
       </div>
 
-      {/* Admin Action Buttons - only show if pending */}
-      {isAdmin && !isOwn && isPending && (
+      {/* Action Buttons - show for admin or agent in support context */}
+      {(isAdmin || isSupportContext) && !isOwn && isPending && (
         <div className="space-y-2 mt-4">
           <p className="text-xs text-muted-foreground mb-2">Attribuer les crédits :</p>
           <div className="flex gap-2">

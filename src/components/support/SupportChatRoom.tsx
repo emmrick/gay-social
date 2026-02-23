@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, Headphones, ChevronDown, Hash, Send } from 'lucide-react';
+import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info } from 'lucide-react';
+import CreditRequestMessage from '@/components/chat/CreditRequestMessage';
 import { useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -204,17 +205,33 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
                         </span>
                       )}
 
-                      <div className={cn(
-                        "px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words",
-                        isOwn
-                          ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
-                          : "bg-card border border-border text-foreground rounded-2xl rounded-bl-md",
-                        "max-w-full"
+                      {message.message_type === 'credit_request' ? (
+                        <CreditRequestMessage
+                          messageId={message.id}
+                          content={message.content}
+                          senderId={message.sender_id}
+                          isOwn={isOwn}
+                          isSupportContext
+                          ticketId={ticket.id}
+                        />
+                      ) : message.message_type === 'system' ? (
+                        <div className="flex items-start gap-2 px-3 py-2 text-xs text-muted-foreground bg-muted/50 rounded-2xl border border-border/50 italic max-w-full">
+                          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                          <span style={{ wordBreak: 'break-word' }}>{message.content}</span>
+                        </div>
+                      ) : (
+                        <div className={cn(
+                          "px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words",
+                          isOwn
+                            ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
+                            : "bg-card border border-border text-foreground rounded-2xl rounded-bl-md",
+                          "max-w-full"
+                        )}
+                        style={{ wordBreak: 'break-word' }}
+                        >
+                          {message.content}
+                        </div>
                       )}
-                      style={{ wordBreak: 'break-word' }}
-                      >
-                        {message.content}
-                      </div>
 
                       {isLastInGroup && (
                         <span className="text-[10px] text-muted-foreground mt-0.5 px-1">

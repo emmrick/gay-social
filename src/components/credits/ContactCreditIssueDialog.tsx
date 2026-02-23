@@ -36,17 +36,14 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
   const { user } = useAuth();
   const [internalOpen, setInternalOpen] = useState(false);
   
-  // Use controlled or uncontrolled open state
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = onOpenChange || setInternalOpen;
   
-  // Form state - only editable fields
   const [last4Digits, setLast4Digits] = useState('');
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [paymentEmail, setPaymentEmail] = useState('');
 
-  // Fetch user profile for auto-fill
   const { data: profile } = useQuery({
     queryKey: ['user-profile-credit-issue', user?.id],
     queryFn: async () => {
@@ -62,15 +59,11 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
     enabled: !!user?.id && isOpen,
   });
 
-  // Admin user ID (support account)
-  const ADMIN_USER_ID = '576f712b-2925-4d8f-ad59-9bcbd9996a02';
-
   const submitMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error('Non authentifié');
       if (!profile) throw new Error('Profil non trouvé');
 
-      // Validate required fields
       if (!last4Digits || last4Digits.length !== 4) {
         throw new Error('Veuillez entrer les 4 derniers chiffres de votre carte');
       }
@@ -78,7 +71,6 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
       if (!firstName.trim()) throw new Error('Veuillez entrer votre prénom');
       if (!paymentEmail.trim()) throw new Error('Veuillez entrer votre adresse mail de paiement');
 
-      // Format the credit request data as JSON
       const creditRequestData = {
         last4Digits,
         lastName: lastName.trim(),
@@ -90,64 +82,39 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
         userId: user.id,
       };
 
-      // First, get or create a private conversation with admin
-      const { data: existingConvo } = await supabase
-        .from('private_conversations')
-        .select('id')
-        .or(`and(user1_id.eq.${user.id},user2_id.eq.${ADMIN_USER_ID}),and(user1_id.eq.${ADMIN_USER_ID},user2_id.eq.${user.id})`)
-        .maybeSingle();
-
-      let conversationId = existingConvo?.id;
-
-      if (!conversationId) {
-        const { data: newConvo, error: convoError } = await supabase
-          .from('private_conversations')
-          .insert({
-            user1_id: user.id,
-            user2_id: ADMIN_USER_ID,
-          })
-          .select('id')
-          .single();
-        
-        if (convoError) throw convoError;
-        conversationId = newConvo.id;
-      }
-
-      // Send the message with credit_request type
-      const { error: msgError } = await supabase
-        .from('messages')
+      // Create a support ticket — trigger auto-creates a moderation task
+      const { data: ticket, error: ticketError } = await supabase
+        .from('support_tickets' as any)
         .insert({
+          user_id: user.id,
+          ticket_number: '',
+          subject: 'Réclamation de crédits',
+        })
+        .select()
+        .single();
+
+      if (ticketError) throw ticketError;
+      const ticketId = (ticket as any).id;
+
+      // Send the credit request data as first message
+      const { error: msgError } = await supabase
+        .from('support_messages' as any)
+        .insert({
+          ticket_id: ticketId,
           sender_id: user.id,
-          recipient_id: ADMIN_USER_ID,
           content: JSON.stringify(creditRequestData),
           message_type: 'credit_request',
-          is_private: true,
-        });
+        } as any);
 
       if (msgError) throw msgError;
 
-      // Send push notification to admin
-      try {
-        await supabase.functions.invoke('send-push-notification', {
-          body: {
-            userId: ADMIN_USER_ID,
-            title: '💳 Nouvelle demande de crédits',
-            body: `${profile.username} a envoyé une demande de crédits`,
-            url: `/?tab=messages&conversation=${user.id}`,
-            notificationType: 'private_message',
-          },
-        });
-      } catch (notifError) {
-        console.error('Error sending push notification:', notifError);
-        // Don't fail the request if notification fails
-      }
+      return ticket as any;
     },
-    onSuccess: () => {
-      toast.success('Demande envoyée !', {
-        description: 'Un administrateur examinera votre demande rapidement.',
+    onSuccess: (ticket) => {
+      toast.success(`Demande envoyée — Ticket #${ticket.ticket_number}`, {
+        description: 'Un agent va examiner votre demande rapidement.',
       });
       setIsOpen(false);
-      // Reset form
       setLast4Digits('');
       setLastName('');
       setFirstName('');
@@ -178,7 +145,6 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Payment Information Section */}
           <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
             <p className="text-sm font-medium text-amber-600">📋 Informations de paiement</p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -237,7 +203,6 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
             />
           </div>
 
-          {/* Account Information Section - Auto-filled and Read-only */}
           <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
             <p className="text-sm font-medium text-primary flex items-center gap-2">
               <Lock className="w-4 h-4" />
@@ -250,11 +215,7 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
               <User className="w-4 h-4" />
               Pseudonyme
             </Label>
-            <Input
-              value={profile?.username || ''}
-              disabled
-              className="bg-muted"
-            />
+            <Input value={profile?.username || ''} disabled className="bg-muted" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -263,22 +224,14 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
                 <Calendar className="w-4 h-4" />
                 Âge
               </Label>
-              <Input
-                value={profile?.age ? `${profile.age} ans` : 'Non renseigné'}
-                disabled
-                className="bg-muted"
-              />
+              <Input value={profile?.age ? `${profile.age} ans` : 'Non renseigné'} disabled className="bg-muted" />
             </div>
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
                 Département
               </Label>
-              <Input
-                value={profile?.region || 'Non renseigné'}
-                disabled
-                className="bg-muted"
-              />
+              <Input value={profile?.region || 'Non renseigné'} disabled className="bg-muted" />
             </div>
           </div>
         </div>

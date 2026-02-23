@@ -8,17 +8,15 @@ interface SlideTransitionProps {
 }
 
 const SlideTransition = ({ children, direction = 'right', className = '' }: SlideTransitionProps) => {
-  const x = direction === 'right' ? '100%' : '-100%';
-
   return (
     <motion.div
-      initial={{ x, opacity: 0 }}
+      initial={{ x: direction === 'right' ? '30%' : '-30%', opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      exit={{ x: direction === 'right' ? '-100%' : '100%', opacity: 0 }}
+      exit={{ x: direction === 'right' ? '-30%' : '30%', opacity: 0 }}
       transition={{
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
+        type: 'tween',
+        duration: 0.15,
+        ease: 'easeOut',
       }}
       className={className}
     >

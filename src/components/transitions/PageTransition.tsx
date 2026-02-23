@@ -7,48 +7,17 @@ interface PageTransitionProps {
   direction?: 'left' | 'right' | 'up' | 'down' | 'fade';
 }
 
-const variants = {
-  fade: {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 },
-  },
-  left: {
-    initial: { opacity: 0, x: 20 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -20 },
-  },
-  right: {
-    initial: { opacity: 0, x: -20 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 20 },
-  },
-  up: {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-  },
-  down: {
-    initial: { opacity: 0, y: -20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: 20 },
-  },
-};
-
 const PageTransition = ({ children, viewKey, direction = 'fade' }: PageTransitionProps) => {
-  const variant = variants[direction];
-
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="popLayout" initial={false}>
       <motion.div
         key={viewKey}
-        initial={variant.initial}
-        animate={variant.animate}
-        exit={variant.exit}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         transition={{
-          type: 'tween',
-          ease: 'easeInOut',
-          duration: 0.25,
+          duration: 0.1,
+          ease: 'easeOut',
         }}
         className="flex-1 flex flex-col"
       >

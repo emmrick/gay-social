@@ -46,24 +46,13 @@ type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'profile';
 // Tab order for determining animation direction
 const tabOrder: NavTab[] = ['home', 'swipe', 'messages', 'premium', 'profile'];
 
-// Animation variants for page transitions - snappy crossfade
+// Minimal animation variants - instant transitions
 const pageVariants = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
   exit: { opacity: 0 },
 };
-
-const fadeVariants = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
-};
-
-const slideUpVariants = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
-};
+const fadeVariants = pageVariants;
 
 const Index = () => {
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
@@ -266,7 +255,7 @@ const Index = () => {
         initial={{ x: '100%', opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
         className="min-h-screen"
       >
         <PrivateChatRoom
@@ -284,7 +273,7 @@ const Index = () => {
         initial={{ x: '100%', opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
         className="min-h-screen"
       >
         <ChatRoom
@@ -307,17 +296,12 @@ const Index = () => {
     switch (currentView) {
       case 'landing':
         return (
-          <motion.div
+          <div
             key="landing"
-            variants={fadeVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1"
           >
             <Hero onGetStarted={handleGetStarted} />
-          </motion.div>
+          </div>
         );
       
       case 'home':
@@ -338,22 +322,12 @@ const Index = () => {
             >
               <div className="px-5 pb-4 flex items-center justify-between w-full">
                 <div>
-                  <motion.h2 
-                    className="font-display text-2xl font-bold text-foreground mb-0.5"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
+                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
                     Accueil
-                  </motion.h2>
-                  <motion.p 
-                    className="text-sm text-muted-foreground"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.15 }}
-                  >
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
                     Bienvenue, {profile?.username || 'membre'}
-                  </motion.p>
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Credit balance */}
@@ -405,22 +379,12 @@ const Index = () => {
             >
               <div className="px-5 pb-4 flex items-center justify-between">
                 <div>
-                  <motion.h2 
-                    className="font-display text-2xl font-bold text-foreground mb-0.5"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
+                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
                     Swipe
-                  </motion.h2>
-                  <motion.p 
-                    className="text-sm text-muted-foreground"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.15 }}
-                  >
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
                     Découvre des profils
-                  </motion.p>
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
@@ -450,25 +414,15 @@ const Index = () => {
             >
               <div className="px-5 pb-4 flex items-center justify-between">
                 <div>
-                  <motion.h2 
-                    className="font-display text-2xl font-bold text-foreground mb-0.5"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
+                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
                     Messages
-                  </motion.h2>
-                  <motion.p 
-                    className="text-sm text-muted-foreground"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.15 }}
-                  >
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
                     {messageSubTab === 'groups' 
                       ? `${joinedGroups.length}/${maxGroups} groupes rejoints`
                       : 'Tes conversations privées'
                     }
-                  </motion.p>
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
@@ -586,22 +540,12 @@ const Index = () => {
             >
               <div className="px-5 pb-4 flex items-center justify-between">
                 <div>
-                  <motion.h2 
-                    className="font-display text-2xl font-bold text-foreground mb-0.5"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
+                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
                     Mon Profil
-                  </motion.h2>
-                  <motion.p 
-                    className="text-sm text-muted-foreground"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.15 }}
-                  >
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
                     Gérer ton compte
-                  </motion.p>
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
@@ -645,22 +589,12 @@ const Index = () => {
             >
               <div className="px-5 pb-4 flex items-center justify-between">
                 <div>
-                  <motion.h2 
-                    className="font-display text-2xl font-bold text-foreground mb-0.5"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
+                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
                     Premium
-                  </motion.h2>
-                  <motion.p 
-                    className="text-sm text-muted-foreground"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.15 }}
-                  >
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
                     Débloquer toutes les fonctionnalités
-                  </motion.p>
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <ReferralDialog />

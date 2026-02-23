@@ -62,7 +62,7 @@ const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0, isPremium = fal
                         "absolute inset-x-2 inset-y-1 rounded-xl",
                         tab.premium ? "bg-amber-500/15" : "bg-primary/15"
                       )}
-                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
                     />
                   )}
                   

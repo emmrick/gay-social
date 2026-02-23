@@ -276,20 +276,17 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
       {allProfiles.length > 0 ? (
         <>
           <div className="grid grid-cols-3 gap-2">
-            {allProfiles.map((profile, index) => (
-              <motion.button
+            {allProfiles.map((profile) => (
+              <button
                 key={profile.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: Math.min(index * 0.02, 0.3) }} // Cap animation delay
                 onClick={() => !profile.isCurrentUser && navigate(`/profile/${profile.user_id}`)}
                 className={cn(
                   "relative aspect-[3/4] rounded-xl overflow-hidden group",
                   "bg-gradient-to-br from-secondary to-secondary/50",
-                  "border-2 transition-all duration-200",
+                  "border-2 transition-colors duration-150",
                   profile.isCurrentUser 
                     ? "border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/30" 
-                    : "border-border/30 hover:border-primary/50"
+                    : "border-border/30 active:border-primary/50"
                 )}
               >
                 {/* Avatar/Photo */}
@@ -363,7 +360,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
                 {!profile.isCurrentUser && (
                   <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                 )}
-              </motion.button>
+              </button>
             ))}
           </div>
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { CreditCard, Check, Loader2, X } from 'lucide-react';
+import { CreditCard, Check, Loader2, X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,6 +56,7 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [customAmount, setCustomAmount] = useState('');
 
   // Parse the credit request data from content
   let requestData: CreditRequestData | null = null;
@@ -254,6 +256,43 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
                 )}
               </Button>
             ))}
+          </div>
+
+          {/* Custom amount input */}
+          <div className="flex gap-2 mt-2">
+            <Input
+              type="number"
+              min="1"
+              max="10000"
+              placeholder="Montant personnalisé"
+              value={customAmount}
+              onChange={(e) => setCustomAmount(e.target.value)}
+              className="flex-1 h-8 text-xs"
+              disabled={isProcessing}
+            />
+            <Button
+              size="sm"
+              variant="secondary"
+              className="text-xs h-8 px-3"
+              onClick={() => {
+                const amount = parseInt(customAmount, 10);
+                if (!amount || amount < 1 || amount > 10000) {
+                  toast.error('Montant invalide (1 - 10 000)');
+                  return;
+                }
+                handleCreditUser(amount);
+              }}
+              disabled={isProcessing || !customAmount}
+            >
+              {isProcessing ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <>
+                  <Send className="w-3 h-3 mr-1" />
+                  Attribuer
+                </>
+              )}
+            </Button>
           </div>
           
           {/* Reject Button */}

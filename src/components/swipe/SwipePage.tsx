@@ -1,15 +1,15 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Sparkles, MessageCircle, Loader2, RefreshCw, X, EyeOff, Flame, Zap, Rocket } from 'lucide-react';
-import { useSwipeActions, SWIPE_CREDIT_COSTS } from '@/hooks/useSwipeActions';
+import { Heart, Sparkles, MessageCircle, Loader2, RefreshCw, X, EyeOff, Flame, Zap, Rocket, Crown, Users, ShieldCheck } from 'lucide-react';
+import { useSwipeActions } from '@/hooks/useSwipeActions';
 import SwipeCard from './SwipeCard';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfile } from '@/hooks/useProfiles';
 import { useProfileBoost } from '@/hooks/useProfileBoost';
 import { useCreditCheck } from '@/hooks/useCreditCheck';
+import { useNavigate } from 'react-router-dom';
 
 interface SwipePageProps {
   onStartChat: (userId: string) => void;
@@ -52,86 +52,54 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as 'swipe' | 'likes')}
-        className="flex-1 flex flex-col min-h-0"
-      >
-        <div className="px-5 pb-3">
-          <TabsList className="grid w-full grid-cols-2 bg-secondary/60 backdrop-blur-sm p-1 rounded-2xl h-12">
-            <TabsTrigger
-              value="swipe"
-              className="gap-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-lg transition-all font-semibold text-sm"
-            >
-              <Flame className="w-4 h-4" />
-              Découvrir
-            </TabsTrigger>
-            <TabsTrigger
-              value="likes"
-              className="gap-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-lg transition-all font-semibold text-sm"
-            >
-              <Heart className="w-4 h-4" />
-              Mes likes
-              {likedProfiles.length > 0 && (
-                <span className="ml-0.5 text-[10px] bg-primary text-primary-foreground w-5 h-5 rounded-full flex items-center justify-center font-bold">
-                  {likedProfiles.length}
-                </span>
-              )}
-            </TabsTrigger>
-          </TabsList>
+      {/* Tab switcher */}
+      <div className="px-5 pb-4">
+        <div className="flex gap-2 p-1 bg-secondary/50 backdrop-blur-sm rounded-2xl">
+          <button
+            onClick={() => setActiveTab('swipe')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+              activeTab === 'swipe'
+                ? 'bg-card text-foreground shadow-lg shadow-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Flame className="w-4 h-4" />
+            Découvrir
+          </button>
+          <button
+            onClick={() => setActiveTab('likes')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 relative ${
+              activeTab === 'likes'
+                ? 'bg-card text-foreground shadow-lg shadow-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Heart className="w-4 h-4" />
+            Mes likes
+            {likedProfiles.length > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1.5 bg-primary text-primary-foreground text-[10px] font-black rounded-full flex items-center justify-center shadow-lg shadow-primary/30">
+                {likedProfiles.length}
+              </span>
+            )}
+          </button>
         </div>
+      </div>
 
-        <TabsContent value="swipe" className="flex-1 flex flex-col min-h-0 mt-0 overflow-hidden">
-          <div className="flex-1 flex flex-col min-h-0">
+      {/* Content */}
+      <AnimatePresence mode="wait">
+        {activeTab === 'swipe' ? (
+          <motion.div
+            key="swipe"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1 flex flex-col min-h-0"
+          >
             {isLoading ? (
-              <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                <motion.div
-                  className="relative"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 200 }}
-                >
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
-                    <Loader2 className="w-9 h-9 animate-spin text-primary" />
-                  </div>
-                  <motion.div
-                    className="absolute inset-0 rounded-3xl border-2 border-primary/20"
-                    animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                </motion.div>
-                <p className="text-sm text-muted-foreground font-medium">Chargement des profils…</p>
-              </div>
+              <LoadingState />
             ) : remainingProfiles.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0, rotate: -5 }}
-                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                  className="relative mb-6"
-                >
-                  <div className="w-28 h-28 rounded-[32px] bg-gradient-to-br from-primary/15 via-accent/10 to-secondary flex items-center justify-center">
-                    <Sparkles className="w-14 h-14 text-primary/60" />
-                  </div>
-                  <motion.div
-                    className="absolute -top-2 -right-2 w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center"
-                    animate={{ y: [0, -4, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Zap className="w-5 h-5 text-accent" />
-                  </motion.div>
-                </motion.div>
-                <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                  C'est tout pour le moment !
-                </h3>
-                <p className="text-muted-foreground text-sm mb-6 max-w-[260px] leading-relaxed">
-                  Tu as vu tous les profils disponibles. Reviens plus tard pour de nouvelles découvertes.
-                </p>
-                <Button onClick={() => refetchProfiles()} variant="outline" className="gap-2 rounded-2xl h-11 px-6 font-medium">
-                  <RefreshCw className="w-4 h-4" />
-                  Rafraîchir
-                </Button>
-              </div>
+              <EmptySwipeState onRefresh={refetchProfiles} />
             ) : (
               <>
                 {/* Cards stack */}
@@ -149,112 +117,232 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                 </div>
 
                 {/* Action buttons */}
-                <div className="relative z-20 flex justify-center items-center gap-4 py-4 px-6">
-                  <motion.div whileTap={{ scale: 0.85 }} whileHover={{ scale: 1.08 }}>
-                    <button
-                      className="w-[56px] h-[56px] rounded-full flex items-center justify-center bg-card border-2 border-destructive/30 shadow-lg shadow-destructive/10 hover:border-destructive/50 hover:shadow-destructive/20 transition-all active:bg-destructive/10"
-                      onClick={() => remainingProfiles[0] && handleSwipe('left')}
-                    >
-                      <X className="w-6 h-6 text-destructive" strokeWidth={2.5} />
-                    </button>
-                  </motion.div>
-                  <motion.div whileTap={{ scale: 0.85 }} whileHover={{ scale: 1.08 }}>
-                    <button
-                      className="w-[44px] h-[44px] rounded-full flex items-center justify-center bg-card border-2 border-purple-400/30 shadow-lg shadow-purple-400/10 hover:border-purple-400/50 hover:shadow-purple-400/20 transition-all active:bg-purple-400/10"
-                      onClick={() => remainingProfiles[0] && handleSwipe('up')}
-                    >
-                      <EyeOff className="w-[18px] h-[18px] text-purple-400" />
-                    </button>
-                  </motion.div>
-                  <motion.div whileTap={{ scale: 0.85 }} whileHover={{ scale: 1.08 }}>
-                    <button
-                      className="w-[56px] h-[56px] rounded-full flex items-center justify-center bg-gradient-to-br from-green-400 to-green-500 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 transition-all active:from-green-500 active:to-green-600"
-                      onClick={() => remainingProfiles[0] && handleSwipe('right')}
-                    >
-                      <Heart className="w-6 h-6 text-white" fill="white" />
-                    </button>
-                  </motion.div>
+                <div className="relative z-20 flex justify-center items-center gap-5 py-5 px-6">
+                  <ActionButton
+                    onClick={() => remainingProfiles[0] && handleSwipe('left')}
+                    color="destructive"
+                    size="lg"
+                    icon={<X className="w-7 h-7" strokeWidth={2.5} />}
+                  />
+                  <ActionButton
+                    onClick={() => remainingProfiles[0] && handleSwipe('up')}
+                    color="purple"
+                    size="sm"
+                    icon={<EyeOff className="w-5 h-5" />}
+                  />
+                  <ActionButton
+                    onClick={() => remainingProfiles[0] && handleSwipe('right')}
+                    color="green"
+                    size="lg"
+                    icon={<Heart className="w-7 h-7" fill="white" />}
+                  />
                 </div>
 
-                {/* Credit costs */}
-                <div className="px-5 pb-3">
-                  <div className="flex items-center justify-center gap-5 text-[11px] text-muted-foreground/60">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-lg bg-green-500/10 flex items-center justify-center">
-                        <Heart className="w-2.5 h-2.5 text-green-500" fill="currentColor" />
-                      </span>
-                      <span>{creditCosts.like} cr</span>
-                    </span>
-                    <span className="w-px h-3 bg-border" />
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-lg bg-destructive/10 flex items-center justify-center">
-                        <X className="w-2.5 h-2.5 text-destructive" />
-                      </span>
-                      <span>{creditCosts.dislike} cr</span>
-                    </span>
-                    <span className="w-px h-3 bg-border" />
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                        <EyeOff className="w-2.5 h-2.5 text-purple-400" />
-                      </span>
-                      <span>{creditCosts.hide} cr</span>
-                    </span>
-                  </div>
-                </div>
+                {/* Credit costs bar */}
+                <CreditCostsBar creditCosts={creditCosts} />
               </>
             )}
 
-            {/* Boost banner - always visible */}
-            <div className="px-5 pb-3">
-              {isBoostActive ? (
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 to-orange-500/15 border border-amber-500/20">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30">
-                    <Rocket className="w-[18px] h-[18px] text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground">Profil en avant !</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      Expire {boostExpiresAt ? `à ${boostExpiresAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : 'bientôt'}
-                    </p>
-                  </div>
-                  <span className="text-xs font-bold text-amber-500">Actif</span>
-                </div>
-              ) : (
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => activateBoost()}
-                  disabled={isActivating || totalCredits < boostCost}
-                  className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/15 hover:border-amber-500/30 transition-all disabled:opacity-50"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
-                    <Rocket className="w-[18px] h-[18px] text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-xs font-semibold text-foreground">Mettre en avant mon profil</p>
-                    <p className="text-[10px] text-muted-foreground">Visible 1 à 3 fois pendant 24h</p>
-                  </div>
-                  <span className="text-xs font-bold text-amber-500">{boostCost} cr</span>
-                </motion.button>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="likes" className="flex-1 min-h-0 mt-0">
-          <LikedProfilesList 
-            likedUserIds={likedProfiles} 
-            onStartChat={onStartChat}
-          />
-        </TabsContent>
-      </Tabs>
+            {/* Boost banner */}
+            <BoostBanner
+              isBoostActive={isBoostActive}
+              activateBoost={activateBoost}
+              isActivating={isActivating}
+              boostCost={boostCost}
+              boostExpiresAt={boostExpiresAt}
+              totalCredits={totalCredits}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="likes"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1 min-h-0"
+          >
+            <LikedProfilesList likedUserIds={likedProfiles} onStartChat={onStartChat} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-// Liked profiles list component
+/* ───── Action Button ───── */
+const ActionButton = ({
+  onClick,
+  color,
+  size,
+  icon,
+}: {
+  onClick: () => void;
+  color: 'destructive' | 'purple' | 'green';
+  size: 'sm' | 'lg';
+  icon: React.ReactNode;
+}) => {
+  const styles = {
+    destructive: 'border-destructive/30 text-destructive hover:border-destructive/50 hover:bg-destructive/10 shadow-destructive/10 hover:shadow-destructive/20',
+    purple: 'border-purple-400/30 text-purple-400 hover:border-purple-400/50 hover:bg-purple-400/10 shadow-purple-400/10 hover:shadow-purple-400/20',
+    green: 'bg-gradient-to-br from-green-400 to-green-500 text-white border-transparent shadow-green-500/30 hover:shadow-green-500/50 active:from-green-500 active:to-green-600',
+  };
+
+  const sizeClass = size === 'lg' ? 'w-[60px] h-[60px]' : 'w-[48px] h-[48px]';
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.82 }}
+      whileHover={{ scale: 1.1 }}
+      onClick={onClick}
+      className={`${sizeClass} rounded-full flex items-center justify-center bg-card border-2 shadow-lg transition-all duration-200 ${styles[color]}`}
+    >
+      {icon}
+    </motion.button>
+  );
+};
+
+/* ───── Credit Costs ───── */
+const CreditCostsBar = ({ creditCosts }: { creditCosts: { like: number; dislike: number; hide: number } }) => (
+  <div className="px-5 pb-3">
+    <div className="flex items-center justify-center gap-6 text-[11px] text-muted-foreground/50">
+      <span className="flex items-center gap-1.5">
+        <span className="w-5 h-5 rounded-lg bg-green-500/10 flex items-center justify-center">
+          <Heart className="w-2.5 h-2.5 text-green-500" fill="currentColor" />
+        </span>
+        {creditCosts.like} cr
+      </span>
+      <span className="w-px h-3 bg-border" />
+      <span className="flex items-center gap-1.5">
+        <span className="w-5 h-5 rounded-lg bg-destructive/10 flex items-center justify-center">
+          <X className="w-2.5 h-2.5 text-destructive" />
+        </span>
+        {creditCosts.dislike} cr
+      </span>
+      <span className="w-px h-3 bg-border" />
+      <span className="flex items-center gap-1.5">
+        <span className="w-5 h-5 rounded-lg bg-purple-500/10 flex items-center justify-center">
+          <EyeOff className="w-2.5 h-2.5 text-purple-400" />
+        </span>
+        {creditCosts.hide} cr
+      </span>
+    </div>
+  </div>
+);
+
+/* ───── Loading ───── */
+const LoadingState = () => (
+  <div className="flex-1 flex flex-col items-center justify-center gap-5">
+    <motion.div
+      className="relative"
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 200 }}
+    >
+      <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+      <motion.div
+        className="absolute inset-0 rounded-[28px] border-2 border-primary/15"
+        animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0, 0.4] }}
+        transition={{ duration: 2.5, repeat: Infinity }}
+      />
+    </motion.div>
+    <p className="text-sm text-muted-foreground font-medium">Chargement des profils…</p>
+  </div>
+);
+
+/* ───── Empty swipe state ───── */
+const EmptySwipeState = ({ onRefresh }: { onRefresh: () => void }) => (
+  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+    <motion.div
+      initial={{ scale: 0.7, opacity: 0, y: 20 }}
+      animate={{ scale: 1, opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 180, damping: 14 }}
+      className="relative mb-8"
+    >
+      <div className="w-32 h-32 rounded-[36px] bg-gradient-to-br from-primary/10 via-accent/8 to-secondary flex items-center justify-center">
+        <Sparkles className="w-16 h-16 text-primary/40" />
+      </div>
+      <motion.div
+        className="absolute -top-3 -right-3 w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center"
+        animate={{ y: [0, -6, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      >
+        <Zap className="w-6 h-6 text-accent" />
+      </motion.div>
+    </motion.div>
+    <h3 className="text-2xl font-black mb-3 text-foreground" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+      C'est tout pour le moment !
+    </h3>
+    <p className="text-muted-foreground text-sm mb-8 max-w-[280px] leading-relaxed">
+      Tu as vu tous les profils disponibles. Reviens plus tard pour de nouvelles découvertes.
+    </p>
+    <Button 
+      onClick={onRefresh} 
+      variant="outline" 
+      className="gap-2 rounded-2xl h-12 px-8 font-semibold text-sm"
+    >
+      <RefreshCw className="w-4 h-4" />
+      Rafraîchir
+    </Button>
+  </div>
+);
+
+/* ───── Boost Banner ───── */
+const BoostBanner = ({
+  isBoostActive,
+  activateBoost,
+  isActivating,
+  boostCost,
+  boostExpiresAt,
+  totalCredits,
+}: {
+  isBoostActive: boolean;
+  activateBoost: () => void;
+  isActivating: boolean;
+  boostCost: number;
+  boostExpiresAt: Date | null;
+  totalCredits: number;
+}) => (
+  <div className="px-5 pb-4">
+    {isBoostActive ? (
+      <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/15">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/25">
+          <Rocket className="w-5 h-5 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold text-foreground">Profil en avant !</p>
+          <p className="text-[10px] text-muted-foreground">
+            Expire {boostExpiresAt ? `à ${boostExpiresAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : 'bientôt'}
+          </p>
+        </div>
+        <span className="text-xs font-black text-amber-500 tracking-wide">ACTIF</span>
+      </div>
+    ) : (
+      <motion.button
+        whileTap={{ scale: 0.97 }}
+        onClick={() => activateBoost()}
+        disabled={isActivating || totalCredits < boostCost}
+        className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/8 to-orange-500/8 border border-amber-500/10 hover:border-amber-500/25 transition-all disabled:opacity-40"
+      >
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/15">
+          <Rocket className="w-5 h-5 text-white" />
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <p className="text-xs font-bold text-foreground">Mettre en avant mon profil</p>
+          <p className="text-[10px] text-muted-foreground">Visible 1 à 3 fois pendant 24h</p>
+        </div>
+        <span className="text-xs font-black text-amber-500">{boostCost} cr</span>
+      </motion.button>
+    )}
+  </div>
+);
+
+/* ───── Liked Profiles List ───── */
 const LikedProfilesList = ({ 
   likedUserIds, 
-  onStartChat 
+  onStartChat,
 }: { 
   likedUserIds: string[]; 
   onStartChat: (userId: string) => void;
@@ -263,62 +351,76 @@ const LikedProfilesList = ({
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
+          initial={{ scale: 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="relative mb-6"
+          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+          className="relative mb-8"
         >
-          <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-pink-500/12 to-primary/12 flex items-center justify-center">
-            <Heart className="w-12 h-12 text-pink-400/60" />
+          <div className="w-28 h-28 rounded-[32px] bg-gradient-to-br from-pink-500/10 to-rose-400/10 flex items-center justify-center">
+            <Heart className="w-14 h-14 text-pink-400/40" />
           </div>
+          <motion.div
+            className="absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl bg-rose-500/10 flex items-center justify-center"
+            animate={{ scale: [1, 1.1, 1], rotate: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Sparkles className="w-5 h-5 text-rose-400" />
+          </motion.div>
         </motion.div>
-        <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+        <h3 className="text-2xl font-black mb-3 text-foreground" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
           Aucun like
         </h3>
-        <p className="text-muted-foreground text-sm max-w-[240px] leading-relaxed">
-          Les profils que tu aimes apparaîtront ici.
+        <p className="text-muted-foreground text-sm max-w-[260px] leading-relaxed">
+          Les profils que tu aimes apparaîtront ici. Commence à swiper !
         </p>
       </div>
     );
   }
 
   return (
-    <ScrollArea className="flex-1">
-      <div className="p-4 space-y-2">
-        {likedUserIds.map((userId, index) => (
-          <motion.div
-            key={userId}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.04, duration: 0.25 }}
-          >
-            <LikedProfileCard 
-              userId={userId} 
-              onStartChat={onStartChat}
-            />
-          </motion.div>
-        ))}
+    <ScrollArea className="flex-1 h-full">
+      <div className="px-5 pb-6 pt-2">
+        <div className="flex items-center gap-2 mb-4">
+          <Users className="w-4 h-4 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground font-semibold">
+            {likedUserIds.length} profil{likedUserIds.length > 1 ? 's' : ''} aimé{likedUserIds.length > 1 ? 's' : ''}
+          </span>
+        </div>
+        <div className="space-y-2.5">
+          {likedUserIds.map((userId, index) => (
+            <motion.div
+              key={userId}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.04, duration: 0.3, ease: 'easeOut' }}
+            >
+              <LikedProfileCard userId={userId} onStartChat={onStartChat} />
+            </motion.div>
+          ))}
+        </div>
       </div>
     </ScrollArea>
   );
 };
 
-// Individual liked profile card
+/* ───── Individual Liked Profile Card ───── */
 const LikedProfileCard = ({ 
   userId, 
-  onStartChat 
+  onStartChat,
 }: { 
   userId: string; 
   onStartChat: (userId: string) => void;
 }) => {
+  const navigate = useNavigate();
   const { data: profile, isLoading } = useProfile(userId);
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-border/50 animate-pulse">
-        <div className="w-12 h-12 rounded-full bg-muted" />
-        <div className="flex-1">
-          <div className="h-4 w-24 bg-muted rounded-lg mb-2" />
-          <div className="h-3 w-16 bg-muted rounded-lg" />
+      <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-card border border-border/40 animate-pulse">
+        <div className="w-14 h-14 rounded-2xl bg-muted" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 w-28 bg-muted rounded-xl" />
+          <div className="h-3 w-20 bg-muted rounded-xl" />
         </div>
       </div>
     );
@@ -327,37 +429,51 @@ const LikedProfileCard = ({
   if (!profile) return null;
 
   return (
-    <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-border/40 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 transition-all duration-200 group">
-      <div className="relative">
-        <Avatar className="w-12 h-12 border-2 border-primary/10 ring-2 ring-primary/5">
-          <AvatarImage src={profile.avatar_url || undefined} />
-          <AvatarFallback className="bg-primary/8 text-primary font-semibold">
+    <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-card border border-border/30 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
+      {/* Avatar */}
+      <button
+        onClick={() => navigate(`/profile/${userId}`)}
+        className="relative shrink-0"
+      >
+        <Avatar className="w-14 h-14 rounded-2xl border-2 border-primary/10">
+          <AvatarImage src={profile.avatar_url || undefined} className="object-cover" />
+          <AvatarFallback className="rounded-2xl bg-primary/8 text-primary font-black text-lg">
             {profile.username.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         {profile.is_online && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-green-400 border-2 border-card shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
+          <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green-400 border-[3px] border-card shadow-[0_0_10px_rgba(74,222,128,0.5)]" />
         )}
-      </div>
+      </button>
 
+      {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold truncate text-sm">{profile.username}</span>
-          {profile.age && <span className="text-sm text-muted-foreground">{profile.age}</span>}
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="font-bold text-sm text-foreground truncate">{profile.username}</span>
+          {profile.age && (
+            <span className="text-sm text-muted-foreground font-medium">{profile.age}</span>
+          )}
+          {profile.is_verified && (
+            <ShieldCheck className="w-3.5 h-3.5 text-primary shrink-0" />
+          )}
         </div>
         <p className="text-xs text-muted-foreground truncate">{profile.region}</p>
       </div>
 
-      <Button
-        size="sm"
-        onClick={() => onStartChat(userId)}
-        className="gap-1.5 rounded-xl shadow-sm h-9 px-4 font-medium"
-      >
-        <MessageCircle className="w-3.5 h-3.5" />
-        Message
-      </Button>
+      {/* Action */}
+      <motion.div whileTap={{ scale: 0.9 }}>
+        <Button
+          size="sm"
+          onClick={() => onStartChat(userId)}
+          className="gap-1.5 rounded-xl shadow-sm h-10 px-5 font-bold text-xs"
+        >
+          <MessageCircle className="w-3.5 h-3.5" />
+          Message
+        </Button>
+      </motion.div>
     </div>
   );
 };
+
 
 export default SwipePage;

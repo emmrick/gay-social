@@ -51,7 +51,7 @@ export const CREDIT_REWARDS = {
   signup: 15.0, // 10 + 5 welcome bonus
   identity_verification: 30.0,
   daily_claim: 5.0,
-  referral_success: 10.0, // For each party
+  referral_success: 30.0, // For each party (default, overridden by dynamic credit_costs)
 } as const;
 
 export type CreditActionType = keyof typeof CREDIT_COSTS;

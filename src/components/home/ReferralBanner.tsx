@@ -1,10 +1,12 @@
 import { Gift, ArrowRight, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useReferral } from '@/hooks/useReferral';
-import { CREDIT_REWARDS } from '@/hooks/useCredits';
+import { useDynamicCreditCosts } from '@/hooks/useDynamicCreditCosts';
 
 const ReferralBanner = () => {
   const { referralCode, shareReferralLink, isLoading } = useReferral();
+  const { data: costs } = useDynamicCreditCosts();
+  const referralReward = costs?.referral_reward ?? 30;
 
   if (isLoading || !referralCode) return null;
 
@@ -16,7 +18,7 @@ const ReferralBanner = () => {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground">
-            Invite tes amis, gagne {CREDIT_REWARDS.referral_success} crédits !
+            Invite tes amis, gagne {referralReward} crédits !
           </p>
           <p className="text-xs text-muted-foreground">
             Toi et ton filleul recevez des crédits gratuits

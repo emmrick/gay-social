@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useCredits, CREDIT_COSTS, CREDIT_REWARDS } from '@/hooks/useCredits';
+import { useDynamicCreditCosts } from '@/hooks/useDynamicCreditCosts';
 import CreditBalanceBar from './CreditBalanceBar';
 import CreditHistorySheet from './CreditHistorySheet';
 import CreditReferralSection from './CreditReferralSection';
@@ -57,6 +58,7 @@ const CreditCostItem = ({ icon, action, cost, description }: CreditCostItemProps
 
 const CreditsPage = () => {
   const { isLoading, dailyCredits, bonusCredits, purchasedCredits, maxDailyCredits } = useCredits();
+  const { data: dynamicCosts } = useDynamicCreditCosts();
 
   if (isLoading) {
     return (
@@ -297,7 +299,7 @@ const CreditsPage = () => {
                     <p className="text-xs text-muted-foreground">Parrain + Filleul vérifiés</p>
                   </div>
                 </div>
-                <Badge className="bg-purple-500 text-white">+{CREDIT_REWARDS.referral_success} chacun</Badge>
+                <Badge className="bg-purple-500 text-white">+{dynamicCosts?.referral_reward ?? CREDIT_REWARDS.referral_success} chacun</Badge>
               </div>
             </CardContent>
           </Card>

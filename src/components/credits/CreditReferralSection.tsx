@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useReferral } from '@/hooks/useReferral';
-import { CREDIT_REWARDS } from '@/hooks/useCredits';
+import { useDynamicCreditCosts } from '@/hooks/useDynamicCreditCosts';
 
 const CreditReferralSection = () => {
   const { 
@@ -24,6 +24,8 @@ const CreditReferralSection = () => {
     copyReferralLink, 
     shareReferralLink 
   } = useReferral();
+  const { data: costs } = useDynamicCreditCosts();
+  const referralReward = costs?.referral_reward ?? 30;
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -58,7 +60,7 @@ const CreditReferralSection = () => {
             </li>
             <li className="flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs">3</span>
-              Vous recevez chacun <span className="font-bold text-green-500">{CREDIT_REWARDS.referral_success} crédits</span> !
+              Vous recevez chacun <span className="font-bold text-green-500">{referralReward} crédits</span> !
             </li>
           </ul>
         </div>

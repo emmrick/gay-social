@@ -33,6 +33,7 @@ const FALLBACK_COSTS: Record<string, number> = {
   chatbot_info: 2.5,
   chatbot_info_extra: 20.0,
   chatbot_activate: 10.0,
+  referral_reward: 30.0,
 };
 
 export const useDynamicCreditCosts = () => {

@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { useReferral } from '@/hooks/useReferral';
-import { CREDIT_REWARDS } from '@/hooks/useCredits';
+import { useDynamicCreditCosts } from '@/hooks/useDynamicCreditCosts';
 
 const ReferralSection = () => {
   const { 
@@ -18,6 +18,8 @@ const ReferralSection = () => {
     copyReferralLink, 
     shareReferralLink 
   } = useReferral();
+  const { data: costs } = useDynamicCreditCosts();
+  const referralReward = costs?.referral_reward ?? 30;
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -46,7 +48,7 @@ const ReferralSection = () => {
           <div>
             <CardTitle className="text-lg">Parrainez vos amis</CardTitle>
             <CardDescription>
-              Gagnez {CREDIT_REWARDS.referral_success} crédits pour chaque filleul vérifié
+              Gagnez {referralReward} crédits pour chaque filleul vérifié
             </CardDescription>
           </div>
         </div>
@@ -62,7 +64,7 @@ const ReferralSection = () => {
             <li>Partagez votre lien de parrainage</li>
             <li>Votre ami s'inscrit sur GayConnect</li>
             <li>Il vérifie son identité</li>
-            <li><span className="text-primary font-medium">Vous recevez tous les deux {CREDIT_REWARDS.referral_success} crédits !</span></li>
+            <li><span className="text-primary font-medium">Vous recevez tous les deux {referralReward} crédits !</span></li>
           </ol>
         </div>
 

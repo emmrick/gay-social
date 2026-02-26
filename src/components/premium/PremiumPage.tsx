@@ -34,6 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useCredits, CREDIT_COSTS, CREDIT_REWARDS } from '@/hooks/useCredits';
+import { useDynamicCreditCosts } from '@/hooks/useDynamicCreditCosts';
 import ReferralSection from './ReferralSection';
 import CreditBalanceBar from '../credits/CreditBalanceBar';
 import CreditHistorySheet from '../credits/CreditHistorySheet';
@@ -46,6 +47,7 @@ interface PremiumPageProps {
 
 const PremiumPage = ({ onNavigateToSupport }: PremiumPageProps = {}) => {
   const { totalCredits, isLoading } = useCredits();
+  const { data: dynamicCosts } = useDynamicCreditCosts();
   const [showClaimDialog, setShowClaimDialog] = useState(false);
 
   if (isLoading) {
@@ -151,7 +153,7 @@ const PremiumPage = ({ onNavigateToSupport }: PremiumPageProps = {}) => {
               { icon: <Zap className="w-4 h-4 text-green-500" />, label: 'Inscription', credits: CREDIT_REWARDS.signup, bg: 'bg-green-500/10' },
               { icon: <Shield className="w-4 h-4 text-blue-500" />, label: 'Vérification d\'identité', credits: CREDIT_REWARDS.identity_verification, bg: 'bg-blue-500/10' },
               { icon: <Clock className="w-4 h-4 text-amber-500" />, label: 'Crédits quotidiens (auto)', credits: CREDIT_REWARDS.daily_claim, bg: 'bg-amber-500/10', suffix: '/jour' },
-              { icon: <Users className="w-4 h-4 text-purple-500" />, label: 'Parrainage réussi', credits: CREDIT_REWARDS.referral_success, bg: 'bg-purple-500/10', suffix: ' chacun' },
+              { icon: <Users className="w-4 h-4 text-purple-500" />, label: 'Parrainage réussi', credits: dynamicCosts?.referral_reward ?? CREDIT_REWARDS.referral_success, bg: 'bg-purple-500/10', suffix: ' chacun' },
             ].map((item, i) => (
               <div key={i} className={`flex items-center justify-between py-2 px-2.5 rounded-lg ${item.bg}`}>
                 <div className="flex items-center gap-2">

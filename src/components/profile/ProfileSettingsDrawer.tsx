@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Bell, Moon, Shield, HelpCircle, FolderLock, 
-  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale
+  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale, Ban
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import SettingsDialog from './SettingsDialog';
 import AlbumManager from '@/components/albums/AlbumManager';
 import ProfileEditDialog from './ProfileEditDialog';
+import BlockedUsersSheet from './BlockedUsersSheet';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
@@ -37,11 +38,13 @@ const ProfileSettingsDrawer = ({
   const [settingsType, setSettingsType] = useState<SettingsType | null>(null);
   const [showAlbumManager, setShowAlbumManager] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showBlockedUsers, setShowBlockedUsers] = useState(false);
 
   const menuItems = [
     { icon: Bell, label: 'Notifications', action: () => { setOpen(false); setSettingsType('notifications'); }, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
     { icon: Moon, label: 'Apparence', action: () => { setOpen(false); setSettingsType('appearance'); }, color: 'text-indigo-500', bgColor: 'bg-indigo-500/10' },
     { icon: Shield, label: 'Confidentialité', action: () => { setOpen(false); setSettingsType('privacy'); }, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
+    { icon: Ban, label: 'Utilisateurs bloqués', action: () => { setOpen(false); setShowBlockedUsers(true); }, color: 'text-red-500', bgColor: 'bg-red-500/10' },
     { icon: HelpCircle, label: 'Aide & Support', action: () => { setOpen(false); setSettingsType('help'); }, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
   ];
 
@@ -56,6 +59,7 @@ const ProfileSettingsDrawer = ({
     <>
       <ProfileEditDialog open={showEditDialog} onOpenChange={setShowEditDialog} />
       <AlbumManager isOpen={showAlbumManager} onClose={() => setShowAlbumManager(false)} />
+      <BlockedUsersSheet open={showBlockedUsers} onOpenChange={setShowBlockedUsers} />
       
       {settingsType && (
         <SettingsDialog 

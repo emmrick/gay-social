@@ -10,9 +10,11 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { shouldShowOnlineIndicator, getDetailedLastSeenText } from '@/hooks/useOnlineStatus';
 import ReportUserDialog from './ReportUserDialog';
+import BlockUserDialog from './BlockUserDialog';
 import ProfilePhotoCarousel from './ProfilePhotoCarousel';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { useUserSuspensionStatus } from '@/hooks/useUserSuspensionStatus';
+import { useHasBlockedUser } from '@/hooks/useUserBlock';
 
 interface UserProfile {
   user_id: string;
@@ -39,6 +41,8 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const { data: hasBlocked } = useHasBlockedUser(userId || '');
   const { photos: userPhotos } = useProfilePhotos(userId || undefined);
   const { data: suspensionStatus, isLoading: suspensionLoading } = useUserSuspensionStatus(userId || undefined);
   
@@ -172,13 +176,23 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
 
                 {!isOwnProfile && (
                   <div className="flex gap-2 w-full">
-                    <Button 
-                      variant="gradient" 
-                      className="flex-1"
-                      onClick={handleStartChat}
+                    {!hasBlocked && (
+                      <Button 
+                        variant="gradient" 
+                        className="flex-1"
+                        onClick={handleStartChat}
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Message privé
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setShowBlockDialog(true)}
+                      title={hasBlocked ? 'Déjà bloqué' : 'Bloquer'}
                     >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Message privé
+                      <Ban className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="outline"
@@ -205,6 +219,15 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
           onOpenChange={setShowReportDialog}
           userId={userId}
           username={profile?.username || 'Utilisateur'}
+        />
+      )}
+      {userId && profile && (
+        <BlockUserDialog
+          open={showBlockDialog}
+          onOpenChange={setShowBlockDialog}
+          userId={userId}
+          username={profile.username}
+          onBlocked={onClose}
         />
       )}
     </>

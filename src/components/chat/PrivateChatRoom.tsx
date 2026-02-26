@@ -415,14 +415,37 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
       {/* Input */}
       <div className="flex-shrink-0">
-        <PrivateChatInput
-          onSendMessage={handleSendMessage}
-          recipientId={otherUserId}
-          recipientName={otherUserProfile?.username}
-          isSending={sendMessage.isPending}
-          onFocus={handleInputFocus}
-          onTyping={startTyping}
-        />
+        {hasBlocked ? (
+          <div className="px-4 py-3 border-t border-border bg-card">
+            <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-destructive/10 border border-destructive/20">
+              <div className="flex items-center gap-2 min-w-0">
+                <Ban className="w-4 h-4 text-destructive flex-shrink-0" />
+                <p className="text-sm text-destructive truncate">
+                  Vous avez bloqué {otherUserProfile?.username}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleUnblock}
+                disabled={unblockUser.isPending}
+                className="flex-shrink-0 text-xs"
+              >
+                <UserCheck className="w-3.5 h-3.5 mr-1" />
+                Débloquer
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <PrivateChatInput
+            onSendMessage={handleSendMessage}
+            recipientId={otherUserId}
+            recipientName={otherUserProfile?.username}
+            isSending={sendMessage.isPending}
+            onFocus={handleInputFocus}
+            onTyping={startTyping}
+          />
+        )}
       </div>
     </div>
   );

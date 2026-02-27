@@ -302,7 +302,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                       <div className="group/msg relative flex items-center gap-1">
                         {/* Reaction picker - left for own messages */}
                         {isOwn && !isEphemeralMedia && (
-                          <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                          <div className="md:opacity-0 md:group-hover/msg:opacity-100 transition-opacity">
                             <EmojiReactionPicker onSelect={(emoji) => toggleReaction.mutate({ messageId: message.id, emoji })} />
                           </div>
                         )}
@@ -353,7 +353,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
                         {/* Reaction picker - right for received messages */}
                         {!isOwn && !isEphemeralMedia && (
-                          <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                          <div className="md:opacity-0 md:group-hover/msg:opacity-100 transition-opacity">
                             <EmojiReactionPicker onSelect={(emoji) => toggleReaction.mutate({ messageId: message.id, emoji })} />
                           </div>
                         )}

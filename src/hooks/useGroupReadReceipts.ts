@@ -73,35 +73,29 @@ export const useGroupReadReceipts = (chatRoomId: string | null) => {
       return grouped;
     },
     enabled: !!chatRoomId,
-    refetchInterval: 30000, // Refresh every 30s
+    staleTime: 10000,
+    refetchInterval: 15000,
   });
 
   // Mark messages as read when viewing the chat
   const markAsRead = useCallback(async (messageIds: string[]) => {
     if (!user?.id || !messageIds.length) return;
 
-    // Filter out messages we've already marked as read
-    const existingReads = readReceipts || {};
-    const unreadIds = messageIds.filter(id => {
-      const readers = existingReads[id] || [];
-      return !readers.some(r => r.user_id === user.id);
-    });
-
-    if (!unreadIds.length) return;
-
     // Batch insert read receipts (ignore conflicts)
-    const inserts = unreadIds.map(messageId => ({
+    const inserts = messageIds.map(messageId => ({
       message_id: messageId,
       user_id: user.id,
     }));
 
-    await supabase
+    const { error } = await supabase
       .from('group_message_reads')
       .upsert(inserts, { onConflict: 'message_id,user_id', ignoreDuplicates: true });
 
-    // Invalidate to refresh
-    queryClient.invalidateQueries({ queryKey: ['group-read-receipts', chatRoomId] });
-  }, [user?.id, readReceipts, chatRoomId, queryClient]);
+    if (!error) {
+      // Invalidate to refresh
+      queryClient.invalidateQueries({ queryKey: ['group-read-receipts', chatRoomId] });
+    }
+  }, [user?.id, chatRoomId, queryClient]);
 
   // Real-time subscription for read receipts
   useEffect(() => {

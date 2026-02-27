@@ -65,10 +65,10 @@ export const useTypingIndicator = (chatRoomId: string | null) => {
     };
   }, [chatRoomId, user?.id]);
 
-  // Cleanup typing indicator on unmount
+  // Cleanup typing indicator on unmount or page unload
   useEffect(() => {
-    return () => {
-      if (chatRoomId && user?.id && isTypingRef.current) {
+    const cleanup = () => {
+      if (chatRoomId && user?.id) {
         supabase
           .from('typing_indicators')
           .delete()
@@ -76,6 +76,17 @@ export const useTypingIndicator = (chatRoomId: string | null) => {
           .eq('user_id', user.id)
           .then();
       }
+    };
+
+    // Also clean on beforeunload (tab close/refresh)
+    const handleBeforeUnload = () => {
+      if (isTypingRef.current) cleanup();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (isTypingRef.current) cleanup();
     };
   }, [chatRoomId, user?.id]);
 

@@ -1,0 +1,1 @@
+ALTER TABLE public.ephemeral_media ADD COLUMN IF NOT EXISTS replay_count integer NOT NULL DEFAULT 0;

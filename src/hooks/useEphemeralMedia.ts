@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 
-type EphemeralMedia = Tables<'ephemeral_media'>;
+type EphemeralMedia = Tables<'ephemeral_media'> & { replay_count?: number };
 
 interface EphemeralMediaWithUrl extends EphemeralMedia {
   signedUrl: string;

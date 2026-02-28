@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, EyeOff, AlertTriangle, Shield, Play, Download, Infinity, Check } from 'lucide-react';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { X, Eye, EyeOff, AlertTriangle, Shield, Play, Download, Infinity as InfinityIcon, Check, Send, RotateCcw } from 'lucide-react';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -16,7 +16,42 @@ interface EphemeralMediaViewerProps {
   onClose: () => void;
   onViewed: () => void;
   onSaveToConversation?: () => Promise<void>;
+  canReplay?: boolean;
+  onReplay?: () => void;
+  onSwipeReply?: () => void;
 }
+
+// Circular timer component (Snapchat style)
+const CircularTimer = ({ timeLeft, duration }: { timeLeft: number; duration: number }) => {
+  const radius = 22;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (timeLeft / duration) * circumference;
+
+  return (
+    <div className="relative w-14 h-14 flex items-center justify-center">
+      <svg className="absolute inset-0 -rotate-90" width="56" height="56" viewBox="0 0 56 56">
+        <circle cx="28" cy="28" r={radius} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
+        <circle
+          cx="28" cy="28" r={radius}
+          fill="none"
+          stroke="url(#timerGradient)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference - progress}
+          className="transition-all duration-1000 ease-linear"
+        />
+        <defs>
+          <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="hsl(var(--primary))" />
+            <stop offset="100%" stopColor="hsl(var(--accent))" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <span className="text-white font-bold text-lg z-10">{timeLeft}</span>
+    </div>
+  );
+};
 
 const EphemeralMediaViewer = ({ 
   isOpen,
@@ -28,24 +63,30 @@ const EphemeralMediaViewer = ({
   onClose, 
   onViewed,
   onSaveToConversation,
+  canReplay = false,
+  onReplay,
+  onSwipeReply,
 }: EphemeralMediaViewerProps) => {
   const isUnlimited = duration === 0;
   const [isViewing, setIsViewing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(isUnlimited ? -1 : duration);
   const [hasEnded, setHasEnded] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
+  const [showReplyHint, setShowReplyHint] = useState(false);
   const { 
     isBlocked,
     preventContextMenu, 
     handleViolation,
     enableProtection,
     disableProtection,
-  } = useScreenshotProtection(true, true); // Enable native blocking + aggressive detection for ephemeral media
+  } = useScreenshotProtection(true, true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasCalledOnViewed = useRef(false);
+  const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Enable protection when viewing starts
   useEffect(() => {
@@ -63,17 +104,19 @@ const EphemeralMediaViewer = ({
       setTimeLeft(isUnlimited ? -1 : duration);
       setHasEnded(false);
       setIsClosing(false);
+      setIsPaused(false);
       setIsSaving(false);
       setHasSaved(false);
+      setShowReplyHint(false);
       hasCalledOnViewed.current = false;
     }
   }, [isOpen, duration, isUnlimited]);
 
-  // Timer countdown (only for non-unlimited media)
+  // Timer countdown - pauses on hold
   useEffect(() => {
-    if (isUnlimited) return; // No countdown for unlimited
+    if (isUnlimited) return;
     
-    if (isViewing && timeLeft > 0 && !hasEnded) {
+    if (isViewing && timeLeft > 0 && !hasEnded && !isPaused) {
       const timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
@@ -84,17 +127,48 @@ const EphemeralMediaViewer = ({
         hasCalledOnViewed.current = true;
         onViewed();
       }
-      // Smooth close animation
       setIsClosing(true);
-      setTimeout(() => {
-        onClose();
-      }, 400);
+      setTimeout(() => onClose(), 400);
     }
-  }, [isViewing, timeLeft, onClose, onViewed, hasEnded, isUnlimited]);
+  }, [isViewing, timeLeft, onClose, onViewed, hasEnded, isUnlimited, isPaused]);
+
+  // Hold to pause (long press)
+  const handlePointerDown = useCallback(() => {
+    holdTimerRef.current = setTimeout(() => {
+      setIsPaused(true);
+      if (type === 'video' && videoRef.current) {
+        videoRef.current.pause();
+      }
+    }, 200);
+  }, [type]);
+
+  const handlePointerUp = useCallback(() => {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+    if (isPaused) {
+      setIsPaused(false);
+      if (type === 'video' && videoRef.current) {
+        videoRef.current.play();
+      }
+    }
+  }, [isPaused, type]);
+
+  // Swipe up to reply
+  const handleDragEnd = useCallback((_: any, info: PanInfo) => {
+    if (info.offset.y < -100 && onSwipeReply) {
+      onSwipeReply();
+      handleCloseClick();
+    }
+  }, [onSwipeReply]);
+
+  const handleDrag = useCallback((_: any, info: PanInfo) => {
+    setShowReplyHint(info.offset.y < -40);
+  }, []);
 
   const handleSaveToConversation = useCallback(async () => {
     if (!onSaveToConversation || isSaving || hasSaved) return;
-    
     setIsSaving(true);
     try {
       await onSaveToConversation();
@@ -108,20 +182,15 @@ const EphemeralMediaViewer = ({
     }
   }, [onSaveToConversation, isSaving, hasSaved]);
 
-  // Disable DevTools detection
+  // DevTools detection
   useEffect(() => {
     if (!isViewing || !isOpen) return;
-
     const detectDevTools = () => {
       const threshold = 160;
-      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-      const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-      
-      if (widthThreshold || heightThreshold) {
+      if (window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold) {
         handleViolation();
       }
     };
-
     const interval = setInterval(detectDevTools, 1000);
     return () => clearInterval(interval);
   }, [isViewing, handleViolation, isOpen]);
@@ -129,53 +198,32 @@ const EphemeralMediaViewer = ({
   // Prevent copy operations
   useEffect(() => {
     if (!isViewing || !isOpen) return;
-
-    const preventCopy = (e: ClipboardEvent) => {
-      e.preventDefault();
-      handleViolation();
-    };
-
+    const preventCopy = (e: ClipboardEvent) => { e.preventDefault(); handleViolation(); };
     const preventKeyShortcuts = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        if (['c', 's', 'p', 'a'].includes(e.key.toLowerCase())) {
-          e.preventDefault();
-          handleViolation();
-        }
+      if ((e.ctrlKey || e.metaKey) && ['c', 's', 'p', 'a'].includes(e.key.toLowerCase())) {
+        e.preventDefault(); handleViolation();
       }
-      if (e.key === 'PrintScreen') {
-        e.preventDefault();
-        handleViolation();
-      }
+      if (e.key === 'PrintScreen') { e.preventDefault(); handleViolation(); }
     };
-
     document.addEventListener('copy', preventCopy);
     document.addEventListener('keydown', preventKeyShortcuts);
-
     return () => {
       document.removeEventListener('copy', preventCopy);
       document.removeEventListener('keydown', preventKeyShortcuts);
     };
   }, [isViewing, handleViolation, isOpen]);
 
-  // Visibility change detection (switching apps on mobile)
+  // Visibility change
   useEffect(() => {
     if (!isViewing || !isOpen) return;
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        handleViolation();
-      }
-    };
-
+    const handleVisibilityChange = () => { if (document.hidden) handleViolation(); };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [isViewing, handleViolation, isOpen]);
 
   const handleStartViewing = useCallback(() => {
     setIsViewing(true);
-    if (type === 'video' && videoRef.current) {
-      videoRef.current.play();
-    }
+    if (type === 'video' && videoRef.current) videoRef.current.play();
   }, [type]);
 
   const handleCloseClick = useCallback(() => {
@@ -204,7 +252,7 @@ const EphemeralMediaViewer = ({
         transition={{ duration: 0.3 }}
         className="fixed inset-0 z-[100] bg-black"
       >
-        {/* Pre-viewing state (tap to view) */}
+        {/* Pre-viewing state */}
         <AnimatePresence mode="wait">
           {!isViewing && (
             <motion.div 
@@ -215,10 +263,9 @@ const EphemeralMediaViewer = ({
               transition={{ duration: 0.3 }}
               className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted flex items-center justify-center p-6"
             >
-              {/* Close button */}
               <button 
                 onClick={handleCloseClick}
-                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-muted/50 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-muted/50 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all z-20"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -229,7 +276,6 @@ const EphemeralMediaViewer = ({
                 transition={{ delay: 0.1, duration: 0.4 }}
                 className="bg-card/80 backdrop-blur-xl rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-border/50"
               >
-                {/* Icon */}
                 <motion.div 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -243,7 +289,6 @@ const EphemeralMediaViewer = ({
                   )}
                 </motion.div>
 
-                {/* Sender avatar */}
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-muted flex items-center justify-center text-foreground font-bold text-lg">
                     {senderName.charAt(0).toUpperCase()}
@@ -257,15 +302,14 @@ const EphemeralMediaViewer = ({
                 <p className="text-sm text-muted-foreground mb-8">
                   {isUnlimited ? (
                     <span className="flex items-center justify-center gap-1">
-                      <Infinity className="w-4 h-4" />
-                      <span>Visible en illimité • <span className="text-green-500 font-medium">Enregistrable</span></span>
+                      <InfinityIcon className="w-4 h-4" />
+                      Visible en illimité • <span className="text-green-500 font-medium">Enregistrable</span>
                     </span>
                   ) : (
-                    <>Disparaît après <span className="font-semibold text-foreground">{duration} secondes</span></>
+                    <>Disparaît après <span className="font-semibold text-foreground">{duration}s</span> • Maintenez pour pause</>
                   )}
                 </p>
 
-                {/* Actions */}
                 <div className="space-y-3">
                   <Button 
                     variant="default" 
@@ -274,7 +318,7 @@ const EphemeralMediaViewer = ({
                     onClick={handleStartViewing}
                   >
                     <Eye className="w-5 h-5 mr-2" />
-                    Voir maintenant
+                    {canReplay ? 'Revoir (1 replay)' : 'Voir maintenant'}
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -286,7 +330,6 @@ const EphemeralMediaViewer = ({
                   </Button>
                 </div>
 
-                {/* Security warning or save info */}
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -301,15 +344,9 @@ const EphemeralMediaViewer = ({
                     isUnlimited ? 'text-green-600 dark:text-green-400' : 'text-destructive'
                   }`}>
                     {isUnlimited ? (
-                      <>
-                        <Download className="w-4 h-4" />
-                        Tu pourras enregistrer ce média
-                      </>
+                      <><Download className="w-4 h-4" />Tu pourras enregistrer ce média</>
                     ) : (
-                      <>
-                        <Shield className="w-4 h-4" />
-                        Capture d'écran = Suspension
-                      </>
+                      <><Shield className="w-4 h-4" />Capture d'écran = Suspension</>
                     )}
                   </p>
                 </motion.div>
@@ -318,10 +355,10 @@ const EphemeralMediaViewer = ({
           )}
         </AnimatePresence>
 
-        {/* Banking-style protection overlay */}
+        {/* Protection overlay */}
         <ScreenshotProtectionOverlay isActive={isBlocked} />
 
-        {/* Viewing state with protection */}
+        {/* Full-screen immersive viewing */}
         <AnimatePresence>
           {isViewing && (
             <motion.div
@@ -333,58 +370,60 @@ const EphemeralMediaViewer = ({
               ref={containerRef}
               className="absolute inset-0 bg-black flex items-center justify-center select-none"
               onContextMenu={preventContextMenu}
+              onPointerDown={handlePointerDown}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
               style={{ 
                 userSelect: 'none', 
                 WebkitUserSelect: 'none',
                 WebkitTouchCallout: 'none',
               }}
             >
-              {/* Elegant timer bar - only for non-unlimited */}
+              {/* Snapchat-style segmented progress bar */}
               {!isUnlimited && (
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/10 z-10">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-primary via-accent to-primary"
-                    initial={{ width: '100%' }}
-                    animate={{ width: `${(timeLeft / duration) * 100}%` }}
-                    transition={{ duration: 1, ease: 'linear' }}
-                  />
+                <div className="absolute top-2 left-3 right-3 z-20 flex gap-0.5">
+                  {Array.from({ length: duration }, (_, i) => (
+                    <div key={i} className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20">
+                      <div 
+                        className="h-full bg-white rounded-full transition-all duration-1000 ease-linear"
+                        style={{ 
+                          width: i < (duration - timeLeft) ? '100%' : i === (duration - timeLeft) ? '100%' : '0%'
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
               
-              {/* Header with glassmorphism */}
-              <div className="absolute top-0 left-0 right-0 pt-6 pb-4 px-6 z-10 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+              {/* Header */}
+              <div className="absolute top-4 left-0 right-0 pt-4 pb-4 px-4 z-10">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold shadow-lg">
                       {senderName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <span className="font-semibold text-white block">{senderName}</span>
-                      <span className="text-white/60 text-xs">
-                        {isUnlimited ? 'Média enregistrable' : 'Contenu éphémère'}
+                      <span className="font-semibold text-white text-sm block">{senderName}</span>
+                      <span className="text-white/50 text-xs">
+                        {isPaused ? '⏸ En pause' : isUnlimited ? 'Média partagé' : 'Éphémère'}
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {/* Timer/Unlimited display */}
-                    <div className={`backdrop-blur-md px-4 py-2 rounded-full border ${
-                      isUnlimited 
-                        ? 'bg-green-500/20 border-green-500/30' 
-                        : 'bg-white/10 border-white/10'
-                    }`}>
-                      {isUnlimited ? (
-                        <span className="text-green-400 font-medium text-sm flex items-center gap-1">
-                          <Infinity className="w-4 h-4" />
+                  <div className="flex items-center gap-2">
+                    {/* Circular timer for ephemeral, infinity badge for unlimited */}
+                    {isUnlimited ? (
+                      <div className="bg-green-500/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-green-500/30">
+                        <span className="text-green-400 font-medium text-xs flex items-center gap-1">
+                          <InfinityIcon className="w-3.5 h-3.5" />
                           Illimité
                         </span>
-                      ) : (
-                        <span className="text-white font-mono text-lg font-bold">{timeLeft}s</span>
-                      )}
-                    </div>
-                    {/* Close button */}
+                      </div>
+                    ) : (
+                      <CircularTimer timeLeft={timeLeft} duration={duration} />
+                    )}
                     <button 
                       onClick={handleCloseClick} 
-                      className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all border border-white/10"
+                      className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -392,12 +431,17 @@ const EphemeralMediaViewer = ({
                 </div>
               </div>
               
-              {/* Media content - protected */}
+              {/* Media content - swipeable for reply */}
               <motion.div 
+                drag={onSwipeReply ? "y" : false}
+                dragConstraints={{ top: -200, bottom: 0 }}
+                dragElastic={0.3}
+                onDrag={handleDrag}
+                onDragEnd={handleDragEnd}
                 initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                animate={{ scale: isPaused ? 1.02 : 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
-                className="max-w-full max-h-full p-4 sm:p-8 pointer-events-none relative"
+                className="w-full h-full flex items-center justify-center pointer-events-auto"
                 style={{ 
                   filter: isBlocked ? 'brightness(0)' : 'none',
                   transition: 'filter 0.1s ease',
@@ -407,23 +451,44 @@ const EphemeralMediaViewer = ({
                   <img 
                     src={src} 
                     alt="Ephemeral content" 
-                    className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl"
+                    className="w-full h-full object-contain"
                     draggable={false}
+                    style={{ pointerEvents: 'none' }}
                   />
                 ) : (
                   <video 
                     ref={videoRef}
                     src={src} 
-                    className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl"
+                    className="w-full h-full object-contain"
                     controls={false}
                     autoPlay
                     playsInline
                     muted={false}
+                    style={{ pointerEvents: 'none' }}
                   />
                 )}
               </motion.div>
 
-              {/* Black overlay when screenshot detected */}
+              {/* Pause indicator */}
+              <AnimatePresence>
+                {isPaused && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+                  >
+                    <div className="w-20 h-20 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                      <div className="flex gap-1.5">
+                        <div className="w-2.5 h-8 bg-white rounded-sm" />
+                        <div className="w-2.5 h-8 bg-white rounded-sm" />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Screenshot detected overlay */}
               <AnimatePresence>
                 {isBlocked && (
                   <motion.div 
@@ -432,26 +497,35 @@ const EphemeralMediaViewer = ({
                     exit={{ opacity: 0 }}
                     className="absolute inset-0 bg-black z-20 flex items-center justify-center"
                   >
-                    <motion.div 
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1 }}
-                      className="text-center"
-                    >
+                    <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center">
                       <div className="w-24 h-24 mx-auto rounded-full bg-destructive/30 flex items-center justify-center mb-6">
                         <AlertTriangle className="w-12 h-12 text-destructive" />
                       </div>
-                      <p className="text-destructive text-2xl font-bold mb-2">
-                        Capture détectée !
-                      </p>
-                      <p className="text-destructive/70 text-sm">
-                        Votre compte a été suspendu
-                      </p>
+                      <p className="text-destructive text-2xl font-bold mb-2">Capture détectée !</p>
+                      <p className="text-destructive/70 text-sm">Votre compte a été suspendu</p>
                     </motion.div>
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Swipe up reply hint */}
+              <AnimatePresence>
+                {showReplyHint && onSwipeReply && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="absolute bottom-24 left-0 right-0 flex justify-center z-10 pointer-events-none"
+                  >
+                    <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-2 flex items-center gap-2">
+                      <Send className="w-4 h-4 text-white" />
+                      <span className="text-white text-sm font-medium">Relâcher pour répondre</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               
-              {/* Footer - Save button for unlimited or warning for ephemeral */}
+              {/* Footer */}
               <div className="absolute bottom-0 left-0 right-0 pb-8 pt-16 px-6 z-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
                 {isUnlimited && onSaveToConversation ? (
                   <div className="flex flex-col items-center gap-3">
@@ -465,31 +539,42 @@ const EphemeralMediaViewer = ({
                       } text-white border border-white/20 rounded-full px-6`}
                     >
                       {hasSaved ? (
-                        <>
-                          <Check className="w-4 h-4 mr-2" />
-                          Enregistré
-                        </>
+                        <><Check className="w-4 h-4 mr-2" />Enregistré</>
                       ) : isSaving ? (
-                        <>
-                          <Download className="w-4 h-4 mr-2 animate-spin" />
-                          Enregistrement...
-                        </>
+                        <><Download className="w-4 h-4 mr-2 animate-spin" />Enregistrement...</>
                       ) : (
-                        <>
-                          <Download className="w-4 h-4 mr-2" />
-                          Enregistrer dans la conversation
-                        </>
+                        <><Download className="w-4 h-4 mr-2" />Enregistrer dans la conversation</>
                       )}
                     </Button>
-                    <p className="text-white/50 text-xs">
-                      Le média sera visible en permanence
-                    </p>
+                  </div>
+                ) : canReplay && onReplay ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Button
+                      onClick={onReplay}
+                      variant="ghost"
+                      className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Replay disponible (1x)
+                    </Button>
                   </div>
                 ) : (
-                  <p className="text-white/50 text-sm flex items-center justify-center gap-2">
-                    <EyeOff className="w-4 h-4" />
-                    Protection anti-capture activée
-                  </p>
+                  <div className="flex flex-col items-center gap-2">
+                    {onSwipeReply && (
+                      <motion.div
+                        animate={{ y: [0, -6, 0] }}
+                        transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                        className="flex flex-col items-center text-white/40"
+                      >
+                        <Send className="w-5 h-5 rotate-[-90deg] mb-1" />
+                        <span className="text-xs">Glisser pour répondre</span>
+                      </motion.div>
+                    )}
+                    <p className="text-white/40 text-xs flex items-center justify-center gap-1.5">
+                      <EyeOff className="w-3.5 h-3.5" />
+                      Protection anti-capture
+                    </p>
+                  </div>
                 )}
               </div>
             </motion.div>

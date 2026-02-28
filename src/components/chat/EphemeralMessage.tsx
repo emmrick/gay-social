@@ -22,12 +22,13 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
   const queryClient = useQueryClient();
 
   const isUnlimited = media?.view_duration === 0;
+  const canReplay = !isOwn && media?.is_viewed && !isUnlimited && (media?.replay_count ?? 0) < 1;
 
   const handleView = useCallback(() => {
-    if (media && !media.is_viewed) {
+    if (media && (!media.is_viewed || canReplay)) {
       setShowMedia(true);
     }
-  }, [media]);
+  }, [media, canReplay]);
 
   const handleClose = useCallback(() => {
     setShowMedia(false);
@@ -38,6 +39,20 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
       await markAsViewed.mutateAsync(media.id);
     }
   }, [media, markAsViewed, isUnlimited]);
+
+  const handleReplay = useCallback(async () => {
+    if (!media) return;
+    // Use replay via the hook
+    try {
+      await supabase
+        .from('ephemeral_media')
+        .update({ replay_count: (media.replay_count ?? 0) + 1 })
+        .eq('id', media.id);
+      queryClient.invalidateQueries({ queryKey: ['ephemeral-media', messageId] });
+    } catch (e) {
+      console.error('Replay error:', e);
+    }
+  }, [media, messageId, queryClient]);
 
   // Save media to conversation (convert ephemeral to regular)
   const handleSaveToConversation = useCallback(async () => {
@@ -87,8 +102,8 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
     );
   }
 
-  // Media already viewed (only for non-unlimited)
-  if (media.is_viewed && !isOwn && !isUnlimited) {
+  // Media already viewed and no replay left (only for non-unlimited)
+  if (media.is_viewed && !isOwn && !isUnlimited && !canReplay) {
     return (
       <div className="flex items-center gap-2 p-3 rounded-xl bg-secondary/30 text-muted-foreground">
         {messageType === 'image' ? (
@@ -108,10 +123,12 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
       {/* Media preview button */}
       <button
         onClick={handleView}
-        disabled={isOwn || (media.is_viewed && !isUnlimited)}
+        disabled={isOwn || (media.is_viewed && !isUnlimited && !canReplay)}
         className={`relative flex items-center gap-3 p-4 rounded-xl transition-all ${
           isOwn
             ? 'bg-primary/20 cursor-default'
+            : canReplay
+            ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 cursor-pointer border border-amber-500/20'
             : (media.is_viewed && !isUnlimited)
             ? 'bg-secondary/30 cursor-default'
             : isUnlimited
@@ -120,7 +137,7 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
         }`}
       >
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-          isOwn ? 'bg-primary/30' : isUnlimited ? 'bg-gradient-to-br from-green-500 to-emerald-500' : 'bg-gradient-to-br from-primary to-accent'
+          isOwn ? 'bg-primary/30' : canReplay ? 'bg-gradient-to-br from-amber-500 to-orange-500' : isUnlimited ? 'bg-gradient-to-br from-green-500 to-emerald-500' : 'bg-gradient-to-br from-primary to-accent'
         }`}>
           {messageType === 'image' ? (
             <Image className="w-6 h-6 text-white" />
@@ -131,7 +148,7 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
         
         <div className="text-left">
           <p className="font-medium text-sm">
-            {isOwn ? 'Tu as envoyé' : 'Tu as reçu'} {messageType === 'image' ? 'une photo' : 'une vidéo'}
+            {canReplay ? '🔄 Replay disponible' : isOwn ? 'Tu as envoyé' : 'Tu as reçu'} {!canReplay && (messageType === 'image' ? 'une photo' : 'une vidéo')}
           </p>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             {isUnlimited ? (
@@ -144,6 +161,8 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
                   }
                 </span>
               </>
+            ) : canReplay ? (
+              <span className="text-amber-500">Appuie pour revoir • 1 replay</span>
             ) : (
               <>
                 <Eye className="w-3 h-3" />
@@ -159,7 +178,7 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
         </div>
       </button>
 
-      {/* Full screen media viewer - POPUP */}
+      {/* Full screen media viewer - Snapchat style */}
       <EphemeralMediaViewer
         isOpen={showMedia}
         type={messageType}
@@ -170,6 +189,8 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
         onClose={handleClose}
         onViewed={handleViewed}
         onSaveToConversation={isUnlimited && !isOwn ? handleSaveToConversation : undefined}
+        canReplay={canReplay}
+        onReplay={canReplay ? handleReplay : undefined}
       />
     </>
   );

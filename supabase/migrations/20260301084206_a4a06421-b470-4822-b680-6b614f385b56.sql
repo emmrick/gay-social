@@ -1,0 +1,2 @@
+ALTER TABLE public.ephemeral_media ADD COLUMN IF NOT EXISTS screenshot_detected boolean NOT NULL DEFAULT false;
+ALTER TABLE public.ephemeral_media ADD COLUMN IF NOT EXISTS screenshot_detected_at timestamptz;

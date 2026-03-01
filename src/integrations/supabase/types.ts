@@ -487,6 +487,8 @@ export type Database = {
           media_url: string
           message_id: string
           replay_count: number
+          screenshot_detected: boolean
+          screenshot_detected_at: string | null
           view_duration: number
           viewed_at: string | null
         }
@@ -499,6 +501,8 @@ export type Database = {
           media_url: string
           message_id: string
           replay_count?: number
+          screenshot_detected?: boolean
+          screenshot_detected_at?: string | null
           view_duration?: number
           viewed_at?: string | null
         }
@@ -511,6 +515,8 @@ export type Database = {
           media_url?: string
           message_id?: string
           replay_count?: number
+          screenshot_detected?: boolean
+          screenshot_detected_at?: string | null
           view_duration?: number
           viewed_at?: string | null
         }

@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import EphemeralMediaViewer from './EphemeralMediaViewer';
+import { notifyEphemeralScreenshot } from '@/services/pushNotificationService';
 
 interface EphemeralMessageProps {
   messageId: string;
@@ -80,6 +81,44 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
       queryClient.invalidateQueries({ queryKey: ['private-messages', user.id, recipientId] });
     }
   }, [media, user, chatRoomId, recipientId, messageType, messageId, queryClient]);
+
+  // Handle screenshot detection: record in DB + notify sender
+  const handleScreenshotDetected = useCallback(async () => {
+    if (!media || !user || isOwn) return;
+    try {
+      // Record screenshot in DB
+      await supabase
+        .from('ephemeral_media')
+        .update({
+          screenshot_detected: true,
+          screenshot_detected_at: new Date().toISOString(),
+        })
+        .eq('id', media.id);
+
+      // Get sender info from the original message
+      const { data: msg } = await supabase
+        .from('messages')
+        .select('sender_id')
+        .eq('id', messageId)
+        .single();
+
+      if (msg?.sender_id) {
+        // Get current user's username for the notification
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('user_id', user.id)
+          .single();
+
+        await notifyEphemeralScreenshot(
+          msg.sender_id,
+          profile?.username || 'Un membre'
+        );
+      }
+    } catch (e) {
+      console.error('Screenshot notification error:', e);
+    }
+  }, [media, user, isOwn, messageId]);
 
   if (isLoading) {
     return (
@@ -191,6 +230,7 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
         onSaveToConversation={isUnlimited && !isOwn ? handleSaveToConversation : undefined}
         canReplay={canReplay}
         onReplay={canReplay ? handleReplay : undefined}
+        onScreenshotDetected={!isOwn && !isUnlimited ? handleScreenshotDetected : undefined}
       />
     </>
   );

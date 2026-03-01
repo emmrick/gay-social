@@ -439,6 +439,21 @@ export const notifyScreenshotSanction = async (
   );
 };
 
+// Notify sender that recipient took a screenshot of their ephemeral media
+export const notifyEphemeralScreenshot = async (
+  senderId: string,
+  recipientUsername: string
+) => {
+  await createNotificationAndPush(
+    senderId,
+    'ephemeral_screenshot',
+    '📸 Capture d\'écran détectée !',
+    `${recipientUsername} a tenté de capturer votre média éphémère.`,
+    '/',
+    { notificationType: 'system' }
+  );
+};
+
 // Notify user when their screenshot sanction is lifted
 export const notifyScreenshotSanctionLifted = async (userId: string) => {
   await createNotificationAndPush(

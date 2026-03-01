@@ -19,6 +19,7 @@ interface EphemeralMediaViewerProps {
   canReplay?: boolean;
   onReplay?: () => void;
   onSwipeReply?: () => void;
+  onScreenshotDetected?: () => void;
 }
 
 // Circular timer component (Snapchat style)
@@ -66,6 +67,7 @@ const EphemeralMediaViewer = ({
   canReplay = false,
   onReplay,
   onSwipeReply,
+  onScreenshotDetected,
 }: EphemeralMediaViewerProps) => {
   const isUnlimited = duration === 0;
   const [isViewing, setIsViewing] = useState(false);
@@ -79,14 +81,24 @@ const EphemeralMediaViewer = ({
   const { 
     isBlocked,
     preventContextMenu, 
-    handleViolation,
+    handleViolation: baseHandleViolation,
     enableProtection,
     disableProtection,
   } = useScreenshotProtection(true, true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasCalledOnViewed = useRef(false);
+  const hasNotifiedScreenshot = useRef(false);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Wrap violation handler to also notify sender
+  const handleViolation = useCallback(() => {
+    baseHandleViolation();
+    if (onScreenshotDetected && !hasNotifiedScreenshot.current) {
+      hasNotifiedScreenshot.current = true;
+      onScreenshotDetected();
+    }
+  }, [baseHandleViolation, onScreenshotDetected]);
 
   // Enable protection when viewing starts
   useEffect(() => {
@@ -109,6 +121,7 @@ const EphemeralMediaViewer = ({
       setHasSaved(false);
       setShowReplyHint(false);
       hasCalledOnViewed.current = false;
+      hasNotifiedScreenshot.current = false;
     }
   }, [isOpen, duration, isUnlimited]);
 

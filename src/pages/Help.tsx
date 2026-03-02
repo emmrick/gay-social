@@ -238,16 +238,15 @@ const Help = () => {
                   {currentOptions.map((node) => (
                     <button
                       key={node.id}
-                      onClick={() => handleSelectOption(node)}
+                      onClick={(e) => { e.stopPropagation(); handleSelectOption(node); }}
                       className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
                     >
                       {node.label}
                     </button>
                   ))}
 
-                  {/* Always show "Contacter un agent" as last action */}
                   <button
-                    onClick={handleContactAgent}
+                    onClick={(e) => { e.stopPropagation(); handleContactAgent(); }}
                     disabled={createTicket.isPending}
                     className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
                   >
@@ -271,13 +270,13 @@ const Help = () => {
                 </div>
                 <div className="flex-1 space-y-1.5 max-w-[80%]">
                   <button
-                    onClick={handleStartChat}
+                    onClick={(e) => { e.stopPropagation(); handleStartChat(); }}
                     className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
                   >
                     Autre demande
                   </button>
                   <button
-                    onClick={handleContactAgent}
+                    onClick={(e) => { e.stopPropagation(); handleContactAgent(); }}
                     disabled={createTicket.isPending}
                     className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
                   >

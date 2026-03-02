@@ -13,9 +13,11 @@ import { useFAQArticles, useHelpChatbotNodes, type HelpChatbotNode } from '@/hoo
 import { useSupportTickets, useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import SupportTicketList from '@/components/support/SupportTicketList';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
+import ContactCreditIssueDialog from '@/components/credits/ContactCreditIssueDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
+import { Coins } from 'lucide-react';
 import { toast } from 'sonner';
 
 type ChatPhase = 'idle' | 'chatbot' | 'waiting_agent' | 'agent' | 'rating';
@@ -52,6 +54,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [ratingEmoji, setRatingEmoji] = useState<string | null>(null);
   const [ratingComment, setRatingComment] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [showCreditClaim, setShowCreditClaim] = useState(false);
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const agentJoinedRef = useRef(false);
 
@@ -192,6 +195,26 @@ const Help = ({ embedded = false }: HelpProps) => {
     } catch {
       setChatPhase('chatbot');
     }
+  };
+
+  const handleCreditClaimFromChatbot = () => {
+    setChatMessages(prev => [
+      ...prev,
+      { type: 'user', text: 'Réclamation d\'achat de crédits' },
+      { type: 'bot', text: 'Bien sûr ! Remplissez le formulaire ci-dessous avec vos informations de paiement. Un agent vérifiera votre transaction et attribuera vos crédits.' },
+    ]);
+    setShowCreditClaim(true);
+  };
+
+  const handleCreditTicketCreated = (ticket: any) => {
+    setShowCreditClaim(false);
+    setChatMessages(prev => [
+      ...prev,
+      { type: 'system', text: `✅ Réclamation envoyée — Ticket #${ticket.ticket_number}` },
+      { type: 'bot', text: 'Votre demande a été transmise à un agent. Vous serez mis en relation dès qu\'un agent est disponible.' },
+    ]);
+    setChatPhase('waiting_agent');
+    setSelectedTicket(ticket);
   };
 
   // Go back to FAQ without closing the ticket - conversation stays open
@@ -567,6 +590,14 @@ const Help = ({ embedded = false }: HelpProps) => {
                       {node.label}
                     </button>
                   ))}
+                  {/* Credit claim button - always visible */}
+                  <button
+                    onClick={handleCreditClaimFromChatbot}
+                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors active:scale-[0.98] flex items-center gap-2"
+                  >
+                    <Coins className="w-4 h-4 shrink-0" />
+                    Réclamation d'achat de crédits
+                  </button>
                   {/* Agent button - shown at root level after navigating (not on first display) */}
                   {chatMessages.length > 2 && !currentNodeId && (
                     <button
@@ -604,6 +635,14 @@ const Help = ({ embedded = false }: HelpProps) => {
                   <Bot className="w-3.5 h-3.5 text-background" />
                 </div>
                 <div className="flex-1 space-y-1.5 max-w-[80%]">
+                  {/* Credit claim button */}
+                  <button
+                    onClick={handleCreditClaimFromChatbot}
+                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors active:scale-[0.98] flex items-center gap-2"
+                  >
+                    <Coins className="w-4 h-4 shrink-0" />
+                    Réclamation d'achat de crédits
+                  </button>
                   <button
                     onClick={handleContactAgent}
                     disabled={createTicket.isPending}
@@ -636,6 +675,26 @@ const Help = ({ embedded = false }: HelpProps) => {
                       Revenir en arrière
                     </button>
                   )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Credit claim form inline */}
+            {chatPhase === 'chatbot' && showCreditClaim && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-start gap-2"
+              >
+                <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mt-1">
+                  <Bot className="w-3.5 h-3.5 text-background" />
+                </div>
+                <div className="flex-1 max-w-[90%]">
+                  <ContactCreditIssueDialog
+                    open={showCreditClaim}
+                    onOpenChange={setShowCreditClaim}
+                    onTicketCreated={handleCreditTicketCreated}
+                  />
                 </div>
               </motion.div>
             )}

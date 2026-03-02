@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Loader2, Navigation, RefreshCw, Crown } from 'lucide-react';
@@ -39,34 +39,13 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
   const { 
     data: profiles, 
     isLoading: profilesLoading, 
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
     error: profilesError, 
     refetch, 
-    isPremium, 
+    isPremium,
+    hasGeoData,
   } = useNearbyProfiles(latitude, longitude);
 
   const hasLocation = latitude != null && longitude != null;
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-
-  // Intersection Observer for infinite scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1, rootMargin: '100px' }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // If the user already granted location permission, fetch location automatically on mount
   useEffect(() => {
@@ -122,98 +101,19 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
 
   // ---------- HELPER FUNCTIONS ----------
 
-  const handleRequestLocation = async () => {
-    await requestLocation();
-  };
-
   const formatDistance = (km: number | null) => {
     if (km === null) return null;
     if (km < 1) return `${Math.round(km * 1000)}m`;
     return `${km.toFixed(1)}km`;
   };
 
-  // Use centralized online status helpers
-  const getProfileLastSeenText = (profile: any) => {
-    return getLastSeenText(profile);
-  };
-  
-  const shouldShowOnlineStatus = (profile: any) => {
-    return shouldShowOnlineIndicator(profile);
-  };
+  const getProfileLastSeenText = (profile: any) => getLastSeenText(profile);
+  const shouldShowOnlineStatus = (profile: any) => shouldShowOnlineIndicator(profile);
 
   // ---------- EARLY RETURNS (AFTER ALL HOOKS) ----------
 
-  // Show location permission request
-  if (!hasLocation && !locationLoading && (permissionState === 'prompt' || !permissionState)) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl bg-gradient-to-br from-primary/10 via-card to-accent/10 border border-border/50 p-6 text-center"
-      >
-        <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4">
-          <Navigation className="w-8 h-8 text-primary" />
-        </div>
-        <h3 className="font-display font-semibold text-lg mb-2">
-          Découvre les membres proches
-        </h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Active ta position pour voir qui est autour de toi
-        </p>
-        <Button 
-          onClick={handleRequestLocation}
-          className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
-          disabled={locationLoading}
-        >
-          {locationLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              Localisation...
-            </>
-          ) : (
-            <>
-              <MapPin className="w-4 h-4 mr-2" />
-              Activer la localisation
-            </>
-          )}
-        </Button>
-      </motion.div>
-    );
-  }
-
-  // If permission is already granted, wait for coordinates
-  if (!hasLocation && permissionState === 'granted' && !locationError) {
-    return (
-      <div className="grid grid-cols-3 gap-2">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <ProfileSkeleton key={i} index={i} />
-        ))}
-      </div>
-    );
-  }
-
-  // Show error state
-  if (locationError || permissionState === 'denied') {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl bg-secondary/50 border border-border/50 p-6 text-center"
-      >
-        <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-        <h3 className="font-medium text-foreground mb-2">Position non disponible</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          {locationError || 'Active la géolocalisation dans les paramètres de ton navigateur'}
-        </p>
-        <Button variant="outline" onClick={handleRequestLocation}>
-          Réessayer
-        </Button>
-      </motion.div>
-    );
-  }
-
-  // Show query error
-  if (profilesError) {
+  // Show query error only if no profiles at all
+  if (profilesError && allProfiles.length === 0) {
     const message = (profilesError as any)?.message || 'Erreur lors du chargement des profils.';
     return (
       <motion.div
@@ -238,7 +138,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
   }
 
   // Initial loading state - show skeleton grid
-  if (locationLoading || (profilesLoading && allProfiles.length === 0)) {
+  if (profilesLoading && allProfiles.length === 0) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -262,7 +162,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
       {/* Header with refresh */}
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
-          {allProfiles.length} membres{hasLocation ? ' à proximité' : ''}
+          {allProfiles.filter(p => !p.isCurrentUser).length} membre{allProfiles.filter(p => !p.isCurrentUser).length > 1 ? 's' : ''}{hasGeoData ? ' à proximité' : ''}
         </span>
         <Button 
           variant="ghost" 
@@ -374,25 +274,6 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
             ))}
           </div>
 
-          {/* Load more trigger */}
-          <div ref={loadMoreRef} className="py-2">
-            {isFetchingNextPage && (
-              <div className="flex items-center justify-center gap-2 py-4">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">Chargement...</span>
-              </div>
-            )}
-            {hasNextPage && !isFetchingNextPage && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => fetchNextPage()}
-                className="w-full text-xs"
-              >
-                Voir plus de membres
-              </Button>
-            )}
-          </div>
         </>
       ) : (
         <div className="text-center py-12 rounded-2xl bg-secondary/30">

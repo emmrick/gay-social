@@ -1,20 +1,29 @@
-import { useState } from 'react';
-import { Plus, Trash2, Edit2, Save, X, ChevronRight, ChevronDown, Eye, EyeOff, Bot, HelpCircle } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Trash2, Edit2, Save, X, ChevronRight, ChevronDown, Bot, HelpCircle, MessageSquare, ArrowRight, Eye, CornerDownRight, GripVertical, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { 
-  useAllFAQArticles, useFAQMutations, 
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import {
+  useAllFAQArticles, useFAQMutations,
   useAllChatbotNodes, useChatbotNodeMutations,
-  type FAQArticle, type HelpChatbotNode 
+  type FAQArticle, type HelpChatbotNode
 } from '@/hooks/useFAQ';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const FAQManagementPanel = () => {
   const [activeTab, setActiveTab] = useState<'faq' | 'chatbot'>('faq');
@@ -211,180 +220,543 @@ const FAQArticleRow = ({ article, isEditing, onEdit, onCancelEdit, onUpdate, onD
 const ChatbotEditor = () => {
   const { data: allNodes = [] } = useAllChatbotNodes();
   const { createNode, updateNode, deleteNode } = useChatbotNodeMutations();
-  const [showNew, setShowNew] = useState(false);
+  const [showNodeDialog, setShowNodeDialog] = useState(false);
+  const [editingNode, setEditingNode] = useState<HelpChatbotNode | null>(null);
   const [newParentId, setNewParentId] = useState<string | null>(null);
-  const [newForm, setNewForm] = useState({ label: '', response_text: '', is_root: true });
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [nodeForm, setNodeForm] = useState({ label: '', response_text: '' });
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
-  const rootNodes = allNodes.filter(n => n.is_root);
-  const getChildren = (parentId: string) => allNodes.filter(n => n.parent_id === parentId);
+  const rootNodes = useMemo(() => allNodes.filter(n => n.is_root).sort((a, b) => a.display_order - b.display_order), [allNodes]);
+  const getChildren = (parentId: string) => allNodes.filter(n => n.parent_id === parentId).sort((a, b) => a.display_order - b.display_order);
 
-  const handleCreate = () => {
-    if (!newForm.label.trim()) return;
-    createNode.mutate({
-      label: newForm.label,
-      response_text: newForm.response_text || undefined,
-      is_root: newParentId === null,
-      parent_id: newParentId,
-      display_order: allNodes.length,
-    }, {
-      onSuccess: () => {
-        setShowNew(false);
-        setNewForm({ label: '', response_text: '', is_root: true });
-        setNewParentId(null);
-      },
-    });
-  };
+  const selectedNode = selectedNodeId ? allNodes.find(n => n.id === selectedNodeId) : null;
+  const selectedChildren = selectedNodeId ? getChildren(selectedNodeId) : [];
 
-  const handleAddChild = (parentId: string) => {
+  // Build breadcrumb path for selected node
+  const breadcrumb = useMemo(() => {
+    if (!selectedNodeId) return [];
+    const path: HelpChatbotNode[] = [];
+    let current = allNodes.find(n => n.id === selectedNodeId);
+    while (current) {
+      path.unshift(current);
+      current = current.parent_id ? allNodes.find(n => n.id === current!.parent_id) : undefined;
+    }
+    return path;
+  }, [selectedNodeId, allNodes]);
+
+  const openCreateDialog = (parentId: string | null) => {
+    setEditingNode(null);
     setNewParentId(parentId);
-    setNewForm({ label: '', response_text: '', is_root: false });
-    setShowNew(true);
+    setNodeForm({ label: '', response_text: '' });
+    setShowNodeDialog(true);
   };
 
-  const handleAddRoot = () => {
-    setNewParentId(null);
-    setNewForm({ label: '', response_text: '', is_root: true });
-    setShowNew(true);
+  const openEditDialog = (node: HelpChatbotNode) => {
+    setEditingNode(node);
+    setNewParentId(node.parent_id);
+    setNodeForm({ label: node.label, response_text: node.response_text || '' });
+    setShowNodeDialog(true);
   };
+
+  const handleSaveNode = () => {
+    if (!nodeForm.label.trim()) return;
+    if (editingNode) {
+      updateNode.mutate({ id: editingNode.id, label: nodeForm.label, response_text: nodeForm.response_text || undefined });
+    } else {
+      createNode.mutate({
+        label: nodeForm.label,
+        response_text: nodeForm.response_text || undefined,
+        is_root: newParentId === null,
+        parent_id: newParentId,
+        display_order: allNodes.length,
+      });
+    }
+    setShowNodeDialog(false);
+  };
+
+  const handleDeleteNode = (id: string) => {
+    // Also check if it has children
+    const children = getChildren(id);
+    if (children.length > 0) {
+      if (!confirm(`Ce nœud a ${children.length} sous-option(s). Supprimer quand même ?`)) return;
+    }
+    deleteNode.mutate(id);
+    if (selectedNodeId === id) setSelectedNodeId(null);
+  };
+
+  // The nodes to display in the current view
+  const displayNodes = selectedNodeId ? selectedChildren : rootNodes;
 
   return (
     <div className="space-y-4 mt-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{rootNodes.length} option(s) racine</p>
-        <Button size="sm" onClick={handleAddRoot} className="gap-1.5">
-          <Plus className="w-3.5 h-3.5" />
-          Option racine
-        </Button>
+        <div className="flex items-center gap-2">
+          <Bot className="w-4 h-4 text-primary" />
+          <p className="text-sm font-medium">Arbre de conversation</p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setShowPreview(true)} className="gap-1.5">
+            <Eye className="w-3.5 h-3.5" />
+            Aperçu
+          </Button>
+          <Button size="sm" onClick={() => openCreateDialog(selectedNodeId)} className="gap-1.5">
+            <Plus className="w-3.5 h-3.5" />
+            {selectedNodeId ? 'Sous-option' : 'Option racine'}
+          </Button>
+        </div>
       </div>
 
-      {showNew && (
-        <Card className="border-primary/30">
-          <CardContent className="pt-4 space-y-3">
-            <p className="text-xs text-muted-foreground">
-              {newParentId ? `Sous-option de: ${allNodes.find(n => n.id === newParentId)?.label}` : 'Nouvelle option racine'}
-            </p>
-            <div>
-              <Label className="text-xs">Label (texte du bouton)</Label>
-              <Input value={newForm.label} onChange={(e) => setNewForm(p => ({ ...p, label: e.target.value }))} placeholder="ex: Mon compte" />
+      {/* Breadcrumb navigation */}
+      {breadcrumb.length > 0 && (
+        <div className="flex items-center gap-1 flex-wrap">
+          <button
+            onClick={() => setSelectedNodeId(null)}
+            className="text-xs text-primary hover:underline font-medium"
+          >
+            🏠 Racine
+          </button>
+          {breadcrumb.map((node, i) => (
+            <div key={node.id} className="flex items-center gap-1">
+              <ChevronRight className="w-3 h-3 text-muted-foreground" />
+              <button
+                onClick={() => setSelectedNodeId(node.id)}
+                className={cn(
+                  "text-xs font-medium hover:underline",
+                  i === breadcrumb.length - 1 ? "text-foreground" : "text-primary"
+                )}
+              >
+                {node.label}
+              </button>
             </div>
-            <div>
-              <Label className="text-xs">Réponse du bot (optionnel)</Label>
-              <Textarea value={newForm.response_text} onChange={(e) => setNewForm(p => ({ ...p, response_text: e.target.value }))} rows={2} placeholder="Le texte que le bot affichera..." />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button variant="ghost" size="sm" onClick={() => setShowNew(false)}>Annuler</Button>
-              <Button size="sm" onClick={handleCreate} disabled={createNode.isPending}>
-                <Save className="w-3.5 h-3.5 mr-1" /> Créer
-              </Button>
+          ))}
+        </div>
+      )}
+
+      {/* Current node info (when navigated into a node) */}
+      {selectedNode && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="py-3 px-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <MessageSquare className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-semibold">{selectedNode.label}</p>
+                </div>
+                {selectedNode.response_text ? (
+                  <div className="bg-background/80 rounded-xl px-3 py-2 mt-1.5 border border-border/50">
+                    <p className="text-xs text-muted-foreground mb-0.5">💬 Réponse du bot :</p>
+                    <p className="text-sm text-foreground whitespace-pre-line">{selectedNode.response_text}</p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic mt-1">Pas de réponse configurée</p>
+                )}
+              </div>
+              <div className="flex gap-1 shrink-0">
+                <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => {
+                  const parent = selectedNode.parent_id;
+                  setSelectedNodeId(parent || null);
+                }}>
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => openEditDialog(selectedNode)}>
+                  <Edit2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <ScrollArea className="h-[calc(100vh-380px)]">
-        <div className="space-y-2">
-          {rootNodes.map((node) => (
-            <ChatbotNodeTree
-              key={node.id}
-              node={node}
-              getChildren={getChildren}
-              onAddChild={handleAddChild}
-              onUpdate={(id, updates) => updateNode.mutate({ id, ...updates })}
-              onDelete={(id) => deleteNode.mutate(id)}
-              editingId={editingId}
-              setEditingId={setEditingId}
-            />
-          ))}
-        </div>
-      </ScrollArea>
+      {/* Options list */}
+      <div className="space-y-1">
+        <p className="text-xs text-muted-foreground mb-2">
+          {selectedNodeId ? `${selectedChildren.length} option(s) de réponse` : `${rootNodes.length} option(s) racine`}
+          {displayNodes.length === 0 && (
+            <span className="ml-1 text-amber-500">
+              — Nœud terminal (le bouton "Mise en relation" s'affichera ici)
+            </span>
+          )}
+        </p>
+
+        <AnimatePresence mode="popLayout">
+          {displayNodes.map((node, index) => {
+            const nodeChildren = getChildren(node.id);
+            return (
+              <motion.div
+                key={node.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ delay: index * 0.03 }}
+              >
+                <Card className={cn(
+                  "group transition-all hover:shadow-sm cursor-pointer",
+                  "border-border/60 hover:border-primary/30"
+                )}>
+                  <CardContent className="py-2.5 px-3">
+                    <div className="flex items-center gap-2">
+                      {/* Expand / navigate indicator */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedNodeId(node.id); }}
+                        className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                          nodeChildren.length > 0
+                            ? "bg-primary/10 text-primary hover:bg-primary/20"
+                            : "bg-muted text-muted-foreground"
+                        )}
+                        title={nodeChildren.length > 0 ? `${nodeChildren.length} sous-option(s)` : 'Nœud terminal'}
+                      >
+                        {nodeChildren.length > 0 ? (
+                          <span className="text-xs font-bold">{nodeChildren.length}</span>
+                        ) : (
+                          <MessageSquare className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+
+                      {/* Content */}
+                      <div
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => setSelectedNodeId(node.id)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium truncate">{node.label}</p>
+                          {nodeChildren.length > 0 && (
+                            <Badge variant="secondary" className="text-[10px] shrink-0">
+                              {nodeChildren.length} option{nodeChildren.length > 1 ? 's' : ''}
+                            </Badge>
+                          )}
+                          {!node.is_active && (
+                            <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30">Inactif</Badge>
+                          )}
+                        </div>
+                        {node.response_text && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            💬 {node.response_text}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="w-7 h-7" onClick={(e) => { e.stopPropagation(); openCreateDialog(node.id); }} title="Ajouter sous-option">
+                          <Plus className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="w-7 h-7" onClick={(e) => { e.stopPropagation(); openEditDialog(node); }} title="Modifier">
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="w-7 h-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteNode(node.id); }} title="Supprimer">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+
+                      {/* Navigate arrow */}
+                      <ChevronRight
+                        className="w-4 h-4 text-muted-foreground shrink-0 cursor-pointer"
+                        onClick={() => setSelectedNodeId(node.id)}
+                      />
+                    </div>
+
+                    {/* Preview of child options */}
+                    {nodeChildren.length > 0 && (
+                      <div className="mt-2 ml-10 flex flex-wrap gap-1.5">
+                        {nodeChildren.slice(0, 4).map(child => (
+                          <button
+                            key={child.id}
+                            onClick={(e) => { e.stopPropagation(); setSelectedNodeId(child.id); }}
+                            className="text-[10px] px-2 py-1 rounded-full border border-border bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                          >
+                            <CornerDownRight className="w-2.5 h-2.5" />
+                            {child.label}
+                          </button>
+                        ))}
+                        {nodeChildren.length > 4 && (
+                          <span className="text-[10px] px-2 py-1 text-muted-foreground">+{nodeChildren.length - 4} autres</span>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+
+        {displayNodes.length === 0 && !selectedNodeId && (
+          <div className="text-center py-12 text-muted-foreground">
+            <Bot className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm font-medium">Aucune option configurée</p>
+            <p className="text-xs mt-1">Créez des options racine pour construire l'arbre de conversation.</p>
+          </div>
+        )}
+
+        {displayNodes.length === 0 && selectedNodeId && (
+          <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-xl">
+            <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
+            <p className="text-sm font-medium">Nœud terminal</p>
+            <p className="text-xs mt-1 max-w-xs mx-auto">
+              Aucune sous-option. Le bouton <span className="text-primary font-medium">"Mise en relation avec un agent"</span> s'affichera automatiquement ici.
+            </p>
+            <Button size="sm" className="mt-3 gap-1.5" onClick={() => openCreateDialog(selectedNodeId)}>
+              <Plus className="w-3.5 h-3.5" />
+              Ajouter des options
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Create/Edit Node Dialog */}
+      <Dialog open={showNodeDialog} onOpenChange={setShowNodeDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="w-5 h-5 text-primary" />
+              {editingNode ? 'Modifier l\'option' : 'Nouvelle option'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {newParentId && !editingNode && (
+              <div className="p-2.5 rounded-lg bg-muted/50 border border-border/50">
+                <p className="text-xs text-muted-foreground">
+                  Sous-option de : <span className="font-medium text-foreground">{allNodes.find(n => n.id === newParentId)?.label}</span>
+                </p>
+              </div>
+            )}
+            <div>
+              <Label className="text-xs font-medium">Texte du bouton</Label>
+              <Input
+                value={nodeForm.label}
+                onChange={(e) => setNodeForm(p => ({ ...p, label: e.target.value }))}
+                placeholder="ex: Problème de connexion"
+                className="mt-1"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Ce texte apparaît comme option cliquable pour l'utilisateur.</p>
+            </div>
+            <div>
+              <Label className="text-xs font-medium">Réponse du bot (optionnel)</Label>
+              <Textarea
+                value={nodeForm.response_text}
+                onChange={(e) => setNodeForm(p => ({ ...p, response_text: e.target.value }))}
+                rows={3}
+                placeholder="Le message que le bot affichera quand l'utilisateur clique sur cette option..."
+                className="mt-1"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Laissez vide si cette option sert uniquement de catégorie avec des sous-options.</p>
+            </div>
+
+            {/* Preview */}
+            <div className="border border-border rounded-xl p-3 bg-muted/30">
+              <p className="text-[10px] text-muted-foreground mb-2 font-medium">Aperçu conversation :</p>
+              <div className="space-y-2">
+                {nodeForm.label && (
+                  <div className="flex justify-end">
+                    <div className="bg-foreground text-background text-xs px-3 py-2 rounded-2xl rounded-br-md max-w-[70%]">
+                      {nodeForm.label}
+                    </div>
+                  </div>
+                )}
+                {nodeForm.response_text && (
+                  <div className="flex items-end gap-1.5">
+                    <div className="w-6 h-6 rounded-full bg-foreground flex items-center justify-center shrink-0">
+                      <Bot className="w-3 h-3 text-background" />
+                    </div>
+                    <div className="bg-background text-foreground text-xs px-3 py-2 rounded-2xl rounded-bl-md max-w-[70%] border border-border">
+                      {nodeForm.response_text}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNodeDialog(false)}>Annuler</Button>
+            <Button onClick={handleSaveNode} disabled={!nodeForm.label.trim()} className="gap-1.5">
+              <Save className="w-3.5 h-3.5" />
+              {editingNode ? 'Sauvegarder' : 'Créer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <ChatbotPreviewDialog open={showPreview} onOpenChange={setShowPreview} allNodes={allNodes} />
     </div>
   );
 };
 
-const ChatbotNodeTree = ({ node, getChildren, onAddChild, onUpdate, onDelete, editingId, setEditingId, depth = 0 }: {
-  node: HelpChatbotNode;
-  getChildren: (id: string) => HelpChatbotNode[];
-  onAddChild: (parentId: string) => void;
-  onUpdate: (id: string, updates: Partial<HelpChatbotNode>) => void;
-  onDelete: (id: string) => void;
-  editingId: string | null;
-  setEditingId: (id: string | null) => void;
-  depth?: number;
-}) => {
-  const [expanded, setExpanded] = useState(true);
-  const children = getChildren(node.id);
-  const [editForm, setEditForm] = useState({ label: node.label, response_text: node.response_text || '' });
-  const isEditing = editingId === node.id;
+// ==================== Chatbot Preview ====================
 
-  if (isEditing) {
-    return (
-      <Card className="border-primary/30" style={{ marginLeft: depth * 16 }}>
-        <CardContent className="pt-3 space-y-2">
-          <div>
-            <Label className="text-xs">Label</Label>
-            <Input value={editForm.label} onChange={(e) => setEditForm(p => ({ ...p, label: e.target.value }))} />
-          </div>
-          <div>
-            <Label className="text-xs">Réponse</Label>
-            <Textarea value={editForm.response_text} onChange={(e) => setEditForm(p => ({ ...p, response_text: e.target.value }))} rows={2} />
-          </div>
-          <div className="flex gap-2 justify-end">
-            <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>Annuler</Button>
-            <Button size="sm" onClick={() => { onUpdate(node.id, editForm); setEditingId(null); }}>
-              <Save className="w-3.5 h-3.5 mr-1" /> Sauvegarder
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+const ChatbotPreviewDialog = ({ open, onOpenChange, allNodes }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  allNodes: HelpChatbotNode[];
+}) => {
+  const [previewMessages, setPreviewMessages] = useState<Array<{ type: 'bot' | 'user' | 'system'; text: string }>>([]);
+  const [previewNodeId, setPreviewNodeId] = useState<string | null>(null);
+  const [nodeHistory, setNodeHistory] = useState<(string | null)[]>([]);
+
+  const rootNodes = allNodes.filter(n => n.is_root && n.is_active).sort((a, b) => a.display_order - b.display_order);
+  const getChildren = (parentId: string) => allNodes.filter(n => n.parent_id === parentId && n.is_active).sort((a, b) => a.display_order - b.display_order);
+  const currentOptions = previewNodeId ? getChildren(previewNodeId) : rootNodes;
+
+  const resetPreview = () => {
+    setPreviewMessages([
+      { type: 'bot', text: 'Bonjour ! 👋 Merci de contacter l\'assistance. Nous sommes là pour vous aider.' },
+      { type: 'bot', text: 'Comment pouvons-nous vous aider aujourd\'hui ? Sélectionnez une option ci-dessous.' },
+    ]);
+    setPreviewNodeId(null);
+    setNodeHistory([]);
+  };
+
+  const handlePreviewSelect = (node: HelpChatbotNode) => {
+    const newMessages = [
+      ...previewMessages,
+      { type: 'user' as const, text: node.label },
+    ];
+    if (node.response_text) {
+      newMessages.push({ type: 'bot' as const, text: node.response_text });
+    }
+    setPreviewMessages(newMessages);
+    setNodeHistory(prev => [...prev, previewNodeId]);
+    setPreviewNodeId(node.id);
+  };
+
+  const handlePreviewBack = () => {
+    if (nodeHistory.length === 0) return;
+    const prev = nodeHistory[nodeHistory.length - 1];
+    setNodeHistory(h => h.slice(0, -1));
+    setPreviewMessages(m => [...m, { type: 'system', text: '↩️ Retour au menu précédent' }]);
+    setPreviewNodeId(prev);
+  };
+
+  // Initialize on open
+  const handleOpenChange = (o: boolean) => {
+    if (o) resetPreview();
+    onOpenChange(o);
+  };
 
   return (
-    <div style={{ marginLeft: depth * 16 }}>
-      <Card className="hover:bg-muted/30 transition-colors">
-        <CardContent className="py-2.5 px-3 flex items-center gap-2">
-          {children.length > 0 ? (
-            <button onClick={() => setExpanded(!expanded)} className="p-0.5">
-              {expanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-            </button>
-          ) : <div className="w-4" />}
-          
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{node.label}</p>
-            {node.response_text && (
-              <p className="text-xs text-muted-foreground truncate">{node.response_text}</p>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-sm p-0 overflow-hidden max-h-[85vh]">
+        <div className="flex flex-col h-[75vh]">
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
+            <div className="w-9 h-9 rounded-full bg-foreground flex items-center justify-center">
+              <Bot className="w-4 h-4 text-background" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-sm">Aperçu Chatbot</p>
+              <p className="text-[11px] text-muted-foreground">Simulation de conversation</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={resetPreview} className="text-xs">
+              Réinitialiser
+            </Button>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+            {previewMessages.map((msg, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "flex items-end gap-2",
+                  msg.type === 'user' ? 'justify-end' : msg.type === 'system' ? 'justify-center' : 'justify-start'
+                )}
+              >
+                {msg.type === 'system' ? (
+                  <div className="bg-muted/60 text-muted-foreground text-[11px] px-3 py-1.5 rounded-full">
+                    {msg.text}
+                  </div>
+                ) : (
+                  <>
+                    {msg.type === 'bot' && (
+                      <div className="w-7 h-7 rounded-full bg-foreground flex items-center justify-center shrink-0">
+                        <Bot className="w-3 h-3 text-background" />
+                      </div>
+                    )}
+                    <div className={cn(
+                      "max-w-[80%] rounded-2xl px-3 py-2 text-xs leading-relaxed",
+                      msg.type === 'user'
+                        ? 'bg-foreground text-background rounded-br-md'
+                        : 'bg-muted text-foreground rounded-bl-md'
+                    )}>
+                      <p className="whitespace-pre-line">{msg.text}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+
+            {/* Options */}
+            {currentOptions.length > 0 && (
+              <div className="flex items-end gap-2">
+                <div className="w-7 h-7 rounded-full bg-foreground flex items-center justify-center shrink-0">
+                  <Bot className="w-3 h-3 text-background" />
+                </div>
+                <div className="flex-1 space-y-1 max-w-[80%]">
+                  {currentOptions.map(node => (
+                    <button
+                      key={node.id}
+                      onClick={() => handlePreviewSelect(node)}
+                      className="w-full text-left px-3 py-2 text-xs font-medium rounded-xl border border-border bg-background hover:bg-muted transition-colors"
+                    >
+                      {node.label}
+                    </button>
+                  ))}
+                  {nodeHistory.length > 0 && (
+                    <button
+                      onClick={handlePreviewBack}
+                      className="w-full text-left px-3 py-2 text-xs font-medium rounded-xl border border-border bg-background hover:bg-muted transition-colors text-muted-foreground flex items-center gap-1.5"
+                    >
+                      <ArrowLeft className="w-3 h-3" />
+                      Revenir en arrière
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Terminal node */}
+            {currentOptions.length === 0 && previewMessages.length > 2 && (
+              <div className="flex items-end gap-2">
+                <div className="w-7 h-7 rounded-full bg-foreground flex items-center justify-center shrink-0">
+                  <Bot className="w-3 h-3 text-background" />
+                </div>
+                <div className="flex-1 space-y-1 max-w-[80%]">
+                  <div className="px-3 py-2 text-xs font-medium rounded-xl border border-primary/30 bg-primary/5 text-primary flex items-center gap-1.5">
+                    🎧 Mise en relation avec un agent
+                  </div>
+                  <button
+                    onClick={() => {
+                      setNodeHistory([]);
+                      setPreviewNodeId(null);
+                      setPreviewMessages(m => [
+                        ...m,
+                        { type: 'system', text: '───────────' },
+                        { type: 'bot', text: 'Avez-vous une autre question ?' },
+                      ]);
+                    }}
+                    className="w-full text-left px-3 py-2 text-xs font-medium rounded-xl border border-border bg-background hover:bg-muted transition-colors"
+                  >
+                    Autre demande
+                  </button>
+                  {nodeHistory.length > 0 && (
+                    <button
+                      onClick={handlePreviewBack}
+                      className="w-full text-left px-3 py-2 text-xs font-medium rounded-xl border border-border bg-background hover:bg-muted transition-colors text-muted-foreground flex items-center gap-1.5"
+                    >
+                      <ArrowLeft className="w-3 h-3" />
+                      Revenir en arrière
+                    </button>
+                  )}
+                </div>
+              </div>
             )}
           </div>
-
-          <div className="flex gap-1 flex-shrink-0">
-            <Button variant="ghost" size="icon" className="w-7 h-7" onClick={() => onAddChild(node.id)} title="Ajouter sous-option">
-              <Plus className="w-3 h-3" />
-            </Button>
-            <Button variant="ghost" size="icon" className="w-7 h-7" onClick={() => setEditingId(node.id)}>
-              <Edit2 className="w-3 h-3" />
-            </Button>
-            <Button variant="ghost" size="icon" className="w-7 h-7 text-destructive" onClick={() => onDelete(node.id)}>
-              <Trash2 className="w-3 h-3" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {expanded && children.map((child) => (
-        <ChatbotNodeTree
-          key={child.id}
-          node={child}
-          getChildren={getChildren}
-          onAddChild={onAddChild}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
-          editingId={editingId}
-          setEditingId={setEditingId}
-          depth={depth + 1}
-        />
-      ))}
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

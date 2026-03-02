@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronLeft, ChevronRight, Headphones, HelpCircle, X, ArrowLeft, ArrowRight, Check, Send, Bot, MessageCircle, ExternalLink, Minimize2 } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Headphones, HelpCircle, X, ArrowLeft, ArrowRight, Check, Send, Bot } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -19,7 +19,7 @@ type ChatPhase = 'idle' | 'chatbot' | 'agent';
 interface ChatMessage {
   type: 'bot' | 'user';
   text: string;
-  faqArticleId?: string | null;
+  actions?: HelpChatbotNode[];
 }
 
 const Help = () => {
@@ -33,47 +33,34 @@ const Help = () => {
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [showTickets, setShowTickets] = useState(false);
   const [freeText, setFreeText] = useState('');
-  const [chatOpen, setChatOpen] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
   const scrollEndRef = useRef<HTMLDivElement>(null);
 
   const { data: faqArticles = [], isLoading: faqLoading } = useFAQArticles(searchQuery);
   const { data: rootNodes = [] } = useHelpChatbotNodes(undefined);
-  const { data: childNodes = [], isLoading: childNodesLoading } = useHelpChatbotNodes(currentNodeId);
+  const { data: childNodes = [] } = useHelpChatbotNodes(currentNodeId);
   const { createTicket } = useSupportTickets();
 
   const currentOptions = currentNodeId ? childNodes : rootNodes;
-  const isOptionsLoading = currentNodeId ? childNodesLoading : false;
 
   // Auto-scroll to bottom
   useEffect(() => {
     scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages.length, currentOptions.length, isTyping]);
+  }, [chatMessages.length, currentOptions.length]);
 
-  const simulateTyping = (callback: () => void) => {
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      callback();
-    }, 800 + Math.random() * 600);
-  };
-
+  // When chat starts, show greeting + root options
   const handleStartChat = () => {
     setChatPhase('chatbot');
-    setChatOpen(true);
     setCurrentNodeId(null);
-    setChatMessages([]);
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      setChatMessages([
-        { type: 'bot', text: 'Bonjour ! 👋 Comment pouvons-nous vous aider ?' },
-      ]);
-    }, 600);
-  };
-
-  const handleResumeChat = () => {
-    setChatOpen(true);
+    setChatMessages([
+      {
+        type: 'bot',
+        text: 'Bonjour ! 👋 Merci de contacter l\'assistance. Nous sommes là pour vous aider.',
+      },
+      {
+        type: 'bot',
+        text: 'Comment pouvons-nous vous aider aujourd\'hui ? Sélectionnez une option ou décrivez votre problème ci-dessous.',
+      },
+    ]);
   };
 
   const handleSelectOption = (node: HelpChatbotNode) => {
@@ -81,17 +68,12 @@ const Help = () => {
       ...chatMessages,
       { type: 'user', text: node.label },
     ];
-    setChatMessages(newMessages);
 
     if (node.response_text) {
-      simulateTyping(() => {
-        setChatMessages(prev => [
-          ...prev,
-          { type: 'bot', text: node.response_text!, faqArticleId: (node as any).faq_article_id },
-        ]);
-      });
+      newMessages.push({ type: 'bot', text: node.response_text });
     }
 
+    setChatMessages(newMessages);
     setCurrentNodeId(node.id);
   };
 
@@ -114,33 +96,16 @@ const Help = () => {
     setChatMessages([]);
     setCurrentNodeId(null);
     setFreeText('');
-    setChatOpen(false);
-  };
-
-  const handleMinimize = () => {
-    setChatOpen(false);
   };
 
   const handleSendFreeText = () => {
     if (!freeText.trim()) return;
-    const text = freeText.trim();
+    setChatMessages(prev => [
+      ...prev,
+      { type: 'user', text: freeText.trim() },
+      { type: 'bot', text: 'Merci pour ces détails. Pour une assistance personnalisée, nous vous recommandons de contacter un agent.' },
+    ]);
     setFreeText('');
-    setChatMessages(prev => [...prev, { type: 'user', text }]);
-    simulateTyping(() => {
-      setChatMessages(prev => [
-        ...prev,
-        { type: 'bot', text: 'Merci pour ces détails. Pour une assistance personnalisée, nous vous recommandons de contacter un agent.' },
-      ]);
-    });
-  };
-
-  const handleScrollToFAQ = (articleId: string) => {
-    setChatOpen(false);
-    setExpandedFAQ(articleId);
-    setTimeout(() => {
-      const el = document.getElementById(`faq-${articleId}`);
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
   };
 
   // Grouped FAQ by category
@@ -166,12 +131,18 @@ const Help = () => {
   // Show ticket detail from "Mes tickets"
   if (selectedTicket && chatPhase !== 'agent') {
     return (
-      <div className="fixed inset-0 z-[60] bg-background">
+      <motion.div
+        initial={{ x: '100%', opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: '100%', opacity: 0 }}
+        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+        className="min-h-screen"
+      >
         <SupportChatRoom
           ticket={selectedTicket}
           onBack={() => setSelectedTicket(null)}
         />
-      </div>
+      </motion.div>
     );
   }
 
@@ -192,6 +163,164 @@ const Help = () => {
     );
   }
 
+  // Chatbot phase — Uber Eats style
+  if (chatPhase === 'chatbot') {
+    return (
+      <div className="fixed inset-0 z-[60] bg-background flex flex-col">
+        {/* Header */}
+        <div
+          className="border-b border-border bg-background/95 backdrop-blur-lg flex items-center gap-3 px-3 py-2.5"
+          style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top, 0px))' }}
+        >
+          <Button variant="ghost" size="icon" onClick={handleEndChat} className="shrink-0">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <div className="w-9 h-9 rounded-full bg-foreground flex items-center justify-center shrink-0">
+              <Bot className="w-4.5 h-4.5 text-background" />
+            </div>
+            <span className="font-semibold text-sm truncate">Assistance</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleEndChat}
+            className="text-xs shrink-0 rounded-full"
+          >
+            Mettre fin
+          </Button>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
+            {chatMessages.map((msg, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: i === chatMessages.length - 1 ? 0.1 : 0 }}
+                className={cn("flex items-end gap-2", msg.type === 'user' ? "justify-end" : "justify-start")}
+              >
+                {msg.type === 'bot' && (
+                  <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
+                    <Bot className="w-3.5 h-3.5 text-background" />
+                  </div>
+                )}
+                <div
+                  className={cn(
+                    "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                    msg.type === 'user'
+                      ? "bg-foreground text-background rounded-br-md"
+                      : "bg-muted text-foreground rounded-bl-md"
+                  )}
+                >
+                  <p className="whitespace-pre-line">{msg.text}</p>
+                </div>
+                {msg.type === 'user' && (
+                  <Check className="w-4 h-4 text-muted-foreground shrink-0 mb-1" />
+                )}
+              </motion.div>
+            ))}
+
+            {/* Action buttons — Uber style */}
+            {currentOptions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="flex items-end gap-2"
+              >
+                <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
+                  <Bot className="w-3.5 h-3.5 text-background" />
+                </div>
+                <div className="flex-1 space-y-1.5 max-w-[80%]">
+                  {currentOptions.map((node) => (
+                    <button
+                      key={node.id}
+                      onClick={() => handleSelectOption(node)}
+                      className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
+                    >
+                      {node.label}
+                    </button>
+                  ))}
+
+                  {/* Always show "Contacter un agent" as last action */}
+                  <button
+                    onClick={handleContactAgent}
+                    disabled={createTicket.isPending}
+                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
+                  >
+                    <Headphones className="w-4 h-4 shrink-0" />
+                    {createTicket.isPending ? 'Connexion...' : 'Mise en relation avec un agent'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* If no options left, show prominent agent button */}
+            {currentOptions.length === 0 && chatMessages.length > 2 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="flex items-end gap-2"
+              >
+                <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
+                  <Bot className="w-3.5 h-3.5 text-background" />
+                </div>
+                <div className="flex-1 space-y-1.5 max-w-[80%]">
+                  <button
+                    onClick={handleStartChat}
+                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
+                  >
+                    Autre demande
+                  </button>
+                  <button
+                    onClick={handleContactAgent}
+                    disabled={createTicket.isPending}
+                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
+                  >
+                    <Headphones className="w-4 h-4 shrink-0" />
+                    {createTicket.isPending ? 'Connexion...' : 'Mise en relation avec un agent'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            <div ref={scrollEndRef} />
+          </div>
+        </div>
+
+        {/* Bottom input */}
+        <div
+          className="border-t border-border bg-background px-4 py-3"
+          style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
+        >
+          <div className="max-w-lg mx-auto flex items-center gap-2">
+            <Input
+              placeholder="Décrivez votre problème..."
+              value={freeText}
+              onChange={(e) => setFreeText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendFreeText()}
+              className="flex-1 rounded-full bg-muted border-0 h-11"
+            />
+            <Button
+              size="icon"
+              variant={freeText.trim() ? "default" : "ghost"}
+              onClick={handleSendFreeText}
+              disabled={!freeText.trim()}
+              className="rounded-full w-11 h-11 shrink-0"
+            >
+              <Send className="w-4.5 h-4.5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default: FAQ + "Démarrez le chat" card
   return (
     <div className="min-h-dvh bg-background flex flex-col">
       {/* Header */}
@@ -252,6 +381,21 @@ const Help = () => {
           </div>
         ) : (
           <div className="p-4 space-y-6 pb-24">
+            {/* "Besoin d'aide?" CTA card — Uber style */}
+            <Card className="p-6 text-center border-border/50">
+              <h2 className="text-xl font-bold mb-2">Besoin d'aide ?</h2>
+              <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto">
+                Cliquez sur le bouton ci-dessous pour commencer à discuter avec notre assistant.
+              </p>
+              <Button
+                onClick={handleStartChat}
+                className="w-full max-w-xs mx-auto h-12 rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold text-sm gap-2"
+              >
+                Démarrez le chat
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Card>
+
             {/* FAQ Section */}
             {faqArticles.length === 0 && !faqLoading ? (
               <div className="text-center py-8">
@@ -276,7 +420,6 @@ const Help = () => {
                     {articles.map((article) => (
                       <Card
                         key={article.id}
-                        id={`faq-${article.id}`}
                         className={cn(
                           "overflow-hidden transition-all cursor-pointer",
                           expandedFAQ === article.id ? "ring-1 ring-primary/30" : ""
@@ -314,214 +457,6 @@ const Help = () => {
           </div>
         )}
       </ScrollArea>
-
-      {/* Floating Chat Bubble */}
-      <AnimatePresence>
-        {chatPhase === 'idle' && !chatOpen && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            onClick={handleStartChat}
-            className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-foreground text-background shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
-            style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
-          >
-            <MessageCircle className="w-6 h-6" />
-          </motion.button>
-        )}
-
-        {chatPhase === 'chatbot' && !chatOpen && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            onClick={handleResumeChat}
-            className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-foreground text-background shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
-            style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
-          >
-            <div className="relative">
-              <MessageCircle className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-foreground" />
-            </div>
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* Chat Panel (Uber-style bottom sheet) */}
-      <AnimatePresence>
-        {chatOpen && chatPhase === 'chatbot' && (
-          <motion.div
-            initial={{ y: '100%', opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: '100%', opacity: 0 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-[60] bg-background border-t border-border rounded-t-3xl shadow-2xl flex flex-col"
-            style={{ 
-              maxHeight: '85dvh',
-              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-            }}
-          >
-            {/* Chat Header */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-border shrink-0">
-              <div className="w-9 h-9 rounded-full bg-foreground flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4 text-background" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="font-semibold text-sm">Assistance</span>
-                <p className="text-[11px] text-muted-foreground">En ligne</p>
-              </div>
-              <Button variant="ghost" size="icon" className="w-8 h-8" onClick={handleMinimize}>
-                <Minimize2 className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm" className="text-xs text-destructive h-8" onClick={handleEndChat}>
-                Fermer
-              </Button>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto min-h-0">
-              <div className="px-4 py-4 space-y-3">
-                {chatMessages.map((msg, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className={cn("flex items-end gap-2", msg.type === 'user' ? "justify-end" : "justify-start")}
-                  >
-                    {msg.type === 'bot' && (
-                      <div className="w-7 h-7 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
-                        <Bot className="w-3 h-3 text-background" />
-                      </div>
-                    )}
-                    <div className={cn(
-                      "max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed",
-                      msg.type === 'user'
-                        ? "bg-foreground text-background rounded-br-md"
-                        : "bg-muted text-foreground rounded-bl-md"
-                    )}>
-                      <p className="whitespace-pre-line">{msg.text}</p>
-                      {msg.faqArticleId && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleScrollToFAQ(msg.faqArticleId!); }}
-                          className="mt-2 flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          Voir l'article FAQ
-                        </button>
-                      )}
-                    </div>
-                    {msg.type === 'user' && (
-                      <Check className="w-3.5 h-3.5 text-muted-foreground shrink-0 mb-1" />
-                    )}
-                  </motion.div>
-                ))}
-
-                {/* Typing indicator */}
-                {isTyping && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-end gap-2"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
-                      <Bot className="w-3 h-3 text-background" />
-                    </div>
-                    <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Action buttons */}
-                {!isTyping && !isOptionsLoading && currentOptions.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="flex items-end gap-2"
-                  >
-                    <div className="w-7 h-7 shrink-0" />
-                    <div className="flex-1 space-y-1.5 max-w-[85%]">
-                      {currentOptions.map((node) => (
-                        <button
-                          key={node.id}
-                          onClick={(e) => { e.stopPropagation(); handleSelectOption(node); }}
-                          className="w-full text-left px-4 py-2.5 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
-                        >
-                          {node.label}
-                        </button>
-                      ))}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleContactAgent(); }}
-                        disabled={createTicket.isPending}
-                        className="w-full text-left px-4 py-2.5 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
-                      >
-                        <Headphones className="w-4 h-4 shrink-0" />
-                        {createTicket.isPending ? 'Connexion...' : 'Contacter un agent'}
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* End of tree */}
-                {!isTyping && !isOptionsLoading && currentOptions.length === 0 && chatMessages.length > 1 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="flex items-end gap-2"
-                  >
-                    <div className="w-7 h-7 shrink-0" />
-                    <div className="flex-1 space-y-1.5 max-w-[85%]">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleStartChat(); }}
-                        className="w-full text-left px-4 py-2.5 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
-                      >
-                        Autre demande
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleContactAgent(); }}
-                        disabled={createTicket.isPending}
-                        className="w-full text-left px-4 py-2.5 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
-                      >
-                        <Headphones className="w-4 h-4 shrink-0" />
-                        {createTicket.isPending ? 'Connexion...' : 'Contacter un agent'}
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-
-                <div ref={scrollEndRef} />
-              </div>
-            </div>
-
-            {/* Bottom input */}
-            <div className="border-t border-border bg-background px-4 py-2.5 shrink-0">
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder="Décrivez votre problème..."
-                  value={freeText}
-                  onChange={(e) => setFreeText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendFreeText()}
-                  className="flex-1 rounded-full bg-muted border-0 h-10 text-sm"
-                />
-                <Button
-                  size="icon"
-                  variant={freeText.trim() ? "default" : "ghost"}
-                  onClick={handleSendFreeText}
-                  disabled={!freeText.trim()}
-                  className="rounded-full w-10 h-10 shrink-0"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Plus, Trash2, Edit2, Save, X, ChevronRight, ChevronDown, Bot, HelpCircle, Link2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, X, ChevronRight, ChevronDown, Eye, EyeOff, Bot, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { 
   useAllFAQArticles, useFAQMutations, 
   useAllChatbotNodes, useChatbotNodeMutations,
@@ -210,11 +210,10 @@ const FAQArticleRow = ({ article, isEditing, onEdit, onCancelEdit, onUpdate, onD
 
 const ChatbotEditor = () => {
   const { data: allNodes = [] } = useAllChatbotNodes();
-  const { data: faqArticles = [] } = useAllFAQArticles();
   const { createNode, updateNode, deleteNode } = useChatbotNodeMutations();
   const [showNew, setShowNew] = useState(false);
   const [newParentId, setNewParentId] = useState<string | null>(null);
-  const [newForm, setNewForm] = useState({ label: '', response_text: '', is_root: true, faq_article_id: '' });
+  const [newForm, setNewForm] = useState({ label: '', response_text: '', is_root: true });
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const rootNodes = allNodes.filter(n => n.is_root);
@@ -228,11 +227,10 @@ const ChatbotEditor = () => {
       is_root: newParentId === null,
       parent_id: newParentId,
       display_order: allNodes.length,
-      faq_article_id: newForm.faq_article_id || undefined,
     }, {
       onSuccess: () => {
         setShowNew(false);
-        setNewForm({ label: '', response_text: '', is_root: true, faq_article_id: '' });
+        setNewForm({ label: '', response_text: '', is_root: true });
         setNewParentId(null);
       },
     });
@@ -240,13 +238,13 @@ const ChatbotEditor = () => {
 
   const handleAddChild = (parentId: string) => {
     setNewParentId(parentId);
-    setNewForm({ label: '', response_text: '', is_root: false, faq_article_id: '' });
+    setNewForm({ label: '', response_text: '', is_root: false });
     setShowNew(true);
   };
 
   const handleAddRoot = () => {
     setNewParentId(null);
-    setNewForm({ label: '', response_text: '', is_root: true, faq_article_id: '' });
+    setNewForm({ label: '', response_text: '', is_root: true });
     setShowNew(true);
   };
 
@@ -271,27 +269,8 @@ const ChatbotEditor = () => {
               <Input value={newForm.label} onChange={(e) => setNewForm(p => ({ ...p, label: e.target.value }))} placeholder="ex: Mon compte" />
             </div>
             <div>
-              <Label className="text-xs">Réponse du bot</Label>
-              <Textarea value={newForm.response_text} onChange={(e) => setNewForm(p => ({ ...p, response_text: e.target.value }))} rows={3} placeholder="Le texte que le bot affichera quand l'utilisateur clique sur cette option..." />
-            </div>
-            <div>
-              <Label className="text-xs flex items-center gap-1.5">
-                <Link2 className="w-3 h-3" />
-                Lier à un article FAQ (optionnel)
-              </Label>
-              <Select value={newForm.faq_article_id} onValueChange={(v) => setNewForm(p => ({ ...p, faq_article_id: v === 'none' ? '' : v }))}>
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="Aucun article lié" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucun article lié</SelectItem>
-                  {faqArticles.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      <span className="truncate">{a.question}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-xs">Réponse du bot (optionnel)</Label>
+              <Textarea value={newForm.response_text} onChange={(e) => setNewForm(p => ({ ...p, response_text: e.target.value }))} rows={2} placeholder="Le texte que le bot affichera..." />
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="ghost" size="sm" onClick={() => setShowNew(false)}>Annuler</Button>
@@ -315,7 +294,6 @@ const ChatbotEditor = () => {
               onDelete={(id) => deleteNode.mutate(id)}
               editingId={editingId}
               setEditingId={setEditingId}
-              faqArticles={faqArticles}
             />
           ))}
         </div>
@@ -324,7 +302,7 @@ const ChatbotEditor = () => {
   );
 };
 
-const ChatbotNodeTree = ({ node, getChildren, onAddChild, onUpdate, onDelete, editingId, setEditingId, faqArticles, depth = 0 }: {
+const ChatbotNodeTree = ({ node, getChildren, onAddChild, onUpdate, onDelete, editingId, setEditingId, depth = 0 }: {
   node: HelpChatbotNode;
   getChildren: (id: string) => HelpChatbotNode[];
   onAddChild: (parentId: string) => void;
@@ -332,18 +310,12 @@ const ChatbotNodeTree = ({ node, getChildren, onAddChild, onUpdate, onDelete, ed
   onDelete: (id: string) => void;
   editingId: string | null;
   setEditingId: (id: string | null) => void;
-  faqArticles: FAQArticle[];
   depth?: number;
 }) => {
   const [expanded, setExpanded] = useState(true);
   const children = getChildren(node.id);
-  const [editForm, setEditForm] = useState({ 
-    label: node.label, 
-    response_text: node.response_text || '',
-    faq_article_id: (node as any).faq_article_id || '',
-  });
+  const [editForm, setEditForm] = useState({ label: node.label, response_text: node.response_text || '' });
   const isEditing = editingId === node.id;
-  const linkedFaq = faqArticles.find(a => a.id === (node as any).faq_article_id);
 
   if (isEditing) {
     return (
@@ -355,37 +327,11 @@ const ChatbotNodeTree = ({ node, getChildren, onAddChild, onUpdate, onDelete, ed
           </div>
           <div>
             <Label className="text-xs">Réponse</Label>
-            <Textarea value={editForm.response_text} onChange={(e) => setEditForm(p => ({ ...p, response_text: e.target.value }))} rows={3} />
-          </div>
-          <div>
-            <Label className="text-xs flex items-center gap-1.5">
-              <Link2 className="w-3 h-3" />
-              Article FAQ lié
-            </Label>
-            <Select value={editForm.faq_article_id} onValueChange={(v) => setEditForm(p => ({ ...p, faq_article_id: v === 'none' ? '' : v }))}>
-              <SelectTrigger className="text-sm">
-                <SelectValue placeholder="Aucun article lié" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Aucun article lié</SelectItem>
-                {faqArticles.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    <span className="truncate">{a.question}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Textarea value={editForm.response_text} onChange={(e) => setEditForm(p => ({ ...p, response_text: e.target.value }))} rows={2} />
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>Annuler</Button>
-            <Button size="sm" onClick={() => { 
-              onUpdate(node.id, { 
-                label: editForm.label, 
-                response_text: editForm.response_text,
-                faq_article_id: editForm.faq_article_id || null,
-              } as any); 
-              setEditingId(null); 
-            }}>
+            <Button size="sm" onClick={() => { onUpdate(node.id, editForm); setEditingId(null); }}>
               <Save className="w-3.5 h-3.5 mr-1" /> Sauvegarder
             </Button>
           </div>
@@ -405,15 +351,7 @@ const ChatbotNodeTree = ({ node, getChildren, onAddChild, onUpdate, onDelete, ed
           ) : <div className="w-4" />}
           
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <p className="text-sm font-medium truncate">{node.label}</p>
-              {linkedFaq && (
-                <Badge variant="outline" className="text-[9px] px-1.5 gap-1 shrink-0">
-                  <Link2 className="w-2.5 h-2.5" />
-                  FAQ
-                </Badge>
-              )}
-            </div>
+            <p className="text-sm font-medium truncate">{node.label}</p>
             {node.response_text && (
               <p className="text-xs text-muted-foreground truncate">{node.response_text}</p>
             )}
@@ -443,7 +381,6 @@ const ChatbotNodeTree = ({ node, getChildren, onAddChild, onUpdate, onDelete, ed
           onDelete={onDelete}
           editingId={editingId}
           setEditingId={setEditingId}
-          faqArticles={faqArticles}
           depth={depth + 1}
         />
       ))}

@@ -135,7 +135,7 @@ export const useSupportMessages = (ticketId: string | null) => {
     const channel = supabase
       .channel(`support-messages-${ticketId}`)
       .on('postgres_changes', {
-        event: '*',
+        event: 'INSERT',
         schema: 'public',
         table: 'support_messages',
         filter: `ticket_id=eq.${ticketId}`,

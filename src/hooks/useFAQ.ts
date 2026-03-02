@@ -26,7 +26,6 @@ export interface HelpChatbotNode {
   created_by: string;
   created_at: string;
   updated_at: string;
-  faq_article_id: string | null;
 }
 
 export const useFAQArticles = (searchQuery?: string) => {
@@ -137,6 +136,7 @@ export const useHelpChatbotNodes = (parentId?: string | null) => {
         .order('display_order', { ascending: true });
 
       if (parentId === undefined) {
+        // Root nodes
         query = query.eq('is_root', true);
       } else if (parentId === null) {
         query = query.is('parent_id', null).eq('is_root', true);
@@ -170,7 +170,7 @@ export const useChatbotNodeMutations = () => {
   const queryClient = useQueryClient();
 
   const createNode = useMutation({
-    mutationFn: async (node: { parent_id?: string | null; label: string; response_text?: string; is_root?: boolean; display_order?: number; faq_article_id?: string }) => {
+    mutationFn: async (node: { parent_id?: string | null; label: string; response_text?: string; is_root?: boolean; display_order?: number }) => {
       if (!user?.id) throw new Error('Not authenticated');
       const { data, error } = await supabase
         .from('help_chatbot_nodes' as any)

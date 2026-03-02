@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2, CheckCheck } from 'lucide-react';
+import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2 } from 'lucide-react';
 import CreditRequestMessage from '@/components/chat/CreditRequestMessage';
 import { useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { notifySupportAgentReply } from '@/services/pushNotificationService';
@@ -426,32 +426,35 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
                             {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
                           </span>
                           {isOwn && (
-                            <CheckCheck className={cn(
-                              "w-3.5 h-3.5",
+                            <span className={cn(
+                              "text-[10px] font-medium",
                               message.read_at ? "text-primary" : "text-muted-foreground/50"
-                            )} />
+                            )}>
+                              {message.read_at ? 'Lu' : 'Distribué'}
+                            </span>
                           )}
-
-            {/* Typing indicator */}
-            {isOtherTyping && (
-              <div className="flex justify-start mb-2">
-                <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-2xl rounded-bl-md">
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                  <span className="text-xs text-muted-foreground">écrit...</span>
-                </div>
-              </div>
-            )}
-          </div>
+                        </div>
                       )}
+
                     </div>
                   </div>
                 </div>
               );
             })
+          )}
+
+          {/* Typing indicator */}
+          {isOtherTyping && (
+            <div className="flex justify-start mb-2">
+              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-2xl rounded-bl-md">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <span className="text-xs text-muted-foreground">écrit...</span>
+              </div>
+            </div>
           )}
         </div>
 

@@ -381,21 +381,6 @@ const Help = () => {
           </div>
         ) : (
           <div className="p-4 space-y-6 pb-24">
-            {/* "Besoin d'aide?" CTA card — Uber style */}
-            <Card className="p-6 text-center border-border/50">
-              <h2 className="text-xl font-bold mb-2">Besoin d'aide ?</h2>
-              <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto">
-                Cliquez sur le bouton ci-dessous pour commencer à discuter avec notre assistant.
-              </p>
-              <Button
-                onClick={handleStartChat}
-                className="w-full max-w-xs mx-auto h-12 rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold text-sm gap-2"
-              >
-                Démarrez le chat
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Card>
-
             {/* FAQ Section */}
             {faqArticles.length === 0 && !faqLoading ? (
               <div className="text-center py-8">
@@ -457,6 +442,16 @@ const Help = () => {
           </div>
         )}
       </ScrollArea>
+
+      {/* Floating chat bubble */}
+      <button
+        onClick={handleStartChat}
+        className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-foreground text-background shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
+        style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        aria-label="Démarrer le chat"
+      >
+        <Bot className="w-6 h-6" />
+      </button>
     </div>
   );
 };

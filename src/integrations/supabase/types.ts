@@ -724,6 +724,7 @@ export type Database = {
           created_at: string
           created_by: string
           display_order: number
+          faq_article_id: string | null
           id: string
           is_active: boolean
           is_root: boolean
@@ -736,6 +737,7 @@ export type Database = {
           created_at?: string
           created_by: string
           display_order?: number
+          faq_article_id?: string | null
           id?: string
           is_active?: boolean
           is_root?: boolean
@@ -748,6 +750,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           display_order?: number
+          faq_article_id?: string | null
           id?: string
           is_active?: boolean
           is_root?: boolean
@@ -757,6 +760,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "help_chatbot_nodes_faq_article_id_fkey"
+            columns: ["faq_article_id"]
+            isOneToOne: false
+            referencedRelation: "faq_articles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "help_chatbot_nodes_parent_id_fkey"
             columns: ["parent_id"]

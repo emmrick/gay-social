@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2, XCircle } from 'lucide-react';
+import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2, XCircle, PauseCircle } from 'lucide-react';
 import CreditRequestMessage from '@/components/chat/CreditRequestMessage';
 import { useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { useSupportTypingIndicator } from '@/hooks/useSupportTypingIndicator';
@@ -82,6 +82,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
   const [manualCreditType, setManualCreditType] = useState<'purchased' | 'daily' | 'bonus' | 'passive'>('purchased');
   const [isGrantingCredits, setIsGrantingCredits] = useState(false);
   const [isClosingTicket, setIsClosingTicket] = useState(false);
+  const [isHoldingTicket, setIsHoldingTicket] = useState(false);
   const [ratingEmoji, setRatingEmoji] = useState<string | null>(null);
   const [ratingComment, setRatingComment] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
@@ -135,6 +136,62 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
     if (!text) return;
     setInputValue('');
     sendStopTyping();
+
+    // If client replies to a waiting_client ticket, auto-reopen it
+    if (!isAgent && ticket.status === 'waiting_client') {
+      // Send system message first
+      await supabase
+        .from('support_messages' as any)
+        .insert({
+          ticket_id: ticket.id,
+          sender_id: user?.id,
+          content: '🔄 Nous vous mettons en relation avec un agent. Merci de patienter...',
+          message_type: 'system',
+        } as any);
+
+      // Reopen the ticket
+      await supabase
+        .from('support_tickets' as any)
+        .update({ status: 'open', assigned_to: null } as any)
+        .eq('id', ticket.id);
+
+      // The create_support_task trigger will auto-create a new moderation task
+      // since the ticket status is back to 'open'... but the trigger only fires on INSERT.
+      // So we need to manually create the task
+      const { data: taskRate } = await supabase
+        .from('task_rates')
+        .select('rate_cents')
+        .eq('task_type', 'support_chat')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      const { data: clientProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', ticket.user_id)
+        .single();
+
+      await supabase
+        .from('moderation_tasks')
+        .insert({
+          task_type: 'support_chat',
+          target_entity_id: ticket.id,
+          target_user_id: ticket.user_id,
+          reward_cents: taskRate?.rate_cents || 5,
+          description: `Reprise support #${ticket.ticket_number} de ${clientProfile?.username || 'un utilisateur'}`,
+          metadata: {
+            ticket_id: ticket.id,
+            ticket_number: ticket.ticket_number,
+            username: clientProfile?.username,
+            subject: ticket.subject,
+            reopened: true,
+          },
+        } as any);
+
+      globalQueryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      globalQueryClient.invalidateQueries({ queryKey: ['live-support-ticket', ticket.id] });
+    }
+
     await sendMessage.mutateAsync({ content: text });
 
     // If agent is replying, notify the ticket owner
@@ -205,7 +262,6 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
   const handleCloseTicket = async () => {
     setIsClosingTicket(true);
     try {
-      // Send system message before closing
       await sendMessage.mutateAsync({
         content: '🔒 La conversation a été clôturée par le support.',
         messageType: 'system',
@@ -223,8 +279,103 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
     }
   };
 
-  const isClosed = ticket.status === 'closed';
-  const hasRated = ratingSubmitted || !!ticket.rated_at;
+  const handleHoldTicket = async () => {
+    setIsHoldingTicket(true);
+    try {
+      // Send system message to client
+      await sendMessage.mutateAsync({
+        content: '⏸️ Votre conversation est en attente. Un agent reprendra votre demande dès que vous répondrez.',
+        messageType: 'system',
+      });
+
+      // Update ticket status to waiting_client
+      await supabase
+        .from('support_tickets' as any)
+        .update({ status: 'waiting_client', assigned_to: null } as any)
+        .eq('id', ticket.id);
+
+      // Get the active task for this agent to complete with half reward
+      const { data: activeTask } = await supabase
+        .from('moderation_tasks')
+        .select('*')
+        .eq('reserved_by', user?.id)
+        .eq('status', 'reserved')
+        .eq('task_type', 'support_chat')
+        .maybeSingle();
+
+      if (activeTask) {
+        // Complete task with half payment using hold_support_task RPC
+        const { data: holdResult } = await supabase.rpc('hold_support_task', {
+          _task_id: activeTask.id,
+          _user_id: user?.id,
+        });
+
+        const result = holdResult as any;
+        if (result?.success && result.reward_cents > 0) {
+          // Record half earning manually
+          const halfCents = result.reward_cents;
+          await supabase.from('moderator_earnings').insert({
+            user_id: user?.id,
+            task_type: 'support_chat',
+            amount_cents: halfCents,
+            target_entity_id: ticket.id,
+            target_user_id: ticket.user_id,
+            description: `Support en attente #${ticket.ticket_number} (50%)`,
+          } as any);
+
+          // Update wallet
+          await supabase.from('moderator_wallets').upsert({
+            user_id: user?.id,
+            balance_cents: halfCents,
+            total_earned_cents: halfCents,
+          } as any, { onConflict: 'user_id' });
+
+          // Actually we need to ADD to existing wallet, not upsert with raw value
+          // Let's use a raw SQL approach
+          const { data: wallet } = await supabase
+            .from('moderator_wallets')
+            .select('balance_cents, total_earned_cents')
+            .eq('user_id', user?.id)
+            .maybeSingle();
+
+          if (wallet) {
+            await supabase
+              .from('moderator_wallets')
+              .update({
+                balance_cents: wallet.balance_cents + halfCents,
+                total_earned_cents: wallet.total_earned_cents + halfCents,
+              } as any)
+              .eq('user_id', user?.id);
+          } else {
+            await supabase
+              .from('moderator_wallets')
+              .insert({
+                user_id: user?.id,
+                balance_cents: halfCents,
+                total_earned_cents: halfCents,
+              } as any);
+          }
+
+          toast.success(`Conversation mise en attente. +${(halfCents / 100).toFixed(2).replace('.', ',')} € (50%)`);
+        } else {
+          toast.success('Conversation mise en attente.');
+        }
+      } else {
+        toast.success('Conversation mise en attente.');
+      }
+
+      globalQueryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      globalQueryClient.invalidateQueries({ queryKey: ['moderation-task-active'] });
+      globalQueryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
+      globalQueryClient.invalidateQueries({ queryKey: ['moderator-wallet'] });
+      globalQueryClient.invalidateQueries({ queryKey: ['moderator-earnings'] });
+    } catch (err) {
+      console.error('Error holding ticket:', err);
+      toast.error('Erreur lors de la mise en attente');
+    } finally {
+      setIsHoldingTicket(false);
+    }
+  };
 
   // Sync ratingSubmitted when ticket data updates
   useEffect(() => {
@@ -253,8 +404,12 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
     }
   };
 
-  const statusLabel = ticket.status === 'open' ? 'En attente' : ticket.status === 'assigned' ? 'En cours' : 'Fermé';
-  const statusColor = ticket.status === 'open' ? 'bg-amber-500/20 text-amber-600' : ticket.status === 'assigned' ? 'bg-green-500/20 text-green-600' : 'bg-muted text-muted-foreground';
+  const isClosed = ticket.status === 'closed';
+  const isWaitingClient = ticket.status === 'waiting_client';
+  const hasRated = ratingSubmitted || !!ticket.rated_at;
+
+  const statusLabel = ticket.status === 'open' ? 'En attente' : ticket.status === 'assigned' ? 'En cours' : ticket.status === 'waiting_client' ? 'En attente client' : 'Fermé';
+  const statusColor = ticket.status === 'open' ? 'bg-amber-500/20 text-amber-600' : ticket.status === 'assigned' ? 'bg-green-500/20 text-green-600' : ticket.status === 'waiting_client' ? 'bg-orange-500/20 text-orange-600' : 'bg-muted text-muted-foreground';
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-background overflow-hidden">
@@ -282,7 +437,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
               </Badge>
             </div>
           </div>
-          {isAgent && !isClosed && (
+          {isAgent && !isClosed && !isWaitingClient && (
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <Button
                 variant="outline"
@@ -292,6 +447,17 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
                 title="Attribuer des crédits"
               >
                 <Coins className="w-5 h-5 text-amber-500" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-10 gap-1.5 text-xs text-orange-600 border-orange-400/30 hover:bg-orange-500/10"
+                onClick={handleHoldTicket}
+                disabled={isHoldingTicket}
+                title="Mettre en attente du client"
+              >
+                {isHoldingTicket ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PauseCircle className="w-3.5 h-3.5" />}
+                En attente
               </Button>
               <Button
                 variant="outline"
@@ -584,13 +750,27 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
         </div>
       )}
 
-      {/* Input (only when not closed) */}
-      {!isClosed && (
+      {/* Waiting client banner (agent side) */}
+      {isWaitingClient && isAgent && (
+        <div className="flex justify-center py-3 border-t border-border bg-card">
+          <span className="text-xs text-muted-foreground bg-orange-500/10 text-orange-600 px-4 py-1.5 rounded-full">
+            ⏸️ En attente de réponse du client
+          </span>
+        </div>
+      )}
+
+      {/* Input (only when not closed and not waiting_client for agent) */}
+      {!isClosed && !(isAgent && isWaitingClient) && (
         <div className="flex-shrink-0 border-t border-border bg-card p-2"
           style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
         >
+          {isWaitingClient && !isAgent && (
+            <p className="text-xs text-orange-600 text-center mb-2">
+              ⏸️ Votre conversation est en attente. Répondez pour être mis en relation avec un agent.
+            </p>
+          )}
           <div className="flex items-end gap-2">
-            {isAgent && (
+            {isAgent && !isWaitingClient && (
               <SavedRepliesSheet onSelect={(content) => setInputValue(prev => prev ? prev + '\n' + content : content)} />
             )}
             <Textarea
@@ -600,7 +780,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
                 handleTyping(e.target.value.length > 0, ownProfile?.username || 'Utilisateur');
               }}
               onKeyDown={handleKeyDown}
-              placeholder={isAgent ? "Répondre au client..." : "Décrivez votre problème..."}
+              placeholder={isWaitingClient && !isAgent ? "Répondez pour reprendre la conversation..." : isAgent ? "Répondre au client..." : "Décrivez votre problème..."}
               className="min-h-[40px] max-h-[120px] resize-none text-sm"
               rows={1}
             />

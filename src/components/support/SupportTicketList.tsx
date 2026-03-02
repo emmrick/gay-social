@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useSupportTickets, SupportTicket } from '@/hooks/useSupportTickets';
-import { Headphones, Plus, Hash, Clock, CheckCircle, Loader2 } from 'lucide-react';
+import { Headphones, Plus, Hash, Clock, CheckCircle, Loader2, PauseCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +34,12 @@ const SupportTicketList = ({ onSelectTicket }: SupportTicketListProps) => {
         return (
           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-green-500/20 text-green-600">
             <Loader2 className="w-2.5 h-2.5 mr-0.5" /> En cours
+          </Badge>
+        );
+      case 'waiting_client':
+        return (
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-orange-500/20 text-orange-600">
+            <PauseCircle className="w-2.5 h-2.5 mr-0.5" /> En attente
           </Badge>
         );
       case 'closed':

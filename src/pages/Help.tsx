@@ -567,6 +567,17 @@ const Help = ({ embedded = false }: HelpProps) => {
                       {node.label}
                     </button>
                   ))}
+                  {/* Agent button - shown at root level after navigating (not on first display) */}
+                  {chatMessages.length > 2 && !currentNodeId && (
+                    <button
+                      onClick={handleContactAgent}
+                      disabled={createTicket.isPending}
+                      className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
+                    >
+                      <Headphones className="w-4 h-4 shrink-0" />
+                      {createTicket.isPending ? 'Connexion...' : 'Mise en relation avec un agent'}
+                    </button>
+                  )}
                   {/* Back button */}
                   {nodeHistory.length > 0 && (
                     <button

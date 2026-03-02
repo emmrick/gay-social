@@ -182,6 +182,7 @@ export const useChatbotNodeMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['help-chatbot-nodes'] });
+      queryClient.invalidateQueries({ queryKey: ['help-chatbot-nodes-all'] });
       toast.success('Nœud chatbot créé');
     },
     onError: () => toast.error('Erreur lors de la création'),
@@ -197,6 +198,7 @@ export const useChatbotNodeMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['help-chatbot-nodes'] });
+      queryClient.invalidateQueries({ queryKey: ['help-chatbot-nodes-all'] });
       toast.success('Nœud chatbot mis à jour');
     },
     onError: () => toast.error('Erreur lors de la mise à jour'),
@@ -212,6 +214,7 @@ export const useChatbotNodeMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['help-chatbot-nodes'] });
+      queryClient.invalidateQueries({ queryKey: ['help-chatbot-nodes-all'] });
       toast.success('Nœud chatbot supprimé');
     },
     onError: () => toast.error('Erreur lors de la suppression'),

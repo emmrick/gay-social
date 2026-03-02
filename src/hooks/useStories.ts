@@ -171,9 +171,43 @@ export const useStories = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['stories'] });
       toast.success('Story publiée !');
+      
+      // Send notification to relevant users (fire-and-forget)
+      if (data && user) {
+        void (async () => {
+          try {
+            const { data: myProfile } = await supabase
+              .from('profiles')
+              .select('username')
+              .eq('user_id', user.id)
+              .single();
+            
+            const username = myProfile?.username || 'Un membre';
+            
+            // Create in-app notification for followers/favorites
+            const { data: fans } = await supabase
+              .from('user_favorites')
+              .select('user_id')
+              .eq('favorite_user_id', user.id);
+            
+            if (fans && fans.length > 0) {
+              const notifications = fans.map(f => ({
+                user_id: f.user_id,
+                type: 'new_story',
+                title: '📸 Nouvelle story',
+                message: `${username} a publié une nouvelle story`,
+                action_url: '/',
+              }));
+              await supabase.from('notifications').insert(notifications);
+            }
+          } catch (err) {
+            console.error('[stories] notification error:', err);
+          }
+        })();
+      }
     },
     onError: () => {
       toast.error('Erreur lors de la publication');

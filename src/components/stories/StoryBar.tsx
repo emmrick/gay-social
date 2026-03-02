@@ -27,11 +27,23 @@ const StoryBar = () => {
     );
   }
 
-  const hasOwnStories = storyGroups.some(g => g.user_id === user?.id);
+  const ownGroup = storyGroups.find(g => g.user_id === user?.id);
+  const hasOwnStories = !!ownGroup;
 
   const handleOpenViewer = (group: StoryGroup, index: number) => {
     setViewingGroup(group);
     setViewingGroupIndex(index);
+  };
+
+  const handleOwnStoryClick = () => {
+    if (hasOwnStories && ownGroup) {
+      // Open viewer for own stories
+      const index = storyGroups.indexOf(ownGroup);
+      handleOpenViewer(ownGroup, index);
+    } else {
+      // No stories, open create dialog
+      setShowCreateDialog(true);
+    }
   };
 
   const handleNextGroup = () => {
@@ -48,25 +60,25 @@ const StoryBar = () => {
     <>
       <ScrollArea className="w-full">
         <div className="flex gap-3 px-1 py-2">
-          {/* Add story button */}
+          {/* Own story button */}
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => setShowCreateDialog(true)}
+            onClick={handleOwnStoryClick}
             className="flex flex-col items-center gap-1.5 flex-shrink-0"
           >
             <div className="relative w-16 h-16">
               {hasOwnStories ? (
                 <div className="w-full h-full rounded-full border-2 border-primary p-0.5">
                   <div className="w-full h-full rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                    {storyGroups.find(g => g.user_id === user?.id)?.avatar_url ? (
+                    {ownGroup.avatar_url ? (
                       <img
-                        src={storyGroups.find(g => g.user_id === user?.id)?.avatar_url || ''}
+                        src={ownGroup.avatar_url}
                         alt="My story"
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <span className="text-lg font-bold text-muted-foreground">
-                        {user?.email?.charAt(0).toUpperCase()}
+                        {ownGroup.username?.charAt(0).toUpperCase() || '?'}
                       </span>
                     )}
                   </div>
@@ -81,14 +93,14 @@ const StoryBar = () => {
               </div>
             </div>
             <span className="text-[10px] text-muted-foreground font-medium max-w-16 truncate">
-              Ma story
+              {hasOwnStories ? `Ma story (${ownGroup.stories.length})` : 'Ma story'}
             </span>
           </motion.button>
 
           {/* Other users' stories */}
           {storyGroups
             .filter(g => g.user_id !== user?.id)
-            .map((group, i) => (
+            .map((group) => (
               <motion.button
                 key={group.user_id}
                 whileTap={{ scale: 0.95 }}
@@ -139,6 +151,7 @@ const StoryBar = () => {
           group={viewingGroup}
           onClose={() => setViewingGroup(null)}
           onNextGroup={handleNextGroup}
+          onAddStory={() => { setViewingGroup(null); setShowCreateDialog(true); }}
         />
       )}
     </>

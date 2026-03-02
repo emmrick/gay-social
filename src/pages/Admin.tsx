@@ -57,6 +57,7 @@ import MaintenanceTogglePanel from '@/components/admin/MaintenanceTogglePanel';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import PendingTasksPanel from '@/components/admin/PendingTasksPanel';
 import AdminSupportChatPanel from '@/components/admin/AdminSupportChatPanel';
+import SupportRatingsPanel from '@/components/admin/SupportRatingsPanel';
 import PopupManagementPanel from '@/components/admin/PopupManagementPanel';
 import FAQManagementPanel from '@/components/admin/FAQManagementPanel';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
@@ -305,6 +306,8 @@ const Admin = () => {
         return <PendingTasksPanel />;
       case 'support':
         return <AdminSupportChatPanel onBack={() => handleSectionChange('wallet')} />;
+      case 'support-ratings':
+        return <SupportRatingsPanel />;
       case 'popups':
         return <PopupManagementPanel />;
       case 'faq':

@@ -24,7 +24,8 @@ import {
   UserCog,
   Wrench,
   ListOrdered,
-  HelpCircle
+  HelpCircle,
+  Star
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -57,6 +58,7 @@ export type AdminSection =
   | 'maintenance'
   | 'pending-tasks'
   | 'support'
+  | 'support-ratings'
   | 'popups'
   | 'faq';
 
@@ -100,6 +102,7 @@ const navItems: NavItem[] = [
   { id: 'screenshot-sanctions', label: 'Captures écran', icon: Camera, group: 'moderation' },
   { id: 'history', label: 'Historique', icon: History, group: 'moderation' },
   { id: 'pending-tasks', label: 'File d\'attente', icon: ListOrdered, group: 'moderation' },
+  { id: 'support-ratings', label: 'Mes avis support', icon: Star, group: 'moderation' },
   
   // Paramètres
   { id: 'moderators', label: 'Modérateurs', icon: UserCog, group: 'settings' },

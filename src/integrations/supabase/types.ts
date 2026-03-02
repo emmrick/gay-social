@@ -2100,9 +2100,13 @@ export type Database = {
       support_tickets: {
         Row: {
           assigned_to: string | null
+          chatbot_history: Json | null
           closed_at: string | null
           created_at: string
           id: string
+          rated_at: string | null
+          rating_comment: string | null
+          rating_emoji: string | null
           status: string
           subject: string | null
           ticket_number: string
@@ -2111,9 +2115,13 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          chatbot_history?: Json | null
           closed_at?: string | null
           created_at?: string
           id?: string
+          rated_at?: string | null
+          rating_comment?: string | null
+          rating_emoji?: string | null
           status?: string
           subject?: string | null
           ticket_number: string
@@ -2122,9 +2130,13 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          chatbot_history?: Json | null
           closed_at?: string | null
           created_at?: string
           id?: string
+          rated_at?: string | null
+          rating_comment?: string | null
+          rating_emoji?: string | null
           status?: string
           subject?: string | null
           ticket_number?: string

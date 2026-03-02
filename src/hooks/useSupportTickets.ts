@@ -63,11 +63,8 @@ export const useSupportTickets = () => {
       if (error) throw error;
       return data as unknown as SupportTicket;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
-      toast.success(`Ticket #${data.ticket_number} créé`, {
-        description: 'Un agent va prendre en charge votre demande.',
-      });
     },
     onError: () => {
       toast.error('Erreur lors de la création du ticket');

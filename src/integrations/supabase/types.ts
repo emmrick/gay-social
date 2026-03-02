@@ -2661,6 +2661,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      hold_support_task: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: Json
+      }
       is_group_admin: {
         Args: { _chat_room_id: string; _user_id: string }
         Returns: boolean

@@ -624,7 +624,6 @@ const Help = ({ embedded = false }: HelpProps) => {
                       setCurrentNodeId(null);
                       setChatMessages(prev => [
                         ...prev,
-                        { type: 'system', text: '───────────' },
                         { type: 'bot', text: 'Avez-vous une autre question ? Sélectionnez une option ci-dessous.' },
                       ]);
                     }}

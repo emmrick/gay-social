@@ -18,6 +18,7 @@ export interface FAQArticle {
 export interface HelpChatbotNode {
   id: string;
   parent_id: string | null;
+  faq_article_id: string | null;
   label: string;
   response_text: string | null;
   is_root: boolean;
@@ -170,7 +171,7 @@ export const useChatbotNodeMutations = () => {
   const queryClient = useQueryClient();
 
   const createNode = useMutation({
-    mutationFn: async (node: { parent_id?: string | null; label: string; response_text?: string; is_root?: boolean; display_order?: number }) => {
+    mutationFn: async (node: { parent_id?: string | null; label: string; response_text?: string; faq_article_id?: string | null; is_root?: boolean; display_order?: number }) => {
       if (!user?.id) throw new Error('Not authenticated');
       const { data, error } = await supabase
         .from('help_chatbot_nodes' as any)

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Save, X, ChevronRight, ChevronDown, Bot, HelpCircle, MessageSquare, ArrowRight, Eye, CornerDownRight, GripVertical, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, X, ChevronRight, ChevronDown, Bot, HelpCircle, MessageSquare, ArrowRight, Eye, CornerDownRight, GripVertical, ArrowLeft, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -219,11 +220,12 @@ const FAQArticleRow = ({ article, isEditing, onEdit, onCancelEdit, onUpdate, onD
 
 const ChatbotEditor = () => {
   const { data: allNodes = [] } = useAllChatbotNodes();
+  const { data: allFAQArticles = [] } = useAllFAQArticles();
   const { createNode, updateNode, deleteNode } = useChatbotNodeMutations();
   const [showNodeDialog, setShowNodeDialog] = useState(false);
   const [editingNode, setEditingNode] = useState<HelpChatbotNode | null>(null);
   const [newParentId, setNewParentId] = useState<string | null>(null);
-  const [nodeForm, setNodeForm] = useState({ label: '', response_text: '' });
+  const [nodeForm, setNodeForm] = useState({ label: '', response_text: '', faq_article_id: '' });
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -248,25 +250,27 @@ const ChatbotEditor = () => {
   const openCreateDialog = (parentId: string | null) => {
     setEditingNode(null);
     setNewParentId(parentId);
-    setNodeForm({ label: '', response_text: '' });
+    setNodeForm({ label: '', response_text: '', faq_article_id: '' });
     setShowNodeDialog(true);
   };
 
   const openEditDialog = (node: HelpChatbotNode) => {
     setEditingNode(node);
     setNewParentId(node.parent_id);
-    setNodeForm({ label: node.label, response_text: node.response_text || '' });
+    setNodeForm({ label: node.label, response_text: node.response_text || '', faq_article_id: node.faq_article_id || '' });
     setShowNodeDialog(true);
   };
 
   const handleSaveNode = () => {
     if (!nodeForm.label.trim()) return;
+    const faqId = nodeForm.faq_article_id || null;
     if (editingNode) {
-      updateNode.mutate({ id: editingNode.id, label: nodeForm.label, response_text: nodeForm.response_text || undefined });
+      updateNode.mutate({ id: editingNode.id, label: nodeForm.label, response_text: nodeForm.response_text || undefined, faq_article_id: faqId });
     } else {
       createNode.mutate({
         label: nodeForm.label,
         response_text: nodeForm.response_text || undefined,
+        faq_article_id: faqId,
         is_root: newParentId === null,
         parent_id: newParentId,
         display_order: allNodes.length,
@@ -436,6 +440,11 @@ const ChatbotEditor = () => {
                             💬 {node.response_text}
                           </p>
                         )}
+                        {node.faq_article_id && (
+                          <p className="text-xs text-primary/70 truncate mt-0.5">
+                            🔗 {allFAQArticles.find(a => a.id === node.faq_article_id)?.question || 'Article FAQ lié'}
+                          </p>
+                        )}
                       </div>
 
                       {/* Actions */}
@@ -543,6 +552,31 @@ const ChatbotEditor = () => {
                 className="mt-1"
               />
               <p className="text-[10px] text-muted-foreground mt-1">Laissez vide si cette option sert uniquement de catégorie avec des sous-options.</p>
+            </div>
+
+            {/* FAQ Article Association */}
+            <div>
+              <Label className="text-xs font-medium flex items-center gap-1.5">
+                <Link2 className="w-3.5 h-3.5" />
+                Associer un article FAQ (optionnel)
+              </Label>
+              <Select
+                value={nodeForm.faq_article_id || '__none__'}
+                onValueChange={(val) => setNodeForm(p => ({ ...p, faq_article_id: val === '__none__' ? '' : val }))}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Aucun article associé" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Aucun article associé</SelectItem>
+                  {allFAQArticles.map(article => (
+                    <SelectItem key={article.id} value={article.id}>
+                      {article.question}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground mt-1">Liez cette option à un article FAQ pour afficher sa réponse automatiquement.</p>
             </div>
 
             {/* Preview */}

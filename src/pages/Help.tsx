@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronLeft, ChevronRight, MessageCircle, Headphones, HelpCircle, Bot, X, ArrowLeft } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Headphones, HelpCircle, X, ArrowLeft, ArrowRight, Check, Send, Bot } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,20 +14,26 @@ import SupportChatRoom from '@/components/support/SupportChatRoom';
 import SupportTicketList from '@/components/support/SupportTicketList';
 import { cn } from '@/lib/utils';
 
-type ChatPhase = 'chatbot' | 'agent';
+type ChatPhase = 'idle' | 'chatbot' | 'agent';
+
+interface ChatMessage {
+  type: 'bot' | 'user';
+  text: string;
+  actions?: HelpChatbotNode[];
+}
 
 const Help = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
-  const [showChat, setShowChat] = useState(false);
-  const [chatPhase, setChatPhase] = useState<ChatPhase>('chatbot');
-  const [chatbotHistory, setChatbotHistory] = useState<{ type: 'bot' | 'user'; text: string }[]>([]);
+  const [chatPhase, setChatPhase] = useState<ChatPhase>('idle');
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [showTickets, setShowTickets] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [freeText, setFreeText] = useState('');
+  const scrollEndRef = useRef<HTMLDivElement>(null);
 
   const { data: faqArticles = [], isLoading: faqLoading } = useFAQArticles(searchQuery);
   const { data: rootNodes = [] } = useHelpChatbotNodes(undefined);
@@ -36,41 +42,38 @@ const Help = () => {
 
   const currentOptions = currentNodeId ? childNodes : rootNodes;
 
-  // Auto-scroll messages
+  // Auto-scroll to bottom
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [chatbotHistory.length]);
+    scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages.length, currentOptions.length]);
 
-  // Init chatbot greeting when opening chat
-  useEffect(() => {
-    if (showChat && chatPhase === 'chatbot' && chatbotHistory.length === 0) {
-      setChatbotHistory([{
-        type: 'bot',
-        text: 'Bonjour ! 👋 Je suis l\'assistant du support. Comment puis-je vous aider ?',
-      }]);
-    }
-  }, [showChat, chatPhase]);
-
-  const handleOpenChat = () => {
+  // When chat starts, show greeting + root options
+  const handleStartChat = () => {
     setChatPhase('chatbot');
-    setChatbotHistory([]);
     setCurrentNodeId(null);
-    setShowChat(true);
+    setChatMessages([
+      {
+        type: 'bot',
+        text: 'Bonjour ! 👋 Merci de contacter l\'assistance. Nous sommes là pour vous aider.',
+      },
+      {
+        type: 'bot',
+        text: 'Comment pouvons-nous vous aider aujourd\'hui ? Sélectionnez une option ou décrivez votre problème ci-dessous.',
+      },
+    ]);
   };
 
   const handleSelectOption = (node: HelpChatbotNode) => {
-    const newHistory = [
-      ...chatbotHistory,
-      { type: 'user' as const, text: node.label },
+    const newMessages: ChatMessage[] = [
+      ...chatMessages,
+      { type: 'user', text: node.label },
     ];
 
     if (node.response_text) {
-      newHistory.push({ type: 'bot' as const, text: node.response_text });
+      newMessages.push({ type: 'bot', text: node.response_text });
     }
 
-    setChatbotHistory(newHistory);
+    setChatMessages(newMessages);
     setCurrentNodeId(node.id);
   };
 
@@ -88,24 +91,21 @@ const Help = () => {
     }
   };
 
-  const handleBackFromChat = () => {
-    if (chatPhase === 'agent') {
-      // Go back to chatbot phase
-      setChatPhase('chatbot');
-      setSelectedTicket(null);
-    } else {
-      setShowChat(false);
-      setChatbotHistory([]);
-      setCurrentNodeId(null);
-    }
+  const handleEndChat = () => {
+    setChatPhase('idle');
+    setChatMessages([]);
+    setCurrentNodeId(null);
+    setFreeText('');
   };
 
-  const handleResetChatbot = () => {
-    setChatbotHistory([{
-      type: 'bot',
-      text: 'Bonjour ! 👋 Je suis l\'assistant du support. Comment puis-je vous aider ?',
-    }]);
-    setCurrentNodeId(null);
+  const handleSendFreeText = () => {
+    if (!freeText.trim()) return;
+    setChatMessages(prev => [
+      ...prev,
+      { type: 'user', text: freeText.trim() },
+      { type: 'bot', text: 'Merci pour ces détails. Pour une assistance personnalisée, nous vous recommandons de contacter un agent.' },
+    ]);
+    setFreeText('');
   };
 
   // Grouped FAQ by category
@@ -129,7 +129,7 @@ const Help = () => {
   }
 
   // Show ticket detail from "Mes tickets"
-  if (selectedTicket && !showChat) {
+  if (selectedTicket && chatPhase !== 'agent') {
     return (
       <motion.div
         initial={{ x: '100%', opacity: 0 }}
@@ -146,10 +146,185 @@ const Help = () => {
     );
   }
 
+  // Agent phase — full screen support chat
+  if (chatPhase === 'agent' && selectedTicket) {
+    return (
+      <div className="fixed inset-0 z-[60] bg-background">
+        <SupportChatRoom
+          ticket={selectedTicket}
+          onBack={() => {
+            setChatPhase('idle');
+            setSelectedTicket(null);
+            setChatMessages([]);
+            setCurrentNodeId(null);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Chatbot phase — Uber Eats style
+  if (chatPhase === 'chatbot') {
+    return (
+      <div className="fixed inset-0 z-[60] bg-background flex flex-col">
+        {/* Header */}
+        <div
+          className="border-b border-border bg-background/95 backdrop-blur-lg flex items-center gap-3 px-3 py-2.5"
+          style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top, 0px))' }}
+        >
+          <Button variant="ghost" size="icon" onClick={handleEndChat} className="shrink-0">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <div className="w-9 h-9 rounded-full bg-foreground flex items-center justify-center shrink-0">
+              <Bot className="w-4.5 h-4.5 text-background" />
+            </div>
+            <span className="font-semibold text-sm truncate">Assistance</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleEndChat}
+            className="text-xs shrink-0 rounded-full"
+          >
+            Mettre fin
+          </Button>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
+            {chatMessages.map((msg, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: i === chatMessages.length - 1 ? 0.1 : 0 }}
+                className={cn("flex items-end gap-2", msg.type === 'user' ? "justify-end" : "justify-start")}
+              >
+                {msg.type === 'bot' && (
+                  <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
+                    <Bot className="w-3.5 h-3.5 text-background" />
+                  </div>
+                )}
+                <div
+                  className={cn(
+                    "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                    msg.type === 'user'
+                      ? "bg-foreground text-background rounded-br-md"
+                      : "bg-muted text-foreground rounded-bl-md"
+                  )}
+                >
+                  <p className="whitespace-pre-line">{msg.text}</p>
+                </div>
+                {msg.type === 'user' && (
+                  <Check className="w-4 h-4 text-muted-foreground shrink-0 mb-1" />
+                )}
+              </motion.div>
+            ))}
+
+            {/* Action buttons — Uber style */}
+            {currentOptions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="flex items-end gap-2"
+              >
+                <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
+                  <Bot className="w-3.5 h-3.5 text-background" />
+                </div>
+                <div className="flex-1 space-y-1.5 max-w-[80%]">
+                  {currentOptions.map((node) => (
+                    <button
+                      key={node.id}
+                      onClick={() => handleSelectOption(node)}
+                      className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
+                    >
+                      {node.label}
+                    </button>
+                  ))}
+
+                  {/* Always show "Contacter un agent" as last action */}
+                  <button
+                    onClick={handleContactAgent}
+                    disabled={createTicket.isPending}
+                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
+                  >
+                    <Headphones className="w-4 h-4 shrink-0" />
+                    {createTicket.isPending ? 'Connexion...' : 'Mise en relation avec un agent'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* If no options left, show prominent agent button */}
+            {currentOptions.length === 0 && chatMessages.length > 2 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="flex items-end gap-2"
+              >
+                <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
+                  <Bot className="w-3.5 h-3.5 text-background" />
+                </div>
+                <div className="flex-1 space-y-1.5 max-w-[80%]">
+                  <button
+                    onClick={handleStartChat}
+                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
+                  >
+                    Autre demande
+                  </button>
+                  <button
+                    onClick={handleContactAgent}
+                    disabled={createTicket.isPending}
+                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
+                  >
+                    <Headphones className="w-4 h-4 shrink-0" />
+                    {createTicket.isPending ? 'Connexion...' : 'Mise en relation avec un agent'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            <div ref={scrollEndRef} />
+          </div>
+        </div>
+
+        {/* Bottom input */}
+        <div
+          className="border-t border-border bg-background px-4 py-3"
+          style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
+        >
+          <div className="max-w-lg mx-auto flex items-center gap-2">
+            <Input
+              placeholder="Décrivez votre problème..."
+              value={freeText}
+              onChange={(e) => setFreeText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendFreeText()}
+              className="flex-1 rounded-full bg-muted border-0 h-11"
+            />
+            <Button
+              size="icon"
+              variant={freeText.trim() ? "default" : "ghost"}
+              onClick={handleSendFreeText}
+              disabled={!freeText.trim()}
+              className="rounded-full w-11 h-11 shrink-0"
+            >
+              <Send className="w-4.5 h-4.5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default: FAQ + "Démarrez le chat" card
   return (
     <div className="min-h-dvh bg-background flex flex-col">
       {/* Header */}
-      <div 
+      <div
         className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
         style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))' }}
       >
@@ -161,9 +336,9 @@ const Help = () => {
             <h1 className="font-display text-xl font-bold">Centre d'aide</h1>
             <p className="text-xs text-muted-foreground">FAQ & Support client</p>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="gap-1.5"
             onClick={() => setShowTickets(!showTickets)}
           >
@@ -206,18 +381,32 @@ const Help = () => {
           </div>
         ) : (
           <div className="p-4 space-y-6 pb-24">
+            {/* "Besoin d'aide?" CTA card — Uber style */}
+            <Card className="p-6 text-center border-border/50">
+              <h2 className="text-xl font-bold mb-2">Besoin d'aide ?</h2>
+              <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto">
+                Cliquez sur le bouton ci-dessous pour commencer à discuter avec notre assistant.
+              </p>
+              <Button
+                onClick={handleStartChat}
+                className="w-full max-w-xs mx-auto h-12 rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold text-sm gap-2"
+              >
+                Démarrez le chat
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Card>
+
             {/* FAQ Section */}
             {faqArticles.length === 0 && !faqLoading ? (
-              <div className="text-center py-12">
-                <HelpCircle className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+              <div className="text-center py-8">
+                <HelpCircle className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
                 <h3 className="font-medium text-foreground mb-1">
                   {searchQuery ? 'Aucun résultat' : 'FAQ bientôt disponible'}
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  {searchQuery 
+                  {searchQuery
                     ? 'Essayez avec d\'autres mots-clés ou contactez le support.'
-                    : 'Les articles d\'aide seront bientôt disponibles. En attendant, contactez le support via la bulle de chat.'
-                  }
+                    : 'Les articles d\'aide seront bientôt disponibles.'}
                 </p>
               </div>
             ) : (
@@ -240,7 +429,7 @@ const Help = () => {
                         <div className="px-4 py-3 flex items-center justify-between">
                           <p className="font-medium text-sm flex-1">{article.question}</p>
                           <ChevronRight className={cn(
-                            "w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ml-2",
+                            "w-4 h-4 text-muted-foreground transition-transform shrink-0 ml-2",
                             expandedFAQ === article.id && "rotate-90"
                           )} />
                         </div>
@@ -268,139 +457,6 @@ const Help = () => {
           </div>
         )}
       </ScrollArea>
-
-      {/* Floating chat bubble */}
-      {!showTickets && !showChat && (
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handleOpenChat}
-          className="fixed bottom-6 right-4 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center z-50"
-          style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
-        >
-          <MessageCircle className="w-6 h-6" />
-        </motion.button>
-      )}
-
-      {/* Full-screen Support Chat (Chatbot → Agent) */}
-      <AnimatePresence>
-        {showChat && (
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
-            className="fixed inset-0 z-[60] bg-background flex flex-col"
-          >
-            {chatPhase === 'agent' && selectedTicket ? (
-              /* Agent phase - reuse existing SupportChatRoom */
-              <SupportChatRoom
-                ticket={selectedTicket}
-                onBack={handleBackFromChat}
-              />
-            ) : (
-              /* Chatbot phase */
-              <>
-                {/* Header */}
-                <div 
-                  className="border-b border-border px-4 py-3 flex items-center gap-3"
-                  style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
-                >
-                  <Button variant="ghost" size="icon" onClick={handleBackFromChat}>
-                    <ArrowLeft className="w-5 h-5" />
-                  </Button>
-                  <div className="flex items-center gap-2.5 flex-1">
-                    <div className="relative">
-                      <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center">
-                        <Bot className="w-4.5 h-4.5 text-primary" />
-                      </div>
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">Assistant Support</p>
-                      <p className="text-[11px] text-green-500 font-medium">En ligne</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={handleResetChatbot} className="text-xs text-muted-foreground">
-                    Recommencer
-                  </Button>
-                </div>
-
-                {/* Messages */}
-                <ScrollArea className="flex-1">
-                  <div ref={scrollRef} className="p-4 space-y-3 max-w-lg mx-auto">
-                    {chatbotHistory.map((msg, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2, delay: i === chatbotHistory.length - 1 ? 0.1 : 0 }}
-                        className={cn("flex gap-2.5", msg.type === 'user' ? "justify-end" : "justify-start")}
-                      >
-                        {msg.type === 'bot' && (
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <Bot className="w-4 h-4 text-primary" />
-                          </div>
-                        )}
-                        <div className={cn(
-                          "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm",
-                          msg.type === 'user' 
-                            ? "bg-primary text-primary-foreground rounded-br-sm" 
-                            : "bg-muted rounded-bl-sm"
-                        )}>
-                          <p className="whitespace-pre-line">{msg.text}</p>
-                        </div>
-                      </motion.div>
-                    ))}
-
-                    {/* Show options as chat suggestion chips */}
-                    {currentOptions.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex flex-wrap gap-2 pl-10"
-                      >
-                        {currentOptions.map((node) => (
-                          <button
-                            key={node.id}
-                            onClick={() => handleSelectOption(node)}
-                            className="px-3.5 py-2 text-xs font-medium rounded-full border border-primary/30 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/50 transition-all active:scale-95"
-                          >
-                            {node.label}
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </div>
-                </ScrollArea>
-
-                {/* Bottom action */}
-                <div 
-                  className="border-t border-border p-4"
-                  style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))' }}
-                >
-                  <Button
-                    onClick={handleContactAgent}
-                    className="w-full gap-2 h-12 rounded-xl"
-                    variant={currentOptions.length === 0 ? "default" : "secondary"}
-                    disabled={createTicket.isPending}
-                  >
-                    <Headphones className="w-4 h-4" />
-                    {createTicket.isPending ? 'Connexion en cours...' : 'Contacter un Agent par chat'}
-                  </Button>
-                  {currentOptions.length > 0 && (
-                    <p className="text-[11px] text-center text-muted-foreground mt-2">
-                      Sélectionnez une option ci-dessus ou contactez un agent
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

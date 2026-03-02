@@ -14,6 +14,10 @@ export interface SupportTicket {
   created_at: string;
   updated_at: string;
   closed_at: string | null;
+  chatbot_history: Array<{ type: string; text: string }> | null;
+  rating_emoji: string | null;
+  rating_comment: string | null;
+  rated_at: string | null;
 }
 
 export interface SupportMessage {

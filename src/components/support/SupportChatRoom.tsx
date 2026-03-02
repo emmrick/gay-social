@@ -4,6 +4,7 @@ import { fr } from 'date-fns/locale';
 import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2 } from 'lucide-react';
 import CreditRequestMessage from '@/components/chat/CreditRequestMessage';
 import { useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
+import { useSupportTypingIndicator } from '@/hooks/useSupportTypingIndicator';
 import { notifySupportAgentReply } from '@/services/pushNotificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -39,7 +40,23 @@ const formatDateLabel = (date: Date): string => {
 const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomProps) => {
   const { user } = useAuth();
   const { messages, isLoading, sendMessage } = useSupportMessages(ticket.id);
+  const { typingUsers, handleTyping, sendStopTyping } = useSupportTypingIndicator(ticket.id);
   const [inputValue, setInputValue] = useState('');
+
+  // Fetch own profile for typing indicator username
+  const { data: ownProfile } = useQuery({
+    queryKey: ['own-profile-support', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const isInitialLoad = useRef(true);
@@ -96,6 +113,7 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
     const text = inputValue.trim();
     if (!text) return;
     setInputValue('');
+    sendStopTyping();
     await sendMessage.mutateAsync({ content: text });
 
     // If agent is replying, notify the ticket owner
@@ -383,6 +401,24 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
               );
             })
           )}
+
+          {/* Typing indicator */}
+          {typingUsers.length > 0 && (
+            <div className="flex items-start gap-2 px-3 py-1">
+              <div className="bg-card border border-border rounded-2xl rounded-bl-md px-3 py-2.5 flex items-center gap-2">
+                <div className="flex gap-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {typingUsers.length === 1
+                    ? `${typingUsers[0].username} écrit...`
+                    : `${typingUsers.length} personnes écrivent...`}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Scroll to bottom button */}
@@ -411,7 +447,10 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
             )}
             <Textarea
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                handleTyping(e.target.value.length > 0, ownProfile?.username || 'Utilisateur');
+              }}
               onKeyDown={handleKeyDown}
               placeholder={isAgent ? "Répondre au client..." : "Décrivez votre problème..."}
               className="min-h-[40px] max-h-[120px] resize-none text-sm"

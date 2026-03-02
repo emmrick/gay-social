@@ -90,14 +90,20 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
     // Apply age filter
     if (ageRange && (ageRange[0] !== 18 || ageRange[1] !== 99)) {
       return result.filter(p => {
-        if (p.isCurrentUser) return true; // Always show current user
-        if (!p.age) return false; // Hide profiles without age when filter is active
+        if (p.isCurrentUser) return true;
+        if (!p.age) return false;
         return p.age >= ageRange[0] && p.age <= ageRange[1];
       });
     }
     
     return result;
   }, [currentUserProfile, profiles, ageRange]);
+
+  // Stable member count excluding current user
+  const otherMembersCount = useMemo(() => 
+    allProfiles.filter(p => !p.isCurrentUser).length, 
+    [allProfiles]
+  );
 
   // ---------- HELPER FUNCTIONS ----------
 
@@ -162,7 +168,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
       {/* Header with refresh */}
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
-          {allProfiles.filter(p => !p.isCurrentUser).length} membre{allProfiles.filter(p => !p.isCurrentUser).length > 1 ? 's' : ''}{hasGeoData ? ' à proximité' : ''}
+          {otherMembersCount} membre{otherMembersCount > 1 ? 's' : ''}{hasGeoData ? ' à proximité' : ''}
         </span>
         <Button 
           variant="ghost" 

@@ -47,7 +47,6 @@ export const useNearbyProfiles = (
         .from('profiles')
         .select('id, user_id, username, avatar_url, bio, age, is_online, last_seen, region')
         .neq('user_id', user.id)
-        .not('user_id', 'in', `(select user_id from user_blocks where is_active = true)`)
         .order('is_online', { ascending: false })
         .order('last_seen', { ascending: false, nullsFirst: false })
         .limit(100);
@@ -57,7 +56,8 @@ export const useNearbyProfiles = (
     },
     enabled: !!user,
     staleTime: 30000,
-    gcTime: 120000,
+    gcTime: 300000,
+    refetchOnWindowFocus: false,
   });
 
   // Query 2: When geolocation is available, fetch with distances (runs in parallel / replaces)

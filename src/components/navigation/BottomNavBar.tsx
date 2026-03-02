@@ -1,10 +1,10 @@
-import { MessageCircle, User, Home, Crown, Sparkles } from 'lucide-react';
+import { MessageCircle, User, Home, Crown, Sparkles, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
 interface BottomNavBarProps {
-  activeTab: 'home' | 'swipe' | 'messages' | 'premium' | 'profile';
-  onTabChange: (tab: 'home' | 'swipe' | 'messages' | 'premium' | 'profile') => void;
+  activeTab: 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile';
+  onTabChange: (tab: 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile') => void;
   unreadCount?: number;
   isPremium?: boolean;
 }
@@ -18,6 +18,7 @@ const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0, isPremium = fal
     { id: 'swipe' as const, icon: Sparkles, label: 'Swipe' },
     { id: 'messages' as const, icon: MessageCircle, label: 'Messages', badge: messageBadge },
     { id: 'premium' as const, icon: Crown, label: 'Premium', premium: true },
+    { id: 'help' as const, icon: HelpCircle, label: 'Aide' },
     { id: 'profile' as const, icon: User, label: 'Profil' },
   ];
 

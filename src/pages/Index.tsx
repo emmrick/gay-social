@@ -42,10 +42,10 @@ import { Loader2, Plus, User, Users } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
-type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'profile';
+type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile';
 
 // Tab order for determining animation direction
-const tabOrder: NavTab[] = ['home', 'swipe', 'messages', 'premium', 'profile'];
+const tabOrder: NavTab[] = ['home', 'swipe', 'messages', 'premium', 'help', 'profile'];
 
 // Minimal animation variants - instant transitions
 const pageVariants = {
@@ -189,6 +189,10 @@ const Index = () => {
   };
 
   const handleTabChange = (tab: NavTab) => {
+    if (tab === 'help') {
+      navigate('/aide');
+      return;
+    }
     setPreviousTab(activeTab);
     setActiveTab(tab);
     if (tab === 'profile') {

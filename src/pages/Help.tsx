@@ -12,7 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useFAQArticles, useHelpChatbotNodes, type HelpChatbotNode } from '@/hooks/useFAQ';
 import { useSupportTickets, useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
-import SupportTicketList from '@/components/support/SupportTicketList';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -50,7 +49,6 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
   const [nodeHistory, setNodeHistory] = useState<(string | null)[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
-  const [showTickets, setShowTickets] = useState(false);
   const [freeText, setFreeText] = useState('');
   const [ratingEmoji, setRatingEmoji] = useState<string | null>(null);
   const [ratingComment, setRatingComment] = useState('');
@@ -335,20 +333,6 @@ const Help = ({ embedded = false }: HelpProps) => {
     );
   }
 
-  // Show old ticket detail from "Mes tickets"
-  if (selectedTicket && chatPhase === 'idle') {
-    return (
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen"
-      >
-        <SupportChatRoom ticket={selectedTicket} onBack={() => setSelectedTicket(null)} />
-      </motion.div>
-    );
-  }
 
   // ============ RATING PHASE ============
   if (chatPhase === 'rating') {
@@ -783,44 +767,28 @@ const Help = ({ embedded = false }: HelpProps) => {
             <h1 className="font-display text-xl font-bold tracking-tight">Centre d'aide</h1>
             <p className="text-xs text-muted-foreground">Trouvez rapidement des réponses</p>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-1.5 rounded-full border-border/50 hover:bg-muted/80" 
-            onClick={() => setShowTickets(!showTickets)}
-          >
-            <Headphones className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Mes tickets</span>
-          </Button>
         </div>
 
-        {!showTickets && (
-          <div className="px-4 pb-3">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-              <Input
-                placeholder="Rechercher un sujet..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 rounded-xl bg-muted/50 border-0 h-11 focus-visible:ring-1 focus-visible:ring-primary/30 placeholder:text-muted-foreground/50"
-              />
-              {searchQuery && (
-                <Button variant="ghost" size="icon" className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full" onClick={() => setSearchQuery('')}>
-                  <X className="w-3.5 h-3.5" />
-                </Button>
-              )}
-            </div>
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+            <Input
+              placeholder="Rechercher un sujet..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 rounded-xl bg-muted/50 border-0 h-11 focus-visible:ring-1 focus-visible:ring-primary/30 placeholder:text-muted-foreground/50"
+            />
+            {searchQuery && (
+              <Button variant="ghost" size="icon" className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full" onClick={() => setSearchQuery('')}>
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       <ScrollArea className="flex-1">
-        {showTickets ? (
-          <div className="p-4">
-            <SupportTicketList onSelectTicket={(ticket) => { setShowTickets(false); setSelectedTicket(ticket as SupportTicket); }} />
-          </div>
-        ) : (
-          <div className="p-4 space-y-5 pb-28">
+        <div className="p-4 space-y-5 pb-28">
             {/* Quick action cards */}
             {!searchQuery && (
               <motion.div
@@ -968,7 +936,6 @@ const Help = ({ embedded = false }: HelpProps) => {
               </motion.div>
             )}
           </div>
-        )}
       </ScrollArea>
 
       {/* Floating chat bubble */}

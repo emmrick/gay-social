@@ -81,7 +81,7 @@ export const useMissionToggle = () => {
 };
 
 // ─── Shared invalidation helper ───
-const invalidateAllTaskQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
+export const invalidateAllTaskQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
   queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
   queryClient.invalidateQueries({ queryKey: ['moderation-task-active'] });
   queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });

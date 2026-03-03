@@ -17,6 +17,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   useNextTask,
   useActiveTask,
@@ -27,7 +30,9 @@ import {
   getTaskTypeLabel,
   getTaskTypeSection,
   formatCentsReward,
+  invalidateAllTaskQueries,
 } from '@/hooks/useModerationTaskQueue';
+import { useQueryClient } from '@tanstack/react-query';
 
 // ── Mission arrival sound (synthesized rising chime) ──
 let missionAudioCtx: AudioContext | null = null;
@@ -116,12 +121,15 @@ const TRANSITION_DELAY_MS = 1500; // Brief pause between tasks
 type QueueState = 'idle' | 'offering' | 'transitioning' | 'active';
 
 const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { nextTask, queueLength } = useNextTask();
   const { data: activeTask } = useActiveTask();
   const reserveTask = useReserveTask();
   const refuseTask = useRefuseTask();
   const completeTask = useCompleteTask();
   const { isActive: missionsActive, toggle: toggleMissions } = useMissionToggle();
+  const [isHolding, setIsHolding] = useState(false);
 
   const [queueState, setQueueState] = useState<QueueState>('idle');
   
@@ -240,6 +248,75 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
     const section = getTaskTypeSection(activeTask.task_type);
     onNavigateToSection(section);
   }, [activeTask, onNavigateToSection]);
+
+  const handleHoldSupportTask = useCallback(async () => {
+    if (!activeTask || !user?.id) return;
+    setIsHolding(true);
+    try {
+      const ticketId = (activeTask.metadata as any)?.ticket_id;
+      
+      if (ticketId) {
+        // Send system message to client
+        await supabase
+          .from('support_messages' as any)
+          .insert({
+            ticket_id: ticketId,
+            sender_id: user.id,
+            content: '⏸️ Votre conversation est en attente. Un agent reprendra votre demande dès que vous répondrez.',
+            message_type: 'system',
+          } as any);
+
+        // Update ticket status
+        await supabase
+          .from('support_tickets' as any)
+          .update({ status: 'waiting_client', assigned_to: null } as any)
+          .eq('id', ticketId);
+      }
+
+      // Complete task with half reward
+      const { data: holdResult } = await supabase.rpc('hold_support_task', {
+        _task_id: activeTask.id,
+        _user_id: user.id,
+      });
+
+      const result = holdResult as any;
+      if (result?.success && result.reward_cents > 0) {
+        const halfCents = result.reward_cents;
+        await supabase.from('moderator_earnings').insert({
+          user_id: user.id,
+          task_type: 'support_chat',
+          amount_cents: halfCents,
+          target_entity_id: ticketId || null,
+          description: `Support en attente (50%)`,
+        } as any);
+
+        const { data: wallet } = await supabase
+          .from('moderator_wallets')
+          .select('balance_cents, total_earned_cents')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (wallet) {
+          await supabase
+            .from('moderator_wallets')
+            .update({
+              balance_cents: wallet.balance_cents + halfCents,
+              total_earned_cents: wallet.total_earned_cents + halfCents,
+            } as any)
+            .eq('user_id', user.id);
+        }
+      }
+
+      invalidateAllTaskQueries(queryClient);
+      queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      toast.success('Ticket mis en attente');
+    } catch (err) {
+      console.error('Hold support task error:', err);
+      toast.error('Erreur lors de la mise en attente');
+    } finally {
+      setIsHolding(false);
+    }
+  }, [activeTask, user?.id, queryClient]);
 
   return (
     <>
@@ -452,9 +529,10 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                     size="sm"
                     variant="outline"
                     className="text-orange-600 border-orange-400/30 hover:bg-orange-500/10 text-xs h-11 active:scale-95 transition-transform"
-                    onClick={() => onNavigateToSection('support')}
+                    onClick={handleHoldSupportTask}
+                    disabled={isHolding}
                   >
-                    <PauseCircle className="w-4 h-4 mr-1" />
+                    {isHolding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PauseCircle className="w-4 h-4 mr-1" />}
                     Attente
                   </Button>
                 )}

@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 
 export interface SupportTicket {
   id: string;
@@ -156,8 +157,12 @@ export const useSupportMessages = (ticketId: string | null) => {
         schema: 'public',
         table: 'support_messages',
         filter: `ticket_id=eq.${ticketId}`,
-      }, () => {
+      }, (payload: any) => {
         queryClient.invalidateQueries({ queryKey: ['support-messages', ticketId] });
+        // Play sound for incoming messages (not our own)
+        if (payload.new?.sender_id !== user?.id) {
+          playNotificationSoundStandalone();
+        }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };

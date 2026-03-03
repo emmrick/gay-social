@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronLeft, ChevronRight, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle } from 'lucide-react';
+import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -145,6 +146,7 @@ const Help = ({ embedded = false }: HelpProps) => {
       { type: 'bot', text: `Bonjour ${displayName} ! 👋 Merci de contacter l'assistance. Nous sommes là pour vous aider.` },
       { type: 'bot', text: 'Comment pouvons-nous vous aider aujourd\'hui ? Sélectionnez une option ci-dessous.' },
     ]);
+    playNotificationSoundStandalone();
   };
 
   const handleSelectOption = (node: HelpChatbotNode) => {
@@ -154,6 +156,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     ];
     if (node.response_text) {
       newMessages.push({ type: 'bot', text: node.response_text });
+      playNotificationSoundStandalone();
     }
     setChatMessages(newMessages);
     setNodeHistory(prev => [...prev, currentNodeId]);
@@ -247,6 +250,7 @@ const Help = ({ embedded = false }: HelpProps) => {
       { type: 'bot', text: 'Merci pour ces détails. Pour une assistance personnalisée, nous vous recommandons de contacter un agent.' },
     ]);
     setFreeText('');
+    playNotificationSoundStandalone();
   };
 
   // Send message to agent (in agent phase)

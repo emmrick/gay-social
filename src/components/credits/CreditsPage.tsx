@@ -26,7 +26,6 @@ import { useDynamicCreditCosts } from '@/hooks/useDynamicCreditCosts';
 import CreditBalanceBar from './CreditBalanceBar';
 import CreditHistorySheet from './CreditHistorySheet';
 import CreditReferralSection from './CreditReferralSection';
-import RedeemPromoCodeSection from './RedeemPromoCodeSection';
 import BuyCreditDialog from './BuyCreditDialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { motion } from 'framer-motion';
@@ -193,15 +192,6 @@ const CreditsPage = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
-
-        {/* Redeem Promo Code */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.22 }}
-        >
-          <RedeemPromoCodeSection />
         </motion.div>
 
         {/* Purchase Credits */}

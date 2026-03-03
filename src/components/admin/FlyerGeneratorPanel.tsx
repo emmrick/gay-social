@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Download, Printer, Palette, Type, Eye, RefreshCw, Database } from 'lucide-react';
+import { Download, Printer, Palette, Type, Eye, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,12 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface FlyerConfig {
   title: string;
@@ -45,7 +42,7 @@ const SingleFlyer = ({ config, index }: { config: FlyerConfig; index: number }) 
     : '';
 
   const qrUrl = config.showPromoCode
-    ? `${config.siteUrl}?promo=${promoCode}`
+    ? `${config.siteUrl}?ref=${promoCode}`
     : config.siteUrl;
 
   return (
@@ -114,52 +111,20 @@ const SingleFlyer = ({ config, index }: { config: FlyerConfig; index: number }) 
 };
 
 const FlyerGeneratorPanel = () => {
-  const { user } = useAuth();
   const [config, setConfig] = useState<FlyerConfig>(defaultConfig);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [codesCreated, setCodesCreated] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   const updateConfig = useCallback((key: keyof FlyerConfig, value: string | boolean) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  // Save promo codes to database before PDF generation
-  const savePromoCodesToDB = async () => {
-    if (!config.showPromoCode || !user) return;
-
-    const codes: string[] = [];
-    for (let i = 1; i <= 6; i++) {
-      codes.push(config.promoCode + `-${String(i).padStart(2, '0')}`);
-    }
-
-    // Insert codes that don't already exist
-    for (const code of codes) {
-      const { error } = await supabase
-        .from('flyer_promo_codes')
-        .upsert(
-          { code: code.toUpperCase(), credits_amount: 30, max_uses: 1, created_by: user.id },
-          { onConflict: 'code' }
-        );
-      if (error) {
-        console.error('Error saving promo code:', code, error);
-      }
-    }
-
-    setCodesCreated(true);
-    toast.success(`${codes.length} codes promo créés en base (30 crédits chacun, usage unique)`);
-  };
-
   const generatePDF = async () => {
+    if (!printRef.current) return;
     setIsGenerating(true);
 
     try {
-      // Save promo codes to DB first
-      if (config.showPromoCode) {
-        await savePromoCodesToDB();
-      }
-
-      // A4 landscape: 297mm x 210mm → use fixed pixel dims for off-screen render
+      // A4 landscape: 297mm x 210mm
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const pdfW = 297;
       const pdfH = 210;
@@ -168,51 +133,22 @@ const FlyerGeneratorPanel = () => {
       const cellW = pdfW / cols;
       const cellH = pdfH / rows;
 
-      // Fixed pixel size per flyer for consistent rendering
-      const flyerPxW = 400;
-      const flyerPxH = 560;
-
-      for (let i = 0; i < 6; i++) {
-        // Create an off-screen container with fixed pixel dimensions
-        const offscreen = document.createElement('div');
-        offscreen.style.position = 'fixed';
-        offscreen.style.left = '-9999px';
-        offscreen.style.top = '0';
-        offscreen.style.width = `${flyerPxW}px`;
-        offscreen.style.height = `${flyerPxH}px`;
-        offscreen.style.overflow = 'hidden';
-        document.body.appendChild(offscreen);
-
-        // Render the flyer into it using React
-        const { createRoot } = await import('react-dom/client');
-        const root = createRoot(offscreen);
-
-        await new Promise<void>((resolve) => {
-          root.render(
-            <div style={{ width: flyerPxW, height: flyerPxH }}>
-              <SingleFlyer config={config} index={i + 1} />
-            </div>
-          );
-          // Wait for render
-          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-        });
-
-        const canvas = await html2canvas(offscreen, {
-          scale: 3,
+      // Capture each flyer individually to avoid layout shift
+      const flyerEls = printRef.current.querySelectorAll('[data-flyer]');
+      for (let i = 0; i < flyerEls.length; i++) {
+        const el = flyerEls[i] as HTMLElement;
+        const canvas = await html2canvas(el, {
+          scale: 4,
           useCORS: true,
           backgroundColor: null,
           logging: false,
-          width: flyerPxW,
-          height: flyerPxH,
+          width: el.offsetWidth,
+          height: el.offsetHeight,
         });
-
         const imgData = canvas.toDataURL('image/png');
         const col = i % cols;
         const row = Math.floor(i / cols);
         pdf.addImage(imgData, 'PNG', col * cellW, row * cellH, cellW, cellH);
-
-        root.unmount();
-        document.body.removeChild(offscreen);
       }
 
       pdf.save(`flyers-${config.title.toLowerCase().replace(/\s+/g, '-')}.pdf`);
@@ -388,10 +324,6 @@ const FlyerGeneratorPanel = () => {
                       <p className="text-[10px] text-muted-foreground mt-1">
                         Chaque flyer aura un suffixe unique (ex: {config.promoCode}-01, {config.promoCode}-02…)
                       </p>
-                      <Badge variant="outline" className="mt-2 text-[10px] gap-1">
-                        <Database className="w-3 h-3" />
-                        30 crédits offerts • 1 usage par utilisateur
-                      </Badge>
                     </div>
                   )}
                 </div>

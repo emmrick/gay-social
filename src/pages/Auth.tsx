@@ -30,19 +30,13 @@ const Auth = () => {
   const navigate = useNavigate();
   const { data: rooms, isLoading: roomsLoading } = useChatRooms();
 
-  // Check for referral code or promo code in URL
+  // Check for referral code in URL
   useEffect(() => {
     const refCode = searchParams.get('ref');
-    const promoCode = searchParams.get('promo');
     if (refCode) {
       setReferralCode(refCode.toUpperCase());
       setIsLogin(false); // Switch to signup mode
       validateReferralCode(refCode);
-    }
-    // Store promo code for after login
-    if (promoCode) {
-      sessionStorage.setItem('pending_promo_code', promoCode.toUpperCase());
-      setIsLogin(false);
     }
   }, [searchParams]);
 

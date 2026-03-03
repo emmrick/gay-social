@@ -587,74 +587,6 @@ export type Database = {
         }
         Relationships: []
       }
-      flyer_promo_codes: {
-        Row: {
-          code: string
-          created_at: string
-          created_by: string
-          credits_amount: number
-          expires_at: string | null
-          id: string
-          is_active: boolean
-          max_uses: number | null
-          times_used: number
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          created_by: string
-          credits_amount?: number
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean
-          max_uses?: number | null
-          times_used?: number
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          created_by?: string
-          credits_amount?: number
-          expires_at?: string | null
-          id?: string
-          is_active?: boolean
-          max_uses?: number | null
-          times_used?: number
-        }
-        Relationships: []
-      }
-      flyer_promo_redemptions: {
-        Row: {
-          code_id: string
-          credits_given: number
-          id: string
-          redeemed_at: string
-          user_id: string
-        }
-        Insert: {
-          code_id: string
-          credits_given: number
-          id?: string
-          redeemed_at?: string
-          user_id: string
-        }
-        Update: {
-          code_id?: string
-          credits_given?: number
-          id?: string
-          redeemed_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "flyer_promo_redemptions_code_id_fkey"
-            columns: ["code_id"]
-            isOneToOne: false
-            referencedRelation: "flyer_promo_codes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       group_event_rsvps: {
         Row: {
           created_at: string
@@ -2768,10 +2700,6 @@ export type Database = {
         Returns: boolean
       }
       recycle_fully_refused_tasks: { Args: never; Returns: undefined }
-      redeem_flyer_promo_code: {
-        Args: { _code: string; _user_id: string }
-        Returns: Json
-      }
       refuse_moderation_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: Json

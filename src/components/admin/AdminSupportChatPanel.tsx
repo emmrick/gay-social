@@ -118,76 +118,78 @@ const AdminSupportChatPanel = ({ onBack }: AdminSupportChatPanelProps) => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-200px)] sm:h-[calc(100vh-120px)] rounded-2xl overflow-hidden border border-border bg-card">
-      {/* Client info + chatbot history header */}
-      <div className="flex-shrink-0 bg-card border-b border-border">
-        {/* Client summary bar */}
-        <div className="flex items-center gap-3 px-4 py-3">
-          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-            {clientProfile?.avatar_url ? (
-              <img src={clientProfile.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" />
-            ) : (
-              <User className="w-4 h-4 text-primary" />
-            )}
+    <div className="max-w-2xl mx-auto w-full">
+      <div className="flex flex-col h-[min(600px,calc(100dvh-220px))] sm:h-[min(650px,calc(100vh-160px))] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+        {/* Client info + chatbot history header */}
+        <div className="flex-shrink-0 bg-card border-b border-border">
+          {/* Client summary bar */}
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              {clientProfile?.avatar_url ? (
+                <img src={clientProfile.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" />
+              ) : (
+                <User className="w-4 h-4 text-primary" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">
+                {clientProfile?.username || 'Client'}
+              </p>
+              <p className="text-[11px] text-muted-foreground font-mono">
+                #{ticket.ticket_number} · {ticket.subject || 'Support'}
+              </p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">
-              {clientProfile?.username || 'Client'}
-            </p>
-            <p className="text-[11px] text-muted-foreground font-mono">
-              #{ticket.ticket_number} · {ticket.subject || 'Support'}
-            </p>
-          </div>
+
+          {/* Chatbot history toggle */}
+          {chatbotHistory.length > 0 && (
+            <>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="w-full flex items-center justify-between px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors border-t border-border/50"
+              >
+                <span className="flex items-center gap-2">
+                  <Bot className="w-3.5 h-3.5" />
+                  Historique chatbot · {chatbotHistory.length} msg
+                </span>
+                {showHistory ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+
+              {showHistory && (
+                <div className="px-4 pb-3 space-y-1.5 max-h-48 overflow-y-auto border-t border-border/30 bg-muted/20">
+                  <div className="pt-2" />
+                  {chatbotHistory.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex",
+                        msg.type === 'user' ? "justify-end" : msg.type === 'system' ? "justify-center" : "justify-start"
+                      )}
+                    >
+                      {msg.type === 'system' ? (
+                        <span className="text-[10px] text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full">{msg.text}</span>
+                      ) : (
+                        <div className={cn(
+                          "max-w-[75%] rounded-2xl px-3 py-1.5 text-[11px] leading-relaxed",
+                          msg.type === 'user'
+                            ? "bg-primary/10 text-primary rounded-br-sm"
+                            : "bg-muted text-foreground rounded-bl-sm"
+                        )}>
+                          {msg.text}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
-        {/* Chatbot history toggle */}
-        {chatbotHistory.length > 0 && (
-          <>
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="w-full flex items-center justify-between px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors border-t border-border/50"
-            >
-              <span className="flex items-center gap-2">
-                <Bot className="w-3.5 h-3.5" />
-                Historique chatbot · {chatbotHistory.length} msg
-              </span>
-              {showHistory ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-
-            {showHistory && (
-              <div className="px-4 pb-3 space-y-1.5 max-h-48 overflow-y-auto border-t border-border/30 bg-muted/20">
-                <div className="pt-2" />
-                {chatbotHistory.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "flex",
-                      msg.type === 'user' ? "justify-end" : msg.type === 'system' ? "justify-center" : "justify-start"
-                    )}
-                  >
-                    {msg.type === 'system' ? (
-                      <span className="text-[10px] text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full">{msg.text}</span>
-                    ) : (
-                      <div className={cn(
-                        "max-w-[75%] rounded-2xl px-3 py-1.5 text-[11px] leading-relaxed",
-                        msg.type === 'user'
-                          ? "bg-primary/10 text-primary rounded-br-sm"
-                          : "bg-muted text-foreground rounded-bl-sm"
-                      )}>
-                        {msg.text}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Main chat */}
-      <div className="flex-1 min-h-0">
-        <SupportChatRoom ticket={ticket} onBack={onBack} isAgent hideHeader />
+        {/* Main chat */}
+        <div className="flex-1 min-h-0 flex flex-col">
+          <SupportChatRoom ticket={ticket} onBack={onBack} isAgent hideHeader />
+        </div>
       </div>
     </div>
   );

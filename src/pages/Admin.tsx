@@ -257,7 +257,7 @@ const Admin = () => {
           pendingVerifications={pendingVerificationsCount}
         />
         <main className="flex-1 overflow-auto">
-          <div className={activeSection === 'support' ? 'h-[calc(100dvh-52px)]' : 'p-4 pb-8'}>
+          <div className="p-4 pb-8">
             <TaskQueuePopup onNavigateToSection={handleSectionChange} />
             {renderContent()}
           </div>
@@ -285,20 +285,11 @@ const Admin = () => {
         pendingVerifications={pendingVerificationsCount}
       />
 
-      <main className="flex-1 overflow-hidden">
-        {activeSection === 'support' ? (
-          <div className="h-full">
+      <main className="flex-1 overflow-auto">
+          <div className="max-w-6xl mx-auto p-6 space-y-6">
             <TaskQueuePopup onNavigateToSection={handleSectionChange} />
             {renderContent()}
           </div>
-        ) : (
-          <div className="h-full overflow-auto">
-            <div className="max-w-6xl mx-auto p-6 space-y-6">
-              <TaskQueuePopup onNavigateToSection={handleSectionChange} />
-              {renderContent()}
-            </div>
-          </div>
-        )}
       </main>
 
       {selectedReport && (

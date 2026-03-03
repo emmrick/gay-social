@@ -413,7 +413,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
   const statusColor = ticket.status === 'open' ? 'bg-amber-500/20 text-amber-600' : ticket.status === 'assigned' ? 'bg-green-500/20 text-green-600' : ticket.status === 'waiting_client' ? 'bg-orange-500/20 text-orange-600' : 'bg-muted text-muted-foreground';
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-background overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 bg-background overflow-hidden flex-1">
       {/* Header - hidden when embedded in admin panel */}
       {!hideHeader && (
       <header

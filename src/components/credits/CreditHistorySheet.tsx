@@ -33,6 +33,8 @@ const getTransactionLabel = (type: string): string => {
     profile_view: 'Vue profil',
     nearby_unlock_30: 'Déblocage 30 profils',
     nearby_unlock_130: 'Déblocage 130 profils',
+    passive_recharge: 'Recharge passive',
+    daily_recharge: 'Recharge quotidienne',
   };
   return labels[type] || type;
 };

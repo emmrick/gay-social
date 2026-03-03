@@ -99,11 +99,8 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
     return result;
   }, [currentUserProfile, profiles, ageRange]);
 
-  // Stable member count excluding current user
-  const otherMembersCount = useMemo(() => 
-    allProfiles.filter(p => !p.isCurrentUser).length, 
-    [allProfiles]
-  );
+  // Total member count including current user
+  const totalMembersCount = allProfiles.length;
 
   // ---------- HELPER FUNCTIONS ----------
 
@@ -168,7 +165,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
       {/* Header with refresh */}
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
-          {otherMembersCount} membre{otherMembersCount > 1 ? 's' : ''}{hasGeoData ? ' à proximité' : ''}
+          {totalMembersCount} membre{totalMembersCount > 1 ? 's' : ''}{hasGeoData ? ' à proximité' : ''}
         </span>
         <Button 
           variant="ghost" 
@@ -192,7 +189,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
             {allProfiles.map((profile) => (
               <button
                 key={profile.id}
-                onClick={() => !profile.isCurrentUser && navigate(`/profile/${profile.user_id}`)}
+                onClick={() => navigate(profile.isCurrentUser ? `/profile/${profile.user_id}` : `/profile/${profile.user_id}`)}
                 className={cn(
                   "relative aspect-[3/4] rounded-xl overflow-hidden group",
                   "bg-gradient-to-br from-secondary to-secondary/50",

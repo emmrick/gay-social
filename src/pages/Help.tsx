@@ -80,9 +80,9 @@ const Help = ({ embedded = false }: HelpProps) => {
   }, []);
 
   // Auto-resume active ticket on mount
-  const { tickets, createTicket, closeTicket } = useSupportTickets();
+  const { tickets, isLoading: ticketsLoading, createTicket, closeTicket } = useSupportTickets();
   useEffect(() => {
-    if (hasCheckedActiveTicket || !user?.id || !tickets) return;
+    if (hasCheckedActiveTicket || !user?.id || ticketsLoading) return;
     setHasCheckedActiveTicket(true);
     
     // Find the most recent active (open or assigned) ticket
@@ -92,7 +92,7 @@ const Help = ({ embedded = false }: HelpProps) => {
       agentJoinedRef.current = activeTicket.status === 'assigned';
       setChatPhase(activeTicket.status === 'assigned' ? 'agent' : 'waiting_agent');
     }
-  }, [tickets, user?.id, hasCheckedActiveTicket]);
+  }, [tickets, user?.id, hasCheckedActiveTicket, ticketsLoading]);
 
   // Helper: add bot messages with a random 10-30s delay
   const addBotMessagesWithDelay = (

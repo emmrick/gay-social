@@ -18,7 +18,7 @@ import ProfileEditDialog from './ProfileEditDialog';
 import ProfileReactions from './ProfileReactions';
 import ProfileSettingsDrawer from './ProfileSettingsDrawer';
 import ProfileAlbumsSection from './ProfileAlbumsSection';
-import ChatBotConfigSection from '@/components/chatbot/ChatBotConfigSection';
+import ChatBotProfileCard from '@/components/chatbot/ChatBotProfileCard';
 import { motion } from 'framer-motion';
 
 // Labels
@@ -79,11 +79,12 @@ interface ProfileViewProps {
   onNavigateToAdmin?: () => void;
   onNavigateToCredits?: () => void;
   onContactAdmin?: () => void;
+  onNavigateToChatbot?: () => void;
   isAdmin?: boolean;
   isModerator?: boolean;
 }
 
-const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, isAdmin, isModerator }: ProfileViewProps) => {
+const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, onNavigateToChatbot, isAdmin, isModerator }: ProfileViewProps) => {
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
   const { data: isAdminUser } = useIsAdmin();
@@ -305,7 +306,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
           transition={{ delay: 0.12 }}
           className="mt-3"
         >
-          <ChatBotConfigSection />
+          <ChatBotProfileCard onOpen={() => onNavigateToChatbot?.()} />
         </motion.div>
       </div>
 

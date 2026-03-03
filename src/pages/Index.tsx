@@ -10,6 +10,7 @@ import ChatRoom from '@/components/chat/ChatRoom';
 import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import ProfileView from '@/components/profile/ProfileView';
+import ChatBotConfigPage from '@/components/chatbot/ChatBotConfigPage';
 import PremiumPage from '@/components/premium/PremiumPage';
 import ReferralDialog from '@/components/premium/ReferralDialog';
 import SwipePage from '@/components/swipe/SwipePage';
@@ -255,6 +256,24 @@ const Index = () => {
     setCurrentView('messages');
   };
 
+
+  // Render chatbot config view
+  if (currentView === 'chatbot-config') {
+    return (
+      <motion.div
+        initial={{ x: '100%', opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: '100%', opacity: 0 }}
+        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+        className="min-h-screen"
+      >
+        <ChatBotConfigPage onBack={() => {
+          setCurrentView('profile');
+          setActiveTab('profile');
+        }} />
+      </motion.div>
+    );
+  }
 
   // Render private chat view with slide animation
   if (currentView === 'private' && selectedPrivateUserId) {
@@ -571,6 +590,7 @@ const Index = () => {
                   setActiveTab('help');
                   setCurrentView('help');
                 }}
+                onNavigateToChatbot={() => setCurrentView('chatbot-config')}
                 isAdmin={isAdmin}
                 isModerator={isModerator}
               />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-type AppView = 'landing' | 'home' | 'swipe' | 'groups' | 'messages' | 'premium' | 'profile' | 'chat' | 'private' | 'support' | 'help';
+type AppView = 'landing' | 'home' | 'swipe' | 'groups' | 'messages' | 'premium' | 'profile' | 'chat' | 'private' | 'support' | 'help' | 'chatbot-config';
 type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile';
 
 interface PersistedNavState {

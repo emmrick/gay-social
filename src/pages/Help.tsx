@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronLeft, ChevronRight, ChevronDown, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle, BookOpen, MessageCircle, Shield, CreditCard, Users, Settings, Sparkles, LifeBuoy } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ChevronDown, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle, BookOpen, MessageCircle, Shield, CreditCard, Users, Settings, Sparkles, LifeBuoy, Headset } from 'lucide-react';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useFAQArticles, useHelpChatbotNodes, type HelpChatbotNode } from '@/hooks/useFAQ';
 import { useSupportTickets, useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
+import { useSupportTypingIndicator } from '@/hooks/useSupportTypingIndicator';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -105,6 +106,7 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   // Listen for agent messages on the active ticket
   const { messages: ticketMessages } = useSupportMessages(selectedTicket?.id ?? null);
+  const { typingUsers: agentTypingUsers } = useSupportTypingIndicator(selectedTicket?.id ?? null);
 
   // Fetch agent profile when ticket gets assigned
   const { data: agentProfile } = useQuery({
@@ -158,7 +160,7 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   useEffect(() => {
     scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages.length, currentOptions.length, ticketMessages.length, chatPhase]);
+  }, [chatMessages.length, currentOptions.length, ticketMessages.length, chatPhase, agentTypingUsers.length]);
 
   const handleStartChat = () => {
     setChatPhase('chatbot');
@@ -686,6 +688,26 @@ const Help = ({ embedded = false }: HelpProps) => {
 
 
 
+
+            {/* Agent typing indicator */}
+            {(isAgentPhase || isWaiting) && agentTypingUsers.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-end gap-2 justify-start"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-0.5 text-xs font-bold text-primary">
+                  {agentProfile?.username?.charAt(0)?.toUpperCase() || <Headset className="w-3.5 h-3.5" />}
+                </div>
+                <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                  <div className="flex gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             <div ref={scrollEndRef} />
           </div>

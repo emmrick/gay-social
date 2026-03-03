@@ -216,7 +216,7 @@ const Admin = () => {
       case 'credit-costs': return <CreditCostsPanel />;
       case 'maintenance': return <MaintenanceTogglePanel />;
       case 'pending-tasks': return <PendingTasksPanel />;
-      case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('__home__')} />;
+      case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('__home__')} onNavigateToSection={handleSectionChange} />;
       case 'support-ratings': return <SupportRatingsPanel />;
       case 'popups': return <PopupManagementPanel />;
       case 'faq': return <FAQManagementPanel />;

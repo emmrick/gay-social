@@ -207,7 +207,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   };
 
   const handleSelectOption = (node: HelpChatbotNode) => {
-    if (isProcessingOptionRef.current) return;
+    if (isProcessingOptionRef.current || isBotTyping) return;
     isProcessingOptionRef.current = true;
     const userMessages: ChatMessage[] = [
       ...chatMessages,
@@ -637,15 +637,17 @@ const Help = ({ embedded = false }: HelpProps) => {
                   <Bot className="w-3.5 h-3.5 text-background" />
                 </div>
                 <div className="flex-1 space-y-1.5 max-w-[80%]">
-                  {currentOptions.map((node) => (
-                    <button
-                      key={node.id}
-                      onClick={() => handleSelectOption(node)}
-                      className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
-                    >
-                      {node.label}
-                    </button>
-                  ))}
+                   {currentOptions.map((node) => (
+                     <button
+                       key={node.id}
+                       onClick={() => handleSelectOption(node)}
+                       disabled={isProcessingOptionRef.current || isBotTyping}
+                       className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                     >
+                       {node.label}
+                     </button>
+                   ))}
+
                   {/* Agent button - shown at root level after navigating (not on first display) */}
                   {chatMessages.length > 2 && !currentNodeId && (
                     <button

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronLeft, ChevronRight, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ChevronDown, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle, BookOpen, MessageCircle, Shield, CreditCard, Users, Settings, Sparkles, LifeBuoy } from 'lucide-react';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -751,41 +751,61 @@ const Help = ({ embedded = false }: HelpProps) => {
     );
   }
 
+  // Category icon mapping
+  const getCategoryIcon = (category: string) => {
+    const lower = category.toLowerCase();
+    if (lower.includes('compte') || lower.includes('profil')) return <Users className="w-4 h-4" />;
+    if (lower.includes('crédit') || lower.includes('paiement') || lower.includes('achat')) return <CreditCard className="w-4 h-4" />;
+    if (lower.includes('sécu') || lower.includes('confiden') || lower.includes('privacy')) return <Shield className="w-4 h-4" />;
+    if (lower.includes('message') || lower.includes('chat') || lower.includes('conversation')) return <MessageCircle className="w-4 h-4" />;
+    if (lower.includes('param') || lower.includes('config') || lower.includes('réglage')) return <Settings className="w-4 h-4" />;
+    if (lower.includes('premium') || lower.includes('abonn')) return <Sparkles className="w-4 h-4" />;
+    return <BookOpen className="w-4 h-4" />;
+  };
+
+  const categoryCount = Object.keys(groupedFAQ).length;
+
   // ============ DEFAULT: FAQ page ============
   return (
     <div className={cn("bg-background flex flex-col", embedded ? "flex-1" : "min-h-dvh")}>
+      {/* Modern Header */}
       <div
-        className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
-        style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))' }}
+        className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/30"
+        style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
       >
         <div className="px-4 pb-3 flex items-center gap-3">
           {!embedded && (
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="rounded-full">
               <ChevronLeft className="w-5 h-5" />
             </Button>
           )}
           <div className="flex-1">
-            <h1 className="font-display text-xl font-bold">Centre d'aide</h1>
-            <p className="text-xs text-muted-foreground">FAQ & Support client</p>
+            <h1 className="font-display text-xl font-bold tracking-tight">Centre d'aide</h1>
+            <p className="text-xs text-muted-foreground">Trouvez rapidement des réponses</p>
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowTickets(!showTickets)}>
-            <Headphones className="w-4 h-4" />
-            Mes tickets
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-1.5 rounded-full border-border/50 hover:bg-muted/80" 
+            onClick={() => setShowTickets(!showTickets)}
+          >
+            <Headphones className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Mes tickets</span>
           </Button>
         </div>
 
         {!showTickets && (
           <div className="px-4 pb-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
               <Input
-                placeholder="Rechercher dans la FAQ..."
+                placeholder="Rechercher un sujet..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-10 rounded-xl bg-muted/50 border-0 h-11 focus-visible:ring-1 focus-visible:ring-primary/30 placeholder:text-muted-foreground/50"
               />
               {searchQuery && (
-                <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7" onClick={() => setSearchQuery('')}>
+                <Button variant="ghost" size="icon" className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full" onClick={() => setSearchQuery('')}>
                   <X className="w-3.5 h-3.5" />
                 </Button>
               )}
@@ -800,72 +820,172 @@ const Help = ({ embedded = false }: HelpProps) => {
             <SupportTicketList onSelectTicket={(ticket) => { setShowTickets(false); setSelectedTicket(ticket as SupportTicket); }} />
           </div>
         ) : (
-          <div className="p-4 space-y-6 pb-24">
+          <div className="p-4 space-y-5 pb-28">
+            {/* Quick action cards */}
+            {!searchQuery && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="grid grid-cols-2 gap-3"
+              >
+                <button
+                  onClick={handleStartChat}
+                  className="group relative overflow-hidden rounded-2xl bg-primary/10 p-4 text-left transition-all hover:bg-primary/15 active:scale-[0.98]"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Bot className="w-5 h-5 text-primary" />
+                  </div>
+                  <p className="font-semibold text-sm text-foreground">Assistant virtuel</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Réponse instantanée</p>
+                </button>
+                <button
+                  onClick={() => {
+                    handleStartChat();
+                    // Will navigate to agent after chatbot
+                  }}
+                  className="group relative overflow-hidden rounded-2xl bg-accent/50 p-4 text-left transition-all hover:bg-accent/70 active:scale-[0.98]"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <LifeBuoy className="w-5 h-5 text-foreground" />
+                  </div>
+                  <p className="font-semibold text-sm text-foreground">Contacter le support</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Agent disponible</p>
+                </button>
+              </motion.div>
+            )}
+
+            {/* FAQ articles */}
             {faqArticles.length === 0 && !faqLoading ? (
-              <div className="text-center py-8">
-                <HelpCircle className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-                <h3 className="font-medium text-foreground mb-1">
-                  {searchQuery ? 'Aucun résultat' : 'FAQ bientôt disponible'}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-4">
+                  <HelpCircle className="w-8 h-8 text-muted-foreground/40" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-1">
+                  {searchQuery ? 'Aucun résultat trouvé' : 'FAQ bientôt disponible'}
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  {searchQuery ? 'Essayez avec d\'autres mots-clés ou contactez le support.' : 'Les articles d\'aide seront bientôt disponibles.'}
+                  {searchQuery ? 'Essayez avec d\'autres mots-clés ou utilisez l\'assistant.' : 'Les articles d\'aide seront bientôt disponibles.'}
                 </p>
-              </div>
+                {searchQuery && (
+                  <Button variant="outline" size="sm" onClick={handleStartChat} className="mt-4 gap-2 rounded-full">
+                    <Bot className="w-4 h-4" />
+                    Demander à l'assistant
+                  </Button>
+                )}
+              </motion.div>
             ) : (
-              Object.entries(groupedFAQ).map(([category, articles]) => (
-                <div key={category}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Badge variant="secondary" className="text-xs capitalize">{category}</Badge>
-                    <span className="text-xs text-muted-foreground">{articles.length} article{articles.length > 1 ? 's' : ''}</span>
+              Object.entries(groupedFAQ).map(([category, articles], catIndex) => (
+                <motion.div
+                  key={category}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: catIndex * 0.05 }}
+                >
+                  {/* Category header */}
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                      {getCategoryIcon(category)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="font-semibold text-sm capitalize truncate">{category}</h2>
+                      <p className="text-[11px] text-muted-foreground">{articles.length} article{articles.length > 1 ? 's' : ''}</p>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    {articles.map((article) => (
-                      <Card
+
+                  {/* Article cards */}
+                  <div className="space-y-2 ml-0.5">
+                    {articles.map((article, artIndex) => (
+                      <motion.div
                         key={article.id}
-                        className={cn("overflow-hidden transition-all cursor-pointer", expandedFAQ === article.id ? "ring-1 ring-primary/30" : "")}
-                        onClick={() => setExpandedFAQ(expandedFAQ === article.id ? null : article.id)}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2, delay: catIndex * 0.05 + artIndex * 0.03 }}
                       >
-                        <div className="px-4 py-3 flex items-center justify-between">
-                          <p className="font-medium text-sm flex-1">{article.question}</p>
-                          <ChevronRight className={cn("w-4 h-4 text-muted-foreground transition-transform shrink-0 ml-2", expandedFAQ === article.id && "rotate-90")} />
-                        </div>
+                        <button
+                          className={cn(
+                            "w-full text-left rounded-xl border border-border/50 bg-card overflow-hidden transition-all",
+                            "hover:border-primary/20 hover:shadow-sm active:scale-[0.995]",
+                            expandedFAQ === article.id && "border-primary/30 shadow-sm bg-primary/[0.02]"
+                          )}
+                          onClick={() => setExpandedFAQ(expandedFAQ === article.id ? null : article.id)}
+                        >
+                          <div className="px-4 py-3.5 flex items-center gap-3">
+                            <p className="font-medium text-sm flex-1 leading-snug">{article.question}</p>
+                            <motion.div
+                              animate={{ rotate: expandedFAQ === article.id ? 180 : 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="shrink-0"
+                            >
+                              <ChevronDown className="w-4 h-4 text-muted-foreground/60" />
+                            </motion.div>
+                          </div>
+                        </button>
                         <AnimatePresence>
                           {expandedFAQ === article.id && (
                             <motion.div
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: 'auto', opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
+                              transition={{ duration: 0.25, ease: 'easeInOut' }}
                               className="overflow-hidden"
                             >
-                              <div className="px-4 pb-3 border-t border-border pt-3">
-                                <p className="text-sm text-muted-foreground whitespace-pre-line">{article.answer}</p>
+                              <div className="px-4 py-3 ml-0 border-l-2 border-primary/30 ml-4 mt-1 mb-2">
+                                <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">{article.answer}</p>
                               </div>
                             </motion.div>
                           )}
                         </AnimatePresence>
-                      </Card>
+                      </motion.div>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               ))
+            )}
+
+            {/* Bottom help nudge */}
+            {faqArticles.length > 0 && !searchQuery && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-center pt-4 pb-2"
+              >
+                <p className="text-xs text-muted-foreground mb-2">Vous n'avez pas trouvé votre réponse ?</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleStartChat}
+                  className="gap-2 rounded-full border-primary/30 text-primary hover:bg-primary/5"
+                >
+                  <Bot className="w-4 h-4" />
+                  Parler à l'assistant
+                </Button>
+              </motion.div>
             )}
           </div>
         )}
       </ScrollArea>
 
       {/* Floating chat bubble */}
-      <button
+      <motion.button
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 20 }}
         onClick={handleStartChat}
         className={cn(
-          "fixed right-4 z-50 w-14 h-14 rounded-full bg-foreground text-background shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center",
+          "fixed right-4 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:scale-105 active:scale-95 transition-transform flex items-center justify-center",
           embedded ? "bottom-28" : "bottom-20"
         )}
         style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
         aria-label="Démarrer le chat"
       >
         <Bot className="w-6 h-6" />
-      </button>
+      </motion.button>
     </div>
   );
 };

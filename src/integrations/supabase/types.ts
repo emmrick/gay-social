@@ -1659,6 +1659,7 @@ export type Database = {
           created_at: string
           endowment: string | null
           ethnicity: string | null
+          first_name: string | null
           height: number | null
           hide_last_seen: boolean | null
           hide_online_status: boolean | null
@@ -1667,6 +1668,7 @@ export type Database = {
           is_online: boolean | null
           is_premium: boolean | null
           is_verified: boolean
+          last_name: string | null
           last_seen: string | null
           latitude: number | null
           location_updated_at: string | null
@@ -1693,6 +1695,7 @@ export type Database = {
           created_at?: string
           endowment?: string | null
           ethnicity?: string | null
+          first_name?: string | null
           height?: number | null
           hide_last_seen?: boolean | null
           hide_online_status?: boolean | null
@@ -1701,6 +1704,7 @@ export type Database = {
           is_online?: boolean | null
           is_premium?: boolean | null
           is_verified?: boolean
+          last_name?: string | null
           last_seen?: string | null
           latitude?: number | null
           location_updated_at?: string | null
@@ -1727,6 +1731,7 @@ export type Database = {
           created_at?: string
           endowment?: string | null
           ethnicity?: string | null
+          first_name?: string | null
           height?: number | null
           hide_last_seen?: boolean | null
           hide_online_status?: boolean | null
@@ -1735,6 +1740,7 @@ export type Database = {
           is_online?: boolean | null
           is_premium?: boolean | null
           is_verified?: boolean
+          last_name?: string | null
           last_seen?: string | null
           latitude?: number | null
           location_updated_at?: string | null

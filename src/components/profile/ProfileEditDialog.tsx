@@ -120,6 +120,8 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
   
   // Basic info
   const [username, setUsername] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [bio, setBio] = useState('');
   const [age, setAge] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -150,6 +152,8 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
   useEffect(() => {
     if (open && profile) {
       setUsername(profile.username || '');
+      setFirstName((profile as any).first_name || '');
+      setLastName((profile as any).last_name || '');
       setBio(profile.bio || '');
       setAge(profile.age?.toString() || '');
       setAvatarPreview(profile.avatar_url || null);
@@ -309,6 +313,8 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
 
       const { error } = await updateProfile({
         username: username.trim(),
+        first_name: firstName.trim() || null,
+        last_name: lastName.trim() || null,
         bio: bio.trim() || null,
         age: ageNum,
         avatar_url: avatarUrl,
@@ -389,6 +395,29 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
                   placeholder="Ton pseudo"
                   maxLength={30}
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">Prénom</Label>
+                  <Input
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Ton prénom"
+                    maxLength={50}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Nom</Label>
+                  <Input
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Ton nom"
+                    maxLength={50}
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

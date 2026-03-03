@@ -57,9 +57,19 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [hasCheckedActiveTicket, setHasCheckedActiveTicket] = useState(false);
   
   const scrollEndRef = useRef<HTMLDivElement>(null);
+  const freeTextRef = useRef<HTMLTextAreaElement>(null);
   const agentJoinedRef = useRef(false);
   const [isBotTyping, setIsBotTyping] = useState(false);
   const botTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-resize freeText textarea
+  useEffect(() => {
+    if (freeTextRef.current) {
+      freeTextRef.current.style.height = 'auto';
+      const scrollHeight = freeTextRef.current.scrollHeight;
+      freeTextRef.current.style.height = Math.min(scrollHeight, 120) + 'px';
+    }
+  }, [freeText]);
 
   // Cleanup typing timeout on unmount
   useEffect(() => {
@@ -765,13 +775,12 @@ const Help = ({ embedded = false }: HelpProps) => {
             )}
             <div className="max-w-lg mx-auto flex items-end gap-2">
               <Textarea
+                ref={freeTextRef}
                 placeholder={(isAgentPhase || isWaiting) ? "Écrivez votre message..." : "Décrivez votre problème..."}
                 value={freeText}
                 onChange={(e) => setFreeText(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-                    // On mobile, don't intercept Enter - let it create a newline
-                    // Only send on desktop (non-touch devices) with Enter without Shift
                     const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
                     if (!isMobile) {
                       e.preventDefault();
@@ -779,8 +788,8 @@ const Help = ({ embedded = false }: HelpProps) => {
                     }
                   }
                 }}
-                className="flex-1 rounded-2xl bg-muted border-0 min-h-[120px] max-h-[200px] resize-none text-sm leading-relaxed"
-                rows={5}
+                className="flex-1 rounded-2xl bg-muted border-0 min-h-[40px] max-h-[120px] py-[10px] px-4 resize-none text-sm leading-5"
+                rows={1}
               />
               <Button
                 size="icon"

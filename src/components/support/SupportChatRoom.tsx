@@ -75,6 +75,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
     enabled: !!user?.id,
   });
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const inputTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const isInitialLoad = useRef(true);
   const previousMessagesLength = useRef(0);
@@ -89,6 +90,14 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [ratingSubmitted, setRatingSubmitted] = useState(!!initialTicket.rated_at);
   const globalQueryClient = useQueryClient();
+  // Auto-resize input textarea
+  useEffect(() => {
+    if (inputTextareaRef.current) {
+      inputTextareaRef.current.style.height = 'auto';
+      const scrollHeight = inputTextareaRef.current.scrollHeight;
+      inputTextareaRef.current.style.height = Math.min(scrollHeight, 120) + 'px';
+    }
+  }, [inputValue]);
 
   // Fetch sender profiles for display
   const senderIds = [...new Set(messages.map(m => m.sender_id))];
@@ -843,6 +852,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
               <SavedRepliesSheet onSelect={(content) => setInputValue(prev => prev ? prev + '\n' + content : content)} />
             )}
             <Textarea
+              ref={inputTextareaRef}
               value={inputValue}
               onChange={(e) => {
                 setInputValue(e.target.value);
@@ -850,8 +860,8 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
               }}
               onKeyDown={handleKeyDown}
               placeholder={isWaitingClient && !isAgent ? "Répondez pour reprendre la conversation..." : isAgent ? "Répondre au client..." : "Décrivez votre problème..."}
-              className="min-h-[120px] max-h-[200px] resize-none text-sm leading-relaxed"
-              rows={5}
+              className="min-h-[40px] max-h-[120px] py-[10px] px-4 resize-none text-sm leading-5 rounded-2xl"
+              rows={1}
             />
             <Button
               size="icon"

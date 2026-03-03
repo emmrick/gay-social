@@ -22,6 +22,7 @@ interface FlyerConfig {
   accentColor: string;
   textColor: string;
   showPromoCode: boolean;
+  pageCount: number;
 }
 
 const defaultConfig: FlyerConfig = {
@@ -34,6 +35,7 @@ const defaultConfig: FlyerConfig = {
   accentColor: '#9b59b6',
   textColor: '#ffffff',
   showPromoCode: true,
+  pageCount: 1,
 };
 
 const SingleFlyer = ({ config, index }: { config: FlyerConfig; index: number }) => {
@@ -95,6 +97,7 @@ const SingleFlyer = ({ config, index }: { config: FlyerConfig; index: number }) 
         </p>
         {config.showPromoCode && promoCode && (
           <div
+            data-promo
             className="inline-block px-3 py-1 rounded-full text-[9px] font-bold tracking-wider"
             style={{
               backgroundColor: config.accentColor,
@@ -115,7 +118,7 @@ const FlyerGeneratorPanel = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
-  const updateConfig = useCallback((key: keyof FlyerConfig, value: string | boolean) => {
+  const updateConfig = useCallback((key: keyof FlyerConfig, value: string | boolean | number) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
   }, []);
 
@@ -124,35 +127,53 @@ const FlyerGeneratorPanel = () => {
     setIsGenerating(true);
 
     try {
-      // A4 landscape: 297mm x 210mm
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const pdfW = 297;
       const pdfH = 210;
       const cols = 3;
       const rows = 2;
+      const flyersPerPage = cols * rows;
       const cellW = pdfW / cols;
       const cellH = pdfH / rows;
 
-      // Capture each flyer individually to avoid layout shift
       const flyerEls = printRef.current.querySelectorAll('[data-flyer]');
-      for (let i = 0; i < flyerEls.length; i++) {
-        const el = flyerEls[i] as HTMLElement;
-        const canvas = await html2canvas(el, {
-          scale: 4,
-          useCORS: true,
-          backgroundColor: null,
-          logging: false,
-          width: el.offsetWidth,
-          height: el.offsetHeight,
-        });
-        const imgData = canvas.toDataURL('image/png');
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        pdf.addImage(imgData, 'PNG', col * cellW, row * cellH, cellW, cellH);
+
+      for (let page = 0; page < config.pageCount; page++) {
+        if (page > 0) pdf.addPage();
+
+        for (let i = 0; i < flyersPerPage; i++) {
+          const globalIndex = page * flyersPerPage + i;
+          // Use modulo to cycle through rendered flyer elements
+          const el = flyerEls[i % flyerEls.length] as HTMLElement;
+
+          // Temporarily update promo code suffix for this flyer
+          const promoEl = el.querySelector('[data-promo]') as HTMLElement | null;
+          const originalPromo = promoEl?.textContent || '';
+          if (promoEl && config.showPromoCode) {
+            promoEl.textContent = `CODE : ${config.promoCode}-${String(globalIndex + 1).padStart(2, '0')}`;
+          }
+
+          const canvas = await html2canvas(el, {
+            scale: 4,
+            useCORS: true,
+            backgroundColor: null,
+            logging: false,
+            width: el.offsetWidth,
+            height: el.offsetHeight,
+          });
+          const imgData = canvas.toDataURL('image/png');
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          pdf.addImage(imgData, 'PNG', col * cellW, row * cellH, cellW, cellH);
+
+          // Restore original text
+          if (promoEl) promoEl.textContent = originalPromo;
+        }
       }
 
-      pdf.save(`flyers-${config.title.toLowerCase().replace(/\s+/g, '-')}.pdf`);
-      toast.success('PDF généré avec succès !');
+      const totalFlyers = config.pageCount * flyersPerPage;
+      pdf.save(`flyers-${config.title.toLowerCase().replace(/\s+/g, '-')}-${totalFlyers}ex.pdf`);
+      toast.success(`PDF généré : ${config.pageCount} page(s), ${totalFlyers} flyers !`);
     } catch (err) {
       console.error('PDF generation error:', err);
       toast.error('Erreur lors de la génération du PDF');
@@ -326,6 +347,23 @@ const FlyerGeneratorPanel = () => {
                       </p>
                     </div>
                   )}
+
+                  <div className="pt-2 border-t border-border">
+                    <Label className="text-xs">Nombre de pages A4</Label>
+                    <div className="flex items-center gap-3 mt-1">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={config.pageCount}
+                        onChange={(e) => updateConfig('pageCount', Math.max(1, Math.min(50, parseInt(e.target.value) || 1)))}
+                        className="w-20"
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        = {config.pageCount * 6} flyers au total
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </Card>
 

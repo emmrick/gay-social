@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2, XCircle, PauseCircle } from 'lucide-react';
+import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2, XCircle, PauseCircle, Bot } from 'lucide-react';
 import CreditRequestMessage from '@/components/chat/CreditRequestMessage';
 import { useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { useSupportTypingIndicator } from '@/hooks/useSupportTypingIndicator';
@@ -627,12 +627,19 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
           ) : (
             messages.map((message, index) => {
               const isOwn = message.sender_id === user?.id;
+              const isChatbotBot = message.message_type === 'chatbot_bot';
+              const isChatbotUser = message.message_type === 'chatbot_user';
+              const isSystem = message.message_type === 'system';
               const showDate = shouldShowDateSeparator(index);
               const senderProfile = senderProfiles?.[message.sender_id];
+
+              // For chatbot messages, determine alignment
+              const isRightAligned = isChatbotUser || (isOwn && !isChatbotBot);
 
               const nextMsg = messages[index + 1];
               const isLastInGroup = !nextMsg ||
                 nextMsg.sender_id !== message.sender_id ||
+                nextMsg.message_type !== message.message_type ||
                 new Date(nextMsg.created_at).getTime() - new Date(message.created_at).getTime() > 120000;
 
               return (
@@ -647,12 +654,19 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
 
                   <div className={cn(
                     "flex",
-                    isOwn ? "justify-end" : "justify-start",
+                    isSystem ? "justify-center" : isRightAligned ? "justify-end" : "justify-start",
                     isLastInGroup ? "mb-2" : "mb-0.5"
                   )}>
-                    <div className={cn("max-w-[80%] flex flex-col", isOwn ? "items-end" : "items-start")}>
+                    <div className={cn("max-w-[80%] flex flex-col", isRightAligned ? "items-end" : "items-start")}>
+                      {/* Bot label for chatbot messages */}
+                      {isChatbotBot && isLastInGroup && (
+                        <span className="text-[11px] text-muted-foreground font-medium mb-0.5 px-1 flex items-center gap-1">
+                          <Bot className="w-3 h-3" /> Assistant
+                        </span>
+                      )}
+
                       {/* Agent label */}
-                      {!isOwn && isLastInGroup && senderProfile && (
+                      {!isOwn && !isChatbotBot && !isChatbotUser && !isSystem && isLastInGroup && senderProfile && (
                         <span className="text-[11px] text-primary font-medium mb-0.5 px-1">
                           🛡️ {senderProfile.username}
                         </span>
@@ -667,15 +681,20 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
                           isSupportContext
                           ticketId={ticket.id}
                         />
-                      ) : message.message_type === 'system' ? (
+                      ) : isSystem ? (
                         <div className="flex items-start gap-2 px-3 py-2 text-xs text-muted-foreground bg-muted/50 rounded-2xl border border-border/50 italic max-w-full">
                           <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                           <span style={{ wordBreak: 'break-word' }}>{message.content}</span>
                         </div>
+                      ) : isChatbotBot ? (
+                        <div className="px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words bg-muted/60 border border-border/30 text-foreground rounded-2xl rounded-bl-md max-w-full"
+                          style={{ wordBreak: 'break-word' }}>
+                          {message.content}
+                        </div>
                       ) : (
                         <div className={cn(
                           "px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words",
-                          isOwn
+                          isRightAligned
                             ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
                             : "bg-card border border-border text-foreground rounded-2xl rounded-bl-md",
                           "max-w-full"

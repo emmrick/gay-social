@@ -208,21 +208,36 @@ const Help = ({ embedded = false }: HelpProps) => {
     if (!user) { navigate('/auth'); return; }
     try {
       // Add waiting message
-      setChatMessages(prev => [
-        ...prev,
-        { type: 'system', text: 'Nous vous mettons en relation avec le prochain agent disponible. Merci de patienter...' },
-      ]);
+      const updatedMessages = [
+        ...chatMessages,
+        { type: 'system' as const, text: 'Nous vous mettons en relation avec le prochain agent disponible. Merci de patienter...' },
+      ];
+      setChatMessages(updatedMessages);
       setChatPhase('waiting_agent');
 
       // Save chatbot history with the ticket
       const history = chatMessages.map(m => ({ type: m.type, text: m.text }));
       const ticket = await createTicket.mutateAsync("Demande d'assistance");
 
-      // Save chatbot history
+      // Save chatbot history on ticket (for reference)
       await supabase
         .from('support_tickets' as any)
         .update({ chatbot_history: history } as any)
         .eq('id', ticket.id);
+
+      // Insert chatbot messages into support_messages so everything is in one conversation
+      const chatbotMessagesToInsert = updatedMessages.map((msg) => ({
+        ticket_id: ticket.id,
+        sender_id: user.id,
+        content: msg.text,
+        message_type: msg.type === 'user' ? 'chatbot_user' : msg.type === 'system' ? 'system' : 'chatbot_bot',
+      }));
+
+      if (chatbotMessagesToInsert.length > 0) {
+        await supabase
+          .from('support_messages' as any)
+          .insert(chatbotMessagesToInsert as any);
+      }
 
       setSelectedTicket(ticket);
     } catch {
@@ -466,8 +481,8 @@ const Help = ({ embedded = false }: HelpProps) => {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
-            {/* Chatbot messages */}
-            {chatMessages.map((msg, i) => (
+            {/* Chatbot messages - only show in chatbot phase (in agent/waiting phases they're in ticketMessages) */}
+            {chatPhase === 'chatbot' && chatMessages.map((msg, i) => (
               <motion.div
                 key={`chat-${i}`}
                 initial={{ opacity: 0, y: 10 }}
@@ -522,39 +537,17 @@ const Help = ({ embedded = false }: HelpProps) => {
               </motion.div>
             )}
 
-            {/* Waiting spinner */}
-            {isWaiting && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex justify-center py-4"
-              >
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Recherche d'un agent disponible...</span>
-                </div>
-              </motion.div>
-            )}
+            {/* Waiting and agent joined messages are now handled inline in ticketMessages */}
 
-            {/* Agent joined message */}
-            {isAgentPhase && agentProfile && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex justify-center"
-              >
-                <div className="bg-green-500/10 text-green-600 text-xs font-medium px-4 py-2 rounded-full text-center">
-                  🛡️ {agentProfile.username} a rejoint la conversation
-                </div>
-              </motion.div>
-            )}
-
-            {/* Agent messages from support_messages */}
-            {isAgentPhase && ticketMessages
+            {/* All messages from support_messages (includes chatbot history + agent messages) */}
+            {(isAgentPhase || isWaiting) && ticketMessages
               .filter(m => m.message_type !== 'credit_request')
               .map((msg) => {
                 const isOwn = msg.sender_id === user?.id;
                 const isSystem = msg.message_type === 'system';
+                const isChatbotBot = msg.message_type === 'chatbot_bot';
+                const isChatbotUser = msg.message_type === 'chatbot_user';
+                const isAgentMessage = !isOwn && !isChatbotBot && !isChatbotUser && !isSystem;
 
                 return (
                   <motion.div
@@ -563,7 +556,7 @@ const Help = ({ embedded = false }: HelpProps) => {
                     animate={{ opacity: 1, y: 0 }}
                     className={cn(
                       "flex items-end gap-2",
-                      isSystem ? "justify-center" : isOwn ? "justify-end" : "justify-start"
+                      isSystem ? "justify-center" : (isChatbotUser || isOwn) && !isChatbotBot ? "justify-end" : "justify-start"
                     )}
                   >
                     {isSystem ? (
@@ -572,15 +565,22 @@ const Help = ({ embedded = false }: HelpProps) => {
                       </div>
                     ) : (
                       <>
-                        {!isOwn && (
+                        {isChatbotBot && (
+                          <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
+                            <Bot className="w-3.5 h-3.5 text-background" />
+                          </div>
+                        )}
+                        {isAgentMessage && (
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-0.5 text-xs font-bold text-primary">
                             {agentProfile?.username?.charAt(0)?.toUpperCase() || '?'}
                           </div>
                         )}
                         <div className={cn(
                           "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                          isOwn
+                          (isChatbotUser || isOwn) && !isChatbotBot
                             ? "bg-foreground text-background rounded-br-md"
+                            : isChatbotBot
+                            ? "bg-muted text-foreground rounded-bl-md"
                             : "bg-muted text-foreground rounded-bl-md"
                         )}>
                           <p className="whitespace-pre-line break-words">{msg.content}</p>
@@ -692,20 +692,26 @@ const Help = ({ embedded = false }: HelpProps) => {
         </div>
 
         {/* Bottom input */}
-        {(chatPhase === 'chatbot' || chatPhase === 'agent') && (
+        {(chatPhase === 'chatbot' || chatPhase === 'agent' || chatPhase === 'waiting_agent') && (
           <div
             className="border-t border-border bg-background px-4 py-3"
             style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
           >
+            {isWaiting && (
+              <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs mb-2">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>Recherche d'un agent disponible...</span>
+              </div>
+            )}
             <div className="max-w-lg mx-auto flex items-center gap-2">
               <Input
-                placeholder={isAgentPhase ? "Écrivez votre message..." : "Décrivez votre problème..."}
+                placeholder={(isAgentPhase || isWaiting) ? "Écrivez votre message..." : "Décrivez votre problème..."}
                 value={freeText}
                 onChange={(e) => setFreeText(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    isAgentPhase ? handleSendToAgent() : handleSendFreeText();
+                    (isAgentPhase || isWaiting) ? handleSendToAgent() : handleSendFreeText();
                   }
                 }}
                 className="flex-1 rounded-full bg-muted border-0 h-11"
@@ -713,22 +719,13 @@ const Help = ({ embedded = false }: HelpProps) => {
               <Button
                 size="icon"
                 variant={freeText.trim() ? "default" : "ghost"}
-                onClick={isAgentPhase ? handleSendToAgent : handleSendFreeText}
+                onClick={(isAgentPhase || isWaiting) ? handleSendToAgent : handleSendFreeText}
                 disabled={!freeText.trim()}
                 className="rounded-full w-11 h-11 shrink-0"
               >
                 <Send className="w-4.5 h-4.5" />
               </Button>
             </div>
-          </div>
-        )}
-
-        {/* Waiting phase - no input */}
-        {isWaiting && (
-          <div className="border-t border-border bg-muted/50 px-4 py-4 text-center"
-            style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
-          >
-            <p className="text-xs text-muted-foreground">En attente d'un agent...</p>
           </div>
         )}
       </div>

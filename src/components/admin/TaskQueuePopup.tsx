@@ -95,8 +95,32 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
   const [queueState, setQueueState] = useState<QueueState>('idle');
   
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const soundIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevActiveTaskIdRef = useRef<string | null>(null);
   const prevNextTaskIdRef = useRef<string | null>(null);
+
+  // ── Repeating sound while offering ──
+  useEffect(() => {
+    if (queueState === 'offering' && missionsActive) {
+      // Clear any existing interval
+      if (soundIntervalRef.current) clearInterval(soundIntervalRef.current);
+      // Repeat sound every 8 seconds
+      soundIntervalRef.current = setInterval(() => {
+        playMissionSound();
+      }, 8000);
+    } else {
+      if (soundIntervalRef.current) {
+        clearInterval(soundIntervalRef.current);
+        soundIntervalRef.current = null;
+      }
+    }
+    return () => {
+      if (soundIntervalRef.current) {
+        clearInterval(soundIntervalRef.current);
+        soundIntervalRef.current = null;
+      }
+    };
+  }, [queueState, missionsActive]);
 
   // ── State machine: determine queue state ──
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Play, Pause, Trash2, ZoomIn, ZoomOut, Shield } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Play, Pause, Trash2, ZoomIn, ZoomOut, Shield, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
@@ -29,6 +29,57 @@ interface ZoomState {
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;
+
+/** Image component with loading state */
+const ImageWithLoader = ({ src, alt, isBlocked, zoomState, isZoomed, preventContextMenu }: {
+  src: string;
+  alt: string;
+  isBlocked: boolean;
+  zoomState: ZoomState;
+  isZoomed: boolean;
+  preventContextMenu: (e: React.SyntheticEvent) => void;
+}) => {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <>
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-white/50" />
+        </div>
+      )}
+      <motion.img
+        initial={{ scale: 1, opacity: 0 }}
+        animate={{
+          scale: zoomState.scale,
+          opacity: isBlocked ? 0 : loaded ? 1 : 0,
+          x: zoomState.x,
+          y: zoomState.y,
+        }}
+        transition={{
+          scale: { type: 'spring', stiffness: 300, damping: 30 },
+          x: { type: 'spring', stiffness: 300, damping: 30 },
+          y: { type: 'spring', stiffness: 300, damping: 30 },
+          opacity: { duration: 0.3 }
+        }}
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        className={cn(
+          "max-w-full max-h-full object-contain rounded-lg select-none pointer-events-none",
+          isZoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
+        )}
+        draggable={false}
+        onDragStart={(e) => e.preventDefault()}
+        style={{
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none',
+          filter: isBlocked ? 'brightness(0)' : 'none',
+        }}
+      />
+    </>
+  );
+};
 
 const AlbumGalleryViewer = ({ 
   media, 
@@ -287,6 +338,11 @@ const AlbumGalleryViewer = ({
   if (!isOpen || media.length === 0) return null;
 
   return (
+    <>
+    {/* Preload images */}
+    {media.map(item => item.media_type === 'image' ? (
+      <link key={item.id} rel="preload" as="image" href={item.media_url} />
+    ) : null)}
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -357,8 +413,8 @@ const AlbumGalleryViewer = ({
           </div>
         </div>
 
-        {/* Carousel */}
-        <div className="h-full flex items-center justify-center">
+        {/* Carousel - centered with padding for header/footer */}
+        <div className="absolute inset-0 flex items-center justify-center pt-16 pb-24">
           <div 
             ref={emblaRef} 
             className="overflow-hidden w-full h-full"
@@ -368,12 +424,12 @@ const AlbumGalleryViewer = ({
               {media.map((item, index) => (
                 <div
                   key={item.id}
-                  className="flex-[0_0_100%] min-w-0 h-full flex items-center justify-center p-4"
+                  className="flex-[0_0_100%] min-w-0 h-full flex items-center justify-center px-4"
                 >
                   {item.media_type === 'image' ? (
                     <div
                       ref={index === selectedIndex ? imageContainerRef : undefined}
-                      className="relative max-w-full max-h-full flex items-center justify-center overflow-hidden"
+                      className="relative w-full h-full flex items-center justify-center overflow-hidden"
                       onTouchStart={index === selectedIndex ? handleTouchStart : undefined}
                       onTouchMove={index === selectedIndex ? handleTouchMove : undefined}
                       onTouchEnd={index === selectedIndex ? (e) => {
@@ -382,42 +438,22 @@ const AlbumGalleryViewer = ({
                       } : undefined}
                       onDoubleClick={index === selectedIndex ? handleDoubleTap : undefined}
                     >
-                      <motion.img
-                        initial={{ scale: 1, opacity: 1 }}
-                        animate={{ 
-                          scale: index === selectedIndex ? zoomState.scale : 1, 
-                          opacity: isBlocked ? 0 : 1,
-                          x: index === selectedIndex ? zoomState.x : 0,
-                          y: index === selectedIndex ? zoomState.y : 0,
-                        }}
-                        transition={{ 
-                          scale: { type: 'spring', stiffness: 300, damping: 30 },
-                          x: { type: 'spring', stiffness: 300, damping: 30 },
-                          y: { type: 'spring', stiffness: 300, damping: 30 },
-                          opacity: { duration: 0.1 }
-                        }}
+                      <ImageWithLoader
                         src={item.media_url}
                         alt=""
-                        className={cn(
-                          "max-w-full max-h-full object-contain rounded-lg select-none pointer-events-none",
-                          isZoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
-                        )}
-                        draggable={false}
-                        onDragStart={(e) => e.preventDefault()}
-                        style={{
-                          WebkitUserSelect: 'none',
-                          WebkitTouchCallout: 'none',
-                          filter: isBlocked ? 'brightness(0)' : 'none',
-                        }}
+                        isBlocked={isBlocked}
+                        zoomState={index === selectedIndex ? zoomState : { scale: 1, x: 0, y: 0 }}
+                        isZoomed={isZoomed}
+                        preventContextMenu={preventContextMenu}
                       />
-                      {!isZoomed && (
+                      {!isZoomed && index === selectedIndex && (
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/40 px-3 py-1 rounded-full pointer-events-none">
                           Double-tap ou pincez pour zoomer
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="relative max-w-full max-h-full flex items-center justify-center">
+                    <div className="relative w-full h-full flex items-center justify-center">
                       <motion.video
                         initial={{ scale: 1, opacity: 1 }}
                         animate={{ scale: 1, opacity: isBlocked ? 0 : 1 }}
@@ -546,6 +582,7 @@ const AlbumGalleryViewer = ({
         )}
       </motion.div>
     </AnimatePresence>
+    </>
   );
 };
 

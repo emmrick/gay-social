@@ -131,16 +131,14 @@ const AlbumThumbnail = ({ album, index, useAlbumMedia, onClick }: AlbumThumbnail
   const { data: media = [] } = useAlbumMedia(album.id);
   const coverImage = media[0]?.media_url;
   const [revealed, setRevealed] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleRevealAndOpen = () => {
     if (!revealed) {
-      // First tap: reveal
       setRevealed(true);
-      // Auto-blur again after 3 seconds
       revealTimerRef.current = setTimeout(() => setRevealed(false), 3000);
     } else {
-      // Second tap: open gallery
       if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
       setRevealed(false);
       onClick();
@@ -159,14 +157,24 @@ const AlbumThumbnail = ({ album, index, useAlbumMedia, onClick }: AlbumThumbnail
       )}
     >
       {coverImage ? (
-        <img 
-          src={coverImage} 
-          alt={album.name}
-          className={cn(
-            "w-full h-full object-cover transition-all duration-300",
-            !revealed && "blur-lg scale-110"
+        <>
+          {!imageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-secondary/80">
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            </div>
           )}
-        />
+          <img 
+            src={coverImage} 
+            alt={album.name}
+            loading="lazy"
+            onLoad={() => setImageLoaded(true)}
+            className={cn(
+              "w-full h-full object-cover transition-all duration-300",
+              !revealed && "blur-lg scale-110",
+              !imageLoaded && "opacity-0"
+            )}
+          />
+        </>
       ) : (
         <div className="w-full h-full flex items-center justify-center">
           <ImageIcon className="w-6 h-6 text-muted-foreground/50" />
@@ -174,7 +182,7 @@ const AlbumThumbnail = ({ album, index, useAlbumMedia, onClick }: AlbumThumbnail
       )}
 
       {/* Privacy blur hint */}
-      {coverImage && !revealed && (
+      {coverImage && !revealed && imageLoaded && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="bg-black/40 backdrop-blur-sm rounded-full p-1.5">
             <EyeOff className="w-4 h-4 text-white" />

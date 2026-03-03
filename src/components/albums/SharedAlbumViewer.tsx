@@ -514,18 +514,18 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
               </Button>
             </div>
 
-            {/* Carousel container */}
-            <div className="flex-1 overflow-hidden" ref={emblaRef}>
-              <div className="flex h-full">
+            {/* Carousel container - centered with padding for header/footer */}
+            <div className="absolute inset-0 pt-16 pb-12 flex items-center justify-center" ref={emblaRef}>
+              <div className="flex h-full w-full">
                 {media.map((item, index) => (
                   <div 
                     key={item.id} 
-                    className="flex-[0_0_100%] min-w-0 h-full flex items-center justify-center p-4"
+                    className="flex-[0_0_100%] min-w-0 h-full flex items-center justify-center px-4"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {item.media_type === 'image' ? (
                       <motion.div
-                        className="relative max-w-full max-h-full flex items-center justify-center touch-none"
+                        className="relative w-full h-full flex items-center justify-center touch-none"
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
                         onTouchEnd={handleTouchEnd}
@@ -544,6 +544,7 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
                           onContextMenu={preventContextMenu}
                           onDragStart={preventDrag}
                           draggable={false}
+                          loading="eager"
                         />
                       </motion.div>
                     ) : (

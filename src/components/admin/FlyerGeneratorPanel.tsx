@@ -151,7 +151,6 @@ const FlyerGeneratorPanel = () => {
   };
 
   const generatePDF = async () => {
-    if (!printRef.current) return;
     setIsGenerating(true);
 
     try {
@@ -160,7 +159,7 @@ const FlyerGeneratorPanel = () => {
         await savePromoCodesToDB();
       }
 
-      // A4 landscape: 297mm x 210mm
+      // A4 landscape: 297mm x 210mm → use fixed pixel dims for off-screen render
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const pdfW = 297;
       const pdfH = 210;
@@ -169,22 +168,51 @@ const FlyerGeneratorPanel = () => {
       const cellW = pdfW / cols;
       const cellH = pdfH / rows;
 
-      // Capture each flyer individually to avoid layout shift
-      const flyerEls = printRef.current.querySelectorAll('[data-flyer]');
-      for (let i = 0; i < flyerEls.length; i++) {
-        const el = flyerEls[i] as HTMLElement;
-        const canvas = await html2canvas(el, {
-          scale: 4,
+      // Fixed pixel size per flyer for consistent rendering
+      const flyerPxW = 400;
+      const flyerPxH = 560;
+
+      for (let i = 0; i < 6; i++) {
+        // Create an off-screen container with fixed pixel dimensions
+        const offscreen = document.createElement('div');
+        offscreen.style.position = 'fixed';
+        offscreen.style.left = '-9999px';
+        offscreen.style.top = '0';
+        offscreen.style.width = `${flyerPxW}px`;
+        offscreen.style.height = `${flyerPxH}px`;
+        offscreen.style.overflow = 'hidden';
+        document.body.appendChild(offscreen);
+
+        // Render the flyer into it using React
+        const { createRoot } = await import('react-dom/client');
+        const root = createRoot(offscreen);
+
+        await new Promise<void>((resolve) => {
+          root.render(
+            <div style={{ width: flyerPxW, height: flyerPxH }}>
+              <SingleFlyer config={config} index={i + 1} />
+            </div>
+          );
+          // Wait for render
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        });
+
+        const canvas = await html2canvas(offscreen, {
+          scale: 3,
           useCORS: true,
           backgroundColor: null,
           logging: false,
-          width: el.offsetWidth,
-          height: el.offsetHeight,
+          width: flyerPxW,
+          height: flyerPxH,
         });
+
         const imgData = canvas.toDataURL('image/png');
         const col = i % cols;
         const row = Math.floor(i / cols);
         pdf.addImage(imgData, 'PNG', col * cellW, row * cellH, cellW, cellH);
+
+        root.unmount();
+        document.body.removeChild(offscreen);
       }
 
       pdf.save(`flyers-${config.title.toLowerCase().replace(/\s+/g, '-')}.pdf`);

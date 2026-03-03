@@ -4,16 +4,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { notifySupportTicketAssigned } from '@/services/pushNotificationService';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
+import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import { SupportTicket } from '@/hooks/useSupportTickets';
 import { useAuth } from '@/contexts/AuthContext';
 import { Headphones, Loader2, User } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AdminSupportChatPanelProps {
   onBack: () => void;
+  onNavigateToSection?: (section: string) => void;
 }
 
-const AdminSupportChatPanel = ({ onBack }: AdminSupportChatPanelProps) => {
+const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChatPanelProps) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const { data: activeTask } = useActiveTask();
   const ticketId = (activeTask?.metadata as any)?.ticket_id as string | undefined;
   const autoMessageSentRef = useRef<string | null>(null);
@@ -116,9 +120,55 @@ const AdminSupportChatPanel = ({ onBack }: AdminSupportChatPanelProps) => {
     );
   }
 
+  // Desktop: side-by-side layout (mission left, chat right)
+  if (!isMobile) {
+    return (
+      <div className="flex gap-4 w-full max-w-6xl mx-auto">
+        {/* Left: Mission panel */}
+        <div className="w-[340px] shrink-0">
+          <div className="sticky top-4">
+            <TaskQueuePopup onNavigateToSection={onNavigateToSection || (() => {})} />
+          </div>
+        </div>
+
+        {/* Right: Chat */}
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col h-[calc(100vh-160px)] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+            {/* Client info header */}
+            <div className="flex-shrink-0 bg-card border-b border-border">
+              <div className="flex items-center gap-3 px-4 py-3">
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  {clientProfile?.avatar_url ? (
+                    <img src={clientProfile.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" />
+                  ) : (
+                    <User className="w-4 h-4 text-primary" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {clientProfile?.username || 'Client'}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground font-mono">
+                    #{ticket.ticket_number} · {ticket.subject || 'Support'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Main chat */}
+            <div className="flex-1 min-h-0 flex flex-col">
+              <SupportChatRoom ticket={ticket} onBack={onBack} isAgent hideHeader />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile: stacked layout (original)
   return (
     <div className="max-w-2xl mx-auto w-full">
-      <div className="flex flex-col h-[min(600px,calc(100dvh-220px))] sm:h-[min(650px,calc(100vh-160px))] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+      <div className="flex flex-col h-[min(600px,calc(100dvh-220px))] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
         {/* Client info header */}
         <div className="flex-shrink-0 bg-card border-b border-border">
           <div className="flex items-center gap-3 px-4 py-3">
@@ -140,7 +190,7 @@ const AdminSupportChatPanel = ({ onBack }: AdminSupportChatPanelProps) => {
           </div>
         </div>
 
-        {/* Main chat - unified view with chatbot history inline */}
+        {/* Main chat */}
         <div className="flex-1 min-h-0 flex flex-col">
           <SupportChatRoom ticket={ticket} onBack={onBack} isAgent hideHeader />
         </div>

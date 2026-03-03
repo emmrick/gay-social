@@ -124,21 +124,33 @@ const FlyerGeneratorPanel = () => {
     setIsGenerating(true);
 
     try {
-      const canvas = await html2canvas(printRef.current, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
       // A4 landscape: 297mm x 210mm
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-      const imgData = canvas.toDataURL('image/png');
-
       const pdfW = 297;
       const pdfH = 210;
+      const cols = 3;
+      const rows = 2;
+      const cellW = pdfW / cols;
+      const cellH = pdfH / rows;
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+      // Capture each flyer individually to avoid layout shift
+      const flyerEls = printRef.current.querySelectorAll('[data-flyer]');
+      for (let i = 0; i < flyerEls.length; i++) {
+        const el = flyerEls[i] as HTMLElement;
+        const canvas = await html2canvas(el, {
+          scale: 4,
+          useCORS: true,
+          backgroundColor: null,
+          logging: false,
+          width: el.offsetWidth,
+          height: el.offsetHeight,
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        pdf.addImage(imgData, 'PNG', col * cellW, row * cellH, cellW, cellH);
+      }
+
       pdf.save(`flyers-${config.title.toLowerCase().replace(/\s+/g, '-')}.pdf`);
       toast.success('PDF généré avec succès !');
     } catch (err) {
@@ -349,7 +361,7 @@ const FlyerGeneratorPanel = () => {
                   style={{ aspectRatio: '297 / 210' }}
                 >
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="border border-gray-200" style={{ overflow: 'hidden' }}>
+                    <div key={i} data-flyer className="border border-gray-200" style={{ overflow: 'hidden' }}>
                       <SingleFlyer config={config} index={i + 1} />
                     </div>
                   ))}

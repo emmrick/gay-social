@@ -763,18 +763,19 @@ const Help = ({ embedded = false }: HelpProps) => {
                 ))}
               </div>
             )}
-            <div className="max-w-lg mx-auto flex items-center gap-2">
-              <Input
+            <div className="max-w-lg mx-auto flex items-end gap-2">
+              <Textarea
                 placeholder={(isAgentPhase || isWaiting) ? "Écrivez votre message..." : "Décrivez votre problème..."}
                 value={freeText}
                 onChange={(e) => setFreeText(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     (isAgentPhase || isWaiting) ? handleSendToAgent() : handleSendFreeText();
                   }
                 }}
-                className="flex-1 rounded-full bg-muted border-0 h-11"
+                className="flex-1 rounded-2xl bg-muted border-0 min-h-[80px] max-h-[160px] resize-none text-sm leading-relaxed"
+                rows={3}
               />
               <Button
                 size="icon"

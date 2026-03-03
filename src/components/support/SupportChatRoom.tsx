@@ -847,8 +847,8 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
               }}
               onKeyDown={handleKeyDown}
               placeholder={isWaitingClient && !isAgent ? "Répondez pour reprendre la conversation..." : isAgent ? "Répondre au client..." : "Décrivez votre problème..."}
-              className="min-h-[40px] max-h-[120px] resize-none text-sm"
-              rows={1}
+              className="min-h-[80px] max-h-[160px] resize-none text-sm leading-relaxed"
+              rows={3}
             />
             <Button
               size="icon"

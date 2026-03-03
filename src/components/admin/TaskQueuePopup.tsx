@@ -107,7 +107,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
       // Repeat sound every 8 seconds
       soundIntervalRef.current = setInterval(() => {
         playMissionSound();
-      }, 8000);
+      }, 3000);
     } else {
       if (soundIntervalRef.current) {
         clearInterval(soundIntervalRef.current);

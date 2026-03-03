@@ -104,7 +104,7 @@ const AdminSupportChatPanel = ({ onBack }: AdminSupportChatPanelProps) => {
   }
 
   return (
-    <div className="h-[calc(100dvh-180px)] sm:h-[calc(100vh-100px)] -mx-4 -mt-2 sm:-m-6 rounded-xl overflow-hidden border border-border bg-background flex flex-col">
+    <div className="h-[calc(100dvh-200px)] sm:h-[calc(100vh-120px)] rounded-xl overflow-hidden border border-border bg-background flex flex-col">
       {/* Chatbot history collapsible */}
       {chatbotHistory.length > 0 && (
         <div className="border-b border-border bg-muted/30">

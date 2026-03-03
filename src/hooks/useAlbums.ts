@@ -56,6 +56,7 @@ export const useAlbums = (userId?: string) => {
       return data as Album[];
     },
     enabled: !!targetUserId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   // Fetch albums shared with current user
@@ -293,9 +294,36 @@ export const useAlbums = (userId?: string) => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        return data as AlbumMedia[];
+        const items = data as AlbumMedia[];
+        
+        if (items.length === 0) return items;
+
+        // Batch generate signed URLs for all media at once
+        const paths = items.map(item => {
+          let cleanPath = item.media_url;
+          if (cleanPath.includes('/storage/v1/object/')) {
+            const match = cleanPath.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/media\/(.+?)(\?|$)/);
+            if (match) cleanPath = match[1];
+          }
+          return cleanPath;
+        });
+
+        const { data: signedData, error: signError } = await supabase.storage
+          .from('media')
+          .createSignedUrls(paths, 3600);
+
+        if (signError || !signedData) {
+          console.error('Batch signed URL error:', signError);
+          return items;
+        }
+
+        return items.map((item, i) => ({
+          ...item,
+          media_url: signedData[i]?.signedUrl || item.media_url,
+        }));
       },
       enabled: !!albumId,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
 

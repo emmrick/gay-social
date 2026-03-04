@@ -18,7 +18,8 @@ export type AdminSection =
   | 'credits-surveillance' | 'credit-purchases' | 'broadcast'
   | 'ai-moderation' | 'screenshot-sanctions' | 'moderators'
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
-  | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers';
+  | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
+  | 'error-logs';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -65,6 +66,7 @@ const navItems: NavItem[] = [
   { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'settings' },
   { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'settings' },
   { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'settings' },
+  { id: 'error-logs', label: "Logs d'erreurs", icon: Activity, group: 'settings' },
 ];
 
 const groupLabels: Record<string, string> = {

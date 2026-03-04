@@ -530,6 +530,51 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          created_at: string
+          error_message: string
+          error_source: string | null
+          error_stack: string | null
+          id: string
+          is_resolved: boolean | null
+          metadata: Json | null
+          page_url: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message: string
+          error_source?: string | null
+          error_stack?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          page_url?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string
+          error_source?: string | null
+          error_stack?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          page_url?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       faq_articles: {
         Row: {
           answer: string

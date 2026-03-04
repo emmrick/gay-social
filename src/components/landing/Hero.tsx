@@ -3,7 +3,7 @@ import { MessageCircle, Users, Shield, MapPin, AlertTriangle, Star, Zap, Eye, He
 import { useTotalMemberCount, useOnlineMemberCount } from '@/hooks/useTotalMemberCount';
 import { useNavigate, Link } from 'react-router-dom';
 import SEOHead, { websiteJsonLd, organizationJsonLd, faqPageJsonLd } from '@/components/seo/SEOHead';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface HeroProps {
   onGetStarted: () => void;
@@ -322,14 +322,17 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
   );
 };
 
-const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => (
-  <div className="glass-card rounded-xl p-4 md:p-6 text-center hover:border-primary/50 transition-colors duration-300">
-    <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-primary/20 text-primary mb-3">
-      {icon}
+const FeatureCard = React.forwardRef<HTMLDivElement, { icon: React.ReactNode; title: string; description: string }>(
+  ({ icon, title, description }, ref) => (
+    <div ref={ref} className="glass-card rounded-xl p-4 md:p-6 text-center hover:border-primary/50 transition-colors duration-300">
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-primary/20 text-primary mb-3">
+        {icon}
+      </div>
+      <h3 className="font-display font-semibold text-foreground mb-1">{title}</h3>
+      <p className="text-sm text-muted-foreground">{description}</p>
     </div>
-    <h3 className="font-display font-semibold text-foreground mb-1">{title}</h3>
-    <p className="text-sm text-muted-foreground">{description}</p>
-  </div>
+  )
 );
+FeatureCard.displayName = 'FeatureCard';
 
 export default Hero;

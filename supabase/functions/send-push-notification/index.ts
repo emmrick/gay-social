@@ -84,12 +84,31 @@ serve(async (req) => {
       throw new Error("Supabase credentials not configured");
     }
 
+    // Authentication check
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const authClient = createClient(SUPABASE_URL, anonKey || SUPABASE_SERVICE_ROLE_KEY);
+    const { data: { user: caller }, error: authError } = await authClient.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+
+    if (authError || !caller) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Decode the base64url encoded keys
     const privateKeyBytes = base64UrlDecode(VAPID_PRIVATE_KEY);
     const publicKeyBytes = base64UrlDecode(VAPID_PUBLIC_KEY);
-
-    console.log("Private key bytes:", privateKeyBytes.length); // Should be 32
-    console.log("Public key bytes:", publicKeyBytes.length);   // Should be 65
 
     // Convert to JWK format for the library
     const privateJWK = rawPrivateKeyToJWK(privateKeyBytes, publicKeyBytes);

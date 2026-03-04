@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { logErrorManually } from "@/services/errorLogService";
 
 type Props = {
   children: React.ReactNode;
@@ -23,9 +24,10 @@ export default class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: unknown) {
-    // Log utile pour diagnostiquer un écran noir en prod/preview.
-    // eslint-disable-next-line no-console
     console.error("[ErrorBoundary] Uncaught render error:", error);
+    if (error instanceof Error) {
+      logErrorManually(error, "error_boundary");
+    }
   }
 
   render() {

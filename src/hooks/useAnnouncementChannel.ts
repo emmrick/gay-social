@@ -8,7 +8,7 @@ export const useAnnouncementChannel = () => {
       const { data, error } = await supabase
         .from('chat_rooms')
         .select('*')
-        .eq('is_announcement' as any, true)
+        .eq('region_code', 'announcement')
         .maybeSingle();
 
       if (error) throw error;

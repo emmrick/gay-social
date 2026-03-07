@@ -115,3 +115,23 @@ export const playNotificationSoundStandalone = () => {
     console.error('Error playing notification sound:', error);
   }
 };
+
+// Standalone function for announcement channel chime (always plays the chime sound)
+export const playAnnouncementSoundStandalone = () => {
+  const localSoundEnabled = localStorage.getItem('notification_sound_enabled');
+  if (localSoundEnabled === 'false') return;
+
+  const soundData = SOUND_DATA.chime;
+  if (!soundData) return;
+
+  try {
+    if (!cachedAudios['announcement_chime']) {
+      cachedAudios['announcement_chime'] = new Audio(soundData);
+      cachedAudios['announcement_chime'].volume = 0.7; // Slightly louder for announcements
+    }
+    cachedAudios['announcement_chime'].currentTime = 0;
+    cachedAudios['announcement_chime'].play().catch(() => {});
+  } catch (error) {
+    console.error('Error playing announcement sound:', error);
+  }
+};

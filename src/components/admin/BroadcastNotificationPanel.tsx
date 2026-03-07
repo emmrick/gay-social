@@ -40,11 +40,11 @@ const REGIONS = [
   { code: 'OTHER', name: 'Autre' },
 ];
 
-type TargetType = 'all' | 'region' | 'premium';
+type TargetType = 'all' | 'region';
 
 const getTargetLabel = (targetType: string, targetRegion: string | null) => {
   if (targetType === 'all') return 'Tous';
-  if (targetType === 'premium') return 'Premium';
+  if (targetType === 'premium') return 'Anciens Premium';
   if (targetType === 'region' && targetRegion) {
     const region = REGIONS.find(r => r.code === targetRegion);
     return region?.name || targetRegion;
@@ -276,13 +276,6 @@ const BroadcastNotificationPanel = () => {
                   <Label htmlFor="all" className="flex items-center gap-2 cursor-pointer">
                     <Globe className="w-4 h-4" />
                     Tous les utilisateurs
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="premium" id="premium" />
-                  <Label htmlFor="premium" className="flex items-center gap-2 cursor-pointer">
-                    <Users className="w-4 h-4 text-amber-500" />
-                    Utilisateurs Premium uniquement
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">

@@ -801,7 +801,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     if (lower.includes('sécu') || lower.includes('confiden') || lower.includes('privacy')) return <Shield className="w-4 h-4" />;
     if (lower.includes('message') || lower.includes('chat') || lower.includes('conversation')) return <MessageCircle className="w-4 h-4" />;
     if (lower.includes('param') || lower.includes('config') || lower.includes('réglage')) return <Settings className="w-4 h-4" />;
-    if (lower.includes('premium') || lower.includes('abonn')) return <Sparkles className="w-4 h-4" />;
+    if (lower.includes('crédit') || lower.includes('abonn')) return <Sparkles className="w-4 h-4" />;
     return <BookOpen className="w-4 h-4" />;
   };
 

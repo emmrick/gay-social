@@ -17,7 +17,7 @@ const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0, isPremium = fal
     { id: 'home' as const, icon: Home, label: 'Accueil' },
     { id: 'swipe' as const, icon: Sparkles, label: 'Swipe' },
     { id: 'messages' as const, icon: MessageCircle, label: 'Messages', badge: messageBadge },
-    { id: 'premium' as const, icon: Crown, label: 'Premium', premium: true },
+    { id: 'premium' as const, icon: Crown, label: 'Crédits', premium: true },
     { id: 'help' as const, icon: HelpCircle, label: 'Aide' },
     { id: 'profile' as const, icon: User, label: 'Profil' },
   ];

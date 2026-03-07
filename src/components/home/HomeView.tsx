@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesGrid from './FavoritesGrid';
 import ReferralBanner from './ReferralBanner';
+import AdFreeBanner from './AdFreeBanner';
 import StoryBar from '@/components/stories/StoryBar';
 
 interface HomeViewProps {
@@ -50,7 +51,8 @@ const HomeView = ({
         {/* Stories bar */}
         <StoryBar />
 
-        {/* Referral Banner removed - now shown as popup */}
+        {/* Ad-free banner */}
+        <AdFreeBanner />
 
         {/* Tabs + Filter */}
         <Tabs defaultValue="nearby" className="w-full">

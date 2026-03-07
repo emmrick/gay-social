@@ -96,6 +96,16 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
 
           <button
             className="flex flex-col items-center gap-1.5"
+            onClick={() => { setShowSnapCapture(true); setShowOptions(false); }}
+          >
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+              <Camera className="w-6 h-6 text-primary" />
+            </div>
+            <span className="text-[10px] text-muted-foreground">Snap</span>
+          </button>
+
+          <button
+            className="flex flex-col items-center gap-1.5"
             onClick={() => { setShowShareAlbum(true); setShowOptions(false); }}
           >
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">

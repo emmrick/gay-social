@@ -3,7 +3,8 @@ import { useCustomGroups } from '@/hooks/useCustomGroups';
 import { useOnlineMemberCounts } from '@/hooks/useOnlineMemberCounts';
 import { useUnreadMentions } from '@/hooks/useUnreadMentions';
 import { useChatRooms } from '@/hooks/useChatRooms';
-import { Users, ChevronRight, LogOut, MessageSquare, AtSign, Home, Loader2, BellOff, Bell } from 'lucide-react';
+import { useAnnouncementChannel } from '@/hooks/useAnnouncementChannel';
+import { Users, ChevronRight, LogOut, MessageSquare, AtSign, Home, Loader2, BellOff, Bell, Megaphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {

@@ -75,6 +75,7 @@ const UnifiedPageHeader = ({
           </button>
         </div>
       </div>
+      {bottomContent}
     </div>
   );
 };

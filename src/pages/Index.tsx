@@ -518,26 +518,10 @@ const Index = () => {
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1 flex flex-col min-h-0"
           >
-            {/* Header */}
-            <div 
-              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
-              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
-            >
-              <div className="px-5 pb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
-                    Mon Profil
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Gérer ton compte
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
-                  <NotificationsDropdown />
-                </div>
-              </div>
-            </div>
+            <UnifiedPageHeader
+              onNavigateToCredits={() => handleTabChange('premium')}
+              onNavigateToProfile={() => handleTabChange('profile')}
+            />
             <ScrollArea className="flex-1 min-h-0">
               <ProfileView 
                 onSignOut={handleSignOut}

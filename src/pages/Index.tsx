@@ -7,6 +7,7 @@ import { memo } from 'react';
 import Hero from '@/components/landing/Hero';
 import HomeView from '@/components/home/HomeView';
 import ChatRoom from '@/components/chat/ChatRoom';
+import AnnouncementChannel from '@/components/chat/AnnouncementChannel';
 import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import ProfileView from '@/components/profile/ProfileView';

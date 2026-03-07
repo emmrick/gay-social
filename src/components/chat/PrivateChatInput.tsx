@@ -116,6 +116,14 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
         </div>
       )}
 
+      {/* Snap capture dialog */}
+      <SnapCaptureDialog
+        isOpen={showSnapCapture}
+        onClose={() => setShowSnapCapture(false)}
+        recipientId={recipientId}
+        isPrivate={true}
+      />
+
       {/* Share album dialog */}
       <ShareAlbumDialog
         isOpen={showShareAlbum}

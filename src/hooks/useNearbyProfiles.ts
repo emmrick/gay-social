@@ -81,6 +81,7 @@ export const useNearbyProfiles = (
     enabled: !!user && latitude != null && longitude != null,
     staleTime: 45000,
     gcTime: 120000,
+    refetchInterval: 600000,
   });
 
   // Use geo-sorted data when available, otherwise base data

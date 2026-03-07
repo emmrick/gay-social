@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2, Plus, FolderLock } from 'lucide-react';
+import { Send, Loader2, Plus, FolderLock, Camera } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MediaUploadButton from './MediaUploadButton';
 import SavedMessagesDialog from './SavedMessagesDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
+import SnapCaptureDialog from './SnapCaptureDialog';
 import { cn } from '@/lib/utils';
 
 interface PrivateChatInputProps {

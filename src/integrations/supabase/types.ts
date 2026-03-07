@@ -337,6 +337,33 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_mute_preferences: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          is_muted: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_muted?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_muted?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       credit_cost_audit_log: {
         Row: {
           changed_at: string
@@ -1439,6 +1466,7 @@ export type Database = {
           id: string
           notification_sound: string | null
           push_album_shares: boolean
+          push_announcements: boolean
           push_credits: boolean
           push_favorites: boolean
           push_group_messages: boolean
@@ -1456,6 +1484,7 @@ export type Database = {
           id?: string
           notification_sound?: string | null
           push_album_shares?: boolean
+          push_announcements?: boolean
           push_credits?: boolean
           push_favorites?: boolean
           push_group_messages?: boolean
@@ -1473,6 +1502,7 @@ export type Database = {
           id?: string
           notification_sound?: string | null
           push_album_shares?: boolean
+          push_announcements?: boolean
           push_credits?: boolean
           push_favorites?: boolean
           push_group_messages?: boolean

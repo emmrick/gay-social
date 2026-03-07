@@ -14,7 +14,8 @@ import {
   Sparkles,
   AtSign,
   Coins,
-  ShieldCheck
+  ShieldCheck,
+  Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
@@ -197,6 +198,16 @@ const NotificationPreferencesSection = () => {
         description="Statut de ta demande de vérification"
         checked={preferences.push_verification}
         onCheckedChange={() => togglePreference('push_verification')}
+        disabled={isUpdating}
+      />
+
+      <PreferenceItem
+        icon={Megaphone}
+        iconColor="text-amber-500"
+        title="Annonces officielles"
+        description="Notifications du canal informations"
+        checked={(preferences as any).push_announcements ?? true}
+        onCheckedChange={() => togglePreference('push_announcements' as any)}
         disabled={isUpdating}
       />
 

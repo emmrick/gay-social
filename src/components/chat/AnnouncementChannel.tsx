@@ -7,11 +7,12 @@ import { useIsAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import ChatMessage from './ChatMessage';
-import ChatInput from './ChatInput';
+import MuteButton from './MuteButton';
 import { ArrowLeft, Megaphone, Loader2, ChevronDown, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { sendPushNotification } from '@/services/pushNotificationService';
 
 
 interface AnnouncementChannelProps {
@@ -91,6 +92,35 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
 
       if (error) throw error;
 
+      // Send push notifications to all users for announcement
+      try {
+        const { data: allProfiles } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .neq('user_id', user.id)
+          .limit(1000);
+
+        if (allProfiles) {
+          // Fire and forget - send push to all users
+          const preview = adminMessage.trim().length > 80 
+            ? adminMessage.trim().substring(0, 80) + '...' 
+            : adminMessage.trim();
+
+          for (const profile of allProfiles) {
+            sendPushNotification({
+              userId: profile.user_id,
+              title: '📢 Canal Informations',
+              body: preview,
+              url: '/',
+              tag: 'announcement',
+              notificationType: 'system',
+            }).catch(() => {}); // Ignore individual failures
+          }
+        }
+      } catch (pushErr) {
+        console.error('Error sending announcement push:', pushErr);
+      }
+
       setAdminMessage('');
       toast.success('Message publié sur le canal');
     } catch (err) {
@@ -129,6 +159,7 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
             Canal officiel • Lecture seule
           </p>
         </div>
+        <MuteButton conversationId="announcement" />
       </header>
 
       {/* Messages area */}

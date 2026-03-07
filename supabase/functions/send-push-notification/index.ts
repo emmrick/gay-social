@@ -188,6 +188,27 @@ serve(async (req) => {
       }
     }
 
+    // Check per-conversation mute (for any tagged notification)
+    if (tag) {
+      const conversationId = tag === 'announcement' ? 'announcement' : null;
+      if (conversationId) {
+        const { data: convMute } = await supabase
+          .from("conversation_mute_preferences")
+          .select("is_muted")
+          .eq("user_id", userId)
+          .eq("conversation_id", conversationId)
+          .maybeSingle();
+
+        if (convMute?.is_muted) {
+          console.log(`Conversation ${conversationId} is muted for user ${userId}`);
+          return new Response(
+            JSON.stringify({ success: false, message: "Conversation is muted by user" }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+    }
+
     // Get user's push subscriptions
     const { data: subscriptions, error: subError } = await supabase
       .from("push_subscriptions")

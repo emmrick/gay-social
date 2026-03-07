@@ -2,17 +2,19 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnnouncementChannel } from './useAnnouncementChannel';
+import { useConversationMute } from './useConversationMute';
 import { playAnnouncementSoundStandalone } from './useNotificationSound';
 import { toast } from 'sonner';
-import { Megaphone } from 'lucide-react';
 
 /**
  * Global hook that listens for new announcement channel messages
  * and notifies all authenticated users with a chime sound.
+ * Respects per-conversation mute preference.
  */
 export const useAnnouncementNotifications = () => {
   const { user } = useAuth();
   const { data: announcementChannel } = useAnnouncementChannel();
+  const { isMuted } = useConversationMute('announcement');
 
   useEffect(() => {
     if (!user?.id || !announcementChannel?.id) return;
@@ -33,6 +35,9 @@ export const useAnnouncementNotifications = () => {
           // Don't notify for own messages
           if (newMsg.sender_id === user.id) return;
 
+          // Don't notify if muted
+          if (isMuted) return;
+
           // Play announcement chime
           playAnnouncementSoundStandalone();
 
@@ -48,5 +53,5 @@ export const useAnnouncementNotifications = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, announcementChannel?.id]);
+  }, [user?.id, announcementChannel?.id, isMuted]);
 };

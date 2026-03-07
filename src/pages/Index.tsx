@@ -14,6 +14,7 @@ import ProfileView from '@/components/profile/ProfileView';
 import ChatBotConfigPage from '@/components/chatbot/ChatBotConfigPage';
 import PremiumPage from '@/components/premium/PremiumPage';
 import ReferralDialog from '@/components/premium/ReferralDialog';
+import UnifiedPageHeader from '@/components/layout/UnifiedPageHeader';
 import SwipePage from '@/components/swipe/SwipePage';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
 import MemberSearch from '@/components/chat/MemberSearch';
@@ -364,42 +365,11 @@ const Index = () => {
             className="flex-1 flex flex-col min-h-0"
           >
             {/* Header */}
-            <div 
-              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
-              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
-            >
-              <div className="px-5 pb-4 flex items-center justify-between w-full">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
-                    Accueil
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Bienvenue, {profile?.username || 'membre'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {/* Credit balance */}
-                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
-                  {/* Online members count */}
-                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-xs font-medium text-green-600 dark:text-green-400">{onlineCount || 0}</span>
-                  </div>
-                  <NotificationsDropdown />
-                  {/* Profile avatar */}
-                  <button
-                    onClick={() => handleTabChange('profile')}
-                    className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors overflow-hidden border-2 border-primary/20"
-                  >
-                    {profile?.avatar_url ? (
-                      <img src={profile.avatar_url} alt="Profil" className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
+            <UnifiedPageHeader
+              onNavigateToCredits={() => handleTabChange('premium')}
+              onNavigateToProfile={() => handleTabChange('profile')}
+              onlineCount={onlineCount}
+            />
             <ScrollArea className="flex-1 min-h-0">
               <HomeView
                 onViewProfile={(userId) => handleStartPrivateChat(userId)}
@@ -420,26 +390,10 @@ const Index = () => {
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1 flex flex-col min-h-0"
           >
-            {/* Header */}
-            <div 
-              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
-              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
-            >
-              <div className="px-5 pb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
-                    Swipe
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Découvre des profils
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
-                  <NotificationsDropdown />
-                </div>
-              </div>
-            </div>
+            <UnifiedPageHeader
+              onNavigateToCredits={() => handleTabChange('premium')}
+              onNavigateToProfile={() => handleTabChange('profile')}
+            />
             <SwipePage onStartChat={handleStartPrivateChat} />
           </motion.div>
         ) : null;
@@ -455,75 +409,58 @@ const Index = () => {
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1 flex flex-col relative min-h-0"
           >
-            {/* Header */}
-            <div 
-              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
-              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
-            >
-              <div className="px-5 pb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
-                    Messages
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {messageSubTab === 'groups' 
-                      ? `${joinedGroups.length}/${maxGroups} groupes rejoints`
-                      : 'Tes conversations privées'
-                    }
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
-                  <NotificationsDropdown />
-                  {messageSubTab === 'groups' ? (
-                    <div className="flex items-center gap-1.5">
-                      <Button
-                        onClick={() => setShowCreateGroup(true)}
-                        size="icon"
-                        variant="outline"
-                        className="rounded-full"
-                        title="Créer un groupe"
-                      >
-                        <Users className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={() => setShowGroupPicker(true)}
-                        size="icon"
-                        className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
-                        title="Rejoindre un groupe régional"
-                      >
-                        <Plus className="w-5 h-5" />
-                      </Button>
-                    </div>
-                  ) : (
+            <UnifiedPageHeader
+              onNavigateToCredits={() => handleTabChange('premium')}
+              onNavigateToProfile={() => handleTabChange('profile')}
+              rightContent={
+                messageSubTab === 'groups' ? (
+                  <div className="flex items-center gap-1.5">
                     <Button
-                      onClick={() => setShowMemberSearch(true)}
+                      onClick={() => setShowCreateGroup(true)}
+                      size="icon"
+                      variant="outline"
+                      className="rounded-full"
+                      title="Créer un groupe"
+                    >
+                      <Users className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={() => setShowGroupPicker(true)}
                       size="icon"
                       className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+                      title="Rejoindre un groupe régional"
                     >
                       <Plus className="w-5 h-5" />
                     </Button>
-                  )}
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => setShowMemberSearch(true)}
+                    size="icon"
+                    className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                )
+              }
+              bottomContent={
+                <div className="px-5 pb-3">
+                  <Tabs 
+                    value={messageSubTab} 
+                    onValueChange={(v) => setMessageSubTab(v as 'conversations' | 'groups' | 'archived')}
+                  >
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="conversations">Messages</TabsTrigger>
+                      <TabsTrigger value="groups" className="flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5" />
+                        Groupes
+                      </TabsTrigger>
+                      <TabsTrigger value="archived">Archives</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                 </div>
-              </div>
-
-              {/* Tabs: Conversations | Groupes | Archives */}
-              <div className="px-5 pb-3">
-                <Tabs 
-                  value={messageSubTab} 
-                  onValueChange={(v) => setMessageSubTab(v as 'conversations' | 'groups' | 'archived')}
-                >
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="conversations">Messages</TabsTrigger>
-                    <TabsTrigger value="groups" className="flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5" />
-                      Groupes
-                    </TabsTrigger>
-                    <TabsTrigger value="archived">Archives</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            </div>
+              }
+            />
             
             {/* Content based on sub-tab */}
             <ScrollArea className="flex-1 min-h-0">
@@ -581,26 +518,10 @@ const Index = () => {
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1 flex flex-col min-h-0"
           >
-            {/* Header */}
-            <div 
-              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
-              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
-            >
-              <div className="px-5 pb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
-                    Mon Profil
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Gérer ton compte
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
-                  <NotificationsDropdown />
-                </div>
-              </div>
-            </div>
+            <UnifiedPageHeader
+              onNavigateToCredits={() => handleTabChange('premium')}
+              onNavigateToProfile={() => handleTabChange('profile')}
+            />
             <ScrollArea className="flex-1 min-h-0">
               <ProfileView 
                 onSignOut={handleSignOut}
@@ -630,26 +551,11 @@ const Index = () => {
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1 flex flex-col min-h-0"
           >
-            {/* Header */}
-            <div 
-              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
-              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
-            >
-              <div className="px-5 pb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
-                    Crédits
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Gérer vos crédits et actions
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ReferralDialog />
-                  <NotificationsDropdown />
-                </div>
-              </div>
-            </div>
+            <UnifiedPageHeader
+              onNavigateToCredits={() => handleTabChange('premium')}
+              onNavigateToProfile={() => handleTabChange('profile')}
+              rightContent={<ReferralDialog />}
+            />
             <ScrollArea className="flex-1 min-h-0">
               <PremiumPage onNavigateToSupport={() => {
                 setPreviousTab(activeTab);

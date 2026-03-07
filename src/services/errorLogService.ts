@@ -77,7 +77,8 @@ export const initGlobalErrorCapture = () => {
       ? (args.find((a) => a instanceof Error) as Error).stack
       : undefined;
     // Only log actual errors, not warnings or debug info
-    if (message.includes("Error") || message.includes("error") || message.includes("failed")) {
+    const isReactWarning = message.startsWith("Warning:") || message.includes("React.forwardRef") || message.includes("Function components cannot be given refs");
+    if (!isReactWarning && (message.includes("Error") || message.includes("error") || message.includes("failed"))) {
       deduplicatedLog(message.slice(0, 2000), stack, "console_error");
     }
   };

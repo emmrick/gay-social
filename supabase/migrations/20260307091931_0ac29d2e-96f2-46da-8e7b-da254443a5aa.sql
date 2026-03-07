@@ -1,0 +1,1 @@
+UPDATE error_logs SET is_resolved = true, resolved_at = now() WHERE is_resolved IS DISTINCT FROM true AND error_message LIKE '%Function components cannot be given refs%';

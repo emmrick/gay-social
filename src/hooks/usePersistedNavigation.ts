@@ -48,27 +48,22 @@ export const usePersistedNavigation = (isAuthenticated: boolean, isLoading: bool
     }
   }, [state]);
 
-  // Handle auth state changes
+  // Handle auth state changes - only redirect TO home, never auto-reset to landing
+  // (landing reset is handled explicitly via resetNavigation on sign-out)
   useEffect(() => {
     if (isLoading) return;
 
     if (isAuthenticated) {
-      // If user is logged in and we're on landing, redirect to saved view or home
+      // If user is logged in and we're on landing, redirect to home
       if (state.currentView === 'landing') {
         setState(prev => ({
           ...prev,
           currentView: 'home',
         }));
       }
-    } else {
-      // If user is not logged in, force landing page
-      setState({
-        currentView: 'landing',
-        activeTab: 'home',
-        selectedRegion: null,
-        selectedPrivateUserId: null,
-      });
     }
+    // NOTE: We intentionally do NOT reset to landing when isAuthenticated becomes false.
+    // This prevents flickering during token refresh. resetNavigation() handles sign-out.
   }, [isAuthenticated, isLoading]);
 
   // Setters

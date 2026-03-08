@@ -38,6 +38,16 @@ const formatDateLabel = (date: Date): string => {
   return format(date, 'd MMMM yyyy', { locale: fr });
 };
 
+const formatBoldText = (text: string) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+};
+
 const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideHeader = false }: SupportChatRoomProps) => {
   const { user } = useAuth();
   
@@ -685,12 +695,12 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
                       ) : isSystem ? (
                         <div className="flex items-start gap-2 px-3 py-2 text-xs text-muted-foreground bg-muted/50 rounded-2xl border border-border/50 italic max-w-full">
                           <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                          <span style={{ wordBreak: 'break-word' }}>{message.content}</span>
+                          <span style={{ wordBreak: 'break-word' }}>{formatBoldText(message.content)}</span>
                         </div>
                       ) : isChatbotBot ? (
                         <div className="px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words bg-muted/60 border border-border/30 text-foreground rounded-2xl rounded-bl-md max-w-full"
                           style={{ wordBreak: 'break-word' }}>
-                          {message.content}
+                          {formatBoldText(message.content)}
                         </div>
                       ) : (
                         <div className={cn(
@@ -702,7 +712,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
                         )}
                         style={{ wordBreak: 'break-word' }}
                         >
-                          {message.content}
+                          {formatBoldText(message.content)}
                         </div>
                       )}
 

@@ -133,7 +133,7 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
   // Desktop: side-by-side layout (mission left, chat right)
   if (!isMobile) {
     return (
-      <div className="flex gap-4 w-full max-w-6xl mx-auto">
+      <div className="flex gap-4 w-full max-w-7xl mx-auto">
         {/* Left: Mission panel */}
         <div className="w-[340px] shrink-0">
           <div className="sticky top-4">
@@ -141,7 +141,7 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
           </div>
         </div>
 
-        {/* Right: Chat */}
+        {/* Center: Chat */}
         <div className="flex-1 min-w-0">
           <div className="flex flex-col h-[calc(100vh-160px)] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
             {/* Client info header */}
@@ -162,6 +162,15 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
                     #{ticket.ticket_number} · {ticket.subject || 'Support'}
                   </p>
                 </div>
+                <Button
+                  variant={showInfractions ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setShowInfractions(!showInfractions)}
+                  className="gap-1.5"
+                >
+                  <Shield className="w-4 h-4" />
+                  Infractions
+                </Button>
               </div>
             </div>
 
@@ -171,6 +180,19 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
             </div>
           </div>
         </div>
+
+        {/* Right: Infractions sidebar */}
+        {showInfractions && ticket?.user_id && (
+          <div className="w-[340px] shrink-0">
+            <div className="h-[calc(100vh-160px)] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+              <InfractionsSidebar
+                userId={ticket.user_id}
+                ticketId={ticket.id}
+                onClose={() => setShowInfractions(false)}
+              />
+            </div>
+          </div>
+        )}
       </div>
     );
   }

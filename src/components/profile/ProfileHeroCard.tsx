@@ -52,9 +52,9 @@ const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionL
         <motion.div
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="bg-card rounded-3xl border border-border/50 shadow-lg p-5"
+          className="bg-card rounded-3xl border border-border/50 shadow-lg p-5 pb-4"
         >
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-start">
             {/* Avatar */}
             <div className="relative flex-shrink-0 -mt-12">
               <div className="p-[3px] rounded-2xl bg-gradient-to-br from-primary to-accent shadow-lg">
@@ -137,7 +137,7 @@ const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionL
 
           {/* Bio */}
           {profile.bio && (
-            <p className="text-sm text-muted-foreground mt-4 leading-relaxed bg-secondary/30 rounded-xl px-3 py-2.5">
+            <p className="text-sm text-muted-foreground mt-3 leading-relaxed bg-secondary/30 rounded-xl px-3 py-2.5">
               {profile.bio}
             </p>
           )}

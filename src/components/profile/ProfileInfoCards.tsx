@@ -20,7 +20,7 @@ const ProfileInfoCards = ({ profile, lookingForLabels, bodyTypeLabels, ethnicity
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.15 }}
-      className="bg-card rounded-2xl border border-border/50 p-4 space-y-3"
+      className="bg-card rounded-2xl border border-border/50 p-4 space-y-4"
     >
       {/* Looking for */}
       {hasLookingFor && (

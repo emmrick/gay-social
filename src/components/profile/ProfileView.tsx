@@ -88,7 +88,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
         }
       />
 
-      <div className="px-4 space-y-3 -mt-6 relative z-10">
+      <div className="px-4 space-y-4 mt-4 relative z-10">
         {/* Stats */}
         <ProfileStatsGrid
           stats={stats}

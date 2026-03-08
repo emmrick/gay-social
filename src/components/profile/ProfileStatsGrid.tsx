@@ -27,7 +27,7 @@ const ProfileStatsGrid = ({ stats, statsLoading, favoritesCount }: ProfileStatsG
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.08 }}
-      className="grid grid-cols-4 gap-2"
+      className="grid grid-cols-4 gap-3"
     >
       {items.map((item, i) => (
         <motion.div

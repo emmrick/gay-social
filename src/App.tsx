@@ -123,6 +123,7 @@ const AuthenticatedApp = () => {
                     <Route path="/aide/:category" element={<Suspense fallback={<PageFallback />}><HelpCenter /></Suspense>} />
                     <Route path="/aide/chat" element={<Suspense fallback={<PageFallback />}><Help /></Suspense>} />
                     <Route path="/regles" element={<Suspense fallback={<PageFallback />}><Rules /></Suspense>} />
+                    <Route path="/guide" element={<Suspense fallback={<PageFallback />}><GuidePage /></Suspense>} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                   </Routes>

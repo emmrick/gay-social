@@ -1140,7 +1140,7 @@ const Help = ({ embedded = false }: HelpProps) => {
               </div>
             )}
           </div>
-      </ScrollArea>
+      </div>
 
       {/* Floating chat bubble */}
       <motion.button

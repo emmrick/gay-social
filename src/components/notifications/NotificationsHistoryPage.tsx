@@ -228,7 +228,7 @@ const NotificationsHistoryPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="h-dvh bg-background overflow-y-auto pb-24">
       {/* Hero Header */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-primary/3 to-transparent" />

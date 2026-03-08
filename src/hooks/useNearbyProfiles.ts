@@ -84,10 +84,19 @@ export const useNearbyProfiles = (
     refetchInterval: 600000,
   });
 
-  // Use geo-sorted data when available, otherwise base data
+  // Merge: geo-sorted profiles first, then remaining base profiles not in geo results
+  const mergedProfiles = useMemo(() => {
+    const geoProfiles = geoQuery.data ?? [];
+    const baseProfiles = baseQuery.data ?? [];
+    if (geoProfiles.length === 0) return baseProfiles;
+    const geoUserIds = new Set(geoProfiles.map(p => p.user_id));
+    const remaining = baseProfiles.filter(p => !geoUserIds.has(p.user_id));
+    return [...geoProfiles, ...remaining];
+  }, [geoQuery.data, baseQuery.data]);
+
   const hasGeoData = geoQuery.isSuccess && (geoQuery.data?.length ?? 0) > 0;
-  const profiles = hasGeoData ? geoQuery.data! : baseQuery.data ?? [];
-  const isLoading = !hasGeoData ? baseQuery.isLoading : false;
+  const profiles = mergedProfiles;
+  const isLoading = baseQuery.isLoading;
 
   return {
     data: profiles,

@@ -69,11 +69,7 @@ const IdentityVerificationPanel = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasViewed, setHasViewed] = useState(false);
-  const [signedUrls, setSignedUrls] = useState<{
-    selfie: string | null;
-    idFront: string | null;
-    idBack: string | null;
-  }>({ selfie: null, idFront: null, idBack: null });
+  const [signedSelfieUrl, setSignedSelfieUrl] = useState<string | null>(null);
   const [imageViewer, setImageViewer] = useState<ImageViewerState>({
     isOpen: false,
     imageUrl: null,

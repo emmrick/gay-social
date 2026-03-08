@@ -370,12 +370,12 @@ const Index = () => {
               onNavigateToProfile={() => handleTabChange('profile')}
               onlineCount={onlineCount}
             />
-            <ScrollArea className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto">
               <HomeView
                 onViewProfile={(userId) => handleStartPrivateChat(userId)}
                 onStartPrivateChat={handleStartPrivateChat}
               />
-            </ScrollArea>
+            </div>
           </motion.div>
         ) : null;
 

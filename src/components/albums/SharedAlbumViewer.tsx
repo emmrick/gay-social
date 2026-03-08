@@ -278,12 +278,6 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
     notifyOwnerMutation.mutate();
   }, [notifyOwnerMutation]);
 
-  // Watch for isBlocked changes to notify owner
-  const prevBlockedRef = useRef(false);
-  if (isBlocked && !prevBlockedRef.current) {
-    handleScreenshotDetected();
-  }
-  prevBlockedRef.current = isBlocked;
 
   // Fetch album media with signed URLs
   const { data: media = [], isLoading, error: mediaError } = useQuery({

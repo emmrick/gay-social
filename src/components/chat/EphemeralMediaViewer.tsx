@@ -61,6 +61,7 @@ const EphemeralMediaViewer = ({
   senderName, 
   duration = 10,
   mediaId,
+  autoStart = false,
   onClose, 
   onViewed,
   onSaveToConversation,

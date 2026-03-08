@@ -443,7 +443,7 @@ const AlbumGalleryViewer = ({
                         style={{
                           WebkitUserSelect: 'none',
                           WebkitTouchCallout: 'none',
-                          filter: isBlocked ? 'brightness(0)' : 'none',
+                          filter: 'none',
                         }}
                       />
                       {videoPlaying !== item.id && (

@@ -530,7 +530,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
         {showScrollButton && (
           <button
             className="absolute bottom-3 right-3 rounded-full shadow-lg z-10 bg-card border border-border text-foreground hover:bg-muted w-9 h-9 flex items-center justify-center"
-            onClick={() => scrollToBottom(false)}
+            onClick={() => scrollToBottom()}
           >
             <ChevronDown className="w-4 h-4" />
           </button>

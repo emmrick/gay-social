@@ -219,14 +219,16 @@ const Help = ({ embedded = false }: HelpProps) => {
     return <BookOpen className="w-4 h-4" />;
   };
 
-  // Simulate bot typing delay
-  const addBotMessage = useCallback((text: string, options?: ChatOption[], delay = 600) => {
+  // Simulate bot typing delay based on word count (~1s per word, clamped 2s–15s)
+  const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
+    const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+    const typingDelay = Math.min(Math.max(wordCount * 1000, 2000), 15000);
     setIsBotTyping(true);
     setTimeout(() => {
       setChatMessages(prev => [...prev, { type: 'bot', text, options }]);
       setIsBotTyping(false);
       playNotificationSoundStandalone();
-    }, delay);
+    }, typingDelay);
   }, []);
 
   // Show category selection
@@ -238,8 +240,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     }));
     addBotMessage(
       "Sur quel **sujet** as-tu une question ? Tu peux aussi **taper ta question** directement ! 👇",
-      options,
-      400
+      options
     );
   }, [faqCategories, addBotMessage]);
 
@@ -270,7 +271,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     setAnsweredArticleIds(prev => new Set(prev).add(articleId));
     setNoMatchCount(0);
 
-    addBotMessage(`**${article.question}**\n\n${article.answer}`, undefined, 500);
+    addBotMessage(`**${article.question}**\n\n${article.answer}`);
 
     // After answer, ask if they need more help
     setTimeout(() => {
@@ -283,8 +284,7 @@ const Help = ({ embedded = false }: HelpProps) => {
       ];
       addBotMessage(
         "Est-ce que ça répond à ta question ? Tu peux **continuer** sur le même sujet ou **changer de catégorie**.",
-        options,
-        800
+        options
       );
     }, 1000);
   }, [allFaqArticles, addBotMessage]);

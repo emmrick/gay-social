@@ -56,8 +56,24 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
   const { data: memberCount } = useTotalMemberCount();
   const { data: onlineCount } = useOnlineMemberCount();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+  const previousThemeRef = useRef(theme);
   const animatedMembers = useAnimatedNumber(memberCount || 0);
   const animatedOnline = useAnimatedNumber(onlineCount || 0, 800);
+
+  // Force light theme on landing page
+  useEffect(() => {
+    previousThemeRef.current = theme;
+    if (theme !== 'light') {
+      setTheme('light');
+    }
+    return () => {
+      // Restore previous theme when leaving landing page
+      if (previousThemeRef.current && previousThemeRef.current !== 'light') {
+        setTheme(previousThemeRef.current);
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const seoFaqs = [
     { question: 'Comment fonctionne Gay Connect ?', answer: 'Gay Connect est un site de rencontre gay gratuit qui permet aux hommes de se rencontrer par département. Créez votre profil, rejoignez le chat de votre région et échangez avec des hommes près de chez vous.' },

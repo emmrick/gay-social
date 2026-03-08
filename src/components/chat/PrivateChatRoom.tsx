@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import PrivateChatInput from './PrivateChatInput';
 import EphemeralMessage from './EphemeralMessage';
+import EphemeralMessageRow from './EphemeralMessageRow';
 import RegularMediaMessage from './RegularMediaMessage';
 import SharedAlbumMessage from './SharedAlbumMessage';
 import CreditRequestMessage from './CreditRequestMessage';
@@ -344,8 +345,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 nextMsg.sender_id !== message.sender_id ||
                 new Date(nextMsg.created_at).getTime() - new Date(message.created_at).getTime() > 120000;
 
-              return (
-                <div key={message.id}>
+              // For ephemeral media, wrap entire row in visibility guard
+              const messageContent = (
+                <>
                   {/* Date separator */}
                   {showDate && (
                     <div className="flex justify-center py-3">
@@ -493,8 +495,19 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                     </div>
                   </div>
                   )}
-                </div>
+                </>
               );
+
+              // Wrap ephemeral messages in visibility guard that hides entire row after viewing
+              if (isEphemeralMedia) {
+                return (
+                  <EphemeralMessageRow key={message.id} messageId={message.id} senderId={message.sender_id}>
+                    {messageContent}
+                  </EphemeralMessageRow>
+                );
+              }
+
+              return <div key={message.id}>{messageContent}</div>;
             })
           )}
 

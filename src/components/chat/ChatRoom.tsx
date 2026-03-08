@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import EphemeralMedia from './EphemeralMedia';
+import EphemeralMessageRow from './EphemeralMessageRow';
 import MembersList from './MembersList';
 import TypingIndicator from './TypingIndicator';
 import MessageReply from './MessageReply';
@@ -362,30 +363,43 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           )}
           
           {/* Messages */}
-          {messages.map((message) => (
-            <ChatMessage
-              key={message.id}
-              message={{
-                id: message.id,
-                content: message.content || '',
-                senderId: message.sender_id,
-                senderName: message.senderUsername || 'Anonyme',
-                senderAvatar: message.senderAvatar || undefined,
-                timestamp: new Date(message.created_at),
-                type: message.message_type as 'text' | 'image',
-                replyToMessage: message.replyToMessage,
-              }}
-              isOwn={message.sender_id === user?.id}
-              isHighlighted={searchResults.includes(message.id) && searchResults[searchIndex] === message.id}
-              reactions={getReactionsForMessage(message.id)}
-              readers={getReaders(message.id)}
-              totalMembers={memberCount}
-              chatRoomId={roomId}
-              onReply={handleReply}
-              onAvatarClick={handleAvatarClick}
-              onToggleReaction={handleToggleReaction}
-            />
-          ))}
+          {messages.map((message) => {
+            const isEphemeral = message.message_type === 'image' || message.message_type === 'video';
+            const chatMsg = (
+              <ChatMessage
+                key={message.id}
+                message={{
+                  id: message.id,
+                  content: message.content || '',
+                  senderId: message.sender_id,
+                  senderName: message.senderUsername || 'Anonyme',
+                  senderAvatar: message.senderAvatar || undefined,
+                  timestamp: new Date(message.created_at),
+                  type: message.message_type as 'text' | 'image',
+                  replyToMessage: message.replyToMessage,
+                }}
+                isOwn={message.sender_id === user?.id}
+                isHighlighted={searchResults.includes(message.id) && searchResults[searchIndex] === message.id}
+                reactions={getReactionsForMessage(message.id)}
+                readers={getReaders(message.id)}
+                totalMembers={memberCount}
+                chatRoomId={roomId}
+                onReply={handleReply}
+                onAvatarClick={handleAvatarClick}
+                onToggleReaction={handleToggleReaction}
+              />
+            );
+
+            if (isEphemeral) {
+              return (
+                <EphemeralMessageRow key={message.id} messageId={message.id} senderId={message.sender_id}>
+                  {chatMsg}
+                </EphemeralMessageRow>
+              );
+            }
+
+            return chatMsg;
+          })}
 
           {/* Typing indicator */}
           <TypingIndicator typingUsers={typingUsers} />

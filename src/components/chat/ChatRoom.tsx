@@ -86,7 +86,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
     }
   }, [messages, user?.id, markAsRead]);
   
-  const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
+  const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
   const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);

@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { Image, Video, Eye, Loader2, Infinity } from 'lucide-react';
+import { Image, Video, Eye, Loader2, Infinity, AlertTriangle } from 'lucide-react';
 import { useEphemeralMedia } from '@/hooks/useEphemeralMedia';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';

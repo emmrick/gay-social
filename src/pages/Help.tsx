@@ -466,7 +466,36 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
   };
 
-  const handleGoBack = () => {
+  const handleGoBack = async () => {
+    // If ticket is still open (no agent assigned), cancel it
+    const ticketToCancel = selectedTicket;
+    const liveStatus = liveTicket?.status || ticketToCancel?.status;
+    
+    if (ticketToCancel && liveStatus === 'open') {
+      // Close the ticket since no agent picked it up yet
+      try {
+        await supabase
+          .from('support_tickets' as any)
+          .update({ status: 'closed', closed_at: new Date().toISOString() } as any)
+          .eq('id', ticketToCancel.id);
+
+        // Also cancel the associated moderation task
+        await supabase
+          .from('moderation_tasks')
+          .update({ status: 'cancelled', completed_at: new Date().toISOString() } as any)
+          .eq('task_type', 'support_chat')
+          .eq('status', 'pending')
+          .contains('metadata', { ticket_id: ticketToCancel.id } as any);
+      } catch (err) {
+        console.error('[Help] Error cancelling ticket:', err);
+      }
+      setSelectedTicket(null);
+    } else if (ticketToCancel && (liveStatus === 'assigned')) {
+      // Agent already assigned - keep ticket so user can resume
+    } else {
+      setSelectedTicket(null);
+    }
+
     setChatPhase('idle');
     setChatMessages([]);
     setFreeText('');
@@ -474,11 +503,6 @@ const Help = ({ embedded = false }: HelpProps) => {
     setCurrentCategory(null);
     setAnsweredArticleIds(new Set());
     setNoMatchCount(0);
-    if (selectedTicket && (selectedTicket.status === 'open' || selectedTicket.status === 'assigned' || liveTicket?.status === 'open' || liveTicket?.status === 'assigned')) {
-      // Keep selectedTicket so we can resume
-    } else {
-      setSelectedTicket(null);
-    }
     agentJoinedRef.current = false;
   };
 

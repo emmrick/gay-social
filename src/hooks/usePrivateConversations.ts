@@ -50,7 +50,8 @@ export const usePrivateConversations = () => {
       return data || [];
     },
     enabled: !!user,
-    staleTime: 30_000,
+    staleTime: 60_000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const query = useQuery({
@@ -66,7 +67,7 @@ export const usePrivateConversations = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      if (!conversations) return [];
+      if (!conversations || conversations.length === 0) return [];
 
       // Get other user IDs
       const otherUserIds = conversations.map(conv => 
@@ -90,42 +91,53 @@ export const usePrivateConversations = () => {
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, {
         ...p,
-        // Use avatar_url if available, otherwise fall back to primary photo
         avatar_url: p.avatar_url || primaryPhotoMap.get(p.user_id) || null,
       }]) || []);
 
-      // Fetch last message for each conversation
-      const conversationsWithData = await Promise.all(
-        conversations.map(async (conv) => {
-          const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
-          
-          // Get last message
-          const { data: lastMsg } = await supabase
-            .from('messages')
-            .select('content, created_at, message_type')
-            .eq('is_private', true)
-            .or(`and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          return {
-            ...conv,
-            otherUser: profileMap.get(otherUserId) || {
-              user_id: otherUserId,
-              username: 'Utilisateur',
-              avatar_url: null,
-              is_online: false,
-              last_seen: null,
-              hide_online_status: false,
-              hide_last_seen: false,
-            },
-            lastMessage: lastMsg || undefined,
-          };
-        })
+      // Batch fetch last messages for ALL conversations in one query
+      // Get the latest private message for each conversation partner
+      const lastMessagesPromises = otherUserIds.map(otherUserId =>
+        supabase
+          .from('messages')
+          .select('content, created_at, message_type, sender_id, recipient_id')
+          .eq('is_private', true)
+          .or(`and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
       );
 
-      // Sort by last message date (most recent first), fallback to conversation created_at
+      const lastMessagesResults = await Promise.all(lastMessagesPromises);
+
+      const lastMessageMap = new Map<string, { content: string | null; created_at: string; message_type: string }>();
+      otherUserIds.forEach((otherUserId, index) => {
+        const result = lastMessagesResults[index];
+        if (result.data) {
+          lastMessageMap.set(otherUserId, {
+            content: result.data.content,
+            created_at: result.data.created_at,
+            message_type: result.data.message_type,
+          });
+        }
+      });
+
+      const conversationsWithData: ConversationWithProfile[] = conversations.map(conv => {
+        const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+        return {
+          ...conv,
+          otherUser: profileMap.get(otherUserId) || {
+            user_id: otherUserId,
+            username: 'Utilisateur',
+            avatar_url: null,
+            is_online: false,
+            last_seen: null,
+            hide_online_status: false,
+            hide_last_seen: false,
+          },
+          lastMessage: lastMessageMap.get(otherUserId) || undefined,
+        };
+      });
+
       return conversationsWithData.sort((a, b) => {
         const aTime = a.lastMessage?.created_at || a.created_at;
         const bTime = b.lastMessage?.created_at || b.created_at;
@@ -133,7 +145,8 @@ export const usePrivateConversations = () => {
       });
     },
     enabled: !!user,
-    staleTime: 30_000,
+    staleTime: 60_000,
+    gcTime: 10 * 60 * 1000,
   });
 
   // Filter conversations based on status

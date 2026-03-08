@@ -173,7 +173,6 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                       src={conv.otherUser.avatar_url}
                       alt={conv.otherUser.username}
                       className="w-full h-full object-cover"
-                      loading="lazy"
                     />
                   ) : (
                     <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">

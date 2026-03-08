@@ -462,13 +462,16 @@ const EphemeralMediaViewer = ({
                 }}
               >
                 {type === 'image' ? (
-                  <img 
-                    src={src} 
-                    alt="Ephemeral content" 
-                    className="w-full h-full object-contain"
-                    draggable={false}
-                    style={{ pointerEvents: 'none' }}
-                  />
+                  <div className="relative w-full h-full">
+                    <img 
+                      src={src} 
+                      alt="Ephemeral content" 
+                      className="w-full h-full object-contain"
+                      draggable={false}
+                      style={{ pointerEvents: 'none' }}
+                    />
+                    <GayConnectWatermark />
+                  </div>
                 ) : (
                   <video 
                     ref={videoRef}

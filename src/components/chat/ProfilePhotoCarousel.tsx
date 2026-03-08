@@ -184,6 +184,7 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
                 draggable={false}
                 onClick={closeFullscreen}
               />
+              <GayConnectWatermark />
             </motion.div>
 
             {/* Navigation arrows */}

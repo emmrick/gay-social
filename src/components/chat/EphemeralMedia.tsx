@@ -41,33 +41,6 @@ const EphemeralMedia = ({
   }, [isViewing, timeLeft, onClose, onViewed]);
 
 
-  // Prevent copy operations
-  useEffect(() => {
-    if (!isViewing) return;
-
-    const preventCopy = (e: ClipboardEvent) => {
-      e.preventDefault();
-      handleViolation();
-    };
-
-    const preventKeyShortcuts = (e: KeyboardEvent) => {
-      // Prevent Ctrl+C, Ctrl+S, Ctrl+P, etc.
-      if (e.ctrlKey || e.metaKey) {
-        if (['c', 's', 'p', 'a'].includes(e.key.toLowerCase())) {
-          e.preventDefault();
-          handleViolation();
-        }
-      }
-    };
-
-    document.addEventListener('copy', preventCopy);
-    document.addEventListener('keydown', preventKeyShortcuts);
-
-    return () => {
-      document.removeEventListener('copy', preventCopy);
-      document.removeEventListener('keydown', preventKeyShortcuts);
-    };
-  }, [isViewing, handleViolation]);
 
   const handleStartViewing = () => {
     setIsViewing(true);

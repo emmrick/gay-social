@@ -215,7 +215,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           </div>
         ) : (
           <button
-            onClick={() => setShowProfilePreview(true)}
+            onClick={() => navigate(`/profile/${otherUserId}`)}
             className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
           >
             <div className="relative flex-shrink-0">

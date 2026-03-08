@@ -151,9 +151,16 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
           return (
             <div
               key={conv.id}
-              onClick={() => onSelectConversation(conv.otherUser.user_id)}
+              onClick={() => {
+                if (!wasLongPressRef.current) {
+                  onSelectConversation(conv.otherUser.user_id);
+                }
+              }}
+              onPointerDown={() => handleLongPressStart(conv.id, conv.otherUser.username)}
+              onPointerUp={handleLongPressEnd}
+              onPointerLeave={handleLongPressEnd}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors",
+                "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors select-none",
                 "hover:bg-muted/50 active:bg-muted",
                 selectedUserId === conv.otherUser.user_id && "bg-primary/5"
               )}

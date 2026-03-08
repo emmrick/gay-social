@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 const FORBIDDEN_WORDS = [
   // Harassment & insults
   'pute', 'salope', 'connard', 'connasse', 'enculé', 'enculer', 'nique', 'niquer',
-  'ntm', 'ntm', 'fdp', 'fils de pute', 'ta mère', 'ta mere',
+  'ntm', 'fdp', 'fils de pute', 'ta mère', 'ta mere',
   'pd', 'pédé', 'pédale', 'tapette', 'tarlouze', 'travelo',
   // Racism & discrimination
   'nègre', 'negre', 'bougnoule', 'bougnoul', 'arabe de merde', 'sale noir',
@@ -58,6 +58,67 @@ export const detectForbiddenWord = (message: string): string | null => {
   return null;
 };
 
+// Store recent messages per conversation for context
+const recentMessagesCache: Map<string, Array<{ sender: string; content: string }>> = new Map();
+
+export const addToRecentMessages = (conversationId: string, sender: string, content: string) => {
+  const existing = recentMessagesCache.get(conversationId) || [];
+  existing.push({ sender, content });
+  // Keep last 15 messages for context
+  if (existing.length > 15) existing.shift();
+  recentMessagesCache.set(conversationId, existing);
+};
+
+export const getRecentMessages = (conversationId: string) => {
+  return recentMessagesCache.get(conversationId) || [];
+};
+
+interface AIAnalysisResult {
+  is_hostile: boolean;
+  confidence: number;
+  reason: string;
+}
+
+const analyzeWithAI = async (
+  message: string,
+  detectedWord: string,
+  recentMessages: Array<{ sender: string; content: string }>
+): Promise<AIAnalysisResult> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('analyze-message', {
+      body: {
+        message,
+        detected_word: detectedWord,
+        recent_messages: recentMessages,
+      },
+    });
+
+    if (error) {
+      console.error('AI analysis error:', error);
+      // Fallback: treat as hostile for safety
+      return { is_hostile: true, confidence: 0.5, reason: 'Analyse IA indisponible' };
+    }
+
+    // Handle rate limit / payment errors
+    if (data?.error) {
+      console.warn('AI analysis service error:', data.error);
+      if (data.error.includes('Rate limit')) {
+        toast.error('Service d\'analyse temporairement surchargé, réessayez dans un instant.');
+      }
+      return { is_hostile: true, confidence: 0.5, reason: data.error };
+    }
+
+    return {
+      is_hostile: data.is_hostile ?? true,
+      confidence: data.confidence ?? 0.5,
+      reason: data.reason ?? 'Analyse IA',
+    };
+  } catch (err) {
+    console.error('AI analysis failed:', err);
+    return { is_hostile: true, confidence: 0.5, reason: 'Erreur d\'analyse' };
+  }
+};
+
 export const useUserInfractions = () => {
   const { user } = useAuth();
 
@@ -82,17 +143,39 @@ export const useUserInfractionCount = () => {
   return infractions.length;
 };
 
-export const useForbiddenWords = () => {
+export const useForbiddenWords = (conversationId?: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const checkMessage = useCallback(async (message: string): Promise<{ blocked: boolean; word?: string; warningCount?: number; sanctioned?: boolean }> => {
     if (!user?.id) return { blocked: false };
 
+    // Step 1: Quick keyword detection
     const detectedWord = detectForbiddenWord(message);
     if (!detectedWord) return { blocked: false };
 
-    // Get current infraction count
+    // Step 2: AI contextual analysis - is it really hostile?
+    const recentMessages = conversationId ? getRecentMessages(conversationId) : [];
+
+    toast.loading('Analyse du message en cours...', { id: 'ai-analysis' });
+
+    const aiResult = await analyzeWithAI(message, detectedWord, recentMessages);
+
+    toast.dismiss('ai-analysis');
+
+    // Step 3: If AI says it's NOT hostile with good confidence, let it pass
+    if (!aiResult.is_hostile && aiResult.confidence >= 0.6) {
+      console.log(`[ForbiddenWords] AI cleared message: "${aiResult.reason}" (confidence: ${aiResult.confidence})`);
+      return { blocked: false };
+    }
+
+    // Step 4: If AI is uncertain (low confidence), warn but don't count as infraction
+    if (!aiResult.is_hostile && aiResult.confidence < 0.6) {
+      toast.info(`💬 Attention : votre message a été détecté comme potentiellement inapproprié. Il a été envoyé, mais faites attention à votre langage.`);
+      return { blocked: false };
+    }
+
+    // Step 5: AI confirmed hostile → proceed with infraction system
     const { data: existingInfractions } = await supabase
       .from('user_infractions' as any)
       .select('id')
@@ -114,7 +197,7 @@ export const useForbiddenWords = () => {
           subject: `⚠️ Sanction automatique - ${newWarningNumber} infractions détectées`,
           status: 'open',
           chatbot_history: JSON.stringify([
-            { type: 'system', text: `L'utilisateur a accumulé ${newWarningNumber} infractions pour utilisation de mots interdits. Une vérification approfondie est requise avant de débloquer l'accès.` }
+            { type: 'system', text: `L'utilisateur a accumulé ${newWarningNumber} infractions pour utilisation de mots interdits. Analyse IA : "${aiResult.reason}" (confiance: ${Math.round(aiResult.confidence * 100)}%). Une vérification approfondie est requise.` }
           ]),
         })
         .select('id')
@@ -123,26 +206,25 @@ export const useForbiddenWords = () => {
       if (ticketData) {
         supportTicketId = (ticketData as any).id;
 
-        // Send auto system message in the ticket
         await supabase
           .from('support_messages' as any)
           .insert({
             ticket_id: supportTicketId,
             sender_id: user.id,
-            content: `⚠️ **Sanction automatique** : ${newWarningNumber} infractions détectées pour utilisation de mots interdits. Un membre du support va examiner votre dossier. Vous ne pourrez pas quitter cette conversation tant que le problème n'est pas résolu.`,
+            content: `⚠️ **Sanction automatique** : ${newWarningNumber} infractions détectées.\n\n**Dernière analyse IA** : ${aiResult.reason}\n\nUn membre du support va examiner votre dossier. Vous ne pourrez pas quitter cette conversation tant que le problème n'est pas résolu.`,
             message_type: 'system',
           });
       }
     }
 
-    // Record infraction
+    // Record infraction with AI analysis details
     await supabase
       .from('user_infractions' as any)
       .insert({
         user_id: user.id,
         detected_word: detectedWord,
         message_content: message.substring(0, 500),
-        context: 'chat',
+        context: `chat | AI: ${aiResult.reason} (${Math.round(aiResult.confidence * 100)}%)`,
         warning_number: newWarningNumber,
         is_sanctioned: isSanctioned,
         support_ticket_id: supportTicketId,
@@ -153,7 +235,7 @@ export const useForbiddenWords = () => {
     if (isSanctioned) {
       toast.error(`🚫 Vous avez atteint ${newWarningNumber} avertissements. Vous devez discuter avec le support.`);
     } else {
-      toast.warning(`⚠️ Avertissement ${newWarningNumber}/3 : Votre message contient un mot interdit. Au bout de 3 avertissements, une sanction sera appliquée.`);
+      toast.warning(`⚠️ Avertissement ${newWarningNumber}/3 : Votre message a été identifié comme inapproprié. Raison : ${aiResult.reason}`);
     }
 
     return {
@@ -162,7 +244,7 @@ export const useForbiddenWords = () => {
       warningCount: newWarningNumber,
       sanctioned: isSanctioned,
     };
-  }, [user?.id, queryClient]);
+  }, [user?.id, queryClient, conversationId]);
 
   return { checkMessage };
 };

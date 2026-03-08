@@ -8,9 +8,10 @@ import { useTotalMemberCount, useOnlineMemberCount } from '@/hooks/useTotalMembe
 import { useNavigate, Link } from 'react-router-dom';
 import SEOHead, { websiteJsonLd, organizationJsonLd, faqPageJsonLd } from '@/components/seo/SEOHead';
 import React, { useEffect, useState, useRef } from 'react';
-import mockupChat from '@/assets/mockup-chat.png';
-import mockupSwipe from '@/assets/mockup-swipe.png';
-import mockupProfiles from '@/assets/mockup-profiles.png';
+import { ProfileGridPreview, SwipeCardPreview, ChatPreview } from './AppPreviews';
+import fakeProfile1 from '@/assets/fake-profile-1.jpg';
+import fakeProfile2 from '@/assets/fake-profile-2.jpg';
+import fakeProfile6 from '@/assets/fake-profile-6.jpg';
 import { motion, useInView } from 'framer-motion';
 import { useTheme } from 'next-themes';
 

@@ -837,6 +837,11 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
         </div>
       )}
 
+      {/* FAQ Search Panel for agents */}
+      {isAgent && !isClosed && !isWaitingClient && (
+        <FAQSearchPanel onInsertResponse={(text) => setInputValue(prev => prev ? prev + '\n' + text : text)} />
+      )}
+
       {/* Input (only when not closed and not waiting_client for agent) */}
       {!isClosed && !(isAgent && isWaitingClient) && (
         <div className="flex-shrink-0 border-t border-border bg-card p-2"

@@ -277,6 +277,8 @@ const Help = ({ embedded = false }: HelpProps) => {
       const options: ChatOption[] = [
         { label: '🔄 Autre question sur ce sujet', value: 'same_category' },
         { label: '📋 Changer de sujet', value: 'change_category' },
+        { label: '📖 Centre d\'aide complet', value: 'view_help_center' },
+        { label: '📜 Consulter les règles', value: 'view_rules' },
         { label: '👤 Contacter un agent', value: 'contact_agent' },
       ];
       addBotMessage(

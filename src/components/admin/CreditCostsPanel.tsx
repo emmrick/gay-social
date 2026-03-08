@@ -21,6 +21,7 @@ const categoryLabels: Record<string, string> = {
   swipe: '❤️ Swipe',
   groupes: '👥 Groupes',
   chatbot: '🤖 ChatBot',
+  parrainage: '🎁 Parrainage',
 };
 
 const categoryColors: Record<string, string> = {
@@ -31,6 +32,7 @@ const categoryColors: Record<string, string> = {
   swipe: 'bg-pink-500/10 text-pink-600 border-pink-500/20',
   groupes: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
   chatbot: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
+  parrainage: 'bg-orange-500/10 text-orange-600 border-orange-500/20',
 };
 
 const CreditCostsPanel = () => {

@@ -487,6 +487,8 @@ const SnapCaptureDialog = ({
                 {flashVisible && (
                   <div className="absolute inset-0 bg-white z-30 pointer-events-none animate-fade-out" />
                 )}
+                <video
+                  ref={videoRef}
                   autoPlay
                   playsInline
                   muted

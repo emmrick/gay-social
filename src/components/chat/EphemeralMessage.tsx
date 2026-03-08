@@ -127,22 +127,14 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
     );
   }
 
-  // After viewing: hide from conversation (media disappears)
-  // Exception: if screenshot was detected, show warning
+  // After viewing: the parent EphemeralMessageRow handles hiding the entire row
+  // Here we just return null for the bubble content
   if (media.is_viewed && !isOwn && !isUnlimited) {
-    if (media.screenshot_detected) {
-      return (
-        <div className="flex flex-col gap-1.5 px-3 py-2.5 rounded-xl bg-destructive/10 border border-destructive/30 max-w-[280px]">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
-            <span className="text-xs font-bold text-destructive">Capture d'écran détectée</span>
-          </div>
-          <p className="text-[11px] text-destructive/80 leading-relaxed">
-            Vous avez fait une capture d'écran. Suite à cette infraction, elle sera notée dans votre dossier pour non-respect des règlements du site.
-          </p>
-        </div>
-      );
-    }
+    return null;
+  }
+
+  // For sender: if viewed, hide too (parent handles investigation display)
+  if (isOwn && media.is_viewed && !isUnlimited) {
     return null;
   }
 

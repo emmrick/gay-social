@@ -284,8 +284,7 @@ const Help = ({ embedded = false }: HelpProps) => {
       ];
       addBotMessage(
         "Est-ce que ça répond à ta question ? Tu peux **continuer** sur le même sujet ou **changer de catégorie**.",
-        options,
-        800
+        options
       );
     }, 1000);
   }, [allFaqArticles, addBotMessage]);

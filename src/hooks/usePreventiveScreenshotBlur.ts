@@ -25,18 +25,21 @@ export const usePreventiveScreenshotBlur = ({
   const [showProtection, setShowProtection] = useState(false);
   const cooldownRef = useRef<boolean>(false);
 
-  const triggerProtection = useCallback(() => {
+  const triggerProtection = useCallback((isRealThreat = true) => {
     // Cooldown to prevent rapid re-triggers
     if (cooldownRef.current) return;
     cooldownRef.current = true;
 
     setShowProtection(true);
-    onThreatDetected?.();
+    // Only notify parent for real threats, not visibility changes
+    if (isRealThreat) {
+      onThreatDetected?.();
+    }
 
     setTimeout(() => {
       setShowProtection(false);
       cooldownRef.current = false;
-    }, 5000);
+    }, isRealThreat ? 5000 : 800);
   }, [onThreatDetected]);
 
   // Detect screen recording via navigator.mediaDevices

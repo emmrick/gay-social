@@ -507,18 +507,55 @@ const SnapCaptureDialog = ({
                 )}
               </div>
 
-              {/* Snap capture button + instructions */}
-              <div className="flex flex-col items-center gap-3 py-6 bg-black/80">
+              {/* Snap capture button + lock zone + instructions */}
+              <div
+                className="flex flex-col items-center gap-3 py-6 bg-black/80 relative"
+                onPointerMove={handlePointerMove}
+              >
                 <p className="text-white/60 text-xs">
-                  {isRecording
-                    ? `Relâche pour arrêter • Max ${MAX_TOTAL_DURATION}s`
+                  {isLocked
+                    ? 'Enregistrement verrouillé • Appuie sur le bouton pour arrêter'
+                    : isRecording
+                    ? 'Glisse vers le cadenas pour verrouiller 🔒'
                     : 'Tap = Photo • Appui long = Vidéo (max 60s)'}
                 </p>
+
+                {/* Lock zone - appears above the capture button during recording */}
+                <AnimatePresence>
+                  {isRecording && !isLocked && lockHintVisible && (
+                    <motion.div
+                      ref={lockZoneRef}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute -top-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center animate-bounce">
+                        <LockOpen className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-[10px] text-white/60">Verrouiller</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Locked indicator */}
+                {isLocked && (
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30"
+                  >
+                    <Lock className="w-3.5 h-3.5 text-white" />
+                    <span className="text-xs text-white font-medium">Verrouillé</span>
+                  </motion.div>
+                )}
+
                 <button
-                  onPointerDown={handlePointerDown}
-                  onPointerUp={handlePointerUp}
-                  onPointerCancel={handlePointerUp}
-                  onPointerLeave={handlePointerUp}
+                  onPointerDown={isLocked ? undefined : handlePointerDown}
+                  onPointerUp={isLocked ? undefined : handlePointerUp}
+                  onPointerCancel={isLocked ? undefined : handlePointerUp}
+                  onPointerLeave={isLocked ? undefined : handlePointerUp}
+                  onClick={isLocked ? handleStopLockedRecording : undefined}
                   className={cn(
                     "w-20 h-20 rounded-full border-4 border-white flex items-center justify-center transition-all select-none touch-none",
                     isRecording
@@ -532,9 +569,9 @@ const SnapCaptureDialog = ({
                     <div className="w-14 h-14 rounded-full bg-white" />
                   )}
                 </button>
-                {isRecording && (
+                {isRecording && !isLocked && (
                   <p className="text-amber-400 text-xs animate-pulse">
-                    Découpage auto en segments de {MAX_SEGMENT_DURATION}s
+                    ↑ Glisse vers le cadenas
                   </p>
                 )}
               </div>

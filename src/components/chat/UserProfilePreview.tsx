@@ -187,21 +187,25 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
                         Message privé
                       </Button>
                     )}
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setShowBlockDialog(true)}
-                      title={hasBlocked ? 'Déjà bloqué' : 'Bloquer'}
-                    >
-                      <Ban className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setShowReportDialog(true)}
-                    >
-                      <Flag className="w-4 h-4" />
-                    </Button>
+                    {!isStaffUser && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setShowBlockDialog(true)}
+                        title={hasBlocked ? 'Déjà bloqué' : 'Bloquer'}
+                      >
+                        <Ban className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {!isStaffUser && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setShowReportDialog(true)}
+                      >
+                        <Flag className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>

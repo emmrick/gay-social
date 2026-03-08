@@ -175,18 +175,18 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
         onClick={handleView}
         disabled={isOwn || (media.is_viewed && !isUnlimited && !canReplay)}
         className={cn(
-          'flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all max-w-[220px]',
+          'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all max-w-[280px]',
           isOwn
             ? 'bg-primary/10 cursor-default'
             : 'hover:bg-secondary/60 cursor-pointer bg-secondary/40'
         )}
       >
-        <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', iconBg)}>
-          {messageType === 'image' ? <Image className="w-4 h-4 text-white" /> : <Video className="w-4 h-4 text-white" />}
+        <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0', iconBg)}>
+          {messageType === 'image' ? <Image className="w-5 h-5 text-white" /> : <Video className="w-5 h-5 text-white" />}
         </div>
         <div className="text-left min-w-0">
-          <p className="font-medium text-xs truncate">{label}</p>
-          <p className="text-[10px] text-muted-foreground truncate">{statusText}</p>
+          <p className="font-medium text-sm truncate">{label}</p>
+          <p className="text-xs text-muted-foreground truncate">{statusText}</p>
         </div>
       </button>
 

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Send, Loader2, SwitchCamera, ShieldAlert, Settings, RotateCcw
+  X, Send, Loader2, SwitchCamera, ShieldAlert, Settings, RotateCcw, Lock, LockOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -42,10 +42,12 @@ const SnapCaptureDialog = ({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [capturedSegments, setCapturedSegments] = useState<CapturedSegment[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
+  const [lockHintVisible, setLockHintVisible] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -55,11 +57,13 @@ const SnapCaptureDialog = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isHoldingRef = useRef(false);
+  const isLockedRef = useRef(false);
   const segmentStartTimeRef = useRef(0);
   const totalRecordingTimeRef = useRef(0);
   const segmentsRef = useRef<CapturedSegment[]>([]);
   const autoSplitTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recordingStartTimeRef = useRef(0);
+  const lockZoneRef = useRef<HTMLDivElement>(null);
 
   const { uploadEphemeralMedia, isUploading, progress } = useEphemeralMediaUpload();
   const { permissions, isCameraDenied } = useCameraPermission();
@@ -221,6 +225,8 @@ const SnapCaptureDialog = ({
   // Handle hold start (video recording)
   const handlePointerDown = useCallback(() => {
     isHoldingRef.current = false;
+    isLockedRef.current = false;
+    setIsLocked(false);
     segmentsRef.current = [];
     setCapturedSegments([]);
 
@@ -228,6 +234,7 @@ const SnapCaptureDialog = ({
       isHoldingRef.current = true;
       setIsRecording(true);
       setRecordingTime(0);
+      setLockHintVisible(true);
       totalRecordingTimeRef.current = 0;
       recordingStartTimeRef.current = Date.now();
 
@@ -235,15 +242,39 @@ const SnapCaptureDialog = ({
         const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
         setRecordingTime(elapsed);
 
-        // Auto-stop at max duration
         if (elapsed >= MAX_TOTAL_DURATION) {
           forceStopRecording();
+          setIsLocked(false);
+          isLockedRef.current = false;
+          setLockHintVisible(false);
         }
       }, 1000);
 
       startSegmentRecording();
     }, 300);
   }, [startSegmentRecording, forceStopRecording]);
+
+  // Handle pointer move - check if finger is over lock zone
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isHoldingRef.current || isLockedRef.current) return;
+    if (!lockZoneRef.current) return;
+
+    const rect = lockZoneRef.current.getBoundingClientRect();
+    const isOverLock = (
+      e.clientX >= rect.left - 20 &&
+      e.clientX <= rect.right + 20 &&
+      e.clientY >= rect.top - 20 &&
+      e.clientY <= rect.bottom + 20
+    );
+
+    if (isOverLock) {
+      // Lock recording
+      isLockedRef.current = true;
+      isHoldingRef.current = true; // keep recording going
+      setIsLocked(true);
+      setLockHintVisible(false);
+    }
+  }, []);
 
   // Handle hold end
   const handlePointerUp = useCallback(() => {
@@ -253,12 +284,22 @@ const SnapCaptureDialog = ({
     }
 
     if (!isHoldingRef.current) {
-      takePhoto();
+      // Was a tap, not a hold
+      if (!isLockedRef.current) {
+        takePhoto();
+      }
       return;
     }
 
-    // Stop recording
+    // If locked, don't stop recording on release
+    if (isLockedRef.current) {
+      setLockHintVisible(false);
+      return;
+    }
+
+    // Not locked - stop recording
     isHoldingRef.current = false;
+    setLockHintVisible(false);
     if (autoSplitTimerRef.current) {
       clearTimeout(autoSplitTimerRef.current);
     }
@@ -266,6 +307,20 @@ const SnapCaptureDialog = ({
       mediaRecorderRef.current.stop();
     }
   }, [takePhoto]);
+
+  // Stop locked recording (tap on record button while locked)
+  const handleStopLockedRecording = useCallback(() => {
+    isHoldingRef.current = false;
+    isLockedRef.current = false;
+    setIsLocked(false);
+    setLockHintVisible(false);
+    if (autoSplitTimerRef.current) {
+      clearTimeout(autoSplitTimerRef.current);
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+  }, []);
 
   // Retake
   const handleRetake = () => {
@@ -341,6 +396,9 @@ const SnapCaptureDialog = ({
     setCapturedSegments([]);
     segmentsRef.current = [];
     setIsRecording(false);
+    setIsLocked(false);
+    isLockedRef.current = false;
+    setLockHintVisible(false);
     setRecordingTime(0);
     isHoldingRef.current = false;
     onClose();
@@ -449,18 +507,55 @@ const SnapCaptureDialog = ({
                 )}
               </div>
 
-              {/* Snap capture button + instructions */}
-              <div className="flex flex-col items-center gap-3 py-6 bg-black/80">
+              {/* Snap capture button + lock zone + instructions */}
+              <div
+                className="flex flex-col items-center gap-3 py-6 bg-black/80 relative"
+                onPointerMove={handlePointerMove}
+              >
                 <p className="text-white/60 text-xs">
-                  {isRecording
-                    ? `Relâche pour arrêter • Max ${MAX_TOTAL_DURATION}s`
+                  {isLocked
+                    ? 'Enregistrement verrouillé • Appuie sur le bouton pour arrêter'
+                    : isRecording
+                    ? 'Glisse vers le cadenas pour verrouiller 🔒'
                     : 'Tap = Photo • Appui long = Vidéo (max 60s)'}
                 </p>
+
+                {/* Lock zone - appears above the capture button during recording */}
+                <AnimatePresence>
+                  {isRecording && !isLocked && lockHintVisible && (
+                    <motion.div
+                      ref={lockZoneRef}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute -top-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center animate-bounce">
+                        <LockOpen className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-[10px] text-white/60">Verrouiller</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Locked indicator */}
+                {isLocked && (
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30"
+                  >
+                    <Lock className="w-3.5 h-3.5 text-white" />
+                    <span className="text-xs text-white font-medium">Verrouillé</span>
+                  </motion.div>
+                )}
+
                 <button
-                  onPointerDown={handlePointerDown}
-                  onPointerUp={handlePointerUp}
-                  onPointerCancel={handlePointerUp}
-                  onPointerLeave={handlePointerUp}
+                  onPointerDown={isLocked ? undefined : handlePointerDown}
+                  onPointerUp={isLocked ? undefined : handlePointerUp}
+                  onPointerCancel={isLocked ? undefined : handlePointerUp}
+                  onPointerLeave={isLocked ? undefined : handlePointerUp}
+                  onClick={isLocked ? handleStopLockedRecording : undefined}
                   className={cn(
                     "w-20 h-20 rounded-full border-4 border-white flex items-center justify-center transition-all select-none touch-none",
                     isRecording
@@ -474,9 +569,9 @@ const SnapCaptureDialog = ({
                     <div className="w-14 h-14 rounded-full bg-white" />
                   )}
                 </button>
-                {isRecording && (
+                {isRecording && !isLocked && (
                   <p className="text-amber-400 text-xs animate-pulse">
-                    Découpage auto en segments de {MAX_SEGMENT_DURATION}s
+                    ↑ Glisse vers le cadenas
                   </p>
                 )}
               </div>

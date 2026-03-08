@@ -581,24 +581,14 @@ const Index = () => {
         paddingBottom: showBottomNav ? 'calc(96px + env(safe-area-inset-bottom, 0px))' : undefined,
       }}
       >
-        <AnimatePresence mode="popLayout">
-          {content ?? (
-            <motion.div
-              key="fallback"
-              variants={fadeVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.2 }}
-              className="flex-1 flex items-center justify-center"
-            >
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Chargement...</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {content ?? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Chargement...</p>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Bottom Navigation Bar */}

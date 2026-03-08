@@ -350,7 +350,7 @@ const SnapCaptureDialog = ({
     `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   const totalDuration = capturedSegments.reduce((sum, s) => sum + (s.duration || 0), 0);
-  const hasCapture = capturedSegments.length > 0;
+  const hasCapture = capturedSegments.length > 0 && !isRecording;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>

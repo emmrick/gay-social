@@ -396,6 +396,9 @@ const SnapCaptureDialog = ({
     setCapturedSegments([]);
     segmentsRef.current = [];
     setIsRecording(false);
+    setIsLocked(false);
+    isLockedRef.current = false;
+    setLockHintVisible(false);
     setRecordingTime(0);
     isHoldingRef.current = false;
     onClose();

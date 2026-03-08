@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import CreditBalanceCompact from '@/components/credits/CreditBalanceCompact';
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
 import { User } from 'lucide-react';
+import logoImg from '@/assets/logo.png';
 
 interface UnifiedPageHeaderProps {
   onNavigateToCredits: () => void;
@@ -43,8 +44,9 @@ const UnifiedPageHeader = ({
       style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
     >
       <div className="px-5 pb-4 flex items-center justify-between w-full">
-        <div className="min-w-0">
-          <h1 className="font-display text-2xl font-extrabold rainbow-text leading-tight">
+        <div className="min-w-0 flex items-center gap-2">
+          <img src={logoImg} alt="Gay Connect" className="h-8 w-8" />
+          <h1 className="font-display text-xl font-extrabold rainbow-text leading-tight">
             Gay Connect
           </h1>
         </div>

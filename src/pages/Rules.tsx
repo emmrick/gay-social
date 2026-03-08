@@ -54,7 +54,7 @@ const RULES_SECTIONS = [
     title: 'Vie privée & Sécurité',
     rules: [
       { title: 'Ne partage pas d\'infos personnelles', desc: 'Pour ta sécurité, ne communique pas ton numéro de téléphone, adresse, réseaux sociaux aux inconnus.' },
-      { title: 'Captures d\'écran interdites', desc: 'Les captures d\'écran de conversations privées et de médias éphémères sont détectées et sanctionnées.' },
+      { title: 'Captures d\'écran détectées et sanctionnées', desc: 'Les captures d\'écran de conversations privées et de médias éphémères sont automatiquement détectées. Des sanctions progressives s\'appliquent : avertissement, puis suspensions de 1h à 7 jours. Nous ne pouvons pas empêcher physiquement une capture, mais nous la détectons et sanctionnons systématiquement.' },
       { title: 'Respecte la confidentialité', desc: 'Ne diffuse jamais les photos, messages ou informations d\'un autre membre sans son consentement.' },
     ],
   },

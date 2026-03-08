@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Gift, Copy, Share2, Users, CheckCircle, Clock, Loader2 } from 'lucide-react';
+import { Gift, Copy, Share2, Users, CheckCircle, Clock, Loader2, Lightbulb, MessageCircle, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

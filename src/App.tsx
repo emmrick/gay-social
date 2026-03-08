@@ -21,6 +21,7 @@ import { PageFallback } from "@/components/loading/LazyPageLoader";
 import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoticeDialog";
 import ForcedSupportChat from "@/components/moderation/ForcedSupportChat";
 import PromoPopup from "@/components/popups/PromoPopup";
+import OnboardingGuideDialog from "@/components/onboarding/OnboardingGuideDialog";
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
 import BackgroundRefreshIndicator from "@/components/loading/BackgroundRefreshIndicator";
@@ -42,6 +43,7 @@ const Regions = lazy(() => import("./pages/Regions"));
 const Help = lazy(() => import("./pages/Help"));
 const Rules = lazy(() => import("./pages/Rules"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
+const GuidePage = lazy(() => import("./pages/Guide"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 
@@ -122,6 +124,7 @@ const AuthenticatedApp = () => {
                     <Route path="/aide/:category" element={<Suspense fallback={<PageFallback />}><HelpCenter /></Suspense>} />
                     <Route path="/aide/chat" element={<Suspense fallback={<PageFallback />}><Help /></Suspense>} />
                     <Route path="/regles" element={<Suspense fallback={<PageFallback />}><Rules /></Suspense>} />
+                    <Route path="/guide" element={<Suspense fallback={<PageFallback />}><GuidePage /></Suspense>} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                   </Routes>
@@ -133,6 +136,7 @@ const AuthenticatedApp = () => {
                 <InvestigationNoticeDialog />
                 <ForcedSupportChat />
                 <PromoPopup />
+                <OnboardingGuideDialog />
               </BrowserRouter>
             </TooltipProvider>
           </ProfilePhotoGuard>

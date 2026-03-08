@@ -270,25 +270,35 @@ const HelpCenter = () => {
           ) : (
             <>
               {/* Quick links */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <button
+                  onClick={() => navigate('/guide')}
+                  className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors"
+                >
+                  <BookOpen className="w-5 h-5 text-primary" />
+                  <div className="text-center">
+                    <p className="font-semibold text-xs">Guide</p>
+                    <p className="text-[10px] text-muted-foreground">Utilisation</p>
+                  </div>
+                </button>
                 <button
                   onClick={() => navigate('/regles')}
-                  className="flex items-center gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors text-left"
+                  className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-muted/50 border border-border hover:bg-muted transition-colors"
                 >
-                  <Heart className="w-5 h-5 text-primary flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-sm">Règles</p>
-                    <p className="text-xs text-muted-foreground">Code de conduite</p>
+                  <Heart className="w-5 h-5 text-pink-500" />
+                  <div className="text-center">
+                    <p className="font-semibold text-xs">Règles</p>
+                    <p className="text-[10px] text-muted-foreground">Conduite</p>
                   </div>
                 </button>
                 <button
                   onClick={() => navigate('/legal')}
-                  className="flex items-center gap-3 p-4 rounded-2xl bg-muted/50 border border-border hover:bg-muted transition-colors text-left"
+                  className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-muted/50 border border-border hover:bg-muted transition-colors"
                 >
-                  <Scale className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-sm">Légal</p>
-                    <p className="text-xs text-muted-foreground">CGU, RGPD</p>
+                  <Scale className="w-5 h-5 text-muted-foreground" />
+                  <div className="text-center">
+                    <p className="font-semibold text-xs">Légal</p>
+                    <p className="text-[10px] text-muted-foreground">CGU, RGPD</p>
                   </div>
                 </button>
               </div>

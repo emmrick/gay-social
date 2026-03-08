@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Send, Loader2, SwitchCamera, ShieldAlert, Settings, RotateCcw, Lock, LockOpen
+  X, Send, Loader2, SwitchCamera, ShieldAlert, Settings, RotateCcw, Lock, LockOpen, Coins
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -65,7 +65,7 @@ const SnapCaptureDialog = ({
   const recordingStartTimeRef = useRef(0);
   const lockZoneRef = useRef<HTMLDivElement>(null);
 
-  const { uploadEphemeralMedia, isUploading, progress } = useEphemeralMediaUpload();
+  const { uploadEphemeralMedia, isUploading, progress, creditsNeeded } = useEphemeralMediaUpload();
   const { permissions, isCameraDenied } = useCameraPermission();
 
   // Start camera
@@ -616,14 +616,23 @@ const SnapCaptureDialog = ({
                 ))}
               </div>
 
-              {/* Info text — no duration selector anymore */}
-              {capturedSegments.some(s => s.type === 'video') && (
-                <div className="px-4 pb-1">
-                  <p className="text-xs text-muted-foreground">
-                    ⏱ La durée d'affichage correspond à la durée de chaque vidéo. Les photos s'affichent 10s.
+              {/* Credit cost indicator */}
+              <div className="px-4 pb-1 space-y-1.5">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20">
+                  <Coins className="w-4 h-4 text-primary flex-shrink-0" />
+                  <p className="text-xs text-foreground">
+                    <span className="font-semibold">{(creditsNeeded * capturedSegments.length).toFixed(1)} crédits</span>
+                    {capturedSegments.length > 1 && (
+                      <span className="text-muted-foreground"> ({creditsNeeded} × {capturedSegments.length} segments)</span>
+                    )}
                   </p>
                 </div>
-              )}
+                {capturedSegments.some(s => s.type === 'video') && (
+                  <p className="text-xs text-muted-foreground px-1">
+                    ⏱ La durée d'affichage correspond à la durée de chaque vidéo. Les photos s'affichent 10s.
+                  </p>
+                )}
+              </div>
 
               {/* Action buttons */}
               <div className="px-4 pb-4 flex gap-3">

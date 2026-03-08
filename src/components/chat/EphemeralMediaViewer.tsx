@@ -108,6 +108,8 @@ const EphemeralMediaViewer = ({
       setIsSaving(false);
       setHasSaved(false);
       setShowReplyHint(false);
+      setProgressFraction(0);
+      pausedAtRef.current = 0;
       hasCalledOnViewed.current = false;
       hasNotifiedScreenshot.current = false;
       if (autoStart && type === 'video' && videoRef.current) {
@@ -116,25 +118,50 @@ const EphemeralMediaViewer = ({
     }
   }, [isOpen, duration, isUnlimited, autoStart, type]);
 
-  // Timer countdown - pauses on hold
+  // Continuous progress tracking for smooth bar animation
+  const [progressFraction, setProgressFraction] = useState(0);
+  const startTimeRef = useRef(0);
+  const pausedAtRef = useRef(0);
+  const rafRef = useRef<number>(0);
+
+  // Timer countdown using requestAnimationFrame for smooth progress
   useEffect(() => {
-    if (isUnlimited) return;
-    
-    if (isViewing && timeLeft > 0 && !hasEnded && !isPaused) {
-      const timer = setTimeout(() => {
-        setTimeLeft(timeLeft - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (isViewing && timeLeft === 0 && !hasEnded) {
-      setHasEnded(true);
-      if (!hasCalledOnViewed.current) {
-        hasCalledOnViewed.current = true;
-        onViewed();
-      }
-      setIsClosing(true);
-      setTimeout(() => onClose(), 400);
+    if (isUnlimited || !isViewing || hasEnded) return;
+
+    if (isPaused) {
+      // Store how much time has elapsed when pausing
+      pausedAtRef.current = progressFraction * duration;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      return;
     }
-  }, [isViewing, timeLeft, onClose, onViewed, hasEnded, isUnlimited, isPaused]);
+
+    // Start/resume timing
+    startTimeRef.current = performance.now() - (pausedAtRef.current * 1000);
+
+    const tick = () => {
+      const elapsed = (performance.now() - startTimeRef.current) / 1000;
+      const fraction = Math.min(elapsed / duration, 1);
+      setProgressFraction(fraction);
+      setTimeLeft(Math.max(0, Math.ceil(duration - elapsed)));
+
+      if (fraction >= 1) {
+        setHasEnded(true);
+        if (!hasCalledOnViewed.current) {
+          hasCalledOnViewed.current = true;
+          onViewed();
+        }
+        setIsClosing(true);
+        setTimeout(() => onClose(), 400);
+        return;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [isViewing, hasEnded, isUnlimited, isPaused, duration, onClose, onViewed]);
 
   // Hold to pause (long press) / Tap to advance
   const wasLongPress = useRef(false);
@@ -393,30 +420,27 @@ const EphemeralMediaViewer = ({
                 WebkitTouchCallout: 'none',
               }}
             >
-              {/* Story-style segmented progress bar - one segment per media item */}
+              {/* Story-style segmented progress bar - smooth continuous */}
               {!isUnlimited && (
                 <div className="absolute top-2 left-3 right-3 z-20 flex gap-1">
                   {totalItems && totalItems > 1 ? (
-                    // Multiple media: show one bar per media item
                     Array.from({ length: totalItems }, (_, i) => (
                       <div key={i} className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20">
                         <div 
-                          className="h-full bg-white rounded-full transition-all ease-linear"
+                          className="h-full bg-white rounded-full"
                           style={{ 
                             width: i < (currentItemIndex ?? 0) ? '100%' 
-                              : i === (currentItemIndex ?? 0) ? `${((duration - timeLeft) / duration) * 100}%` 
+                              : i === (currentItemIndex ?? 0) ? `${progressFraction * 100}%` 
                               : '0%',
-                            transitionDuration: i === (currentItemIndex ?? 0) ? '1000ms' : '300ms'
                           }}
                         />
                       </div>
                     ))
                   ) : (
-                    // Single media: show one full bar that progresses
                     <div className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20">
                       <div 
-                        className="h-full bg-white rounded-full transition-all duration-1000 ease-linear"
-                        style={{ width: `${((duration - timeLeft) / duration) * 100}%` }}
+                        className="h-full bg-white rounded-full"
+                        style={{ width: `${progressFraction * 100}%` }}
                       />
                     </div>
                   )}

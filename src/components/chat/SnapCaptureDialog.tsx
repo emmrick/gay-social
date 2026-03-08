@@ -630,7 +630,7 @@ const SnapCaptureDialog = ({
 
               <div className="grid grid-cols-3 gap-2 px-4 pb-2">
                 {capturedSegments.map((seg, i) => (
-                  <div key={i} className="relative flex-shrink-0 w-24 h-32 rounded-xl overflow-hidden bg-black border border-border/50">
+                  <div key={i} className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-black border border-border/50">
                     {seg.type === 'photo' ? (
                       <img src={seg.url} alt={`Segment ${i + 1}`} className="w-full h-full object-cover" />
                     ) : (

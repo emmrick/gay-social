@@ -108,18 +108,6 @@ const AlbumGalleryViewer = ({
   const initialScaleRef = useRef<number>(1);
   const lastPanRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   
-  // Enable/disable protection based on viewer state
-  useEffect(() => {
-    if (isOpen) {
-      enableProtection();
-    } else {
-      disableProtection();
-    }
-    
-    return () => {
-      disableProtection();
-    };
-  }, [isOpen, enableProtection, disableProtection]);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;

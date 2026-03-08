@@ -42,6 +42,7 @@ const Regions = lazy(() => import("./pages/Regions"));
 const Help = lazy(() => import("./pages/Help"));
 const Rules = lazy(() => import("./pages/Rules"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
+const GuidePage = lazy(() => import("./pages/Guide"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 

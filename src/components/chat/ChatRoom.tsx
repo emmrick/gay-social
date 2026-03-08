@@ -224,17 +224,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   return (
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
       {/* Fixed container to prevent keyboard shift */}
-      {viewingMedia && (
-        <EphemeralMedia
-          type={viewingMedia.type}
-          src={viewingMedia.src}
-          senderName={viewingMedia.senderName}
-          duration={viewingMedia.duration}
-          mediaId={viewingMedia.mediaId}
-          onClose={() => setViewingMedia(null)}
-          onViewed={() => console.log('Media viewed')}
-        />
-      )}
 
 
       {/* Suspension banner */}

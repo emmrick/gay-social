@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Send, Loader2, SwitchCamera, ShieldAlert, Settings, RotateCcw
+  X, Send, Loader2, SwitchCamera, ShieldAlert, Settings, RotateCcw, Lock, LockOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';

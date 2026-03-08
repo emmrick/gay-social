@@ -42,10 +42,12 @@ const SnapCaptureDialog = ({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [capturedSegments, setCapturedSegments] = useState<CapturedSegment[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
+  const [lockHintVisible, setLockHintVisible] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -55,11 +57,13 @@ const SnapCaptureDialog = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isHoldingRef = useRef(false);
+  const isLockedRef = useRef(false);
   const segmentStartTimeRef = useRef(0);
   const totalRecordingTimeRef = useRef(0);
   const segmentsRef = useRef<CapturedSegment[]>([]);
   const autoSplitTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recordingStartTimeRef = useRef(0);
+  const lockZoneRef = useRef<HTMLDivElement>(null);
 
   const { uploadEphemeralMedia, isUploading, progress } = useEphemeralMediaUpload();
   const { permissions, isCameraDenied } = useCameraPermission();

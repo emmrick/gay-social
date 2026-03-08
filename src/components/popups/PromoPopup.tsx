@@ -83,7 +83,7 @@ const PromoPopup = () => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative rounded-2xl border border-border bg-card overflow-hidden shadow-2xl"
+          className="relative rounded-3xl border border-border bg-card overflow-hidden shadow-2xl"
         >
           {/* Decorative gradient header */}
           <div className="relative h-32 bg-gradient-to-br from-primary via-primary/80 to-accent overflow-hidden">

@@ -18,6 +18,7 @@ import SEOHead from '@/components/seo/SEOHead';
 const LEGAL_SECTIONS = [
   { id: 'cgu', title: 'Conditions Générales d\'Utilisation (CGU)', keywords: ['cgu', 'conditions', 'utilisation', 'accès', 'inscription', 'vérification', 'identité', 'responsabilité', 'sanctions'] },
   { id: 'privacy', title: 'Politique de confidentialité (RGPD)', keywords: ['rgpd', 'confidentialité', 'données', 'protection', 'cookies', 'droits', 'accès', 'rectification', 'effacement', 'portabilité', 'télécharger'] },
+  { id: 'data-retention', title: 'Politique de conservation & suppression des données', keywords: ['conservation', 'rétention', 'suppression', 'durée', 'automatique', 'nettoyage', '2 ans', '5 ans', '90 jours', 'purge', 'inactivité'] },
   { id: 'purge-policy', title: 'Suppression des comptes non vérifiés (30 jours)', keywords: ['suppression', 'purge', '30 jours', 'non vérifié', 'destruction', 'données', 'compte', 'automatique', 'vérification'] },
   { id: 'anti-prostitution', title: 'Clause anti-prostitution', keywords: ['prostitution', 'escorting', 'paiement', 'argent', 'interdit', 'banni'] },
   { id: 'cgv', title: 'Système de crédits & CGV', keywords: ['crédits', 'paiement', 'achat', 'prix', 'tarif', 'remboursement', 'cgv', 'premium', 'monétisation'] },

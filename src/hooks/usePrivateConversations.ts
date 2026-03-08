@@ -50,7 +50,8 @@ export const usePrivateConversations = () => {
       return data || [];
     },
     enabled: !!user,
-    staleTime: 30_000,
+    staleTime: 60_000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const query = useQuery({

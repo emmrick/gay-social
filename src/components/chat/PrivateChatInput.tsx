@@ -105,7 +105,7 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
               <Camera className="w-6 h-6 text-primary" />
             </div>
-            <span className="text-[10px] text-muted-foreground">Snap</span>
+            <span className="text-[10px] text-muted-foreground">Selfie</span>
           </button>
 
           <button

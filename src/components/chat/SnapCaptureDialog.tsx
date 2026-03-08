@@ -441,8 +441,11 @@ const SnapCaptureDialog = ({
 
         <DialogHeader className="p-4 border-b border-border bg-background/80 backdrop-blur-sm">
           <DialogTitle className="text-center font-display flex items-center justify-center gap-2">
-            📸 Capture Snap
+            📸 Selfie
           </DialogTitle>
+          <p className="text-[11px] text-muted-foreground text-center mt-1">
+            Appuie = 📷 Photo · Maintiens enfoncé = 🎥 Vidéo (max 60s)
+          </p>
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(90vh-140px)]">

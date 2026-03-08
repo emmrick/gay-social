@@ -185,7 +185,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     const onResize = () => {
       const newHeight = vv.height;
       if (newHeight < prevHeight - 50) {
+        // Keyboard opened
         setTimeout(() => scrollToBottom(true), 80);
+        setTimeout(() => scrollToBottom(true), 250);
+        setTimeout(() => scrollToBottom(true), 500);
       }
       prevHeight = newHeight;
     };

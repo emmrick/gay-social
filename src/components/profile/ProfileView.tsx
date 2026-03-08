@@ -4,76 +4,40 @@ import { useProfileStats } from '@/hooks/useProfileStats';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
 import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { 
-  MapPin, Calendar, Edit2, Sparkles, Star, Heart,
-  MessageCircle, Users, Camera, Verified, Cake
-} from 'lucide-react';
 import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { motion, AnimatePresence } from 'framer-motion';
 import ProfileEditDialog from './ProfileEditDialog';
-import ProfileReactions from './ProfileReactions';
 import ProfileSettingsDrawer from './ProfileSettingsDrawer';
 import ProfileAlbumsSection from './ProfileAlbumsSection';
+import ProfileReactions from './ProfileReactions';
 import ChatBotProfileCard from '@/components/chatbot/ChatBotProfileCard';
-import { motion } from 'framer-motion';
+import ProfileHeroCard from './ProfileHeroCard';
+import ProfileInfoCards from './ProfileInfoCards';
+import ProfileStatsGrid from './ProfileStatsGrid';
 
-// Labels
 const POSITION_LABELS: Record<string, string> = {
-  'actif': '🔝 Actif',
-  'passif': '🔽 Passif',
-  'versatile': '↕️ Versatile',
-  'vers_top': '↕️🔝 Vers. Top',
-  'vers_bottom': '↕️🔽 Vers. Bottom',
-  'side': '🤝 Side',
-  'no_answer': 'Non précisé',
+  'actif': '🔝 Actif', 'passif': '🔽 Passif', 'versatile': '↕️ Versatile',
+  'vers_top': '↕️🔝 Vers. Top', 'vers_bottom': '↕️🔽 Vers. Bottom',
+  'side': '🤝 Side', 'no_answer': 'Non précisé',
 };
-
 const LOOKING_FOR_LABELS: Record<string, string> = {
-  'plan_cul': '🔥 Plan cul',
-  'plan_regulier': '🔄 Régulier',
-  'relation': '❤️ Relation',
-  'amitie': '🤝 Amitié',
-  'discussion': '💬 Discussion',
-  'webcam': '📹 Webcam',
-  'groupe': '👥 Groupe',
+  'plan_cul': '🔥 Plan cul', 'plan_regulier': '🔄 Régulier', 'relation': '❤️ Relation',
+  'amitie': '🤝 Amitié', 'discussion': '💬 Discussion', 'webcam': '📹 Webcam', 'groupe': '👥 Groupe',
 };
-
 const BODY_TYPE_LABELS: Record<string, string> = {
-  'mince': 'Mince',
-  'moyen': 'Moyen',
-  'muscle': 'Musclé',
-  'costaud': 'Costaud',
-  'gros': 'Gros',
-  'sportif': 'Sportif',
+  'mince': 'Mince', 'moyen': 'Moyen', 'muscle': 'Musclé',
+  'costaud': 'Costaud', 'gros': 'Gros', 'sportif': 'Sportif',
 };
-
 const ETHNICITY_LABELS: Record<string, string> = {
-  'europeen': 'Européen',
-  'africain': 'Africain',
-  'maghrebin': 'Maghrébin',
-  'asiatique': 'Asiatique',
-  'latino': 'Latino',
-  'metis': 'Métis',
-  'autre': 'Autre',
+  'europeen': 'Européen', 'africain': 'Africain', 'maghrebin': 'Maghrébin',
+  'asiatique': 'Asiatique', 'latino': 'Latino', 'metis': 'Métis', 'autre': 'Autre',
 };
-
 const HIV_STATUS_LABELS: Record<string, string> = {
-  'negative': '🟢 Négatif',
-  'negative_prep': '💊 PrEP',
-  'positive_undetectable': '🔵 Indétectable',
-  'positive': '🟣 Positif',
-  'no_answer': 'Non précisé',
+  'negative': '🟢 Négatif', 'negative_prep': '💊 PrEP',
+  'positive_undetectable': '🔵 Indétectable', 'positive': '🟣 Positif', 'no_answer': 'Non précisé',
 };
-
-const getPositionLabel = (position: string) => POSITION_LABELS[position] || position;
-const getLookingForLabel = (item: string) => LOOKING_FOR_LABELS[item] || item;
-const getBodyTypeLabel = (type: string) => BODY_TYPE_LABELS[type] || type;
-const getEthnicityLabel = (eth: string) => ETHNICITY_LABELS[eth] || eth;
 
 interface ProfileViewProps {
   onSignOut: () => void;
@@ -100,272 +64,69 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
     );
   }
 
-  const statItems = [
-    { value: stats?.messagesCount || 0, label: 'Messages', color: 'text-primary', bgColor: 'bg-primary/10', icon: MessageCircle },
-    { value: stats?.conversationsCount || 0, label: 'Convs', color: 'text-blue-500', bgColor: 'bg-blue-500/10', icon: Users },
-    { value: favorites.length, label: 'Favoris', color: 'text-amber-500', bgColor: 'bg-amber-500/10', icon: Star },
-    { value: stats?.reactionsCount || 0, label: 'Réactions', color: 'text-pink-500', bgColor: 'bg-pink-500/10', icon: Heart },
-  ];
-
   return (
-    <div className="animate-fade-in pb-8 bg-background min-h-screen">
+    <div className="animate-fade-in pb-24 bg-background min-h-screen">
       <ProfileEditDialog open={showEditDialog} onOpenChange={setShowEditDialog} />
-      
-      {/* New Layout: Side-by-side design */}
-      <div className="px-4 pt-4">
-        {/* Main Profile Card - Horizontal Layout */}
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="bg-card rounded-3xl shadow-lg border border-border/50 overflow-hidden"
-        >
-          <div className="flex">
-            {/* Left: Avatar Section */}
-            <div className="relative flex-shrink-0 p-4">
-              <div className="p-0.5 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30">
-                <Avatar className="w-32 h-40 rounded-xl border-2 border-card">
-                  <AvatarImage src={profile.avatar_url || undefined} className="object-cover rounded-xl" />
-                  <AvatarFallback className="text-4xl bg-gradient-to-br from-primary to-accent text-white font-bold rounded-xl">
-                    {profile.username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-              
-              {/* Edit photo button */}
-              <button
-                onClick={() => setShowEditDialog(true)}
-                className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform border-2 border-card"
-              >
-                <Camera className="w-4 h-4" />
-              </button>
-              
-              {/* Online indicator */}
-              {shouldShowOnlineIndicator(profile) && (
-                <span className="absolute top-6 left-6 w-4 h-4 rounded-full bg-emerald-500 border-2 border-card shadow-lg animate-pulse" />
-              )}
-            </div>
 
-            {/* Right: Info Section */}
-            <div className="flex-1 py-4 pr-4 flex flex-col justify-between">
-              {/* Settings button - top right */}
-              <div className="flex justify-between items-start">
-                <div>
-                  {/* Name & Age */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xl font-bold leading-tight">
-                      {profile.username}
-                    </h1>
-                    {profile.is_verified && (
-                      <Verified className="w-5 h-5 text-blue-500 fill-blue-500" />
-                    )}
-                  </div>
-                  {profile.age && (
-                    <p className="text-lg text-muted-foreground">{profile.age} ans</p>
-                  )}
-                </div>
-                <ProfileSettingsDrawer
-                  isAdmin={isAdmin}
-                  isModerator={isModerator}
-                  onNavigateToAdmin={onNavigateToAdmin}
-                  onNavigateToCredits={onNavigateToCredits}
-                  onContactAdmin={onContactAdmin}
-                  onSignOut={onSignOut}
-                />
-              </div>
+      {/* Hero Card */}
+      <ProfileHeroCard
+        profile={profile}
+        isAdminUser={isAdminUser}
+        isModerator={isModerator}
+        isAdmin={isAdmin}
+        positionLabels={POSITION_LABELS}
+        onEdit={() => setShowEditDialog(true)}
+        settingsDrawer={
+          <ProfileSettingsDrawer
+            isAdmin={isAdmin}
+            isModerator={isModerator}
+            onNavigateToAdmin={onNavigateToAdmin}
+            onNavigateToCredits={onNavigateToCredits}
+            onContactAdmin={onContactAdmin}
+            onSignOut={onSignOut}
+          />
+        }
+      />
 
-              {/* Role badges */}
-              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                {isAdminUser && (
-                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-sm text-xs">
-                    ⚡ Admin
-                  </Badge>
-                )}
-                {!isAdminUser && isModerator && (
-                  <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 shadow-sm text-xs">
-                    🛡️ Modérateur
-                  </Badge>
-                )}
-                {/* Removed Premium badge - credits system is now used */}
-                {(profile as any).sexual_position && (profile as any).sexual_position !== 'no_answer' && (
-                  <Badge variant="outline" className="bg-secondary/50 text-xs">
-                    {getPositionLabel((profile as any).sexual_position)}
-                  </Badge>
-                )}
-              </div>
+      <div className="px-4 space-y-3 -mt-6 relative z-10">
+        {/* Stats */}
+        <ProfileStatsGrid
+          stats={stats}
+          statsLoading={statsLoading}
+          favoritesCount={favorites.length}
+        />
 
-              {/* Quick info row */}
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {profile.region}
-                </span>
-                {(profile as any).birth_date && (() => {
-                  const zodiac = getZodiacSign((profile as any).birth_date);
-                  return zodiac ? (
-                    <span className="flex items-center gap-1" title={zodiac.label}>
-                      {zodiac.emoji} {zodiac.label}
-                    </span>
-                  ) : null;
-                })()}
-                {(profile as any).birth_date && (profile as any).show_birthday && (
-                  <span className="flex items-center gap-1">
-                    <Cake className="w-3 h-3" />
-                    {formatBirthday((profile as any).birth_date)}
-                  </span>
-                )}
-                {((profile as any).height || (profile as any).weight) && (
-                  <span>
-                    {(profile as any).height && `${(profile as any).height}cm`}
-                    {(profile as any).height && (profile as any).weight && ' • '}
-                    {(profile as any).weight && `${(profile as any).weight}kg`}
-                  </span>
-                )}
-                {profile.created_at && (
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {format(new Date(profile.created_at), 'MMM yyyy', { locale: fr })}
-                  </span>
-                )}
-              </div>
+        {/* Info Cards */}
+        <ProfileInfoCards
+          profile={profile}
+          lookingForLabels={LOOKING_FOR_LABELS}
+          bodyTypeLabels={BODY_TYPE_LABELS}
+          ethnicityLabels={ETHNICITY_LABELS}
+          hivStatusLabels={HIV_STATUS_LABELS}
+        />
 
-              {/* Edit button */}
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="mt-3 gap-1.5 rounded-xl shadow-sm self-start text-xs h-8"
-                onClick={() => setShowEditDialog(true)}
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-                Modifier le profil
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Bio Section */}
-        {profile.bio && (
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.05 }}
-            className="mt-3"
-          >
-            <Card className="bg-card/80 backdrop-blur-sm border-border/50">
-              <CardContent className="p-3">
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {profile.bio}
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Looking for & Additional info */}
-        {((profile as any).looking_for?.length > 0 || (profile as any).body_type || (profile as any).ethnicity) && (
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.08 }}
-            className="mt-3"
-          >
-            <Card className="bg-card/80 backdrop-blur-sm border-border/50">
-              <CardContent className="p-3">
-                {/* Looking for badges */}
-                {(profile as any).looking_for && (profile as any).looking_for.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {(profile as any).looking_for.map((item: string) => (
-                      <Badge key={item} variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
-                        {getLookingForLabel(item)}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-
-                {/* Additional info */}
-                <div className="flex flex-wrap gap-1.5">
-                  {(profile as any).body_type && (
-                    <Badge variant="outline" className="text-xs">
-                      {getBodyTypeLabel((profile as any).body_type)}
-                    </Badge>
-                  )}
-                  {(profile as any).ethnicity && (
-                    <Badge variant="outline" className="text-xs">
-                      {getEthnicityLabel((profile as any).ethnicity)}
-                    </Badge>
-                  )}
-                  {(profile as any).hiv_status && (profile as any).hiv_status !== 'no_answer' && (
-                    <Badge variant="outline" className="text-xs">
-                      {HIV_STATUS_LABELS[(profile as any).hiv_status]}
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Albums Section */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="mt-3"
-        >
+        {/* Albums */}
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
           <ProfileAlbumsSection />
         </motion.div>
 
-        {/* ChatBot Section */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.12 }}
-          className="mt-3"
-        >
+        {/* ChatBot */}
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
           <ChatBotProfileCard onOpen={() => onNavigateToChatbot?.()} />
         </motion.div>
-      </div>
 
-      {/* Stats Grid */}
-      <motion.div 
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-4 gap-2 px-4 mt-4"
-      >
-        {statItems.map((stat) => (
-          <Card key={stat.label} className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
-            <CardContent className="p-3 text-center">
-              <div className={`w-8 h-8 rounded-lg ${stat.bgColor} flex items-center justify-center mx-auto mb-1.5`}>
-                <stat.icon className={`w-4 h-4 ${stat.color}`} />
-              </div>
-              <p className={`text-xl font-bold ${stat.color}`}>
-                {statsLoading && stat.label !== 'Favoris' ? '...' : stat.value}
-              </p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{stat.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </motion.div>
-
-      {/* Reactions Section */}
-      {profile.user_id && (
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.15 }}
-          className="px-4 mt-4"
-        >
-          <Card className="bg-card/80 backdrop-blur-sm border-border/50">
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground mb-3 text-center font-medium uppercase tracking-wider flex items-center justify-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                Réactions sur ton profil
+        {/* Reactions */}
+        {profile.user_id && (
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
+            <div className="bg-card rounded-2xl border border-border/50 p-4">
+              <p className="text-xs text-muted-foreground mb-3 text-center font-semibold uppercase tracking-wider">
+                ✨ Réactions sur ton profil
               </p>
               <ProfileReactions profileUserId={profile.user_id} className="justify-center" />
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 };

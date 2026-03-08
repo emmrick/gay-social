@@ -136,6 +136,7 @@ const AuthenticatedApp = () => {
                 <InvestigationNoticeDialog />
                 <ForcedSupportChat />
                 <PromoPopup />
+                <OnboardingGuideDialog />
               </BrowserRouter>
             </TooltipProvider>
           </ProfilePhotoGuard>

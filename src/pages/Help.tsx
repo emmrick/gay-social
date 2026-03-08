@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,11 +27,13 @@ type ChatPhase = 'idle' | 'chatbot' | 'waiting_agent' | 'agent' | 'rating';
 interface ChatMessage {
   type: 'bot' | 'user' | 'system';
   text: string;
+  options?: ChatOption[];
 }
 
-interface AIChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
+interface ChatOption {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
 }
 
 const RATING_EMOJIS = [
@@ -57,6 +59,10 @@ const BoldText = ({ text }: { text: string }) => {
   );
 };
 
+// Normalize text for search matching
+const normalize = (text: string) =>
+  text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/g, '');
+
 interface HelpProps {
   embedded?: boolean;
 }
@@ -68,7 +74,6 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const [chatPhase, setChatPhase] = useState<ChatPhase>('idle');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [aiHistory, setAiHistory] = useState<AIChatMessage[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [freeText, setFreeText] = useState('');
   const [ratingEmoji, setRatingEmoji] = useState<string | null>(null);
@@ -76,7 +81,10 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [hasCheckedActiveTicket, setHasCheckedActiveTicket] = useState(false);
   const [showEscalationButton, setShowEscalationButton] = useState(false);
-  
+  const [currentCategory, setCurrentCategory] = useState<string | null>(null);
+  const [answeredArticleIds, setAnsweredArticleIds] = useState<Set<string>>(new Set());
+  const [noMatchCount, setNoMatchCount] = useState(0);
+
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const freeTextRef = useRef<HTMLTextAreaElement>(null);
   const agentJoinedRef = useRef(false);
@@ -96,7 +104,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   useEffect(() => {
     if (hasCheckedActiveTicket || !user?.id || ticketsLoading) return;
     setHasCheckedActiveTicket(true);
-    
+
     const activeTicket = tickets.find(t => t.status === 'open' || t.status === 'assigned');
     if (activeTicket) {
       setSelectedTicket(activeTicket);
@@ -104,6 +112,19 @@ const Help = ({ embedded = false }: HelpProps) => {
       setChatPhase(activeTicket.status === 'assigned' ? 'agent' : 'waiting_agent');
     }
   }, [tickets, user?.id, hasCheckedActiveTicket, ticketsLoading]);
+
+  // Fetch ALL FAQ articles (no search filter for chatbot matching)
+  const { data: allFaqArticles = [] } = useQuery({
+    queryKey: ['all-faq-articles-chatbot'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('faq_articles')
+        .select('*')
+        .eq('is_published', true)
+        .order('display_order', { ascending: true });
+      return data || [];
+    },
+  });
 
   const { data: faqArticles = [], isLoading: faqLoading } = useFAQArticles(searchQuery);
 
@@ -177,69 +198,236 @@ const Help = ({ embedded = false }: HelpProps) => {
     scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages.length, ticketMessages.length, chatPhase, agentTypingUsers.length, isBotTyping]);
 
+  // Get unique categories from FAQ
+  const faqCategories = useMemo(() => {
+    const cats = new Set(allFaqArticles.map(a => a.category));
+    return Array.from(cats);
+  }, [allFaqArticles]);
+
+  // Category icon mapping
+  const getCategoryIcon = (category: string) => {
+    const lower = category.toLowerCase();
+    if (lower.includes('compte') || lower.includes('profil')) return <Users className="w-4 h-4" />;
+    if (lower.includes('crédit') || lower.includes('paiement') || lower.includes('achat')) return <CreditCard className="w-4 h-4" />;
+    if (lower.includes('sécu') || lower.includes('confiden') || lower.includes('privacy')) return <Shield className="w-4 h-4" />;
+    if (lower.includes('message') || lower.includes('chat') || lower.includes('conversation')) return <MessageCircle className="w-4 h-4" />;
+    if (lower.includes('param') || lower.includes('config') || lower.includes('réglage')) return <Settings className="w-4 h-4" />;
+    if (lower.includes('vérif')) return <Shield className="w-4 h-4" />;
+    if (lower.includes('notif')) return <MessageSquareText className="w-4 h-4" />;
+    if (lower.includes('fonctio') || lower.includes('feature')) return <Sparkles className="w-4 h-4" />;
+    if (lower.includes('techni')) return <Settings className="w-4 h-4" />;
+    return <BookOpen className="w-4 h-4" />;
+  };
+
+  // Simulate bot typing delay
+  const addBotMessage = useCallback((text: string, options?: ChatOption[], delay = 600) => {
+    setIsBotTyping(true);
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, { type: 'bot', text, options }]);
+      setIsBotTyping(false);
+      playNotificationSoundStandalone();
+    }, delay);
+  }, []);
+
+  // Show category selection
+  const showCategoryOptions = useCallback(() => {
+    const options: ChatOption[] = faqCategories.map(cat => ({
+      label: cat,
+      value: `cat:${cat}`,
+      icon: getCategoryIcon(cat),
+    }));
+    addBotMessage(
+      "Sur quel **sujet** as-tu une question ? Tu peux aussi **taper ta question** directement ! 👇",
+      options,
+      400
+    );
+  }, [faqCategories, addBotMessage]);
+
+  // Show questions for a category
+  const showCategoryQuestions = useCallback((category: string) => {
+    setCurrentCategory(category);
+    const articles = allFaqArticles.filter(a => a.category === category);
+    if (articles.length === 0) {
+      addBotMessage(`Aucune question disponible dans cette catégorie pour le moment. Tu peux **poser ta question** directement ou **choisir une autre catégorie**.`);
+      setTimeout(() => showCategoryOptions(), 1200);
+      return;
+    }
+    const options: ChatOption[] = articles.map(a => ({
+      label: a.question,
+      value: `faq:${a.id}`,
+    }));
+    addBotMessage(
+      `Voici les questions fréquentes sur **${category}** :\nChoisis celle qui correspond à ta question, ou **tape ta question** si elle n'y est pas. 📝`,
+      options,
+    );
+  }, [allFaqArticles, addBotMessage, showCategoryOptions]);
+
+  // Show an FAQ answer
+  const showFaqAnswer = useCallback((articleId: string) => {
+    const article = allFaqArticles.find(a => a.id === articleId);
+    if (!article) return;
+
+    setAnsweredArticleIds(prev => new Set(prev).add(articleId));
+    setNoMatchCount(0);
+
+    addBotMessage(`**${article.question}**\n\n${article.answer}`, undefined, 500);
+
+    // After answer, ask if they need more help
+    setTimeout(() => {
+      const options: ChatOption[] = [
+        { label: '🔄 Autre question sur ce sujet', value: 'same_category' },
+        { label: '📋 Changer de sujet', value: 'change_category' },
+        { label: '👤 Contacter un agent', value: 'contact_agent' },
+      ];
+      addBotMessage(
+        "Est-ce que ça répond à ta question ? Tu peux **continuer** sur le même sujet ou **changer de catégorie**.",
+        options,
+        800
+      );
+    }, 1000);
+  }, [allFaqArticles, addBotMessage]);
+
+  // Search FAQ articles by keywords
+  const searchFaqArticles = useCallback((query: string) => {
+    const normalizedQuery = normalize(query);
+    const words = normalizedQuery.split(/\s+/).filter(w => w.length > 2);
+
+    if (words.length === 0) return [];
+
+    const scored = allFaqArticles.map(article => {
+      const normalizedQ = normalize(article.question);
+      const normalizedA = normalize(article.answer);
+      const normalizedCat = normalize(article.category);
+      let score = 0;
+
+      for (const word of words) {
+        if (normalizedQ.includes(word)) score += 3;
+        if (normalizedA.includes(word)) score += 1;
+        if (normalizedCat.includes(word)) score += 2;
+      }
+
+      return { article, score };
+    });
+
+    return scored
+      .filter(s => s.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map(s => s.article);
+  }, [allFaqArticles]);
+
   const handleStartChat = () => {
     setChatPhase('chatbot');
-    setAiHistory([]);
     setShowEscalationButton(false);
+    setCurrentCategory(null);
+    setAnsweredArticleIds(new Set());
+    setNoMatchCount(0);
     agentJoinedRef.current = false;
     const displayName = userProfile?.username || 'cher utilisateur';
     setChatMessages([
-      { type: 'bot', text: `Bonjour **${displayName}** ! 👋 Je suis l'assistant **Gay Connect**. Pose-moi ta question et je ferai de mon mieux pour t'aider.` },
-      { type: 'bot', text: 'Tu peux me demander des infos sur les **crédits**, la **vérification d\'identité**, les **messages**, la **sécurité**, ou toute autre fonctionnalité du site !' },
+      { type: 'bot', text: `Bonjour **${displayName}** ! 👋 Je suis l'assistant **Gay Connect**. Je suis là pour t'aider à trouver des réponses à tes questions.` },
     ]);
+
+    // Show categories after greeting
+    setTimeout(() => {
+      const options: ChatOption[] = faqCategories.map(cat => ({
+        label: cat,
+        value: `cat:${cat}`,
+        icon: getCategoryIcon(cat),
+      }));
+      setChatMessages(prev => [
+        ...prev,
+        {
+          type: 'bot',
+          text: "Choisis un **sujet** ci-dessous, ou **tape ta question** directement ! 👇",
+          options,
+        },
+      ]);
+      playNotificationSoundStandalone();
+    }, 700);
   };
 
-  // Send message to AI chatbot
-  const handleSendToAI = useCallback(async () => {
+  // Handle option click (category or FAQ question)
+  const handleOptionClick = useCallback((value: string) => {
+    if (value.startsWith('cat:')) {
+      const category = value.replace('cat:', '');
+      setChatMessages(prev => [...prev, { type: 'user', text: category }]);
+      showCategoryQuestions(category);
+    } else if (value.startsWith('faq:')) {
+      const articleId = value.replace('faq:', '');
+      const article = allFaqArticles.find(a => a.id === articleId);
+      if (article) {
+        setChatMessages(prev => [...prev, { type: 'user', text: article.question }]);
+        showFaqAnswer(articleId);
+      }
+    } else if (value === 'same_category') {
+      setChatMessages(prev => [...prev, { type: 'user', text: 'Autre question sur ce sujet' }]);
+      if (currentCategory) {
+        showCategoryQuestions(currentCategory);
+      } else {
+        showCategoryOptions();
+      }
+    } else if (value === 'change_category') {
+      setChatMessages(prev => [...prev, { type: 'user', text: 'Changer de sujet' }]);
+      setCurrentCategory(null);
+      showCategoryOptions();
+    } else if (value === 'contact_agent') {
+      setChatMessages(prev => [...prev, { type: 'user', text: 'Contacter un agent' }]);
+      setShowEscalationButton(true);
+      addBotMessage("D'accord ! Tu peux **contacter un agent** du support en cliquant sur le bouton ci-dessous. Un membre de notre équipe te répondra dès que possible. 💬");
+    }
+  }, [allFaqArticles, currentCategory, showCategoryQuestions, showCategoryOptions, showFaqAnswer, addBotMessage]);
+
+  // Handle free text input from user
+  const handleSendFreeText = useCallback(() => {
     if (!freeText.trim() || isBotTyping) return;
     const userMsg = freeText.trim();
     setFreeText('');
 
-    // Add user message to chat
     setChatMessages(prev => [...prev, { type: 'user', text: userMsg }]);
 
-    // Build AI history
-    const newHistory: AIChatMessage[] = [...aiHistory, { role: 'user', content: userMsg }];
-    setAiHistory(newHistory);
-    setIsBotTyping(true);
+    // Search FAQ for matching articles
+    const matches = searchFaqArticles(userMsg);
 
-    try {
-      const { data, error } = await supabase.functions.invoke('help-chat', {
-        body: {
-          messages: newHistory,
-          username: userProfile?.username || undefined,
-        },
-      });
+    if (matches.length > 0) {
+      setNoMatchCount(0);
+      // If one very strong match, show answer directly
+      if (matches.length === 1) {
+        showFaqAnswer(matches[0].id);
+      } else {
+        // Show matching questions as options
+        const options: ChatOption[] = matches.map(a => ({
+          label: a.question,
+          value: `faq:${a.id}`,
+        }));
+        addBotMessage(
+          `J'ai trouvé **${matches.length} résultat${matches.length > 1 ? 's' : ''}** qui pourraient correspondre à ta question. Clique sur celle qui t'intéresse : 👇`,
+          options,
+        );
+      }
+    } else {
+      const newCount = noMatchCount + 1;
+      setNoMatchCount(newCount);
 
-      if (error) throw error;
-
-      const reply = data.reply || "Désolé, je n'ai pas pu répondre. **Contacte un agent** pour plus d'aide.";
-      const needsEscalation = data.needsEscalation || false;
-
-      setChatMessages(prev => [...prev, { type: 'bot', text: reply }]);
-      setAiHistory(prev => [...prev, { role: 'assistant', content: reply }]);
-
-      if (needsEscalation) {
+      if (newCount >= 2) {
+        // After 2 failed searches, suggest agent
         setShowEscalationButton(true);
+        addBotMessage(
+          "Je n'ai pas trouvé de réponse à ta question dans notre **base de connaissances**. 😕\n\nJe te recommande de **contacter un agent** du support qui pourra t'aider personnellement.",
+        );
+      } else {
+        // First miss: suggest rephrasing or category browsing
+        const options: ChatOption[] = [
+          { label: '📋 Parcourir les sujets', value: 'change_category' },
+          { label: '👤 Contacter un agent', value: 'contact_agent' },
+        ];
+        addBotMessage(
+          "Je n'ai pas trouvé de réponse correspondant à ta question. 🤔\n\nEssaie de **reformuler** avec d'autres mots, ou **parcours les sujets** disponibles.",
+          options,
+        );
       }
-
-      playNotificationSoundStandalone();
-    } catch (err: any) {
-      console.error('AI chat error:', err);
-      
-      let errorMsg = "Désolé, je rencontre un **problème technique**. Tu peux **contacter un agent** du support.";
-      if (err?.message?.includes('429')) {
-        errorMsg = "Trop de messages envoyés trop rapidement. **Patiente quelques secondes** puis réessaie.";
-      } else if (err?.message?.includes('402')) {
-        errorMsg = "Le service est temporairement **indisponible**. Tu peux **contacter un agent** du support.";
-      }
-
-      setChatMessages(prev => [...prev, { type: 'bot', text: errorMsg }]);
-      setShowEscalationButton(true);
-    } finally {
-      setIsBotTyping(false);
     }
-  }, [freeText, aiHistory, isBotTyping, userProfile?.username]);
+  }, [freeText, isBotTyping, searchFaqArticles, showFaqAnswer, addBotMessage, noMatchCount]);
 
   const handleContactAgent = async () => {
     if (!user) { navigate('/auth'); return; }
@@ -281,9 +469,11 @@ const Help = ({ embedded = false }: HelpProps) => {
   const handleGoBack = () => {
     setChatPhase('idle');
     setChatMessages([]);
-    setAiHistory([]);
     setFreeText('');
     setShowEscalationButton(false);
+    setCurrentCategory(null);
+    setAnsweredArticleIds(new Set());
+    setNoMatchCount(0);
     if (selectedTicket && (selectedTicket.status === 'open' || selectedTicket.status === 'assigned' || liveTicket?.status === 'open' || liveTicket?.status === 'assigned')) {
       // Keep selectedTicket so we can resume
     } else {
@@ -305,10 +495,12 @@ const Help = ({ embedded = false }: HelpProps) => {
   const handleEndChat = () => {
     setChatPhase('idle');
     setChatMessages([]);
-    setAiHistory([]);
     setFreeText('');
     setSelectedTicket(null);
     setShowEscalationButton(false);
+    setCurrentCategory(null);
+    setAnsweredArticleIds(new Set());
+    setNoMatchCount(0);
     agentJoinedRef.current = false;
     setRatingEmoji(null);
     setRatingComment('');
@@ -474,18 +666,18 @@ const Help = ({ embedded = false }: HelpProps) => {
                 <div className="min-w-0">
                   <span className="font-semibold text-sm truncate block">Assistant Gay Connect</span>
                   <span className="text-[11px] text-green-500 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    IA • En ligne
+                    <MessageSquareText className="w-3 h-3" />
+                    Chatbot • En ligne
                   </span>
                 </div>
               </>
             )}
           </div>
           {(isAgentPhase || isWaiting) ? (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleCloseTicket} 
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCloseTicket}
               disabled={closeTicket.isPending}
               className="text-xs shrink-0 rounded-full gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
             >
@@ -502,7 +694,7 @@ const Help = ({ embedded = false }: HelpProps) => {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
-            {/* Chatbot messages (AI phase) */}
+            {/* Chatbot messages */}
             {isChatbotPhase && chatMessages.map((msg, i) => (
               <motion.div
                 key={`chat-${i}`}
@@ -532,6 +724,21 @@ const Help = ({ embedded = false }: HelpProps) => {
                         : "bg-muted text-foreground rounded-bl-md"
                     )}>
                       <p className="whitespace-pre-line"><BoldText text={msg.text} /></p>
+                      {/* Option buttons */}
+                      {msg.type === 'bot' && msg.options && msg.options.length > 0 && (
+                        <div className="mt-3 flex flex-col gap-1.5">
+                          {msg.options.map((opt) => (
+                            <button
+                              key={opt.value}
+                              onClick={() => handleOptionClick(opt.value)}
+                              className="w-full text-left px-3 py-2.5 text-sm font-medium rounded-xl border border-primary/20 bg-background/80 text-foreground hover:bg-primary/10 hover:border-primary/40 transition-colors active:scale-[0.98] flex items-center gap-2"
+                            >
+                              {opt.icon && <span className="text-primary shrink-0">{opt.icon}</span>}
+                              <span className="line-clamp-2">{opt.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -553,13 +760,13 @@ const Help = ({ embedded = false }: HelpProps) => {
                     <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '300ms' }} />
-                    <span className="text-[10px] text-muted-foreground ml-1.5">en train de réfléchir...</span>
+                    <span className="text-[10px] text-muted-foreground ml-1.5">en train d'écrire...</span>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* Escalation button (shown when AI suggests contacting an agent) */}
+            {/* Escalation button */}
             {isChatbotPhase && showEscalationButton && !isBotTyping && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -668,8 +875,8 @@ const Help = ({ embedded = false }: HelpProps) => {
           )}
           {isChatbotPhase && (
             <div className="flex items-center justify-center gap-2 text-muted-foreground text-[11px] mb-2">
-              <Sparkles className="w-3 h-3 text-primary/60" />
-              <span>Réponses générées par IA • Pose ta question librement</span>
+              <MessageSquareText className="w-3 h-3 text-primary/60" />
+              <span>Chatbot • Tape ta question ou choisis une option</span>
             </div>
           )}
           <div className="max-w-lg mx-auto flex items-end gap-2">
@@ -684,7 +891,7 @@ const Help = ({ embedded = false }: HelpProps) => {
                   if (!isMobile) {
                     e.preventDefault();
                     if (isChatbotPhase) {
-                      handleSendToAI();
+                      handleSendFreeText();
                     } else {
                       handleSendToAgent();
                     }
@@ -698,7 +905,7 @@ const Help = ({ embedded = false }: HelpProps) => {
             <Button
               size="icon"
               variant={freeText.trim() ? "default" : "ghost"}
-              onClick={isChatbotPhase ? handleSendToAI : handleSendToAgent}
+              onClick={isChatbotPhase ? handleSendFreeText : handleSendToAgent}
               disabled={!freeText.trim() || isBotTyping}
               className="rounded-full w-11 h-11 shrink-0"
             >
@@ -713,18 +920,6 @@ const Help = ({ embedded = false }: HelpProps) => {
       </div>
     );
   }
-
-  // Category icon mapping
-  const getCategoryIcon = (category: string) => {
-    const lower = category.toLowerCase();
-    if (lower.includes('compte') || lower.includes('profil')) return <Users className="w-4 h-4" />;
-    if (lower.includes('crédit') || lower.includes('paiement') || lower.includes('achat')) return <CreditCard className="w-4 h-4" />;
-    if (lower.includes('sécu') || lower.includes('confiden') || lower.includes('privacy')) return <Shield className="w-4 h-4" />;
-    if (lower.includes('message') || lower.includes('chat') || lower.includes('conversation')) return <MessageCircle className="w-4 h-4" />;
-    if (lower.includes('param') || lower.includes('config') || lower.includes('réglage')) return <Settings className="w-4 h-4" />;
-    if (lower.includes('crédit') || lower.includes('abonn')) return <Sparkles className="w-4 h-4" />;
-    return <BookOpen className="w-4 h-4" />;
-  };
 
   // ============ DEFAULT: FAQ page ============
   return (
@@ -809,8 +1004,8 @@ const Help = ({ embedded = false }: HelpProps) => {
                       <Bot className="w-6 h-6 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-base text-foreground">Discuter avec l'assistant IA</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Pose ta question, il te répondra instantanément !</p>
+                      <p className="font-semibold text-base text-foreground">Discuter avec l'assistant</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Trouve des réponses rapidement grâce au chatbot !</p>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                   </div>
@@ -931,7 +1126,7 @@ const Help = ({ embedded = false }: HelpProps) => {
                   className="gap-2 rounded-full border-primary/30 text-primary hover:bg-primary/5"
                 >
                   <Bot className="w-4 h-4" />
-                  Parler à l'assistant IA
+                  Parler à l'assistant
                 </Button>
               </motion.div>
             )}

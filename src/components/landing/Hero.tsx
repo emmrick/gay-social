@@ -357,34 +357,6 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
             </FadeInWhenVisible>
           </div>
 
-          {/* Fake testimonials with real profile photos */}
-          <FadeInWhenVisible delay={0.4} className="mt-16">
-            <div className="grid sm:grid-cols-3 gap-4">
-              {[
-                { name: 'Lucas, 25 ans', location: 'Paris', text: "J'ai rencontré des mecs incroyables dans mon département. L'ambiance est top et les profils sont **vrais** !", avatar: fakeProfile1 },
-                { name: 'Karim, 30 ans', location: 'Lyon', text: "Les médias éphémères c'est un **game changer**. Je me sens en sécurité pour partager mes photos.", avatar: fakeProfile2 },
-                { name: 'Bastien, 33 ans', location: 'Toulouse', text: "Enfin un site **sans pubs** et **sans faux profils**. La vérification d'identité fait toute la différence.", avatar: fakeProfile6 },
-              ].map((testimonial, i) => (
-                <div key={i} className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-5 hover:border-primary/20 transition-colors">
-                  <div className="flex items-center gap-3 mb-3">
-                    <img src={testimonial.avatar} alt={testimonial.name} className="w-10 h-10 rounded-full object-cover" />
-                    <div>
-                      <p className="font-semibold text-sm text-foreground">{testimonial.name}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="w-3 h-3" /> {testimonial.location}
-                      </p>
-                    </div>
-                    <div className="ml-auto flex gap-0.5">
-                      {[...Array(5)].map((_, j) => (
-                        <Star key={j} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">"{testimonial.text}"</p>
-                </div>
-              ))}
-            </div>
-          </FadeInWhenVisible>
         </div>
       </div>
 

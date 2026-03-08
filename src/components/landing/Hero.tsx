@@ -8,9 +8,10 @@ import { useTotalMemberCount, useOnlineMemberCount } from '@/hooks/useTotalMembe
 import { useNavigate, Link } from 'react-router-dom';
 import SEOHead, { websiteJsonLd, organizationJsonLd, faqPageJsonLd } from '@/components/seo/SEOHead';
 import React, { useEffect, useState, useRef } from 'react';
-import mockupChat from '@/assets/mockup-chat.png';
-import mockupSwipe from '@/assets/mockup-swipe.png';
-import mockupProfiles from '@/assets/mockup-profiles.png';
+import { ProfileGridPreview, SwipeCardPreview, ChatPreview } from './AppPreviews';
+import fakeProfile1 from '@/assets/fake-profile-1.jpg';
+import fakeProfile2 from '@/assets/fake-profile-2.jpg';
+import fakeProfile6 from '@/assets/fake-profile-6.jpg';
 import { motion, useInView } from 'framer-motion';
 import { useTheme } from 'next-themes';
 
@@ -311,19 +312,14 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
             </p>
           </FadeInWhenVisible>
 
-          {/* Showcase cards */}
+          {/* Showcase cards - realistic app previews */}
           <div className="grid md:grid-cols-3 gap-8 items-start">
             {/* Profiles grid */}
             <FadeInWhenVisible delay={0}>
               <div className="relative group">
                 <div className="absolute -inset-2 bg-gradient-to-br from-primary/20 to-accent/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 overflow-hidden shadow-xl">
-                  <img 
-                    src={mockupProfiles} 
-                    alt="Grille de profils de membres sur Gay Connect" 
-                    className="w-full h-auto" 
-                    loading="lazy"
-                  />
+                <div className="relative">
+                  <ProfileGridPreview />
                   <div className="p-4 text-center">
                     <h3 className="font-display font-bold text-foreground mb-1">Explore les profils</h3>
                     <p className="text-xs text-muted-foreground">Des milliers de membres vérifiés t'attendent dans ton département.</p>
@@ -336,13 +332,8 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
             <FadeInWhenVisible delay={0.15}>
               <div className="relative group md:-mt-6">
                 <div className="absolute -inset-2 bg-gradient-to-br from-rose-500/20 to-pink-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 overflow-hidden shadow-xl">
-                  <img 
-                    src={mockupSwipe} 
-                    alt="Fonction swipe et match sur Gay Connect" 
-                    className="w-full h-auto" 
-                    loading="lazy"
-                  />
+                <div className="relative">
+                  <SwipeCardPreview />
                   <div className="p-4 text-center">
                     <h3 className="font-display font-bold text-foreground mb-1">Swipe & Match</h3>
                     <p className="text-xs text-muted-foreground">Fais défiler les profils et connecte-toi avec ceux qui te plaisent.</p>
@@ -355,33 +346,28 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
             <FadeInWhenVisible delay={0.3}>
               <div className="relative group">
                 <div className="absolute -inset-2 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 overflow-hidden shadow-xl">
-                  <img 
-                    src={mockupChat} 
-                    alt="Discussion de groupe sur Gay Connect" 
-                    className="w-full h-auto" 
-                    loading="lazy"
-                  />
+                <div className="relative">
+                  <ChatPreview />
                   <div className="p-4 text-center">
-                    <h3 className="font-display font-bold text-foreground mb-1">Chats de groupe</h3>
-                    <p className="text-xs text-muted-foreground">Rejoins les discussions de ton département en temps réel.</p>
+                    <h3 className="font-display font-bold text-foreground mb-1">Chats privés</h3>
+                    <p className="text-xs text-muted-foreground">Messages, photos éphémères et médias en toute discrétion.</p>
                   </div>
                 </div>
               </div>
             </FadeInWhenVisible>
           </div>
 
-          {/* Fake testimonials */}
+          {/* Fake testimonials with real profile photos */}
           <FadeInWhenVisible delay={0.4} className="mt-16">
             <div className="grid sm:grid-cols-3 gap-4">
               {[
-                { name: 'Théo, 24 ans', location: 'Paris', text: "J'ai rencontré des mecs incroyables dans mon département. L'ambiance est top et les profils sont **vrais** !", avatar: '🧑‍🦱' },
-                { name: 'Maxime, 31 ans', location: 'Lyon', text: "Les médias éphémères c'est un **game changer**. Je me sens en sécurité pour partager mes photos.", avatar: '👨' },
-                { name: 'Julien, 27 ans', location: 'Bordeaux', text: "Enfin un site **sans pubs** et **sans faux profils**. La vérification d'identité fait toute la différence.", avatar: '🧔' },
+                { name: 'Lucas, 25 ans', location: 'Paris', text: "J'ai rencontré des mecs incroyables dans mon département. L'ambiance est top et les profils sont **vrais** !", avatar: fakeProfile1 },
+                { name: 'Karim, 30 ans', location: 'Lyon', text: "Les médias éphémères c'est un **game changer**. Je me sens en sécurité pour partager mes photos.", avatar: fakeProfile2 },
+                { name: 'Bastien, 33 ans', location: 'Toulouse', text: "Enfin un site **sans pubs** et **sans faux profils**. La vérification d'identité fait toute la différence.", avatar: fakeProfile6 },
               ].map((testimonial, i) => (
                 <div key={i} className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-5 hover:border-primary/20 transition-colors">
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl">{testimonial.avatar}</span>
+                    <img src={testimonial.avatar} alt={testimonial.name} className="w-10 h-10 rounded-full object-cover" />
                     <div>
                       <p className="font-semibold text-sm text-foreground">{testimonial.name}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">

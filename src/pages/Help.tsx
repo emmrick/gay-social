@@ -958,7 +958,7 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   // ============ DEFAULT: FAQ page ============
   return (
-    <div className={cn("bg-background flex flex-col", embedded ? "flex-1" : "min-h-dvh")}>
+    <div className={cn("bg-background flex flex-col overflow-hidden", embedded ? "flex-1" : "h-dvh")}>
       {/* Modern Header */}
       <div
         className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/30"
@@ -994,7 +994,7 @@ const Help = ({ embedded = false }: HelpProps) => {
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-5 pb-28">
             {/* Resume active conversation banner */}
             {!searchQuery && selectedTicket && (selectedTicket.status === 'open' || selectedTicket.status === 'assigned' || liveTicket?.status === 'open' || liveTicket?.status === 'assigned') && (
@@ -1140,7 +1140,7 @@ const Help = ({ embedded = false }: HelpProps) => {
               </div>
             )}
           </div>
-      </ScrollArea>
+      </div>
 
       {/* Floating chat bubble */}
       <motion.button

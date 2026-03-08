@@ -77,13 +77,6 @@ const EphemeralMediaViewer = ({
   const [isSaving, setIsSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
   const [showReplyHint, setShowReplyHint] = useState(false);
-  const { 
-    isBlocked,
-    preventContextMenu, 
-    handleViolation: baseHandleViolation,
-    enableProtection,
-    disableProtection,
-  } = useScreenshotProtection(true, true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasCalledOnViewed = useRef(false);

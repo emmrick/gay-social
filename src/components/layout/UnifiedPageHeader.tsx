@@ -45,7 +45,7 @@ const UnifiedPageHeader = ({
     >
       <div className="px-5 pb-4 flex items-center justify-between w-full">
         <div className="min-w-0 flex items-center gap-2">
-          <img src={logoImg} alt="Gay Connect" className="h-11 w-11" />
+          <img src={logoImg} alt="Gay Connect" className="h-14 w-14 -my-1" />
           <h1 className="font-display text-xl font-extrabold rainbow-text leading-tight">
             Gay Connect
           </h1>

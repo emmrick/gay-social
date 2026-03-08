@@ -321,7 +321,7 @@ const MemberProfile = () => {
               variant="secondary" 
               size="icon" 
               className="rounded-full bg-background/80 backdrop-blur-sm shadow-lg"
-              onClick={() => navigate(-1)}
+              onClick={handleBack}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>

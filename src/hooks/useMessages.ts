@@ -281,6 +281,10 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
                 }
               }
             }
+          } catch (e) {
+            console.error('Error sending group notifications:', e);
+          }
+        })();
 
         return data;
       } finally {

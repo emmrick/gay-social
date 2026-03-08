@@ -153,7 +153,7 @@ const LandingSupportChat = () => {
     const article = allFaqArticles.find(a => a.id === articleId);
     if (!article) return;
     setNoMatchCount(0);
-    addBotMessage(`**${article.question}**\n\n${article.answer}`, undefined, 400);
+    addBotMessage(`**${article.question}**\n\n${article.answer}`);
 
     setTimeout(() => {
       const options: ChatOption[] = [

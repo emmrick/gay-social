@@ -256,6 +256,15 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAutoDeleteSheet({ conversationId: conv.id, username: conv.otherUser.username });
+                    }}
+                  >
+                    <Timer className="w-4 h-4 mr-2" />
+                    Messages éphémères
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     onClick={(e) => handleDeleteClick(e, conv.id)}
                     className="text-destructive focus:text-destructive"
                   >

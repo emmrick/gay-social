@@ -58,6 +58,25 @@ export const useIsBlockedByUser = (otherUserId: string) => {
   });
 };
 
+// Check if a user is admin or moderator (cannot be blocked)
+export const useIsStaffUser = (userId: string) => {
+  return useQuery({
+    queryKey: ['is-staff', userId],
+    queryFn: async () => {
+      if (!userId) return false;
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .in('role', ['admin', 'moderator']);
+      if (error) return false;
+      return (data?.length ?? 0) > 0;
+    },
+    enabled: !!userId,
+    staleTime: 60_000,
+  });
+};
+
 // Block a user
 export const useBlockUserAction = () => {
   const { user } = useAuth();
@@ -66,6 +85,17 @@ export const useBlockUserAction = () => {
   return useMutation({
     mutationFn: async (blockedUserId: string) => {
       if (!user?.id) throw new Error('Not authenticated');
+
+      // Check if target is admin/moderator
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', blockedUserId)
+        .in('role', ['admin', 'moderator']);
+
+      if (roles && roles.length > 0) {
+        throw new Error('CANNOT_BLOCK_STAFF');
+      }
 
       const { error } = await supabase
         .from('user_personal_blocks' as any)
@@ -82,9 +112,13 @@ export const useBlockUserAction = () => {
       queryClient.invalidateQueries({ queryKey: ['blocked-users', user?.id] });
       toast.success('Utilisateur bloqué');
     },
-    onError: (error) => {
-      console.error('Error blocking user:', error);
-      toast.error('Erreur lors du blocage');
+    onError: (error: any) => {
+      if (error?.message === 'CANNOT_BLOCK_STAFF') {
+        toast.error('Impossible de bloquer un membre de l\'équipe (administrateur ou modérateur)');
+      } else {
+        console.error('Error blocking user:', error);
+        toast.error('Erreur lors du blocage');
+      }
     },
   });
 };

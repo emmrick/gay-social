@@ -169,7 +169,11 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     if (!vv) return;
     let prev = vv.height;
     const onResize = () => {
-      if (vv.height < prev - 50 && isNearBottomRef.current) scrollToBottom(true);
+      const keyboardOpened = vv.height < prev - 50;
+      if (keyboardOpened) {
+        // Always scroll to bottom when keyboard opens
+        setTimeout(() => scrollToBottom(true), 50);
+      }
       prev = vv.height;
     };
     vv.addEventListener('resize', onResize);
@@ -177,8 +181,8 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   }, [scrollToBottom]);
 
   const handleInputFocus = useCallback(() => {
-    if (isNearBottomRef.current) requestAnimationFrame(() => scrollToBottom(true));
-  }, [scrollToBottom]);
+    // Scroll handled by visualViewport resize (keyboard open)
+  }, []);
 
   const handleScroll = useCallback(() => {
     const el = messagesContainerRef.current;

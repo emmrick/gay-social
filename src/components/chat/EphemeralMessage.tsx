@@ -124,77 +124,71 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-4 rounded-xl bg-secondary/50">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary/40">
+        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (!media) {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-secondary/50 text-muted-foreground">
-        {messageType === 'image' ? <Image className="w-5 h-5" /> : <Video className="w-5 h-5" />}
-        <span className="text-sm">Média non disponible</span>
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary/40 text-muted-foreground">
+        {messageType === 'image' ? <Image className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+        <span className="text-xs">Média non disponible</span>
       </div>
     );
   }
 
   if (media.is_viewed && !isOwn && !isUnlimited && !canReplay) {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-secondary/30 text-muted-foreground">
-        {messageType === 'image' ? <Image className="w-5 h-5" /> : <Video className="w-5 h-5" />}
-        <span className="text-sm">{messageType === 'image' ? 'Photo' : 'Vidéo'} déjà vue</span>
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary/30 text-muted-foreground">
+        {messageType === 'image' ? <Image className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+        <span className="text-xs">{messageType === 'image' ? 'Photo' : 'Vidéo'} déjà vue</span>
       </div>
     );
   }
+
+  const iconBg = canReplay
+    ? 'bg-amber-500'
+    : isUnlimited
+    ? 'bg-green-500'
+    : 'bg-primary';
+
+  const statusText = isUnlimited
+    ? (isOwn ? (media.is_viewed ? 'Vu • Enregistrable' : 'Non vu') : 'Expire après consultation')
+    : canReplay
+    ? 'Appuie pour revoir'
+    : isOwn
+    ? (media.is_viewed ? 'Vu' : 'Non vu')
+    : 'Expire après consultation';
+
+  const label = canReplay
+    ? '🔄 Replay'
+    : messageType === 'image'
+    ? 'Photo éphémère'
+    : 'Vidéo éphémère';
 
   return (
     <>
       <button
         onClick={handleView}
         disabled={isOwn || (media.is_viewed && !isUnlimited && !canReplay)}
-        className={`relative flex items-center gap-3 p-4 rounded-xl transition-all ${
+        className={cn(
+          'flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all max-w-[220px]',
           isOwn
-            ? 'bg-primary/20 cursor-default'
-            : canReplay
-            ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 cursor-pointer border border-amber-500/20'
-            : (media.is_viewed && !isUnlimited)
-            ? 'bg-secondary/30 cursor-default'
-            : isUnlimited
-            ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 cursor-pointer border border-green-500/20'
-            : 'bg-gradient-to-br from-primary/20 to-accent/20 hover:from-primary/30 hover:to-accent/30 cursor-pointer'
-        }`}
+            ? 'bg-primary/10 cursor-default'
+            : 'hover:bg-secondary/60 cursor-pointer bg-secondary/40'
+        )}
       >
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-          isOwn ? 'bg-primary/30' : canReplay ? 'bg-gradient-to-br from-amber-500 to-orange-500' : isUnlimited ? 'bg-gradient-to-br from-green-500 to-emerald-500' : 'bg-gradient-to-br from-primary to-accent'
-        }`}>
-          {messageType === 'image' ? <Image className="w-6 h-6 text-white" /> : <Video className="w-6 h-6 text-white" />}
+        <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', iconBg)}>
+          {messageType === 'image' ? <Image className="w-4 h-4 text-white" /> : <Video className="w-4 h-4 text-white" />}
         </div>
-        <div className="text-left">
-          <p className="font-medium text-sm">
-            {canReplay ? '🔄 Replay disponible' : isOwn ? 'Tu as envoyé' : 'Tu as reçu'} {!canReplay && (messageType === 'image' ? 'une photo' : 'une vidéo')}
-          </p>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            {isUnlimited ? (
-              <>
-                <Infinity className="w-3 h-3 text-green-500" />
-                <span className="text-green-500">
-                  {isOwn ? (media.is_viewed ? 'Vu • Enregistrable' : 'Non vu • Enregistrable') : 'Appuie pour voir • Enregistrable'}
-                </span>
-              </>
-            ) : canReplay ? (
-              <span className="text-amber-500">Appuie pour revoir • 1 replay</span>
-            ) : (
-              <>
-                <Eye className="w-3 h-3" />
-                {isOwn ? (media.is_viewed ? 'Vu' : 'Non vu') : `Appuie pour voir • ${media.view_duration}s`}
-              </>
-            )}
-          </p>
+        <div className="text-left min-w-0">
+          <p className="font-medium text-xs truncate">{label}</p>
+          <p className="text-[10px] text-muted-foreground truncate">{statusText}</p>
         </div>
       </button>
 
-      {/* Sequential ephemeral viewer - tap to advance */}
       <SequentialEphemeralViewer
         isOpen={showMedia}
         items={sequentialItems}

@@ -381,15 +381,7 @@ const Index = () => {
       
       case 'home':
         return user ? (
-          <motion.div
-            key="home"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="flex-1 flex flex-col min-h-0"
-          >
+          <div className="flex-1 flex flex-col min-h-0">
             {/* Header */}
             <UnifiedPageHeader
               onNavigateToCredits={() => handleTabChange('premium')}
@@ -402,7 +394,7 @@ const Index = () => {
                 onStartPrivateChat={handleStartPrivateChat}
               />
             </div>
-          </motion.div>
+          </div>
         ) : null;
 
       case 'swipe':

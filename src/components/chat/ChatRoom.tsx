@@ -98,7 +98,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [previewUserId, setPreviewUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   const scrollRef = useRef<HTMLDivElement>(null);
 

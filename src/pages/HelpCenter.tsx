@@ -114,7 +114,7 @@ const HelpCenter = () => {
                     {related.map(a => (
                       <button
                         key={a.id}
-                        onClick={() => navigate(`/aide/centre?article=${a.id}`)}
+                        onClick={() => navigate(`/aide?article=${a.id}`)}
                         className="w-full flex items-center justify-between p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
                       >
                         <span className="text-sm">{a.question}</span>
@@ -150,7 +150,7 @@ const HelpCenter = () => {
         <div className="min-h-screen bg-background">
           <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
             <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/aide/centre')}>
+              <Button variant="ghost" size="icon" onClick={() => navigate('/aide')}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex items-center gap-2">
@@ -193,7 +193,7 @@ const HelpCenter = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    onClick={() => navigate(`/aide/centre?article=${article.id}`)}
+                    onClick={() => navigate(`/aide?article=${article.id}`)}
                     className="w-full flex items-center justify-between p-4 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
                   >
                     <div className="min-w-0 pr-3">
@@ -217,7 +217,7 @@ const HelpCenter = () => {
       <SEOHead
         title="Centre d'aide - Gay Connect"
         description="Trouvez des réponses à vos questions sur Gay Connect. FAQ, règles, et assistance."
-        canonical="https://gay-connect.lovable.app/aide/centre"
+        canonical="https://gay-connect.lovable.app/aide"
       />
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -256,7 +256,7 @@ const HelpCenter = () => {
               {filteredArticles.map(article => (
                 <button
                   key={article.id}
-                  onClick={() => navigate(`/aide/centre?article=${article.id}`)}
+                  onClick={() => navigate(`/aide?article=${article.id}`)}
                   className="w-full flex items-center justify-between p-4 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
                 >
                   <div className="min-w-0 pr-3">
@@ -304,7 +304,7 @@ const HelpCenter = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.04 }}
-                      onClick={() => navigate(`/aide/centre/${encodeURIComponent(name)}`)}
+                      onClick={() => navigate(`/aide/${encodeURIComponent(name)}`)}
                       className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
                     >
                       <div className={`w-10 h-10 rounded-xl ${meta.bg} flex items-center justify-center ${meta.color} flex-shrink-0`}>
@@ -318,6 +318,15 @@ const HelpCenter = () => {
                     </motion.button>
                   );
                 })}
+              </div>
+
+              {/* Contact support button */}
+              <div className="mt-6 p-4 rounded-2xl bg-primary/5 border border-primary/20 text-center">
+                <p className="text-sm text-muted-foreground mb-3">Vous ne trouvez pas la réponse ?</p>
+                <Button onClick={() => navigate('/aide/chat')} className="gap-2">
+                  <MessageCircle className="w-4 h-4" />
+                  Contacter le support
+                </Button>
               </div>
             </>
           )}

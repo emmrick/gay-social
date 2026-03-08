@@ -102,41 +102,61 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const navigate = useNavigate();
   
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isNearBottomRef = useRef(true);
+  const initialScrollDone = useRef(false);
+  const prevMsgCount = useRef(0);
 
-  // Scroll to bottom on new messages or when conversation opens
   useEffect(() => {
-    const scrollToBottom = () => {
-      if (scrollRef.current && !searchQuery) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
-    };
-    
-    // Immediate scroll
-    scrollToBottom();
-    
-    // Delayed scrolls to handle media loading
-    const timeoutId = setTimeout(scrollToBottom, 100);
-    const timeoutId2 = setTimeout(scrollToBottom, 300);
-    
-    return () => {
-      clearTimeout(timeoutId);
-      clearTimeout(timeoutId2);
-    };
-  }, [messages, searchQuery]);
+    initialScrollDone.current = false;
+    prevMsgCount.current = 0;
+    isNearBottomRef.current = true;
+  }, [roomId]);
 
-  // Auto-scroll when someone starts typing in group chat
-  useEffect(() => {
-    if (typingUsers.length > 0 && scrollRef.current && !searchQuery) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  const scrollToBottom = useCallback((instant = false) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (instant) {
+      el.scrollTop = el.scrollHeight;
+    } else {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     }
-  }, [typingUsers.length, searchQuery]);
+  }, []);
 
-  // Handle scroll to show/hide scroll button
+  // Initial scroll only — once
+  useEffect(() => {
+    if (!isLoading && messages.length > 0 && !initialScrollDone.current && !searchQuery) {
+      initialScrollDone.current = true;
+      requestAnimationFrame(() => scrollToBottom(true));
+      prevMsgCount.current = messages.length;
+    }
+  }, [isLoading, messages.length, searchQuery, scrollToBottom]);
+
+  // New message — only scroll if near bottom or own message
+  useEffect(() => {
+    if (messages.length > prevMsgCount.current && initialScrollDone.current && !searchQuery) {
+      const lastMsg = messages[messages.length - 1];
+      const isOwnMessage = lastMsg?.sender_id === user?.id;
+      if (isOwnMessage || isNearBottomRef.current) {
+        requestAnimationFrame(() => scrollToBottom(false));
+      }
+      prevMsgCount.current = messages.length;
+    }
+  }, [messages.length, messages, user?.id, searchQuery, scrollToBottom]);
+
+  // Typing — only if near bottom
+  useEffect(() => {
+    if (typingUsers.length > 0 && isNearBottomRef.current && !searchQuery) {
+      requestAnimationFrame(() => scrollToBottom(false));
+    }
+  }, [typingUsers.length, searchQuery, scrollToBottom]);
+
+  // Handle scroll to show/hide scroll button + track position
   const handleScroll = useCallback(() => {
-    if (scrollRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-      setShowScrollButton(!isNearBottom);
+    const el = scrollRef.current;
+    if (el) {
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+      isNearBottomRef.current = nearBottom;
+      setShowScrollButton(!nearBottom);
     }
   }, []);
 
@@ -149,18 +169,24 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
     }
   }, [searchIndex, searchResults, searchQuery]);
 
-  const scrollToBottom = useCallback(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, []);
-
-  // Handle input focus - scroll to bottom when keyboard opens
-  const handleInputFocus = useCallback(() => {
-    setTimeout(() => {
-      scrollToBottom();
-    }, 100);
+  // Keyboard open — always scroll to bottom
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let prev = vv.height;
+    const onResize = () => {
+      if (vv.height < prev - 50) {
+        setTimeout(() => scrollToBottom(true), 50);
+      }
+      prev = vv.height;
+    };
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
   }, [scrollToBottom]);
+
+  const handleInputFocus = useCallback(() => {
+    // Scroll handled by visualViewport resize
+  }, []);
 
   const handleSendMessage = async (content: string) => {
     if (content.trim()) {

@@ -12,6 +12,7 @@ interface EphemeralMediaViewerProps {
   senderName: string;
   duration?: number; // 0 = unlimited
   mediaId?: string;
+  autoStart?: boolean; // Skip pre-view screen and start immediately
   onClose: () => void;
   onViewed: () => void;
   onSaveToConversation?: () => Promise<void>;

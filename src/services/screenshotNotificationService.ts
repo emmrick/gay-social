@@ -99,7 +99,7 @@ export const notifyScreenshotInChat = async ({
 
 /**
  * Report a screenshot detection globally (outside of a specific chat context).
- * Creates a report + security event + warning notification to the user.
+ * Creates a report + security event + warning notification + moderation task + violation tracking.
  */
 export const reportScreenshotGlobal = async ({
   userId,
@@ -111,14 +111,58 @@ export const reportScreenshotGlobal = async ({
   pageUrl?: string;
 }) => {
   try {
-    // 1. Create a report for moderation
+    // 1. Upsert screenshot_violations to track repeat offenders
+    const { data: existingViolation } = await supabase
+      .from('screenshot_violations')
+      .select('id, violation_count')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    let violationCount = 1;
+
+    if (existingViolation) {
+      violationCount = existingViolation.violation_count + 1;
+
+      // Calculate suspension based on violation count
+      let suspendedUntil: string | null = null;
+      if (violationCount >= 5) {
+        // 5+ violations: 7 days suspension
+        suspendedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      } else if (violationCount >= 3) {
+        // 3-4 violations: 24h suspension
+        suspendedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      } else if (violationCount >= 2) {
+        // 2 violations: 1h suspension
+        suspendedUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      }
+
+      await supabase
+        .from('screenshot_violations')
+        .update({
+          violation_count: violationCount,
+          last_violation_at: new Date().toISOString(),
+          suspended_until: suspendedUntil,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingViolation.id);
+    } else {
+      await supabase
+        .from('screenshot_violations')
+        .insert({
+          user_id: userId,
+          violation_count: 1,
+          last_violation_at: new Date().toISOString(),
+        });
+    }
+
+    // 2. Create a report for moderation
     const { error: reportError } = await supabase
       .from('reports')
       .insert({
         reporter_id: userId,
         reported_user_id: userId,
         reason: 'inappropriate_content' as any,
-        description: `Capture d'écran détectée automatiquement pour l'utilisateur ${username} sur la page ${pageUrl || 'inconnue'}.`,
+        description: `[Auto] Capture d'écran #${violationCount} détectée pour ${username} sur ${pageUrl || 'page inconnue'}. ${violationCount > 1 ? `⚠️ Récidiviste (${violationCount} infractions).` : ''}`,
         report_type: 'screenshot_violation',
       });
 
@@ -126,29 +170,58 @@ export const reportScreenshotGlobal = async ({
       console.error('[ScreenshotGlobal] Error creating report:', reportError);
     }
 
-    // 2. Log security event
+    // 3. Log security event
     const { error: secError } = await supabase
       .from('security_events')
       .insert({
         event_type: 'screenshot_detected',
-        severity: 'high',
+        severity: violationCount >= 3 ? 'critical' : 'high',
         user_id: userId,
         page_url: pageUrl || null,
-        description: `Capture d'écran détectée pour ${username}.`,
+        description: `Capture d'écran #${violationCount} détectée pour ${username}.${violationCount >= 3 ? ' RÉCIDIVISTE — enquête approfondie recommandée.' : ''}`,
         user_agent: navigator.userAgent,
+        metadata: { violation_count: violationCount, username },
       });
 
     if (secError) {
       console.error('[ScreenshotGlobal] Error logging security event:', secError);
     }
 
-    // 3. Warning notification to the user
+    // 4. Create moderation task for investigation
+    const { error: taskError } = await supabase
+      .from('moderation_tasks')
+      .insert({
+        task_type: 'screenshot_investigation',
+        status: 'pending',
+        target_user_id: userId,
+        description: `📸 Enquête capture d'écran — ${username} (infraction #${violationCount})${violationCount >= 3 ? ' ⚠️ RÉCIDIVISTE' : ''}`,
+        reward_cents: violationCount >= 3 ? 30 : 15,
+        metadata: {
+          violation_count: violationCount,
+          username,
+          page_url: pageUrl || null,
+          detected_at: new Date().toISOString(),
+          is_repeat_offender: violationCount > 1,
+        },
+      });
+
+    if (taskError) {
+      console.error('[ScreenshotGlobal] Error creating moderation task:', taskError);
+    }
+
+    // 5. Warning notification to the user
+    const warningMessage = violationCount >= 3
+      ? `Votre capture d'écran a été détectée (infraction #${violationCount}). Votre compte est sous surveillance renforcée. Un membre de l'équipe va enquêter sur votre activité.`
+      : violationCount >= 2
+      ? `Votre capture d'écran a été détectée (infraction #${violationCount}). Vous êtes désormais sous surveillance. Des sanctions seront appliquées en cas de récidive.`
+      : `Votre capture d'écran a été détectée et signalée. Les captures répétées entraîneront une suspension de votre compte.`;
+
     const { error: notifError } = await supabase
       .from('notifications')
       .insert({
         user_id: userId,
-        title: '⚠️ Avertissement : Capture d\'écran',
-        message: 'Votre capture d\'écran a été détectée et signalée. Les captures d\'écran répétées peuvent entraîner une suspension de votre compte.',
+        title: violationCount >= 3 ? '🚨 Alerte : Surveillance renforcée' : '⚠️ Avertissement : Capture d\'écran',
+        message: warningMessage,
         type: 'screenshot_warning',
       });
 
@@ -156,7 +229,7 @@ export const reportScreenshotGlobal = async ({
       console.error('[ScreenshotGlobal] Error creating notification:', notifError);
     }
 
-    console.log('[ScreenshotGlobal] Screenshot reported successfully');
+    console.log(`[ScreenshotGlobal] Screenshot #${violationCount} reported for ${username}`);
     return true;
   } catch (error) {
     console.error('[ScreenshotGlobal] Unexpected error:', error);

@@ -271,7 +271,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     setAnsweredArticleIds(prev => new Set(prev).add(articleId));
     setNoMatchCount(0);
 
-    addBotMessage(`**${article.question}**\n\n${article.answer}`, undefined, 500);
+    addBotMessage(`**${article.question}**\n\n${article.answer}`);
 
     // After answer, ask if they need more help
     setTimeout(() => {

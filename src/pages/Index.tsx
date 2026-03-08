@@ -347,7 +347,7 @@ const Index = () => {
         return (
           <div
             key="landing"
-            className="flex-1"
+            className="flex-1 min-h-0 overflow-y-auto"
           >
             <Hero onGetStarted={handleGetStarted} />
           </div>

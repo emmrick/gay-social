@@ -87,10 +87,9 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
         {/* Carousel */}
         <div 
           ref={emblaRef} 
-          className="overflow-hidden rounded-lg touch-pan-y"
-          style={{ touchAction: 'pan-y pinch-zoom' }}
+          className="overflow-hidden rounded-lg"
         >
-          <div className="flex touch-pan-x" style={{ touchAction: 'pan-x' }}>
+          <div className="flex">
             {photos.map((photo, index) => (
               <div
                 key={index}

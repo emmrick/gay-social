@@ -590,7 +590,7 @@ const Index = () => {
 
   return (
     <div 
-      className="min-h-dvh min-h-screen bg-background flex flex-col overflow-x-hidden"
+      className="h-dvh h-screen bg-background flex flex-col overflow-hidden"
       style={{
         paddingLeft: 'env(safe-area-inset-left, 0px)',
         paddingRight: 'env(safe-area-inset-right, 0px)',

@@ -26,6 +26,7 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
   const [showShareAlbum, setShowShareAlbum] = useState(false);
   const [showSnapCapture, setShowSnapCapture] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { checkMessage } = useForbiddenWords();
 
   // Auto-resize textarea
   useEffect(() => {

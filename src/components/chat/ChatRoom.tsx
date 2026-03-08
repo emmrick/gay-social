@@ -198,7 +198,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   };
 
   const handleAvatarClick = (userId: string) => {
-    setPreviewUserId(userId);
+    navigate(`/profile/${userId}`);
   };
 
   const handleToggleReaction = (messageId: string, emoji: string) => {

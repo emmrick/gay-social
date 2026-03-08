@@ -122,7 +122,7 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
   ];
 
   return (
-    <section className="relative flex flex-col overflow-hidden">
+    <section className="relative flex flex-col overflow-hidden light" data-theme="light" style={{ colorScheme: 'light' }}>
       <SEOHead
         title="Gay Connect - Site de Rencontre Gay, Sexe Gay & Tchat Gay France"
         description="Gay Connect : le site gay n°1 pour les rencontres et le sexe entre hommes en France. Tchat gay gratuit, plan cul gay par département, échanges de photos et vidéos. Communauté vérifiée. +18 ans."

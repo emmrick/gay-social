@@ -65,7 +65,7 @@ const SnapCaptureDialog = ({
   const recordingStartTimeRef = useRef(0);
   const lockZoneRef = useRef<HTMLDivElement>(null);
 
-  const { uploadEphemeralMedia, isUploading, progress } = useEphemeralMediaUpload();
+  const { uploadEphemeralMedia, isUploading, progress, creditsNeeded } = useEphemeralMediaUpload();
   const { permissions, isCameraDenied } = useCameraPermission();
 
   // Start camera

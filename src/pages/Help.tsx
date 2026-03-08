@@ -222,7 +222,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   // Simulate bot typing delay based on word count (~1s per word, clamped 2s–15s)
   const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-    const typingDelay = Math.min(Math.max(wordCount * 1000, 2000), 15000);
+    const typingDelay = wordCount * 1000;
     setIsBotTyping(true);
     setTimeout(() => {
       setChatMessages(prev => [...prev, { type: 'bot', text, options }]);

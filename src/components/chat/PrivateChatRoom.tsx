@@ -12,7 +12,7 @@ import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import { useAuth } from '@/contexts/AuthContext';
-import { useHasBlockedUser, useUnblockUserAction } from '@/hooks/useUserBlock';
+import { useHasBlockedUser, useUnblockUserAction, useIsStaffUser } from '@/hooks/useUserBlock';
 import { usePrivateTypingIndicator } from '@/hooks/usePrivateTypingIndicator';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';

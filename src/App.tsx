@@ -131,6 +131,7 @@ const AuthenticatedApp = () => {
                 <LowCreditsAlert />
                 <AgeConfirmationModal />
                 <InvestigationNoticeDialog />
+                <ForcedSupportChat />
                 <PromoPopup />
               </BrowserRouter>
             </TooltipProvider>

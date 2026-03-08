@@ -24,6 +24,7 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
   const ticketId = (activeTask?.metadata as any)?.ticket_id as string | undefined;
   const autoMessageSentRef = useRef<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [showInfractions, setShowInfractions] = useState(false);
 
   const { data: ticket, isLoading } = useQuery({
     queryKey: ['support-ticket-detail', ticketId],

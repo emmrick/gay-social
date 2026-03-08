@@ -83,13 +83,21 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
         conversationHistory: allMessages,
       });
 
-      // Simulate typing delay based on response length
-      // ~60ms per character, min 1500ms, max 8000ms
-      const typingDelay = Math.min(8000, Math.max(1500, reply.length * 60));
+      // Stream words: 1 second per 3 words
+      const words = reply.split(/(\s+)/);
       setIsTyping(true);
-      await new Promise(resolve => setTimeout(resolve, typingDelay));
+      setStreamingText('');
+      
+      for (let i = 0; i < words.length; i++) {
+        setStreamingText(prev => prev + words[i]);
+        // Every 3 actual words (not whitespace), wait ~333ms (1s / 3 words)
+        if (words[i].trim() && (i + 1) % 2 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 333));
+        }
+      }
+      
       setIsTyping(false);
-
+      setStreamingText('');
       setLocalMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch (error) {
       setIsTyping(false);

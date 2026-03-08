@@ -101,12 +101,6 @@ const CreditsPage = () => {
     { icon: Users, label: 'Parrainage réussi', reward: dynamicCosts?.referral_reward ?? CREDIT_REWARDS.referral_success, suffix: ' chacun', gradient: 'from-purple-500 to-violet-500' },
   ];
 
-  const packages = [
-    { amount: 50, price: '4,99 €', perCredit: '0,10 €' },
-    { amount: 120, price: '9,99 €', perCredit: '0,08 €' },
-    { amount: 300, price: '19,99 €', perCredit: '0,07 €' },
-    { amount: 700, price: '39,99 €', perCredit: '0,06 €', best: true },
-  ];
 
   return (
     <div className="min-h-screen bg-background pb-28">

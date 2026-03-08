@@ -126,15 +126,30 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   }, []);
 
+  // Track container mutations (images loading, ephemeral media appearing) to re-scroll
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container || isLoading) return;
+    const observer = new MutationObserver(() => {
+      // Only auto-scroll if user is near the bottom
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      if (scrollHeight - scrollTop - clientHeight < 200) {
+        container.scrollTop = scrollHeight;
+      }
+    });
+    observer.observe(container, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'style', 'class'] });
+    return () => observer.disconnect();
+  }, [isLoading]);
+
   useLayoutEffect(() => {
     if (isLoading || messages.length === 0) return;
     if (isInitialLoad.current) {
       scrollToBottom(true);
-      const timers = [50, 150, 300, 500].map((d) => setTimeout(() => scrollToBottom(true), d));
+      const timers = [50, 150, 300, 500, 800, 1200].map((d) => setTimeout(() => scrollToBottom(true), d));
       setTimeout(() => {
         isInitialLoad.current = false;
         previousMessagesLength.current = messages.length;
-      }, 550);
+      }, 1250);
       return () => timers.forEach(clearTimeout);
     }
   }, [messages, isLoading, scrollToBottom]);
@@ -143,6 +158,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     if (isLoading || isInitialLoad.current) return;
     if (messages.length > previousMessagesLength.current) {
       scrollToBottom(false);
+      // Extra delayed scroll for media that loads after the message appears
+      setTimeout(() => scrollToBottom(false), 300);
+      setTimeout(() => scrollToBottom(false), 600);
       previousMessagesLength.current = messages.length;
     }
   }, [messages, isLoading, scrollToBottom]);

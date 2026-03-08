@@ -20,17 +20,29 @@ import {
 
 const CREDIT_OFFERS = [
   { 
-    credits: 100, 
-    price: 5.99, 
-    paymentLink: 'https://checkout.revolut.com/pay/e6ca921f-2793-4867-b8f1-448cbfb39ad4',
+    credits: 50, 
+    price: 4.99, 
+    paymentLink: 'https://checkout.revolut.com/pay/f29c297e-7d41-4f7c-823e-c93f1d53b8dc',
   },
   { 
-    credits: 250, 
-    price: 10.99, 
-    originalPrice: 15.99,
-    discount: 31,
-    paymentLink: 'https://checkout.revolut.com/pay/45dd2e98-7ab4-40e7-ad01-5a64dedee6dd',
+    credits: 120, 
+    price: 9.99, 
+    paymentLink: 'https://checkout.revolut.com/pay/4942e50e-e341-47f3-90fc-20da3d070577',
+  },
+  { 
+    credits: 350, 
+    price: 19.99, 
+    originalPrice: 29.99,
+    discount: 33,
+    paymentLink: 'https://checkout.revolut.com/pay/a7110be4-4136-4547-945d-e4b3143ea73a',
     highlight: true,
+  },
+  { 
+    credits: 800, 
+    price: 39.99, 
+    originalPrice: 69.99,
+    discount: 43,
+    paymentLink: 'https://checkout.revolut.com/pay/8f4981d8-13b3-41df-a92c-562275d13755',
   },
 ];
 

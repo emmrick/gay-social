@@ -81,8 +81,17 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
         message: msg,
         conversationHistory: allMessages,
       });
+
+      // Simulate typing delay based on response length
+      // ~30ms per character, min 800ms, max 4000ms
+      const typingDelay = Math.min(4000, Math.max(800, reply.length * 30));
+      setIsTyping(true);
+      await new Promise(resolve => setTimeout(resolve, typingDelay));
+      setIsTyping(false);
+
       setLocalMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch (error) {
+      setIsTyping(false);
       setLocalMessages(prev => [
         ...prev,
         { role: 'assistant', content: 'Désolé, je rencontre un problème technique. Essaie de contacter directement cette personne ! 😅' },

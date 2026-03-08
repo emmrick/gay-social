@@ -181,9 +181,11 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   }, [scrollToBottom]);
 
   const handleScroll = useCallback(() => {
-    if (messagesContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-      setShowScrollButton(scrollHeight - scrollTop - clientHeight > 100);
+    const el = messagesContainerRef.current;
+    if (el) {
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+      isNearBottomRef.current = nearBottom;
+      setShowScrollButton(!nearBottom);
     }
   }, []);
 

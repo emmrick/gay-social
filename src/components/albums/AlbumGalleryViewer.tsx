@@ -48,7 +48,7 @@ const ImageWithLoader = ({ src, alt, zoomState, isZoomed }: {
         initial={{ scale: 1, opacity: 0 }}
         animate={{
           scale: zoomState.scale,
-          opacity: isBlocked ? 0 : loaded ? 1 : 0,
+          opacity: loaded ? 1 : 0,
           x: zoomState.x,
           y: zoomState.y,
         }}

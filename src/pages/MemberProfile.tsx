@@ -403,7 +403,24 @@ const MemberProfile = () => {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="w-3.5 h-3.5" />
             <span>{profile.region}</span>
-            <span className="text-muted-foreground/50">•</span>
+            {extendedProfile?.birth_date && (() => {
+              const zodiac = getZodiacSign(extendedProfile.birth_date);
+              return zodiac ? (
+                <>
+                  <span className="text-muted-foreground/50">•</span>
+                  <span title={zodiac.label}>{zodiac.emoji} {zodiac.label}</span>
+                </>
+              ) : null;
+            })()}
+            {extendedProfile?.birth_date && extendedProfile?.show_birthday && (
+              <>
+                <span className="text-muted-foreground/50">•</span>
+                <Cake className="w-3.5 h-3.5" />
+                <span>{formatBirthday(extendedProfile.birth_date)}</span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
             <span className={isTrulyOnline ? 'text-green-500' : ''}>
               {getLastSeenText()}
             </span>

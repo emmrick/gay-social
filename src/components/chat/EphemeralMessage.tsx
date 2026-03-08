@@ -140,11 +140,37 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
     );
   }
 
+  // After viewing: hide from conversation (media disappears)
+  // Exception: if screenshot was detected, show warning to the screenshotter
   if (media.is_viewed && !isOwn && !isUnlimited && !canReplay) {
+    if (media.screenshot_detected) {
+      return (
+        <div className="flex flex-col gap-1.5 px-3 py-2.5 rounded-xl bg-destructive/10 border border-destructive/30 max-w-[280px]">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
+            <span className="text-xs font-bold text-destructive">Capture d'écran détectée</span>
+          </div>
+          <p className="text-[11px] text-destructive/80 leading-relaxed">
+            Vous avez fait une capture d'écran. Suite à cette infraction, elle sera notée dans votre dossier pour non-respect des règlements du site.
+          </p>
+        </div>
+      );
+    }
+    // Media viewed normally → disappear from conversation
+    return null;
+  }
+
+  // For sender: show screenshot warning if detected
+  if (isOwn && media.screenshot_detected) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary/30 text-muted-foreground">
-        {messageType === 'image' ? <Image className="w-4 h-4" /> : <Video className="w-4 h-4" />}
-        <span className="text-xs">{messageType === 'image' ? 'Photo' : 'Vidéo'} déjà vue</span>
+      <div className="flex flex-col gap-1.5 px-3 py-2.5 rounded-xl bg-destructive/10 border border-destructive/30 max-w-[280px]">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
+          <span className="text-xs font-bold text-destructive">⚠️ Capture d'écran détectée</span>
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Le destinataire a effectué une capture d'écran de votre {messageType === 'image' ? 'photo' : 'vidéo'}. Le média a été conservé pour l'équipe de modération.
+        </p>
       </div>
     );
   }

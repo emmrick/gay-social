@@ -45,7 +45,7 @@ const BirthdayGiftButton = ({ recipientId, recipientUsername }: BirthdayGiftButt
         .eq('recipient_id', recipientId)
         .eq('gift_year', currentYear)
         .maybeSingle();
-      return data as { amount: number } | null;
+      return (data as unknown as { amount: number }) ?? null;
     },
     enabled: !!user?.id && user?.id !== recipientId,
   });

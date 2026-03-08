@@ -413,6 +413,31 @@ const MemberProfile = () => {
 
       {/* Profile Content */}
       <div className="px-4 pt-4 space-y-5">
+        {/* Birthday Banner */}
+        {extendedProfile?.birth_date && extendedProfile?.show_birthday && isBirthdayToday(extendedProfile.birth_date) && (
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500/20 via-rose-500/20 to-amber-500/20 border border-pink-500/30 p-4 text-center"
+          >
+            <div className="absolute inset-0 flex items-center justify-around opacity-20 text-4xl pointer-events-none">
+              <span className="animate-bounce" style={{ animationDelay: '0s' }}>🎂</span>
+              <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>🎉</span>
+              <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>🎈</span>
+              <span className="animate-bounce" style={{ animationDelay: '0.6s' }}>🎁</span>
+            </div>
+            <div className="relative">
+              <p className="text-lg font-bold">🎂 C'est son anniversaire ! 🎉</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Souhaite-lui un joyeux anniversaire
+              </p>
+              <div className="mt-3 flex justify-center">
+                <BirthdayGiftButton recipientId={userId!} recipientUsername={profile.username} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Profile Reactions */}
         {userId && (
           <motion.div

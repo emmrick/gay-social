@@ -158,16 +158,12 @@ const LandingSupportChat = () => {
     const article = allFaqArticles.find(a => a.id === articleId);
     if (!article) return;
     setNoMatchCount(0);
-    addBotMessage(`**${article.question}**\n\n${article.answer}`);
-
-    setTimeout(() => {
-      const options: ChatOption[] = [
-        { label: '🔄 Autre question sur ce sujet', value: 'same_category' },
-        { label: '📋 Changer de sujet', value: 'change_category' },
-        { label: '👤 Contacter un agent', value: 'contact_agent' },
-      ];
-      addBotMessage("Ça répond à ta question ? 😊", options);
-    }, 800);
+    const options: ChatOption[] = [
+      { label: '🔄 Autre question sur ce sujet', value: 'same_category' },
+      { label: '📋 Changer de sujet', value: 'change_category' },
+      { label: '👤 Contacter un agent', value: 'contact_agent' },
+    ];
+    addBotMessage(`**${article.question}**\n\n${article.answer}\n\nÇa répond à ta question ? 😊`, options);
   }, [allFaqArticles, addBotMessage]);
 
   const searchFaqArticles = useCallback((query: string) => {

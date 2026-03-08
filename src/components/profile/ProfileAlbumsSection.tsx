@@ -159,41 +159,53 @@ const AlbumThumbnail = ({ album, index, useAlbumMedia, onClick }: AlbumThumbnail
       {coverImage ? (
         <>
           {!imageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-secondary/80">
+            <div className="absolute inset-0 flex items-center justify-center bg-secondary/80 z-[1]">
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
             </div>
           )}
-          <img 
-            src={coverImage} 
-            alt={album.name}
-            loading="lazy"
-            onLoad={() => setImageLoaded(true)}
-            className={cn(
-              "w-full h-full object-cover transition-all duration-300",
-              !revealed && "blur-lg scale-110",
-              !imageLoaded && "opacity-0"
-            )}
-          />
+          {/* Wrapper to clip the scaled/blurred image */}
+          <div className="absolute inset-0 overflow-hidden">
+            <img 
+              src={coverImage} 
+              alt={album.name}
+              loading="lazy"
+              onLoad={() => setImageLoaded(true)}
+              className={cn(
+                "w-full h-full object-cover transition-all duration-300",
+                !revealed && "blur-lg scale-110",
+                !imageLoaded && "opacity-0"
+              )}
+            />
+          </div>
         </>
       ) : (
-        <div className="w-full h-full flex items-center justify-center">
+        <div className="w-full h-full flex items-center justify-center bg-secondary/50">
           <ImageIcon className="w-6 h-6 text-muted-foreground/50" />
         </div>
       )}
 
       {/* Privacy blur hint */}
       {coverImage && !revealed && imageLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 z-[2] flex items-center justify-center">
           <div className="bg-black/40 backdrop-blur-sm rounded-full p-1.5">
             <EyeOff className="w-4 h-4 text-white" />
           </div>
         </div>
       )}
       
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-2">
-        <p className="text-white text-xs font-medium truncate">{album.name}</p>
-        <p className="text-white/70 text-[10px]">{media.length} média(s)</p>
+      {/* Overlay - only show gradient when there's an image */}
+      <div className={cn(
+        "absolute inset-0 z-[3] flex flex-col justify-end p-2",
+        coverImage && "bg-gradient-to-t from-black/70 via-transparent to-transparent"
+      )}>
+        <p className={cn(
+          "text-xs font-medium truncate",
+          coverImage ? "text-white" : "text-foreground"
+        )}>{album.name}</p>
+        <p className={cn(
+          "text-[10px]",
+          coverImage ? "text-white/70" : "text-muted-foreground"
+        )}>{media.length} média(s)</p>
       </div>
     </motion.button>
   );

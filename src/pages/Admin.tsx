@@ -178,14 +178,14 @@ const Admin = () => {
               <h2 className="text-lg font-semibold">Signalements</h2>
             </div>
             <Tabs value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as ReportStatus | 'all')}>
-              <TabsList className="grid grid-cols-5 mb-4">
-                <TabsTrigger value="pending" className="text-xs">En attente</TabsTrigger>
-                <TabsTrigger value="reviewed" className="text-xs">En cours</TabsTrigger>
-                <TabsTrigger value="resolved" className="text-xs">Résolus</TabsTrigger>
-                <TabsTrigger value="dismissed" className="text-xs">Rejetés</TabsTrigger>
-                <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
+              <TabsList className="w-full grid grid-cols-5 h-9">
+                <TabsTrigger value="pending" className="text-xs data-[state=active]:shadow-sm">En attente</TabsTrigger>
+                <TabsTrigger value="reviewed" className="text-xs data-[state=active]:shadow-sm">En cours</TabsTrigger>
+                <TabsTrigger value="resolved" className="text-xs data-[state=active]:shadow-sm">Résolus</TabsTrigger>
+                <TabsTrigger value="dismissed" className="text-xs data-[state=active]:shadow-sm">Rejetés</TabsTrigger>
+                <TabsTrigger value="all" className="text-xs data-[state=active]:shadow-sm">Tous</TabsTrigger>
               </TabsList>
-              <TabsContent value={selectedStatus} className="mt-0">
+              <TabsContent value={selectedStatus} className="mt-3">
                 <ScrollArea className="h-[calc(100dvh-280px)]">
                   {reportsLoading ? (
                     <div className="space-y-3">
@@ -234,7 +234,6 @@ const Admin = () => {
   if (isMobile) {
     const isHome = activeSection === ('__home__' as any);
 
-    // Home = dashboard grid (rendered by AdminMobileNav itself)
     if (isHome) {
       return (
         <>
@@ -251,7 +250,6 @@ const Admin = () => {
       );
     }
 
-    // Section content
     return (
       <div className="min-h-[100dvh] bg-background flex flex-col">
         <AdminMobileNav
@@ -263,7 +261,7 @@ const Admin = () => {
           pendingVerifications={pendingVerificationsCount}
         />
         <main className="flex-1 overflow-auto">
-          <div className="p-4 pb-8">
+          <div className="p-3 pb-8">
             <TaskQueuePopup onNavigateToSection={handleSectionChange} />
             {renderContent()}
           </div>
@@ -291,11 +289,11 @@ const Admin = () => {
         pendingVerifications={pendingVerificationsCount}
       />
 
-      <main className="flex-1 overflow-auto">
-          <div className="max-w-6xl mx-auto p-6 space-y-6">
-            <TaskQueuePopup onNavigateToSection={handleSectionChange} />
-            {renderContent()}
-          </div>
+      <main className="flex-1 overflow-auto bg-muted/20">
+        <div className="max-w-5xl mx-auto p-6 space-y-6">
+          <TaskQueuePopup onNavigateToSection={handleSectionChange} />
+          {renderContent()}
+        </div>
       </main>
 
       {selectedReport && (

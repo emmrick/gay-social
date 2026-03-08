@@ -2,14 +2,18 @@ import {
   Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
   MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Menu, 
   Bell, Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, 
-  ListOrdered, HelpCircle, Star, Headphones, FileImage
+  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
-import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export type AdminSection = 
   | 'wallet' | 'withdrawals' | 'rates' | 'global' 
@@ -34,47 +38,53 @@ interface NavItem {
   id: AdminSection;
   label: string;
   icon: React.ElementType;
-  group: 'finances' | 'users' | 'moderation' | 'settings';
+  group: 'finances' | 'users' | 'moderation' | 'help' | 'settings';
 }
 
 const navItems: NavItem[] = [
+  // Finances
   { id: 'wallet', label: 'Portefeuille', icon: Wallet, group: 'finances' },
-  { id: 'rates', label: 'Tarifs', icon: Euro, group: 'finances' },
-  { id: 'withdrawals', label: 'Retraits', icon: ArrowUpRight, group: 'finances' },
+  { id: 'rates', label: 'Tarifs missions', icon: Euro, group: 'finances' },
+  { id: 'withdrawals', label: 'Demandes de retrait', icon: ArrowUpRight, group: 'finances' },
   { id: 'global', label: 'Gains globaux', icon: PieChart, group: 'finances' },
+  // Users
   { id: 'stats', label: 'Statistiques', icon: BarChart3, group: 'users' },
   { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users' },
-  { id: 'credits', label: 'Crédits', icon: Coins, group: 'users' },
-  { id: 'credits-surveillance', label: 'Surveillance', icon: Activity, group: 'users' },
+  { id: 'credits', label: 'Gestion crédits', icon: Coins, group: 'users' },
+  { id: 'credits-surveillance', label: 'Surveillance crédits', icon: Activity, group: 'users' },
   { id: 'credit-purchases', label: 'Achats crédits', icon: ShoppingCart, group: 'users' },
   { id: 'blocked', label: 'Bloqués', icon: Ban, group: 'users' },
+  // Moderation
   { id: 'pending-tasks', label: "File d'attente", icon: ListOrdered, group: 'moderation' },
   { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation' },
-  { id: 'support', label: 'Support client', icon: Headphones, group: 'moderation' },
-  { id: 'support-ratings', label: 'Mes avis support', icon: Star, group: 'moderation' },
   { id: 'ai-moderation', label: 'Modération IA', icon: Bot, group: 'moderation' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
-  { id: 'verification', label: 'Vérifications', icon: IdCard, group: 'moderation' },
+  { id: 'verification', label: 'Vérification identité', icon: IdCard, group: 'moderation' },
   { id: 'screenshot-sanctions', label: 'Captures écran', icon: Camera, group: 'moderation' },
-  { id: 'history', label: 'Historique', icon: History, group: 'moderation' },
-  { id: 'moderators', label: 'Modérateurs', icon: UserCog, group: 'settings' },
+  { id: 'history', label: 'Historique actions', icon: History, group: 'moderation' },
+  // Help
+  { id: 'support', label: 'Support client', icon: Headphones, group: 'help' },
+  { id: 'support-ratings', label: 'Avis support', icon: Star, group: 'help' },
+  { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'help' },
+  // Settings
+  { id: 'moderators', label: 'Gestion modérateurs', icon: UserCog, group: 'settings' },
   { id: 'credit-costs', label: 'Tarifs crédits', icon: Coins, group: 'settings' },
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'settings' },
-  { id: 'broadcast', label: 'Notifications', icon: Bell, group: 'settings' },
+  { id: 'broadcast', label: 'Notifications push', icon: Bell, group: 'settings' },
   { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'settings' },
   { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'settings' },
   { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'settings' },
-  { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'settings' },
-  { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'settings' },
+  { id: 'flyers', label: 'Flyers promo', icon: FileImage, group: 'settings' },
   { id: 'error-logs', label: "Logs d'erreurs", icon: Activity, group: 'settings' },
-  { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'settings' },
+  { id: 'security', label: 'Événements sécurité', icon: ShieldAlert, group: 'settings' },
 ];
 
-const groupLabels: Record<string, string> = {
-  finances: 'Finances',
-  users: 'Utilisateurs',
-  moderation: 'Modération',
-  settings: 'Paramètres',
+const groupConfig: Record<string, { label: string; color: string }> = {
+  finances: { label: 'Finances', color: 'text-emerald-500' },
+  users: { label: 'Utilisateurs', color: 'text-blue-500' },
+  moderation: { label: 'Modération', color: 'text-amber-500' },
+  help: { label: 'Aide & Support', color: 'text-violet-500' },
+  settings: { label: 'Configuration', color: 'text-muted-foreground' },
 };
 
 const AdminSidebar = ({ 
@@ -101,103 +111,142 @@ const AdminSidebar = ({
     return acc;
   }, {} as Record<string, (NavItem & { badge?: number })[]>);
 
-  return (
-    <div 
-      className={cn(
-        "h-screen border-r flex flex-col transition-all duration-300 bg-card border-border",
-        collapsed ? "w-[60px]" : "w-[240px]"
-      )}
-    >
-      {/* Header */}
-      <div className={cn("flex items-center border-b border-border h-14 px-3", collapsed ? "justify-center" : "justify-between")}>
-        {!collapsed && (
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-              <Shield className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-sm">Administration</span>
-          </div>
+  const NavButton = ({ item, isActive }: { item: NavItem & { badge?: number }; isActive: boolean }) => {
+    const Icon = item.icon;
+    const content = (
+      <button
+        onClick={() => onSectionChange(item.id)}
+        className={cn(
+          "relative w-full flex items-center gap-2.5 rounded-lg text-[13px] font-medium transition-all duration-150 group",
+          collapsed ? "justify-center p-2.5" : "px-3 py-[7px]",
+          isActive 
+            ? "bg-primary text-primary-foreground shadow-sm" 
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
         )}
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
-        >
-          {collapsed ? <Menu className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </Button>
-      </div>
+      >
+        <Icon className={cn("w-4 h-4 flex-shrink-0", isActive ? "text-primary-foreground" : "group-hover:text-foreground")} />
+        {!collapsed && (
+          <>
+            <span className="flex-1 text-left truncate">{item.label}</span>
+            {item.badge !== undefined && item.badge > 0 && (
+              <span className={cn(
+                "flex items-center justify-center min-w-[20px] h-5 rounded-full text-[10px] font-bold px-1.5",
+                isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-destructive text-destructive-foreground"
+              )}>
+                {item.badge}
+              </span>
+            )}
+          </>
+        )}
+        {collapsed && item.badge !== undefined && item.badge > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full ring-2 ring-card" />
+        )}
+      </button>
+    );
 
-      {/* Navigation */}
-      <ScrollArea className="flex-1 py-2">
-        <nav className={cn("space-y-4", collapsed ? "px-1.5" : "px-2")}>
-          {Object.entries(groupedItems).map(([group, items], groupIndex) => (
-            <div key={group}>
-              {groupIndex > 0 && <Separator className="mb-3" />}
-              {!collapsed && (
-                <p className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em]">
-                  {groupLabels[group]}
-                </p>
-              )}
-              <div className="space-y-0.5">
-                {items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeSection === item.id;
-                  
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => onSectionChange(item.id)}
-                      className={cn(
-                        "relative w-full flex items-center gap-2.5 rounded-lg text-[13px] font-medium transition-all duration-150",
-                        collapsed ? "justify-center p-2" : "px-2.5 py-2",
-                        isActive 
-                          ? "bg-primary/10 text-primary" 
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                      )}
-                      title={collapsed ? item.label : undefined}
-                    >
-                      <Icon className={cn("w-4 h-4 flex-shrink-0", isActive && "text-primary")} />
-                      {!collapsed && (
-                        <>
-                          <span className="flex-1 text-left truncate">{item.label}</span>
-                          {item.badge !== undefined && item.badge > 0 && (
-                            <span className="flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
-                              {item.badge}
-                            </span>
-                          )}
-                        </>
-                      )}
-                      {collapsed && item.badge !== undefined && item.badge > 0 && (
-                        <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-destructive rounded-full" />
-                      )}
-                      {isActive && !collapsed && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
-                      )}
-                    </button>
-                  );
-                })}
+    if (collapsed) {
+      return (
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>{content}</TooltipTrigger>
+          <TooltipContent side="right" className="text-xs font-medium">
+            {item.label}
+            {item.badge ? ` (${item.badge})` : ''}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+    return content;
+  };
+
+  return (
+    <TooltipProvider>
+      <div 
+        className={cn(
+          "h-screen border-r flex flex-col transition-all duration-200 bg-card/50 border-border/50",
+          collapsed ? "w-[56px]" : "w-[250px]"
+        )}
+      >
+        {/* Header */}
+        <div className={cn(
+          "flex items-center h-14 px-3 border-b border-border/50",
+          collapsed ? "justify-center" : "justify-between"
+        )}>
+          {!collapsed && (
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+                <Shield className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-sm leading-none">Admin</span>
+                <span className="text-[10px] text-muted-foreground leading-none mt-0.5">Tableau de bord</span>
               </div>
             </div>
-          ))}
-        </nav>
-      </ScrollArea>
-
-      {/* Footer */}
-      {!collapsed && (
-        <div className="p-3 border-t border-border">
+          )}
           <Button 
             variant="ghost" 
-            size="sm"
-            className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground text-xs"
-            onClick={() => window.history.back()}
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground flex-shrink-0"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            Retour à l'app
+            {collapsed ? <Menu className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
         </div>
-      )}
-    </div>
+
+        {/* Navigation */}
+        <ScrollArea className="flex-1">
+          <nav className={cn("py-3", collapsed ? "px-1" : "px-2")}>
+            {Object.entries(groupedItems).map(([group, items], groupIndex) => (
+              <div key={group} className={groupIndex > 0 ? "mt-5" : ""}>
+                {!collapsed ? (
+                  <div className="flex items-center gap-1.5 px-3 mb-1.5">
+                    <span className={cn("text-[10px] font-bold uppercase tracking-[0.08em]", groupConfig[group]?.color || 'text-muted-foreground')}>
+                      {groupConfig[group]?.label || group}
+                    </span>
+                    <div className="flex-1 h-px bg-border/50" />
+                  </div>
+                ) : (
+                  groupIndex > 0 && <div className="h-px bg-border/50 mx-1.5 my-2" />
+                )}
+                <div className="space-y-0.5">
+                  {items.map((item) => (
+                    <NavButton key={item.id} item={item} isActive={activeSection === item.id} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </nav>
+        </ScrollArea>
+
+        {/* Footer */}
+        <div className={cn("border-t border-border/50", collapsed ? "p-1.5" : "p-2")}>
+          {collapsed ? (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="w-full h-9 rounded-lg text-muted-foreground hover:text-foreground"
+                  onClick={() => window.history.back()}
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs">Retour à l'app</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground text-xs h-9"
+              onClick={() => window.history.back()}
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Retour à l'app
+            </Button>
+          )}
+        </div>
+      </div>
+    </TooltipProvider>
   );
 };
 

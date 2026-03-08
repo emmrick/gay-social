@@ -1082,116 +1082,23 @@ const Help = ({ embedded = false }: HelpProps) => {
               </div>
             )}
 
-            {/* FAQ articles */}
-            {faqArticles.length === 0 && !faqLoading ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-12"
+            {/* Link to full help center */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.15 }}
+              className="text-center py-6"
+            >
+              <p className="text-sm text-muted-foreground mb-3">Consultez toutes nos ressources d'aide</p>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/aide')}
+                className="gap-2 rounded-full border-primary/30 text-primary hover:bg-primary/5"
               >
-                <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-4">
-                  <HelpCircle className="w-8 h-8 text-muted-foreground/40" />
-                </div>
-                <h3 className="font-semibold text-foreground mb-1">
-                  {searchQuery ? 'Aucun résultat trouvé' : 'FAQ bientôt disponible'}
-                </h3>
-                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  {searchQuery ? 'Essayez avec d\'autres mots-clés ou demandez à l\'assistant.' : 'Les articles d\'aide seront bientôt disponibles.'}
-                </p>
-                {searchQuery && (
-                  <Button variant="outline" size="sm" onClick={handleStartChat} className="mt-4 gap-2 rounded-full">
-                    <Bot className="w-4 h-4" />
-                    Demander à l'assistant
-                  </Button>
-                )}
-              </motion.div>
-            ) : (
-              Object.entries(groupedFAQ).map(([category, articles], catIndex) => (
-                <motion.div
-                  key={category}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: catIndex * 0.05 }}
-                >
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                      {getCategoryIcon(category)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h2 className="font-semibold text-sm capitalize truncate">{category}</h2>
-                      <p className="text-[11px] text-muted-foreground">{articles.length} article{articles.length > 1 ? 's' : ''}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 ml-0.5">
-                    {articles.map((article, artIndex) => (
-                      <motion.div
-                        key={article.id}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.2, delay: catIndex * 0.05 + artIndex * 0.03 }}
-                      >
-                        <button
-                          className={cn(
-                            "w-full text-left rounded-xl border border-border/50 bg-card overflow-hidden transition-all",
-                            "hover:border-primary/20 hover:shadow-sm active:scale-[0.995]",
-                            expandedFAQ === article.id && "border-primary/30 shadow-sm bg-primary/[0.02]"
-                          )}
-                          onClick={() => setExpandedFAQ(expandedFAQ === article.id ? null : article.id)}
-                        >
-                          <div className="px-4 py-3.5 flex items-center gap-3">
-                            <p className="font-medium text-sm flex-1 leading-snug">{article.question}</p>
-                            <motion.div
-                              animate={{ rotate: expandedFAQ === article.id ? 180 : 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="shrink-0"
-                            >
-                              <ChevronDown className="w-4 h-4 text-muted-foreground/60" />
-                            </motion.div>
-                          </div>
-                        </button>
-                        <AnimatePresence>
-                          {expandedFAQ === article.id && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.25, ease: 'easeInOut' }}
-                              className="overflow-hidden"
-                            >
-                              <div className="px-4 py-3 ml-0 border-l-2 border-primary/30 ml-4 mt-1 mb-2">
-                                <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">{article.answer}</p>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              ))
-            )}
-
-            {/* Bottom help nudge */}
-            {faqArticles.length > 0 && !searchQuery && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="text-center pt-4 pb-2"
-              >
-                <p className="text-xs text-muted-foreground mb-2">Vous n'avez pas trouvé votre réponse ?</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleStartChat}
-                  className="gap-2 rounded-full border-primary/30 text-primary hover:bg-primary/5"
-                >
-                  <Bot className="w-4 h-4" />
-                  Parler à l'assistant
-                </Button>
-              </motion.div>
-            )}
+                <BookOpen className="w-4 h-4" />
+                Ouvrir le centre d'aide
+              </Button>
+            </motion.div>
           </div>
       </ScrollArea>
 

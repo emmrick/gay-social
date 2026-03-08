@@ -2650,6 +2650,59 @@ export type Database = {
         }
         Relationships: []
       }
+      user_infractions: {
+        Row: {
+          context: string
+          created_at: string
+          detected_word: string
+          id: string
+          is_sanctioned: boolean
+          message_content: string
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          support_ticket_id: string | null
+          user_id: string
+          warning_number: number
+        }
+        Insert: {
+          context?: string
+          created_at?: string
+          detected_word: string
+          id?: string
+          is_sanctioned?: boolean
+          message_content: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          support_ticket_id?: string | null
+          user_id: string
+          warning_number?: number
+        }
+        Update: {
+          context?: string
+          created_at?: string
+          detected_word?: string
+          id?: string
+          is_sanctioned?: boolean
+          message_content?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          support_ticket_id?: string | null
+          user_id?: string
+          warning_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_infractions_support_ticket_id_fkey"
+            columns: ["support_ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_personal_blocks: {
         Row: {
           blocked_id: string

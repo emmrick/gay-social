@@ -157,7 +157,7 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
       {/* Top bar with branding */}
       <div className="bg-background/95 backdrop-blur-lg border-b border-border/50 py-3 px-5 relative z-20">
         <div className="container mx-auto flex items-center gap-2.5">
-          <img src={logoImg} alt="Gay Connect" className="h-9 w-9" />
+          
           <h1 className="font-display text-2xl font-extrabold rainbow-text leading-tight">
             Gay Connect
           </h1>

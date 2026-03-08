@@ -77,7 +77,7 @@ const PromoPopup = () => {
 
   return (
     <Dialog open={!!currentPopup} onOpenChange={(open) => { if (!open) dismiss(currentPopup.id); }}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none [&>button]:hidden">
+      <DialogContent className="sm:max-w-sm w-[calc(100%-2.5rem)] mx-auto p-0 overflow-hidden border-0 bg-transparent shadow-none [&>button]:hidden rounded-3xl">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

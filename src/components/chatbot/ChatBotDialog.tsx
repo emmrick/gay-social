@@ -223,7 +223,7 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
                 ))}
               </AnimatePresence>
 
-              {/* Typing indicator */}
+              {/* Typing / Streaming indicator */}
               {(sendMessage.isPending || isTyping) && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
@@ -233,13 +233,17 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
                   <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/20">
                     <Bot className="w-4 h-4 text-primary" />
                   </div>
-                  <div className="bg-secondary/60 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 border border-border/30">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      <span className="text-[10px] text-muted-foreground ml-1.5">en train d'écrire...</span>
-                    </div>
+                  <div className="bg-secondary/60 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 border border-border/30 max-w-[80%]">
+                    {streamingText ? (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{streamingText}<span className="inline-block w-1.5 h-4 bg-primary/60 rounded-sm animate-pulse ml-0.5 align-middle" /></p>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span className="text-[10px] text-muted-foreground ml-1.5">en train d'écrire...</span>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}

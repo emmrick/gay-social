@@ -225,6 +225,8 @@ const SnapCaptureDialog = ({
   // Handle hold start (video recording)
   const handlePointerDown = useCallback(() => {
     isHoldingRef.current = false;
+    isLockedRef.current = false;
+    setIsLocked(false);
     segmentsRef.current = [];
     setCapturedSegments([]);
 
@@ -232,6 +234,7 @@ const SnapCaptureDialog = ({
       isHoldingRef.current = true;
       setIsRecording(true);
       setRecordingTime(0);
+      setLockHintVisible(true);
       totalRecordingTimeRef.current = 0;
       recordingStartTimeRef.current = Date.now();
 
@@ -239,15 +242,39 @@ const SnapCaptureDialog = ({
         const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
         setRecordingTime(elapsed);
 
-        // Auto-stop at max duration
         if (elapsed >= MAX_TOTAL_DURATION) {
           forceStopRecording();
+          setIsLocked(false);
+          isLockedRef.current = false;
+          setLockHintVisible(false);
         }
       }, 1000);
 
       startSegmentRecording();
     }, 300);
   }, [startSegmentRecording, forceStopRecording]);
+
+  // Handle pointer move - check if finger is over lock zone
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isHoldingRef.current || isLockedRef.current) return;
+    if (!lockZoneRef.current) return;
+
+    const rect = lockZoneRef.current.getBoundingClientRect();
+    const isOverLock = (
+      e.clientX >= rect.left - 20 &&
+      e.clientX <= rect.right + 20 &&
+      e.clientY >= rect.top - 20 &&
+      e.clientY <= rect.bottom + 20
+    );
+
+    if (isOverLock) {
+      // Lock recording
+      isLockedRef.current = true;
+      isHoldingRef.current = true; // keep recording going
+      setIsLocked(true);
+      setLockHintVisible(false);
+    }
+  }, []);
 
   // Handle hold end
   const handlePointerUp = useCallback(() => {
@@ -257,12 +284,22 @@ const SnapCaptureDialog = ({
     }
 
     if (!isHoldingRef.current) {
-      takePhoto();
+      // Was a tap, not a hold
+      if (!isLockedRef.current) {
+        takePhoto();
+      }
       return;
     }
 
-    // Stop recording
+    // If locked, don't stop recording on release
+    if (isLockedRef.current) {
+      setLockHintVisible(false);
+      return;
+    }
+
+    // Not locked - stop recording
     isHoldingRef.current = false;
+    setLockHintVisible(false);
     if (autoSplitTimerRef.current) {
       clearTimeout(autoSplitTimerRef.current);
     }
@@ -270,6 +307,20 @@ const SnapCaptureDialog = ({
       mediaRecorderRef.current.stop();
     }
   }, [takePhoto]);
+
+  // Stop locked recording (tap on record button while locked)
+  const handleStopLockedRecording = useCallback(() => {
+    isHoldingRef.current = false;
+    isLockedRef.current = false;
+    setIsLocked(false);
+    setLockHintVisible(false);
+    if (autoSplitTimerRef.current) {
+      clearTimeout(autoSplitTimerRef.current);
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+  }, []);
 
   // Retake
   const handleRetake = () => {

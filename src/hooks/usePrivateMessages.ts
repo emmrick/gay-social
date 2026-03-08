@@ -25,17 +25,48 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     queryFn: async (): Promise<PrivateMessageWithProfile[]> => {
       if (!user || !otherUserId) return [];
 
+      // Check auto-delete setting for this conversation
+      const { data: convStatus } = await supabase
+        .from('private_conversation_status')
+        .select('messages_hidden_before, auto_delete_mode')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // Get the conversation ID for filtering
+      const { data: conv } = await supabase
+        .from('private_conversations')
+        .select('id')
+        .or(`and(user1_id.eq.${user.id},user2_id.eq.${otherUserId}),and(user1_id.eq.${otherUserId},user2_id.eq.${user.id})`)
+        .maybeSingle();
+
+      // Check if this specific conversation has auto-delete
+      let messagesHiddenBefore: string | null = null;
+      if (conv) {
+        const { data: specificStatus } = await supabase
+          .from('private_conversation_status')
+          .select('messages_hidden_before, auto_delete_mode')
+          .eq('user_id', user.id)
+          .eq('conversation_id', conv.id)
+          .maybeSingle();
+        messagesHiddenBefore = specificStatus?.messages_hidden_before || null;
+      }
+
       // Get messages between the two users
-      const { data: messages, error } = await supabase
+      let query = supabase
         .from('messages')
         .select('*')
         .eq('is_private', true)
-        .is('deleted_at', null) // Exclude soft-deleted messages
+        .is('deleted_at', null)
         .or(
           `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
-        )
-        // IMPORTANT: We want the latest messages. If we order ASC + limit,
-        // we end up fetching the 100 oldest ones.
+        );
+
+      // Apply auto-delete filter
+      if (messagesHiddenBefore) {
+        query = query.gt('created_at', messagesHiddenBefore);
+      }
+
+      const { data: messages, error } = await query
         .order('created_at', { ascending: false })
         .limit(100);
 

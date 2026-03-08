@@ -161,7 +161,7 @@ const LandingSupportChat = () => {
         { label: '📋 Changer de sujet', value: 'change_category' },
         { label: '👤 Contacter un agent', value: 'contact_agent' },
       ];
-      addBotMessage("Ça répond à ta question ? 😊", options, 600);
+      addBotMessage("Ça répond à ta question ? 😊", options);
     }, 800);
   }, [allFaqArticles, addBotMessage]);
 

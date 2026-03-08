@@ -403,16 +403,14 @@ const EphemeralMediaViewer = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Circular timer for ephemeral, infinity badge for unlimited */}
-                    {isUnlimited ? (
+                    {/* Infinity badge for unlimited */}
+                    {isUnlimited && (
                       <div className="bg-green-500/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-green-500/30">
                         <span className="text-green-400 font-medium text-xs flex items-center gap-1">
                           <InfinityIcon className="w-3.5 h-3.5" />
                           Illimité
                         </span>
                       </div>
-                    ) : (
-                      <CircularTimer timeLeft={timeLeft} duration={duration} />
                     )}
                     <button 
                       onClick={handleCloseClick} 

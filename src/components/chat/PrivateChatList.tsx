@@ -294,6 +294,15 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {autoDeleteSheet && (
+        <ConversationAutoDeleteSheet
+          isOpen={true}
+          onClose={() => setAutoDeleteSheet(null)}
+          conversationId={autoDeleteSheet.conversationId}
+          username={autoDeleteSheet.username}
+        />
+      )}
     </>
   );
 };

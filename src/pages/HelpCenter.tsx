@@ -328,6 +328,7 @@ const HelpCenter = () => {
                   Contacter le support
                 </Button>
               </div>
+            </>
           )}
         </div>
       </div>

@@ -330,8 +330,6 @@ const AlbumGalleryViewer = ({
         className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm"
         data-protected="true"
       >
-        {/* Banking-style protection overlay */}
-        <ScreenshotProtectionOverlay isActive={isBlocked} />
         
         {/* Header */}
         <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">

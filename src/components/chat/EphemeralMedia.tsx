@@ -24,12 +24,6 @@ const EphemeralMedia = ({
 }: EphemeralMediaProps) => {
   const [isViewing, setIsViewing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(duration);
-  const { 
-    isBlocked, 
-    preventContextMenu, 
-    preventDrag, 
-    handleViolation 
-  } = useScreenshotProtection();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 

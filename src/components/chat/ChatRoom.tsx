@@ -23,7 +23,7 @@ import MuteButton from './MuteButton';
 import { ArrowLeft, Users, Search, Image, Loader2, X, ChevronDown, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
+
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface EphemeralMediaData {

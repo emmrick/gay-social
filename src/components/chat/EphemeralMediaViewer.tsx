@@ -360,8 +360,6 @@ const EphemeralMediaViewer = ({
           )}
         </AnimatePresence>
 
-        {/* Protection overlay */}
-        <ScreenshotProtectionOverlay isActive={isBlocked} />
 
         {/* Full-screen immersive viewing */}
         <AnimatePresence>

@@ -411,10 +411,7 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
         {fullscreenIndex !== null && media.length > 0 && (
           <div 
             className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
-            onContextMenu={preventContextMenu}
           >
-            {/* Banking-style protection overlay */}
-            <ScreenshotProtectionOverlay isActive={isBlocked} />
             
             {/* Header with close button and counter */}
             <div className="absolute top-0 left-0 right-0 z-[102] flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">

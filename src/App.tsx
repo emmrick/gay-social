@@ -103,8 +103,6 @@ const AuthenticatedApp = () => {
               <BackgroundRefreshIndicator />
               <Toaster />
               <Sonner />
-              {/* Global screenshot protection overlay */}
-              <ScreenshotProtectionOverlay isActive={isBlocked} />
               <BrowserRouter>
                 <Suspense fallback={<AppLoadingSkeleton />}>
                   <Routes>

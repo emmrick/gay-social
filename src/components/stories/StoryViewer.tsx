@@ -186,10 +186,7 @@ const StoryViewer = ({ group, onClose, onNextGroup, onAddStory }: StoryViewerPro
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
         className="fixed inset-0 z-[100] bg-black select-none"
-        onContextMenu={preventContextMenu}
-        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
       >
-        <ScreenshotProtectionOverlay isActive={isBlocked} />
 
         {/* Segmented progress bars */}
         <div className="absolute top-2 left-3 right-3 z-20 flex gap-1">

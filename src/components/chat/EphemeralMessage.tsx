@@ -16,11 +16,10 @@ interface EphemeralMessageProps {
   isOwn: boolean;
   chatRoomId?: string;
   recipientId?: string;
-  /** All ephemeral message IDs in this conversation for sequential viewing */
   allEphemeralMessageIds?: string[];
 }
 
-const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomId, recipientId, allEphemeralMessageIds }: EphemeralMessageProps) => {
+const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomId, recipientId }: EphemeralMessageProps) => {
   const [showMedia, setShowMedia] = useState(false);
   const { media, isLoading, markAsViewed } = useEphemeralMedia(messageId);
   const { user } = useAuth();
@@ -29,10 +28,10 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
   const isUnlimited = media?.view_duration === 0;
 
   const handleView = useCallback(() => {
-    if (media && (!media.is_viewed || canReplay)) {
+    if (media && !media.is_viewed) {
       setShowMedia(true);
     }
-  }, [media, canReplay]);
+  }, [media]);
 
   const handleClose = useCallback(() => {
     setShowMedia(false);
@@ -43,19 +42,6 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
       await markAsViewed.mutateAsync(media.id);
     }
   }, [media, markAsViewed, isUnlimited]);
-
-  const handleReplay = useCallback(async () => {
-    if (!media) return;
-    try {
-      await supabase
-        .from('ephemeral_media')
-        .update({ replay_count: (media.replay_count ?? 0) + 1 })
-        .eq('id', media.id);
-      queryClient.invalidateQueries({ queryKey: ['ephemeral-media', messageId] });
-    } catch (e) {
-      console.error('Replay error:', e);
-    }
-  }, [media, messageId, queryClient]);
 
   const handleSaveToConversation = useCallback(async () => {
     if (!media || !user) return;
@@ -77,13 +63,11 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
   const handleScreenshotDetected = useCallback(async () => {
     if (!media || !user || isOwn) return;
     try {
-      // Mark screenshot + preserve media for admin review (set expires_at far in future)
       await supabase
         .from('ephemeral_media')
         .update({ 
           screenshot_detected: true, 
           screenshot_detected_at: new Date().toISOString(),
-          // Preserve media for admin investigation - extend expiry by 30 days
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         })
         .eq('id', media.id);
@@ -94,7 +78,6 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
           .from('profiles').select('username').eq('user_id', user.id).single();
         const username = profile?.username || 'Un membre';
         await notifyEphemeralScreenshot(msg.sender_id, username);
-        // Send chat notification + auto-report
         await notifyScreenshotInChat({
           screenshotterUserId: user.id,
           screenshotterUsername: username,
@@ -102,17 +85,14 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
           context: 'ephemeral_media',
         });
       }
-      // Invalidate to refresh UI with screenshot_detected state
       queryClient.invalidateQueries({ queryKey: ['ephemeral-media', messageId] });
     } catch (e) {
       console.error('Screenshot notification error:', e);
     }
   }, [media, user, isOwn, messageId, queryClient]);
 
-  // Build sequential items for the viewer
   const sequentialItems: EphemeralMediaItem[] = useMemo(() => {
     if (!media) return [];
-    // Current item is always included
     const currentItem: EphemeralMediaItem = {
       messageId,
       mediaId: media.id,
@@ -123,12 +103,12 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
       isOwn,
       onViewed: handleViewed,
       onSaveToConversation: isUnlimited && !isOwn ? handleSaveToConversation : undefined,
-      canReplay,
-      onReplay: canReplay ? handleReplay : undefined,
+      canReplay: false,
+      onReplay: undefined,
       onScreenshotDetected: !isOwn && !isUnlimited ? handleScreenshotDetected : undefined,
     };
     return [currentItem];
-  }, [media, messageId, messageType, senderName, isOwn, handleViewed, isUnlimited, handleSaveToConversation, canReplay, handleReplay, handleScreenshotDetected]);
+  }, [media, messageId, messageType, senderName, isOwn, handleViewed, isUnlimited, handleSaveToConversation, handleScreenshotDetected]);
 
   if (isLoading) {
     return (
@@ -148,8 +128,8 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
   }
 
   // After viewing: hide from conversation (media disappears)
-  // Exception: if screenshot was detected, show warning to the screenshotter
-  if (media.is_viewed && !isOwn && !isUnlimited && !canReplay) {
+  // Exception: if screenshot was detected, show warning
+  if (media.is_viewed && !isOwn && !isUnlimited) {
     if (media.screenshot_detected) {
       return (
         <div className="flex flex-col gap-1.5 px-3 py-2.5 rounded-xl bg-destructive/10 border border-destructive/30 max-w-[280px]">
@@ -163,7 +143,6 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
         </div>
       );
     }
-    // Media viewed normally → disappear from conversation
     return null;
   }
 
@@ -182,31 +161,21 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
     );
   }
 
-  const iconBg = canReplay
-    ? 'bg-amber-500'
-    : isUnlimited
-    ? 'bg-green-500'
-    : 'bg-primary';
+  const iconBg = isUnlimited ? 'bg-green-500' : 'bg-primary';
 
   const statusText = isUnlimited
     ? (isOwn ? (media.is_viewed ? 'Vu • Enregistrable' : 'Non vu') : 'Expire après consultation')
-    : canReplay
-    ? 'Appuie pour revoir'
     : isOwn
     ? (media.is_viewed ? 'Vu' : 'Non vu')
     : 'Expire après consultation';
 
-  const label = canReplay
-    ? '🔄 Replay'
-    : messageType === 'image'
-    ? 'Photo éphémère'
-    : 'Vidéo éphémère';
+  const label = messageType === 'image' ? 'Photo éphémère' : 'Vidéo éphémère';
 
   return (
     <>
       <button
         onClick={handleView}
-        disabled={isOwn || (media.is_viewed && !isUnlimited && !canReplay)}
+        disabled={isOwn || (media.is_viewed && !isUnlimited)}
         className={cn(
           'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all max-w-[280px]',
           isOwn

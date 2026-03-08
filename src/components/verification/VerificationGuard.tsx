@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationDeadline } from '@/hooks/useVerificationDeadline';
 import VerificationRequiredScreen from './VerificationRequiredScreen';
+import PendingApprovalScreen from './PendingApprovalScreen';
 
 interface VerificationGuardProps {
   children: ReactNode;

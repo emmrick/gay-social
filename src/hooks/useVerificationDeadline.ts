@@ -63,7 +63,7 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
         isVerificationComplete: false,
         isVerificationPending: true,
         isVerificationRejected: false,
-        canAccessApp: true,
+        canAccessApp: false,
         deadlineDate: null,
         isLoading: false,
       };

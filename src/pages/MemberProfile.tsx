@@ -276,7 +276,7 @@ const MemberProfile = () => {
         <p className="text-muted-foreground mb-4 text-center max-w-xs">
           Ce compte a été suspendu ou désactivé et n'est plus accessible.
         </p>
-        <Button onClick={() => navigate(-1)}>
+        <Button onClick={handleBack}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour
         </Button>

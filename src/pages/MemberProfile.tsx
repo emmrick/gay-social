@@ -186,13 +186,17 @@ const MemberProfile = () => {
 
   const extendedProfile = profile as any;
   
-  // Handle back navigation with swipe gesture support
+  // Safe back navigation - always go to home instead of risking app exit
   const handleBack = useCallback(() => {
-    navigate(-1);
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
   }, [navigate]);
 
   // Enable swipe-to-go-back gesture on mobile
-  useMobileNavigation({ onBack: handleBack, enabled: true });
+  useMobileNavigation({ onBack: handleBack, enabled: true, enableSwipeBack: true });
 
   // Build photos array
   const allPhotos = photos.length > 0 

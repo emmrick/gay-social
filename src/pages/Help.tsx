@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useFAQArticles, useHelpChatbotNodes, type HelpChatbotNode } from '@/hooks/useFAQ';
+import { useFAQArticles } from '@/hooks/useFAQ';
 import { useSupportTickets, useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { useSupportTypingIndicator } from '@/hooks/useSupportTypingIndicator';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
@@ -29,6 +29,11 @@ interface ChatMessage {
   text: string;
 }
 
+interface AIChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 const RATING_EMOJIS = [
   { emoji: '😡', label: 'Très insatisfait' },
   { emoji: '😕', label: 'Insatisfait' },
@@ -36,6 +41,21 @@ const RATING_EMOJIS = [
   { emoji: '😊', label: 'Satisfait' },
   { emoji: '🤩', label: 'Très satisfait' },
 ];
+
+// Simple bold text renderer: converts **text** to <strong>text</strong>
+const BoldText = ({ text }: { text: string }) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <span>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>;
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </span>
+  );
+};
 
 interface HelpProps {
   embedded?: boolean;
@@ -48,21 +68,19 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const [chatPhase, setChatPhase] = useState<ChatPhase>('idle');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
-  const [nodeHistory, setNodeHistory] = useState<(string | null)[]>([]);
+  const [aiHistory, setAiHistory] = useState<AIChatMessage[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [freeText, setFreeText] = useState('');
   const [ratingEmoji, setRatingEmoji] = useState<string | null>(null);
   const [ratingComment, setRatingComment] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [hasCheckedActiveTicket, setHasCheckedActiveTicket] = useState(false);
+  const [showEscalationButton, setShowEscalationButton] = useState(false);
   
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const freeTextRef = useRef<HTMLTextAreaElement>(null);
   const agentJoinedRef = useRef(false);
   const [isBotTyping, setIsBotTyping] = useState(false);
-  const botTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isProcessingOptionRef = useRef(false);
 
   // Auto-resize freeText textarea
   useEffect(() => {
@@ -73,20 +91,12 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
   }, [freeText]);
 
-  // Cleanup typing timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (botTypingTimeoutRef.current) clearTimeout(botTypingTimeoutRef.current);
-    };
-  }, []);
-
   // Auto-resume active ticket on mount
   const { tickets, isLoading: ticketsLoading, createTicket, closeTicket } = useSupportTickets();
   useEffect(() => {
     if (hasCheckedActiveTicket || !user?.id || ticketsLoading) return;
     setHasCheckedActiveTicket(true);
     
-    // Find the most recent active (open or assigned) ticket
     const activeTicket = tickets.find(t => t.status === 'open' || t.status === 'assigned');
     if (activeTicket) {
       setSelectedTicket(activeTicket);
@@ -95,27 +105,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
   }, [tickets, user?.id, hasCheckedActiveTicket, ticketsLoading]);
 
-  // Helper: add bot messages with a random 10-30s delay
-  const addBotMessagesWithDelay = (
-    currentMessages: ChatMessage[],
-    botMessages: ChatMessage[],
-    onDone?: () => void
-  ) => {
-    setChatMessages(currentMessages);
-    setIsBotTyping(true);
-    const delay = Math.floor(Math.random() * 3 + 3) * 1000; // 3-5s
-    botTypingTimeoutRef.current = setTimeout(() => {
-      setChatMessages(prev => [...prev, ...botMessages]);
-      setIsBotTyping(false);
-      playNotificationSoundStandalone();
-      onDone?.();
-    }, delay);
-  };
-
   const { data: faqArticles = [], isLoading: faqLoading } = useFAQArticles(searchQuery);
-  const { data: rootNodes = [] } = useHelpChatbotNodes(undefined);
-  const { data: childNodes = [] } = useHelpChatbotNodes(currentNodeId);
-  // createTicket and closeTicket already destructured above
 
   // Fetch user profile for personalized greeting
   const { data: userProfile } = useQuery({
@@ -177,90 +167,99 @@ const Help = ({ embedded = false }: HelpProps) => {
       setSelectedTicket(liveTicket);
     }
 
-    // Agent closed the ticket -> show rating
     if (liveTicket.status === 'closed' && (chatPhase === 'agent' || chatPhase === 'waiting_agent')) {
       setChatPhase('rating');
       setSelectedTicket(liveTicket);
     }
   }, [liveTicket?.status, liveTicket?.assigned_to, chatPhase]);
 
-  const currentOptions = currentNodeId ? childNodes : rootNodes;
-
   useEffect(() => {
     scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages.length, currentOptions.length, ticketMessages.length, chatPhase, agentTypingUsers.length]);
+  }, [chatMessages.length, ticketMessages.length, chatPhase, agentTypingUsers.length, isBotTyping]);
 
   const handleStartChat = () => {
     setChatPhase('chatbot');
-    setCurrentNodeId(null);
-    setNodeHistory([]);
+    setAiHistory([]);
+    setShowEscalationButton(false);
     agentJoinedRef.current = false;
-    isProcessingOptionRef.current = false;
     const displayName = userProfile?.username || 'cher utilisateur';
-    addBotMessagesWithDelay(
-      [],
-      [
-        { type: 'bot', text: `Bonjour ${displayName} ! 👋 Merci de contacter l'assistance. Nous sommes là pour vous aider.` },
-        { type: 'bot', text: 'Comment pouvons-nous vous aider aujourd\'hui ? Sélectionnez une option ci-dessous.' },
-      ]
-    );
-  };
-
-  const handleSelectOption = (node: HelpChatbotNode) => {
-    if (isProcessingOptionRef.current || isBotTyping) return;
-    isProcessingOptionRef.current = true;
-    const userMessages: ChatMessage[] = [
-      ...chatMessages,
-      { type: 'user', text: node.label },
-    ];
-    setNodeHistory(prev => [...prev, currentNodeId]);
-    if (node.response_text) {
-      addBotMessagesWithDelay(
-        userMessages,
-        [{ type: 'bot', text: node.response_text }],
-        () => { setCurrentNodeId(node.id); isProcessingOptionRef.current = false; }
-      );
-    } else {
-      setChatMessages(userMessages);
-      setCurrentNodeId(node.id);
-      isProcessingOptionRef.current = false;
-    }
-  };
-
-  const handleGoBackInChat = () => {
-    if (nodeHistory.length === 0) return;
-    const previousNodeId = nodeHistory[nodeHistory.length - 1];
-    setNodeHistory(prev => prev.slice(0, -1));
-    setChatMessages(prev => [
-      ...prev,
-      { type: 'system', text: '↩️ Retour au menu précédent' },
+    setChatMessages([
+      { type: 'bot', text: `Bonjour **${displayName}** ! 👋 Je suis l'assistant **Gay Connect**. Pose-moi ta question et je ferai de mon mieux pour t'aider.` },
+      { type: 'bot', text: 'Tu peux me demander des infos sur les **crédits**, la **vérification d\'identité**, les **messages**, la **sécurité**, ou toute autre fonctionnalité du site !' },
     ]);
-    setCurrentNodeId(previousNodeId);
   };
+
+  // Send message to AI chatbot
+  const handleSendToAI = useCallback(async () => {
+    if (!freeText.trim() || isBotTyping) return;
+    const userMsg = freeText.trim();
+    setFreeText('');
+
+    // Add user message to chat
+    setChatMessages(prev => [...prev, { type: 'user', text: userMsg }]);
+
+    // Build AI history
+    const newHistory: AIChatMessage[] = [...aiHistory, { role: 'user', content: userMsg }];
+    setAiHistory(newHistory);
+    setIsBotTyping(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('help-chat', {
+        body: {
+          messages: newHistory,
+          username: userProfile?.username || undefined,
+        },
+      });
+
+      if (error) throw error;
+
+      const reply = data.reply || "Désolé, je n'ai pas pu répondre. **Contacte un agent** pour plus d'aide.";
+      const needsEscalation = data.needsEscalation || false;
+
+      setChatMessages(prev => [...prev, { type: 'bot', text: reply }]);
+      setAiHistory(prev => [...prev, { role: 'assistant', content: reply }]);
+
+      if (needsEscalation) {
+        setShowEscalationButton(true);
+      }
+
+      playNotificationSoundStandalone();
+    } catch (err: any) {
+      console.error('AI chat error:', err);
+      
+      let errorMsg = "Désolé, je rencontre un **problème technique**. Tu peux **contacter un agent** du support.";
+      if (err?.message?.includes('429')) {
+        errorMsg = "Trop de messages envoyés trop rapidement. **Patiente quelques secondes** puis réessaie.";
+      } else if (err?.message?.includes('402')) {
+        errorMsg = "Le service est temporairement **indisponible**. Tu peux **contacter un agent** du support.";
+      }
+
+      setChatMessages(prev => [...prev, { type: 'bot', text: errorMsg }]);
+      setShowEscalationButton(true);
+    } finally {
+      setIsBotTyping(false);
+    }
+  }, [freeText, aiHistory, isBotTyping, userProfile?.username]);
 
   const handleContactAgent = async () => {
     if (!user) { navigate('/auth'); return; }
     try {
-      // Add waiting message
-      const updatedMessages = [
-        ...chatMessages,
+      setChatMessages(prev => [
+        ...prev,
         { type: 'system' as const, text: 'Nous vous mettons en relation avec le prochain agent disponible. Merci de patienter...' },
-      ];
-      setChatMessages(updatedMessages);
+      ]);
       setChatPhase('waiting_agent');
 
-      // Save chatbot history with the ticket
       const history = chatMessages.map(m => ({ type: m.type, text: m.text }));
       const ticket = await createTicket.mutateAsync("Demande d'assistance");
 
-      // Save chatbot history on ticket (for reference)
       await supabase
         .from('support_tickets' as any)
         .update({ chatbot_history: history } as any)
         .eq('id', ticket.id);
 
-      // Insert chatbot messages into support_messages so everything is in one conversation
-      const chatbotMessagesToInsert = updatedMessages.map((msg) => ({
+      // Insert chatbot messages into support_messages
+      const chatbotMessagesToInsert = chatMessages.map((msg) => ({
         ticket_id: ticket.id,
         sender_id: user.id,
         content: msg.text,
@@ -279,16 +278,12 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
   };
 
-
-
-
-  // Go back to FAQ without closing the ticket - conversation stays open
   const handleGoBack = () => {
     setChatPhase('idle');
     setChatMessages([]);
-    setCurrentNodeId(null);
-    setNodeHistory([]);
+    setAiHistory([]);
     setFreeText('');
+    setShowEscalationButton(false);
     if (selectedTicket && (selectedTicket.status === 'open' || selectedTicket.status === 'assigned' || liveTicket?.status === 'open' || liveTicket?.status === 'assigned')) {
       // Keep selectedTicket so we can resume
     } else {
@@ -297,7 +292,6 @@ const Help = ({ embedded = false }: HelpProps) => {
     agentJoinedRef.current = false;
   };
 
-  // Close the ticket officially -> show rating
   const handleCloseTicket = async () => {
     if (!selectedTicket?.id) return;
     try {
@@ -308,27 +302,16 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
   };
 
-  // Full reset after rating or skip
   const handleEndChat = () => {
     setChatPhase('idle');
     setChatMessages([]);
-    setCurrentNodeId(null);
-    setNodeHistory([]);
+    setAiHistory([]);
     setFreeText('');
     setSelectedTicket(null);
+    setShowEscalationButton(false);
     agentJoinedRef.current = false;
     setRatingEmoji(null);
     setRatingComment('');
-  };
-
-  const handleSendFreeText = () => {
-    if (!freeText.trim()) return;
-    const userMsg = freeText.trim();
-    setFreeText('');
-    addBotMessagesWithDelay(
-      [...chatMessages, { type: 'user' as const, text: userMsg }],
-      [{ type: 'bot', text: 'Merci pour ces détails. Pour une assistance personnalisée, nous vous recommandons de contacter un agent.' }]
-    );
   };
 
   // Send message to agent (in agent phase)
@@ -382,7 +365,6 @@ const Help = ({ embedded = false }: HelpProps) => {
     );
   }
 
-
   // ============ RATING PHASE ============
   if (chatPhase === 'rating') {
     return (
@@ -406,7 +388,6 @@ const Help = ({ embedded = false }: HelpProps) => {
             <p className="text-sm text-muted-foreground">Votre avis nous aide à améliorer notre service.</p>
           </div>
 
-          {/* Emoji rating */}
           <div className="flex gap-3">
             {RATING_EMOJIS.map((r) => (
               <button
@@ -425,7 +406,6 @@ const Help = ({ embedded = false }: HelpProps) => {
             ))}
           </div>
 
-          {/* Optional comment */}
           {ratingEmoji && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -463,6 +443,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   if (chatPhase !== 'idle') {
     const isAgentPhase = chatPhase === 'agent';
     const isWaiting = chatPhase === 'waiting_agent';
+    const isChatbotPhase = chatPhase === 'chatbot';
 
     return (
       <div className="fixed inset-0 z-[60] bg-background flex flex-col">
@@ -487,10 +468,16 @@ const Help = ({ embedded = false }: HelpProps) => {
               </>
             ) : (
               <>
-                <div className="w-9 h-9 rounded-full bg-foreground flex items-center justify-center shrink-0">
-                  <Bot className="w-4.5 h-4.5 text-background" />
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Bot className="w-4.5 h-4.5 text-primary" />
                 </div>
-                <span className="font-semibold text-sm truncate">Assistance</span>
+                <div className="min-w-0">
+                  <span className="font-semibold text-sm truncate block">Assistant Gay Connect</span>
+                  <span className="text-[11px] text-green-500 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    IA • En ligne
+                  </span>
+                </div>
               </>
             )}
           </div>
@@ -515,8 +502,8 @@ const Help = ({ embedded = false }: HelpProps) => {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
-            {/* Chatbot messages - only show in chatbot phase (in agent/waiting phases they're in ticketMessages) */}
-            {chatPhase === 'chatbot' && chatMessages.map((msg, i) => (
+            {/* Chatbot messages (AI phase) */}
+            {isChatbotPhase && chatMessages.map((msg, i) => (
               <motion.div
                 key={`chat-${i}`}
                 initial={{ opacity: 0, y: 10 }}
@@ -529,22 +516,22 @@ const Help = ({ embedded = false }: HelpProps) => {
               >
                 {msg.type === 'system' ? (
                   <div className="bg-muted/60 text-muted-foreground text-xs px-4 py-2 rounded-full text-center max-w-[85%]">
-                    {msg.text}
+                    <BoldText text={msg.text} />
                   </div>
                 ) : (
                   <>
                     {msg.type === 'bot' && (
-                      <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
-                        <Bot className="w-3.5 h-3.5 text-background" />
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-0.5">
+                        <Bot className="w-3.5 h-3.5 text-primary" />
                       </div>
                     )}
                     <div className={cn(
                       "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
                       msg.type === 'user'
-                        ? "bg-foreground text-background rounded-br-md"
+                        ? "bg-primary text-primary-foreground rounded-br-md"
                         : "bg-muted text-foreground rounded-bl-md"
                     )}>
-                      <p className="whitespace-pre-line">{msg.text}</p>
+                      <p className="whitespace-pre-line"><BoldText text={msg.text} /></p>
                     </div>
                   </>
                 )}
@@ -558,22 +545,43 @@ const Help = ({ embedded = false }: HelpProps) => {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-end gap-2 justify-start"
               >
-                <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
-                  <Bot className="w-3.5 h-3.5 text-background" />
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-0.5">
+                  <Bot className="w-3.5 h-3.5 text-primary" />
                 </div>
                 <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-1.5 items-center">
                     <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="text-[10px] text-muted-foreground ml-1.5">en train de réfléchir...</span>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* Waiting and agent joined messages are now handled inline in ticketMessages */}
+            {/* Escalation button (shown when AI suggests contacting an agent) */}
+            {isChatbotPhase && showEscalationButton && !isBotTyping && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex items-end gap-2"
+              >
+                <div className="w-8 h-8 shrink-0" />
+                <div className="flex-1 space-y-1.5 max-w-[80%]">
+                  <button
+                    onClick={handleContactAgent}
+                    disabled={createTicket.isPending}
+                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
+                  >
+                    <Headphones className="w-4 h-4 shrink-0" />
+                    {createTicket.isPending ? 'Connexion...' : 'Contacter un agent du support'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
 
-            {/* All messages from support_messages (includes chatbot history + agent messages) */}
+            {/* All messages from support_messages (agent phase) */}
             {(isAgentPhase || isWaiting) && ticketMessages
               .filter(m => m.message_type !== 'credit_request')
               .map((msg) => {
@@ -595,13 +603,13 @@ const Help = ({ embedded = false }: HelpProps) => {
                   >
                     {isSystem ? (
                       <div className="bg-muted/60 text-muted-foreground text-xs px-4 py-2 rounded-full text-center max-w-[85%]">
-                        {msg.content}
+                        <BoldText text={msg.content} />
                       </div>
                     ) : (
                       <>
                         {isChatbotBot && (
-                          <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
-                            <Bot className="w-3.5 h-3.5 text-background" />
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-0.5">
+                            <Bot className="w-3.5 h-3.5 text-primary" />
                           </div>
                         )}
                         {isAgentMessage && (
@@ -612,116 +620,16 @@ const Help = ({ embedded = false }: HelpProps) => {
                         <div className={cn(
                           "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
                           (isChatbotUser || isOwn) && !isChatbotBot
-                            ? "bg-foreground text-background rounded-br-md"
-                            : isChatbotBot
-                            ? "bg-muted text-foreground rounded-bl-md"
+                            ? "bg-primary text-primary-foreground rounded-br-md"
                             : "bg-muted text-foreground rounded-bl-md"
                         )}>
-                          <p className="whitespace-pre-line break-words">{msg.content}</p>
+                          <p className="whitespace-pre-line break-words"><BoldText text={msg.content} /></p>
                         </div>
                       </>
                     )}
                   </motion.div>
                 );
               })}
-
-            {/* Chatbot action buttons (only in chatbot phase) */}
-            {chatPhase === 'chatbot' && currentOptions.length > 0 && !isBotTyping && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="flex items-end gap-2"
-              >
-                <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
-                  <Bot className="w-3.5 h-3.5 text-background" />
-                </div>
-                <div className="flex-1 space-y-1.5 max-w-[80%]">
-                   {currentOptions.map((node) => (
-                     <button
-                       key={node.id}
-                       onClick={() => handleSelectOption(node)}
-                       disabled={isProcessingOptionRef.current || isBotTyping}
-                       className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
-                     >
-                       {node.label}
-                     </button>
-                   ))}
-
-                  {/* Agent button - shown at root level after navigating (not on first display) */}
-                  {chatMessages.length > 2 && !currentNodeId && (
-                    <button
-                      onClick={handleContactAgent}
-                      disabled={createTicket.isPending}
-                      className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
-                    >
-                      <Headphones className="w-4 h-4 shrink-0" />
-                      {createTicket.isPending ? 'Connexion...' : 'Mise en relation avec un agent'}
-                    </button>
-                  )}
-                  {/* Back button */}
-                  {nodeHistory.length > 0 && (
-                    <button
-                      onClick={handleGoBackInChat}
-                      className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98] flex items-center gap-2 text-muted-foreground"
-                    >
-                      <ArrowLeft className="w-4 h-4 shrink-0" />
-                      Revenir en arrière
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-
-            {/* Leaf node: no children = show agent button + other options */}
-            {chatPhase === 'chatbot' && currentOptions.length === 0 && chatMessages.length > 2 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="flex items-end gap-2"
-              >
-                <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
-                  <Bot className="w-3.5 h-3.5 text-background" />
-                </div>
-                <div className="flex-1 space-y-1.5 max-w-[80%]">
-                  <button
-                    onClick={handleContactAgent}
-                    disabled={createTicket.isPending}
-                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
-                  >
-                    <Headphones className="w-4 h-4 shrink-0" />
-                    {createTicket.isPending ? 'Connexion...' : 'Mise en relation avec un agent'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setNodeHistory([]);
-                      setCurrentNodeId(null);
-                      setChatMessages(prev => [
-                        ...prev,
-                        { type: 'bot', text: 'Avez-vous une autre question ? Sélectionnez une option ci-dessous.' },
-                      ]);
-                    }}
-                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
-                  >
-                    Autre demande
-                  </button>
-                  {/* Back button */}
-                  {nodeHistory.length > 0 && (
-                    <button
-                      onClick={handleGoBackInChat}
-                      className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98] flex items-center gap-2 text-muted-foreground"
-                    >
-                      <ArrowLeft className="w-4 h-4 shrink-0" />
-                      Revenir en arrière
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-
-
-
 
             {/* Agent typing indicator */}
             {(isAgentPhase || isWaiting) && agentTypingUsers.length > 0 && (
@@ -748,47 +656,60 @@ const Help = ({ embedded = false }: HelpProps) => {
         </div>
 
         {/* Bottom input */}
-        {(chatPhase === 'chatbot' || chatPhase === 'agent' || chatPhase === 'waiting_agent') && (
-          <div
-            className="border-t border-border bg-background px-4 py-3"
-            style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
-          >
-            {isWaiting && (
-              <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs mb-2">
-                <Loader2 className="w-3 h-3 animate-spin" />
-                <span>Recherche d'un agent disponible...</span>
-              </div>
-            )}
-            <div className="max-w-lg mx-auto flex items-end gap-2">
-              <Textarea
-                ref={freeTextRef}
-                placeholder={(isAgentPhase || isWaiting) ? "Écrivez votre message..." : "Décrivez votre problème..."}
-                value={freeText}
-                onChange={(e) => setFreeText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-                    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-                    if (!isMobile) {
-                      e.preventDefault();
-                      (isAgentPhase || isWaiting) ? handleSendToAgent() : handleSendFreeText();
+        <div
+          className="border-t border-border bg-background px-4 py-3"
+          style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
+        >
+          {isWaiting && (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs mb-2">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>Recherche d'un agent disponible...</span>
+            </div>
+          )}
+          {isChatbotPhase && (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground text-[11px] mb-2">
+              <Sparkles className="w-3 h-3 text-primary/60" />
+              <span>Réponses générées par IA • Pose ta question librement</span>
+            </div>
+          )}
+          <div className="max-w-lg mx-auto flex items-end gap-2">
+            <Textarea
+              ref={freeTextRef}
+              placeholder={isChatbotPhase ? "Pose ta question ici..." : (isAgentPhase || isWaiting) ? "Écrivez votre message..." : "..."}
+              value={freeText}
+              onChange={(e) => setFreeText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                  if (!isMobile) {
+                    e.preventDefault();
+                    if (isChatbotPhase) {
+                      handleSendToAI();
+                    } else {
+                      handleSendToAgent();
                     }
                   }
-                }}
-                className="flex-1 rounded-2xl bg-muted border-0 min-h-[40px] max-h-[120px] py-[10px] px-4 resize-none text-sm leading-5"
-                rows={1}
-              />
-              <Button
-                size="icon"
-                variant={freeText.trim() ? "default" : "ghost"}
-                onClick={(isAgentPhase || isWaiting) ? handleSendToAgent : handleSendFreeText}
-                disabled={!freeText.trim()}
-                className="rounded-full w-11 h-11 shrink-0"
-              >
+                }
+              }}
+              className="flex-1 rounded-2xl bg-muted border-0 min-h-[40px] max-h-[120px] py-[10px] px-4 resize-none text-sm leading-5"
+              rows={1}
+              disabled={isBotTyping}
+            />
+            <Button
+              size="icon"
+              variant={freeText.trim() ? "default" : "ghost"}
+              onClick={isChatbotPhase ? handleSendToAI : handleSendToAgent}
+              disabled={!freeText.trim() || isBotTyping}
+              className="rounded-full w-11 h-11 shrink-0"
+            >
+              {isBotTyping ? (
+                <Loader2 className="w-4.5 h-4.5 animate-spin" />
+              ) : (
                 <Send className="w-4.5 h-4.5" />
-              </Button>
-            </div>
+              )}
+            </Button>
           </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -804,8 +725,6 @@ const Help = ({ embedded = false }: HelpProps) => {
     if (lower.includes('crédit') || lower.includes('abonn')) return <Sparkles className="w-4 h-4" />;
     return <BookOpen className="w-4 h-4" />;
   };
-
-  const categoryCount = Object.keys(groupedFAQ).length;
 
   // ============ DEFAULT: FAQ page ============
   return (
@@ -874,36 +793,34 @@ const Help = ({ embedded = false }: HelpProps) => {
               </motion.div>
             )}
 
-            {/* Quick action cards */}
+            {/* Quick action - single prominent card */}
             {!searchQuery && (
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-2 gap-3"
               >
                 <button
                   onClick={handleStartChat}
-                  className="group relative overflow-hidden rounded-2xl bg-primary/10 p-4 text-left transition-all hover:bg-primary/15 active:scale-[0.98]"
+                  className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 p-5 text-left transition-all hover:from-primary/15 hover:to-accent/15 active:scale-[0.98] w-full"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Bot className="w-5 h-5 text-primary" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Bot className="w-6 h-6 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-base text-foreground">Discuter avec l'assistant IA</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Pose ta question, il te répondra instantanément !</p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                   </div>
-                  <p className="font-semibold text-sm text-foreground">Assistant virtuel</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Réponse instantanée</p>
-                </button>
-                <button
-                  onClick={() => {
-                    handleStartChat();
-                    // Will navigate to agent after chatbot
-                  }}
-                  className="group relative overflow-hidden rounded-2xl bg-accent/50 p-4 text-left transition-all hover:bg-accent/70 active:scale-[0.98]"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <LifeBuoy className="w-5 h-5 text-foreground" />
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {['Crédits', 'Vérification', 'Messages', 'Sécurité', 'Profil'].map((tag) => (
+                      <span key={tag} className="px-2.5 py-1 rounded-full bg-background/80 text-[11px] font-medium text-muted-foreground">
+                        {tag}
+                      </span>
+                    ))}
                   </div>
-                  <p className="font-semibold text-sm text-foreground">Contacter le support</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Agent disponible</p>
                 </button>
               </motion.div>
             )}
@@ -922,7 +839,7 @@ const Help = ({ embedded = false }: HelpProps) => {
                   {searchQuery ? 'Aucun résultat trouvé' : 'FAQ bientôt disponible'}
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  {searchQuery ? 'Essayez avec d\'autres mots-clés ou utilisez l\'assistant.' : 'Les articles d\'aide seront bientôt disponibles.'}
+                  {searchQuery ? 'Essayez avec d\'autres mots-clés ou demandez à l\'assistant.' : 'Les articles d\'aide seront bientôt disponibles.'}
                 </p>
                 {searchQuery && (
                   <Button variant="outline" size="sm" onClick={handleStartChat} className="mt-4 gap-2 rounded-full">
@@ -939,7 +856,6 @@ const Help = ({ embedded = false }: HelpProps) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: catIndex * 0.05 }}
                 >
-                  {/* Category header */}
                   <div className="flex items-center gap-2.5 mb-3">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
                       {getCategoryIcon(category)}
@@ -950,7 +866,6 @@ const Help = ({ embedded = false }: HelpProps) => {
                     </div>
                   </div>
 
-                  {/* Article cards */}
                   <div className="space-y-2 ml-0.5">
                     {articles.map((article, artIndex) => (
                       <motion.div
@@ -1016,7 +931,7 @@ const Help = ({ embedded = false }: HelpProps) => {
                   className="gap-2 rounded-full border-primary/30 text-primary hover:bg-primary/5"
                 >
                   <Bot className="w-4 h-4" />
-                  Parler à l'assistant
+                  Parler à l'assistant IA
                 </Button>
               </motion.div>
             )}

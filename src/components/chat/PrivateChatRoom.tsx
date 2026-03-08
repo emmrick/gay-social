@@ -108,57 +108,68 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   }, [otherUserId]);
 
   const prevMsgCount = useRef(0);
+  const isNearBottomRef = useRef(true);
+  const initialScrollDone = useRef(false);
 
   useEffect(() => {
     prevMsgCount.current = 0;
+    initialScrollDone.current = false;
+    isNearBottomRef.current = true;
   }, [otherUserId]);
 
-  const scrollToBottom = useCallback(() => {
+  const isNearBottom = useCallback(() => {
     const el = messagesContainerRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 150;
   }, []);
 
+  const scrollToBottom = useCallback((instant = false) => {
+    const el = messagesContainerRef.current;
+    if (el) {
+      if (instant) {
+        el.scrollTop = el.scrollHeight;
+      } else {
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+      }
+    }
+  }, []);
+
+  // Initial scroll only — once when messages first load
   useEffect(() => {
-    if (!isLoading && messages.length > 0) {
-      scrollToBottom();
+    if (!isLoading && messages.length > 0 && !initialScrollDone.current) {
+      initialScrollDone.current = true;
+      requestAnimationFrame(() => scrollToBottom(true));
       prevMsgCount.current = messages.length;
     }
   }, [isLoading, messages.length, scrollToBottom]);
 
+  // New message arrived — only scroll if user was already near bottom
   useEffect(() => {
-    if (messages.length > prevMsgCount.current) {
-      requestAnimationFrame(scrollToBottom);
+    if (messages.length > prevMsgCount.current && initialScrollDone.current) {
+      const lastMsg = messages[messages.length - 1];
+      const isOwnMessage = lastMsg?.sender_id === user?.id;
+      // Always scroll for own messages, otherwise only if near bottom
+      if (isOwnMessage || isNearBottomRef.current) {
+        requestAnimationFrame(() => scrollToBottom(false));
+      }
       prevMsgCount.current = messages.length;
     }
-  }, [messages.length, scrollToBottom]);
+  }, [messages.length, messages, user?.id, scrollToBottom]);
 
+  // Typing indicator — only scroll if near bottom
   useEffect(() => {
-    if (isOtherTyping) requestAnimationFrame(scrollToBottom);
+    if (isOtherTyping && isNearBottomRef.current) {
+      requestAnimationFrame(() => scrollToBottom(false));
+    }
   }, [isOtherTyping, scrollToBottom]);
 
-  useEffect(() => {
-    const el = messagesContainerRef.current;
-    if (!el) return;
-    const isNearBottom = () => el.scrollHeight - el.scrollTop - el.clientHeight < 150;
-    const observer = new ResizeObserver(() => {
-      if (isNearBottom()) el.scrollTop = el.scrollHeight;
-    });
-    Array.from(el.children).forEach(child => observer.observe(child));
-    const mo = new MutationObserver(() => {
-      observer.disconnect();
-      Array.from(el.children).forEach(child => observer.observe(child));
-      if (isNearBottom()) el.scrollTop = el.scrollHeight;
-    });
-    mo.observe(el, { childList: true });
-    return () => { observer.disconnect(); mo.disconnect(); };
-  }, [messages.length]);
-
+  // Keyboard open — only scroll if near bottom
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
     let prev = vv.height;
     const onResize = () => {
-      if (vv.height < prev - 50) scrollToBottom();
+      if (vv.height < prev - 50 && isNearBottomRef.current) scrollToBottom(true);
       prev = vv.height;
     };
     vv.addEventListener('resize', onResize);
@@ -166,7 +177,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   }, [scrollToBottom]);
 
   const handleInputFocus = useCallback(() => {
-    requestAnimationFrame(scrollToBottom);
+    if (isNearBottomRef.current) requestAnimationFrame(() => scrollToBottom(true));
   }, [scrollToBottom]);
 
   const handleScroll = useCallback(() => {

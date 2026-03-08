@@ -96,3 +96,70 @@ export const notifyScreenshotInChat = async ({
     return false;
   }
 };
+
+/**
+ * Report a screenshot detection globally (outside of a specific chat context).
+ * Creates a report + security event + warning notification to the user.
+ */
+export const reportScreenshotGlobal = async ({
+  userId,
+  username,
+  pageUrl,
+}: {
+  userId: string;
+  username: string;
+  pageUrl?: string;
+}) => {
+  try {
+    // 1. Create a report for moderation
+    const { error: reportError } = await supabase
+      .from('reports')
+      .insert({
+        reporter_id: userId,
+        reported_user_id: userId,
+        reason: 'inappropriate_content' as any,
+        description: `Capture d'écran détectée automatiquement pour l'utilisateur ${username} sur la page ${pageUrl || 'inconnue'}.`,
+        report_type: 'screenshot_violation',
+      });
+
+    if (reportError) {
+      console.error('[ScreenshotGlobal] Error creating report:', reportError);
+    }
+
+    // 2. Log security event
+    const { error: secError } = await supabase
+      .from('security_events')
+      .insert({
+        event_type: 'screenshot_detected',
+        severity: 'high',
+        user_id: userId,
+        page_url: pageUrl || null,
+        description: `Capture d'écran détectée pour ${username}.`,
+        user_agent: navigator.userAgent,
+      });
+
+    if (secError) {
+      console.error('[ScreenshotGlobal] Error logging security event:', secError);
+    }
+
+    // 3. Warning notification to the user
+    const { error: notifError } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        title: '⚠️ Avertissement : Capture d\'écran',
+        message: 'Votre capture d\'écran a été détectée et signalée. Les captures d\'écran répétées peuvent entraîner une suspension de votre compte.',
+        type: 'screenshot_warning',
+      });
+
+    if (notifError) {
+      console.error('[ScreenshotGlobal] Error creating notification:', notifError);
+    }
+
+    console.log('[ScreenshotGlobal] Screenshot reported successfully');
+    return true;
+  } catch (error) {
+    console.error('[ScreenshotGlobal] Unexpected error:', error);
+    return false;
+  }
+};

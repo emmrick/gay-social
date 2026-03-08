@@ -29,13 +29,11 @@ const MIN_SCALE = 1;
 const MAX_SCALE = 4;
 
 /** Image component with loading state */
-const ImageWithLoader = ({ src, alt, isBlocked, zoomState, isZoomed, preventContextMenu }: {
+const ImageWithLoader = ({ src, alt, zoomState, isZoomed }: {
   src: string;
   alt: string;
-  isBlocked: boolean;
   zoomState: ZoomState;
   isZoomed: boolean;
-  preventContextMenu: (e: React.SyntheticEvent) => void;
 }) => {
   const [loaded, setLoaded] = useState(false);
 

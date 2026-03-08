@@ -410,15 +410,7 @@ const Index = () => {
 
       case 'messages':
         return (
-          <motion.div
-            key="messages"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="flex-1 flex flex-col relative min-h-0"
-          >
+          <div className="flex-1 flex flex-col relative min-h-0">
             <UnifiedPageHeader
               onNavigateToCredits={() => handleTabChange('premium')}
               onNavigateToProfile={() => handleTabChange('profile')}
@@ -497,7 +489,6 @@ const Index = () => {
               open={showCreateGroup}
               onOpenChange={setShowCreateGroup}
               onGroupCreated={(groupId) => {
-                // Navigate to the custom group chat
                 setSelectedRegion(groupId);
                 setCurrentView('chat');
               }}
@@ -514,7 +505,7 @@ const Index = () => {
                 />
               )}
             </AnimatePresence>
-          </motion.div>
+          </div>
         );
 
       case 'profile':

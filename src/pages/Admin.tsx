@@ -160,7 +160,7 @@ const Admin = () => {
       case 'withdrawals': return <WithdrawalRequestsPanel />;
       case 'global': return <GlobalEarningsPanel />;
       case 'stats': return <AdminStatsPanel />;
-      case 'users': return <UserManagementPanel />;
+      case 'users': return <UserManagementPanel initialUserId={targetUserId} onUserSelected={setTargetUserId} />;
       case 'credits': return <CreditsManagementPanel />;
       case 'credits-surveillance': return <CreditsSurveillancePanel />;
       case 'credit-purchases': return <CreditPurchaseRequestsPanel />;

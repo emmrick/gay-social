@@ -236,6 +236,7 @@ const Admin = () => {
       case 'popups': return <PopupManagementPanel />;
       case 'faq': return <FAQManagementPanel />;
       case 'flyers': return <FlyerGeneratorPanel />;
+      case 'promo-images': return <PromoImageGeneratorPanel />;
       case 'error-logs': return <ErrorLogsPanel />;
       case 'security': return <SecurityEventsPanel />;
       default: return null;

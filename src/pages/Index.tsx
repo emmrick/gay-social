@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -6,27 +6,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import Hero from '@/components/landing/Hero';
 import HomeView from '@/components/home/HomeView';
-import ChatRoom from '@/components/chat/ChatRoom';
-import AnnouncementChannel from '@/components/chat/AnnouncementChannel';
-import PrivateChatList from '@/components/chat/PrivateChatList';
-import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
-import ProfileView from '@/components/profile/ProfileView';
-import ChatBotConfigPage from '@/components/chatbot/ChatBotConfigPage';
-import CreditsPage from '@/components/credits/CreditsPage';
-import ReferralDialog from '@/components/premium/ReferralDialog';
 import UnifiedPageHeader from '@/components/layout/UnifiedPageHeader';
-import SwipePage from '@/components/swipe/SwipePage';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
-import MemberSearch from '@/components/chat/MemberSearch';
-import JoinedGroupsList from '@/components/chat/JoinedGroupsList';
-import GroupPickerDialog from '@/components/chat/GroupPickerDialog';
-import CreateGroupDialog from '@/components/chat/CreateGroupDialog';
-import IdentityVerificationDialog from '@/components/verification/IdentityVerificationDialog';
-import VerificationReminderBanner from '@/components/verification/VerificationReminderBanner';
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
 import CreditBalanceCompact from '@/components/credits/CreditBalanceCompact';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import Help from '@/pages/Help';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { useAnnouncementChannel } from '@/hooks/useAnnouncementChannel';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
@@ -47,7 +31,31 @@ import { Loader2, Plus, User, Users } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
+// Lazy-load heavy sub-views to reduce initial JS bundle
+const ChatRoom = lazy(() => import('@/components/chat/ChatRoom'));
+const AnnouncementChannel = lazy(() => import('@/components/chat/AnnouncementChannel'));
+const PrivateChatList = lazy(() => import('@/components/chat/PrivateChatList'));
+const PrivateChatRoom = lazy(() => import('@/components/chat/PrivateChatRoom'));
+const ProfileView = lazy(() => import('@/components/profile/ProfileView'));
+const ChatBotConfigPage = lazy(() => import('@/components/chatbot/ChatBotConfigPage'));
+const CreditsPage = lazy(() => import('@/components/credits/CreditsPage'));
+const ReferralDialog = lazy(() => import('@/components/premium/ReferralDialog'));
+const SwipePage = lazy(() => import('@/components/swipe/SwipePage'));
+const MemberSearch = lazy(() => import('@/components/chat/MemberSearch'));
+const JoinedGroupsList = lazy(() => import('@/components/chat/JoinedGroupsList'));
+const GroupPickerDialog = lazy(() => import('@/components/chat/GroupPickerDialog'));
+const CreateGroupDialog = lazy(() => import('@/components/chat/CreateGroupDialog'));
+const IdentityVerificationDialog = lazy(() => import('@/components/verification/IdentityVerificationDialog'));
+const VerificationReminderBanner = lazy(() => import('@/components/verification/VerificationReminderBanner'));
+const Help = lazy(() => import('@/pages/Help'));
+
 type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile';
+
+const LazyFallback = () => (
+  <div className="flex-1 flex items-center justify-center min-h-screen">
+    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+  </div>
+);
 
 // Slide animation only for sub-views (chat, private)
 const slideIn = {
@@ -310,77 +318,85 @@ const Index = () => {
   // Render chatbot config view
   if (currentView === 'chatbot-config') {
     return (
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen"
-      >
-        <ChatBotConfigPage onBack={() => {
-          setCurrentView('profile');
-          setActiveTab('profile');
-        }} />
-      </motion.div>
+      <Suspense fallback={<LazyFallback />}>
+        <motion.div
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+          className="min-h-screen"
+        >
+          <ChatBotConfigPage onBack={() => {
+            setCurrentView('profile');
+            setActiveTab('profile');
+          }} />
+        </motion.div>
+      </Suspense>
     );
   }
 
   // Render private chat view with slide animation
   if (currentView === 'private' && selectedPrivateUserId) {
     return (
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen"
-      >
-        <PrivateChatRoom
-          otherUserId={selectedPrivateUserId}
-          onBack={handleBackFromPrivateChat}
-        />
-      </motion.div>
+      <Suspense fallback={<LazyFallback />}>
+        <motion.div
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+          className="min-h-screen"
+        >
+          <PrivateChatRoom
+            otherUserId={selectedPrivateUserId}
+            onBack={handleBackFromPrivateChat}
+          />
+        </motion.div>
+      </Suspense>
     );
   }
 
   // Render announcement channel
   if (currentView === 'chat' && selectedRegion === 'announcement' && announcementChannel) {
     return (
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen w-full overflow-hidden"
-      >
-        <AnnouncementChannel
-          roomId={announcementChannel.id}
-          onBack={handleBackToRegions}
-        />
-      </motion.div>
+      <Suspense fallback={<LazyFallback />}>
+        <motion.div
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+          className="min-h-screen w-full overflow-hidden"
+        >
+          <AnnouncementChannel
+            roomId={announcementChannel.id}
+            onBack={handleBackToRegions}
+          />
+        </motion.div>
+      </Suspense>
     );
   }
 
   // Render group chat view with slide animation
   if (currentView === 'chat' && selectedRegion && selectedRoomData) {
     return (
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen"
-      >
-        <ChatRoom
-          roomId={selectedRoomData.id}
-          regionCode={selectedRoomData.region_code}
-          regionName={selectedRoomData.is_custom ? (selectedRoomData.custom_name || selectedRoomData.region_name) : selectedRoomData.region_name}
-          memberCount={memberCount}
-          isCustomGroup={selectedRoomData.is_custom}
-          onBack={handleBackToRegions}
-          onStartPrivateChat={handleStartPrivateChat}
-        />
-      </motion.div>
+      <Suspense fallback={<LazyFallback />}>
+        <motion.div
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+          className="min-h-screen"
+        >
+          <ChatRoom
+            roomId={selectedRoomData.id}
+            regionCode={selectedRoomData.region_code}
+            regionName={selectedRoomData.is_custom ? (selectedRoomData.custom_name || selectedRoomData.region_name) : selectedRoomData.region_name}
+            memberCount={memberCount}
+            isCustomGroup={selectedRoomData.is_custom}
+            onBack={handleBackToRegions}
+            onStartPrivateChat={handleStartPrivateChat}
+          />
+        </motion.div>
+      </Suspense>
     );
   }
 
@@ -582,53 +598,55 @@ const Index = () => {
   const content = renderContent();
 
   return (
-    <div 
-      className="h-dvh h-screen bg-background flex flex-col overflow-hidden"
-      style={{
-        paddingLeft: 'env(safe-area-inset-left, 0px)',
-        paddingRight: 'env(safe-area-inset-right, 0px)',
-      }}
-    >
-      {/* Verification Reminder Banner */}
-      {user && currentView !== 'landing' && <VerificationReminderBanner />}
-      
-      {/* Content with AnimatePresence for transitions */}
-      <main className={cn(
-        "flex-1 flex flex-col overflow-hidden",
-        showBottomNav && "pb-24"
-      )}
-      style={{
-        paddingBottom: showBottomNav ? 'calc(96px + env(safe-area-inset-bottom, 0px))' : undefined,
-      }}
+    <Suspense fallback={<LazyFallback />}>
+      <div 
+        className="h-dvh h-screen bg-background flex flex-col overflow-hidden"
+        style={{
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
+          paddingRight: 'env(safe-area-inset-right, 0px)',
+        }}
       >
-        {content ?? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Chargement...</p>
-            </div>
-          </div>
+        {/* Verification Reminder Banner */}
+        {user && currentView !== 'landing' && <VerificationReminderBanner />}
+        
+        {/* Content with AnimatePresence for transitions */}
+        <main className={cn(
+          "flex-1 flex flex-col overflow-hidden",
+          showBottomNav && "pb-24"
         )}
-      </main>
+        style={{
+          paddingBottom: showBottomNav ? 'calc(96px + env(safe-area-inset-bottom, 0px))' : undefined,
+        }}
+        >
+          {content ?? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Chargement...</p>
+              </div>
+            </div>
+          )}
+        </main>
 
-      {/* Bottom Navigation Bar */}
-      {showBottomNav && (
-        <BottomNavBar
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          unreadCount={getTotalUnreadCount()}
-          isPremium={isPremium}
-        />
-      )}
+        {/* Bottom Navigation Bar */}
+        {showBottomNav && (
+          <BottomNavBar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            unreadCount={getTotalUnreadCount()}
+            isPremium={isPremium}
+          />
+        )}
 
-      {/* Identity Verification Dialog */}
-      {showVerificationDialog && (
-        <IdentityVerificationDialog
-          open={showVerificationDialog}
-          onOpenChange={setShowVerificationDialog}
-        />
-      )}
-    </div>
+        {/* Identity Verification Dialog */}
+        {showVerificationDialog && (
+          <IdentityVerificationDialog
+            open={showVerificationDialog}
+            onOpenChange={setShowVerificationDialog}
+          />
+        )}
+      </div>
+    </Suspense>
   );
 };
 

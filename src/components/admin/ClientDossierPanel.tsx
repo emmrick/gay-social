@@ -659,36 +659,7 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
         <TabsContent value="actions" className="mt-3 space-y-3">
           <div className="relative">
             {isSectionLocked && <LockedOverlay />}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Shield className="w-4 h-4" /> Actions rapides
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs h-auto py-3">
-                    <CreditCard className="w-3.5 h-3.5" />
-                    Ajouter crédits
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs h-auto py-3">
-                    <CreditCard className="w-3.5 h-3.5" />
-                    Retirer crédits
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs h-auto py-3 text-destructive hover:text-destructive">
-                    <Ban className="w-3.5 h-3.5" />
-                    {blockedStatus?.isBlocked ? 'Débloquer' : 'Bloquer'}
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs h-auto py-3 text-destructive hover:text-destructive">
-                    <Shield className="w-3.5 h-3.5" />
-                    {blockedStatus?.isSuspended ? 'Réactiver' : 'Suspendre'}
-                  </Button>
-                </div>
-                <p className="text-[10px] text-muted-foreground text-center mt-2">
-                  Toutes les actions sont journalisées dans l'historique de modération.
-                </p>
-              </CardContent>
-            </Card>
+            <ActionsSection userId={userId} blockedStatus={blockedStatus} queryClient={queryClient} verification={verification} />
           </div>
         </TabsContent>
       </Tabs>

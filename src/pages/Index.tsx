@@ -123,10 +123,17 @@ const Index = () => {
     if (interruptToken) {
       // Clean URL
       window.history.replaceState({}, '', '/');
-      // Call interrupt endpoint
-      supabase.functions.invoke('send-otp-sms', {
-        body: { action: 'interrupt', interrupt_token: interruptToken },
-      }).then(({ data }) => {
+      // Call interrupt endpoint (no auth required - public action from SMS)
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      fetch(`${supabaseUrl}/functions/v1/send-otp-sms`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': anonKey,
+        },
+        body: JSON.stringify({ action: 'interrupt', interrupt_token: interruptToken }),
+      }).then(res => res.json()).then((data) => {
         if (data?.interrupted) {
           import('sonner').then(({ toast }) => {
             toast.success('Accès à votre dossier interrompu avec succès. Un conseiller supérieur sera assigné.');

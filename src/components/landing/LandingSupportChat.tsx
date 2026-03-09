@@ -458,6 +458,16 @@ const LandingSupportChat = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Visitor Support Chat */}
+      <AnimatePresence>
+        {showVisitorChat && (
+          <VisitorSupportChat 
+            isOpen={showVisitorChat} 
+            onClose={() => setShowVisitorChat(false)} 
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

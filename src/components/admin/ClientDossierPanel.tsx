@@ -10,10 +10,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   User, Mail, Phone, Calendar, Shield, Lock, Unlock, CreditCard, 
   AlertTriangle, MessageSquare, History, FileText, Send, Loader2,
-  CheckCircle, XCircle, Ban, ShieldCheck, Eye, KeyRound, Bell
+  CheckCircle, XCircle, Ban, ShieldCheck, Eye, KeyRound, Bell,
+  Plus, Minus, RefreshCw, AlertCircle
 } from 'lucide-react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 

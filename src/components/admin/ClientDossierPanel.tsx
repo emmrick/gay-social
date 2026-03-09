@@ -1282,6 +1282,13 @@ const ActionsSection = ({ userId, blockedStatus, queryClient, verification }: Ac
         });
       }
 
+      await supabase.from('moderation_actions').insert({
+        performed_by: adminUser?.id || '',
+        target_user_id: userId,
+        action_type: (isCurrentlySuspended ? 'unsuspend' : 'suspend') as any,
+        details: isCurrentlySuspended ? 'Réactivation du compte' : 'Suspension du compte (30 jours)',
+      });
+
       // Notify user
       await supabase.from('notifications').insert({
         user_id: userId,

@@ -1,13 +1,15 @@
 import { useState, useRef } from 'react';
-import { Camera, Image, X, Globe, MapPin, Lock, Loader2 } from 'lucide-react';
+import { Camera, Image, X, Globe, MapPin, Lock, Loader2, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useStories } from '@/hooks/useStories';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import SnapCaptureDialog from '@/components/chat/SnapCaptureDialog';
+import AIStoryGenerator from '@/components/stories/AIStoryGenerator';
 
 interface CreateStoryDialogProps {
   isOpen: boolean;
@@ -25,12 +27,14 @@ const VISIBILITY_OPTIONS: { value: Visibility; label: string; icon: typeof Globe
 const CreateStoryDialog = ({ isOpen, onClose }: CreateStoryDialogProps) => {
   const { user } = useAuth();
   const { createStory } = useStories();
+  const { data: isAdmin } = useIsAdmin();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('public');
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [showSnapCapture, setShowSnapCapture] = useState(false);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: profile } = useQuery({
@@ -68,6 +72,13 @@ const CreateStoryDialog = ({ isOpen, onClose }: CreateStoryDialogProps) => {
     }
   };
 
+  const handleAIGenerated = (generatedFile: File) => {
+    setFile(generatedFile);
+    setMediaType('image');
+    setPreview(URL.createObjectURL(generatedFile));
+    setShowAIGenerator(false);
+  };
+
   const handlePublish = async () => {
     if (!file) return;
     await createStory.mutateAsync({
@@ -87,6 +98,7 @@ const CreateStoryDialog = ({ isOpen, onClose }: CreateStoryDialogProps) => {
     setCaption('');
     setVisibility('public');
     if (fileInputRef.current) fileInputRef.current.value = '';
+    setShowAIGenerator(false);
   };
 
   return (
@@ -100,30 +112,47 @@ const CreateStoryDialog = ({ isOpen, onClose }: CreateStoryDialogProps) => {
           <div className="space-y-4">
             {!preview ? (
               <div className="space-y-3">
-                {/* Snap capture button */}
-                <button
-                  onClick={() => setShowSnapCapture(true)}
-                  className="w-full aspect-[9/16] max-h-[40vh] rounded-2xl border-2 border-dashed border-primary/50 hover:border-primary bg-primary/5 flex flex-col items-center justify-center gap-3 transition-colors"
-                >
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Camera className="w-8 h-8 text-primary" />
-                  </div>
-                  <div className="text-center">
-                    <p className="font-medium text-sm">📸 Capture Snap</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Tap = Photo • Appui long = Vidéo
-                    </p>
-                  </div>
-                </button>
+                {showAIGenerator ? (
+                  <AIStoryGenerator onImageGenerated={handleAIGenerated} />
+                ) : (
+                  <>
+                    {/* Snap capture button */}
+                    <button
+                      onClick={() => setShowSnapCapture(true)}
+                      className="w-full aspect-[9/16] max-h-[40vh] rounded-2xl border-2 border-dashed border-primary/50 hover:border-primary bg-primary/5 flex flex-col items-center justify-center gap-3 transition-colors"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Camera className="w-8 h-8 text-primary" />
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium text-sm">📸 Capture Snap</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Tap = Photo • Appui long = Vidéo
+                        </p>
+                      </div>
+                    </button>
 
-                {/* Or select from gallery */}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-4 rounded-2xl border-2 border-dashed border-border hover:border-primary/30 bg-muted/30 flex items-center justify-center gap-3 transition-colors"
-                >
-                  <Image className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Choisir depuis la galerie</span>
-                </button>
+                    {/* Or select from gallery */}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full py-4 rounded-2xl border-2 border-dashed border-border hover:border-primary/30 bg-muted/30 flex items-center justify-center gap-3 transition-colors"
+                    >
+                      <Image className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Choisir depuis la galerie</span>
+                    </button>
+
+                    {/* AI Generator button - Admin only */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => setShowAIGenerator(true)}
+                        className="w-full py-4 rounded-2xl border-2 border-dashed border-accent/50 hover:border-accent bg-accent/5 flex items-center justify-center gap-3 transition-colors"
+                      >
+                        <Sparkles className="w-5 h-5 text-accent" />
+                        <span className="text-sm font-medium text-accent">✨ Créer avec l'IA (Promo)</span>
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             ) : (
               <div className="relative rounded-2xl overflow-hidden bg-black">

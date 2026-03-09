@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.analyze-message]
 verify_jwt = false
+
+[functions.generate-story-image]
+verify_jwt = false

@@ -60,6 +60,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import UserProfileDialog from './UserProfileDialog';
+import ClientDossierPanel from './ClientDossierPanel';
 import {
   useSuspendUser,
   useBlockUser,

@@ -112,30 +112,47 @@ const CreateStoryDialog = ({ isOpen, onClose }: CreateStoryDialogProps) => {
           <div className="space-y-4">
             {!preview ? (
               <div className="space-y-3">
-                {/* Snap capture button */}
-                <button
-                  onClick={() => setShowSnapCapture(true)}
-                  className="w-full aspect-[9/16] max-h-[40vh] rounded-2xl border-2 border-dashed border-primary/50 hover:border-primary bg-primary/5 flex flex-col items-center justify-center gap-3 transition-colors"
-                >
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Camera className="w-8 h-8 text-primary" />
-                  </div>
-                  <div className="text-center">
-                    <p className="font-medium text-sm">📸 Capture Snap</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Tap = Photo • Appui long = Vidéo
-                    </p>
-                  </div>
-                </button>
+                {showAIGenerator ? (
+                  <AIStoryGenerator onImageGenerated={handleAIGenerated} />
+                ) : (
+                  <>
+                    {/* Snap capture button */}
+                    <button
+                      onClick={() => setShowSnapCapture(true)}
+                      className="w-full aspect-[9/16] max-h-[40vh] rounded-2xl border-2 border-dashed border-primary/50 hover:border-primary bg-primary/5 flex flex-col items-center justify-center gap-3 transition-colors"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Camera className="w-8 h-8 text-primary" />
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium text-sm">📸 Capture Snap</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Tap = Photo • Appui long = Vidéo
+                        </p>
+                      </div>
+                    </button>
 
-                {/* Or select from gallery */}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-4 rounded-2xl border-2 border-dashed border-border hover:border-primary/30 bg-muted/30 flex items-center justify-center gap-3 transition-colors"
-                >
-                  <Image className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Choisir depuis la galerie</span>
-                </button>
+                    {/* Or select from gallery */}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full py-4 rounded-2xl border-2 border-dashed border-border hover:border-primary/30 bg-muted/30 flex items-center justify-center gap-3 transition-colors"
+                    >
+                      <Image className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Choisir depuis la galerie</span>
+                    </button>
+
+                    {/* AI Generator button - Admin only */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => setShowAIGenerator(true)}
+                        className="w-full py-4 rounded-2xl border-2 border-dashed border-accent/50 hover:border-accent bg-accent/5 flex items-center justify-center gap-3 transition-colors"
+                      >
+                        <Sparkles className="w-5 h-5 text-accent" />
+                        <span className="text-sm font-medium text-accent">✨ Créer avec l'IA (Promo)</span>
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             ) : (
               <div className="relative rounded-2xl overflow-hidden bg-black">

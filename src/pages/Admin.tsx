@@ -84,8 +84,14 @@ const Admin = () => {
 
   const isAdminOrMod = isAdmin || isModerator;
 
-  const handleSectionChange = useCallback((section: AdminSection | string) => {
+  const handleSectionChange = useCallback((section: AdminSection | string, userId?: string) => {
     setActiveSection(section as AdminSection);
+    // If navigating to users with a specific userId, set it
+    if (section === 'users' && userId) {
+      setTargetUserId(userId);
+    } else if (section !== 'users') {
+      setTargetUserId(null);
+    }
   }, []);
 
   const { data: pendingPurchasesCount = 0 } = useQuery({

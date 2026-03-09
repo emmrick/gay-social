@@ -2,7 +2,7 @@ import {
   Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
   MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Menu, Home,
   Bell, Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, 
-  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut
+  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

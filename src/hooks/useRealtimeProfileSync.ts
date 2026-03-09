@@ -1,17 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
- * Global hook that listens for ANY profile changes via Supabase Realtime
- * and invalidates all related queries across the entire app.
+ * UNIFIED global realtime subscription for ALL profile changes.
+ * Replaces useRealtimeOnlineStatus + useOnlineMemberCounts realtime + old useRealtimeProfileSync.
  * 
- * Mount this ONCE at the app level (e.g., in AppContent).
+ * Mount ONCE at app level.
  */
 export const useRealtimeProfileSync = () => {
   const queryClient = useQueryClient();
   const { user, refetchProfile } = useAuth();
+  const lastInvalidateRef = useRef<number>(0);
 
   useEffect(() => {
     if (!user) return;
@@ -27,8 +28,8 @@ export const useRealtimeProfileSync = () => {
         },
         (payload) => {
           const { old: oldData, new: newData } = payload;
+          const changedUserId = newData?.user_id;
 
-          // Only react to meaningful changes (not heartbeat updates like last_seen/is_online)
           const isAvatarChange = oldData?.avatar_url !== newData?.avatar_url;
           const isUsernameChange = oldData?.username !== newData?.username;
           const isBioChange = oldData?.bio !== newData?.bio;
@@ -36,32 +37,33 @@ export const useRealtimeProfileSync = () => {
           const isOnlineChange = oldData?.is_online !== newData?.is_online;
           const isProfileDataChange = isAvatarChange || isUsernameChange || isBioChange || isAgeChange;
 
-          // If this is the current user's own profile change, refresh AuthContext profile
-          if (newData?.user_id === user.id && isProfileDataChange) {
+          // Own profile data change → refresh AuthContext
+          if (changedUserId === user.id && isProfileDataChange) {
             refetchProfile();
           }
 
-          // For avatar/username/bio changes, invalidate ALL profile-related queries
+          // Profile data changes (avatar, username, etc.) → invalidate profile-related queries
           if (isProfileDataChange) {
-            const changedUserId = newData?.user_id;
-
-            // Invalidate specific profile query and force refetch
             queryClient.invalidateQueries({ queryKey: ['profile', changedUserId] });
-            
-            // Invalidate all list-based queries that display profile data
-            queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
-            queryClient.invalidateQueries({ queryKey: ['private-messages'] });
-            queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
-            queryClient.invalidateQueries({ queryKey: ['nearby-profiles'] });
-            queryClient.invalidateQueries({ queryKey: ['profiles'] });
-            queryClient.invalidateQueries({ queryKey: ['profile-photos'] });
-            queryClient.invalidateQueries({ queryKey: ['messages'] });
+            // Batch: only invalidate lists if not done recently (debounce 2s)
+            const now = Date.now();
+            if (now - lastInvalidateRef.current > 2000) {
+              lastInvalidateRef.current = now;
+              queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
+              queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
+              queryClient.invalidateQueries({ queryKey: ['nearby-profiles'] });
+              queryClient.invalidateQueries({ queryKey: ['profiles'] });
+            }
           }
 
-          // For online status changes only, just update conversations and favorites
+          // Online status change → lightweight invalidation (throttled)
           if (isOnlineChange && !isProfileDataChange) {
-            queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
-            queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
+            const now = Date.now();
+            if (now - lastInvalidateRef.current > 5000) {
+              lastInvalidateRef.current = now;
+              queryClient.invalidateQueries({ queryKey: ['online-member-counts'] });
+              queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
+            }
           }
         }
       )

@@ -11,7 +11,7 @@ interface SEOHeadProps {
   keywords?: string;
 }
 
-const BASE_URL = 'https://gay-connect.lovable.app';
+const BASE_URL = 'https://gay-connect.fr';
 const DEFAULT_OG_IMAGE = 'https://lovable.dev/opengraph-image-p98pqg.png';
 const DEFAULT_KEYWORDS = 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, drague gay, annonce gay, homme gay, gay france, rencontre homosexuel, plan sexe gay, hookup gay, sexfriend gay, homme cherche homme';
 

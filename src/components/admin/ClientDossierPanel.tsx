@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   User, Mail, Phone, Calendar, Shield, Lock, Unlock, CreditCard, 
   AlertTriangle, MessageSquare, History, FileText, Send, Loader2,
-  CheckCircle, XCircle, Ban, ShieldCheck, Eye, KeyRound
+  CheckCircle, XCircle, Ban, ShieldCheck, Eye, KeyRound, Bell
 } from 'lucide-react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
@@ -33,6 +33,7 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const [sendingPhoneNotif, setSendingPhoneNotif] = useState(false);
 
   // Countdown timer for OTP expiry
   useEffect(() => {
@@ -64,7 +65,6 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
   const { data: userEmail } = useQuery({
     queryKey: ['client-dossier-email', userId, isVerified],
     queryFn: async () => {
-      // This would need an edge function to fetch from auth.users
       return null;
     },
     enabled: isVerified,
@@ -157,6 +157,30 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
     enabled: !!userId,
   });
 
+  const hasPhoneNumber = !!profile?.phone_number;
+
+  // Send notification to ask user to add phone number
+  const handleSendPhoneNotification = async () => {
+    setSendingPhoneNotif(true);
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: userId,
+          type: 'system',
+          title: '📱 Numéro de téléphone requis',
+          message: 'Pour assurer la sécurité de ton compte et te permettre de bénéficier d\'une assistance personnalisée, merci d\'ajouter ton numéro de téléphone dans les paramètres de ton profil. Cette information est indispensable pour que notre équipe puisse vérifier ton identité lors de demandes de support.',
+          is_read: false,
+        });
+      if (error) throw error;
+      toast.success('Notification envoyée au client');
+    } catch (err: any) {
+      toast.error('Erreur lors de l\'envoi de la notification');
+    } finally {
+      setSendingPhoneNotif(false);
+    }
+  };
+
   // Send OTP
   const handleSendOTP = async () => {
     if (!profile?.phone_number) {
@@ -165,7 +189,6 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
     }
     setOtpSending(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const response = await supabase.functions.invoke('send-otp-sms', {
         body: {
           action: 'send',
@@ -237,6 +260,20 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
     return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
+  // Locked tab content overlay
+  const LockedOverlay = () => (
+    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl">
+      <Lock className="w-10 h-10 text-muted-foreground/50 mb-3" />
+      <p className="text-sm font-medium text-muted-foreground">Accès verrouillé</p>
+      <p className="text-xs text-muted-foreground/70 mt-1 text-center max-w-[240px]">
+        Le client doit d'abord ajouter son numéro de téléphone, puis valider un code OTP.
+      </p>
+    </div>
+  );
+
+  // Determine if sections should be locked (no phone = locked except identity verification)
+  const isSectionLocked = !hasPhoneNumber || !isVerified;
+
   return (
     <div className="space-y-4">
       {/* Header: basic profile info (always visible) */}
@@ -264,6 +301,11 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                 {blockedStatus?.isSuspended && (
                   <Badge variant="destructive" className="text-[10px]">Suspendu</Badge>
                 )}
+                {!hasPhoneNumber && (
+                  <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/50 text-amber-600">
+                    <Phone className="w-3 h-3" /> Pas de téléphone
+                  </Badge>
+                )}
               </div>
               <p className="text-sm text-muted-foreground">
                 {profile.first_name} {profile.last_name} · {profile.age ? `${profile.age} ans` : 'Âge inconnu'}
@@ -276,8 +318,40 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
         </CardContent>
       </Card>
 
-      {/* OTP Verification Gate */}
-      {!isVerified && (
+      {/* No phone number: show notification button + identity verification only */}
+      {!hasPhoneNumber && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <Lock className="w-4 h-4" />
+              Dossier verrouillé — Numéro de téléphone manquant
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Ce client n'a pas encore renseigné de numéro de téléphone. Toutes les actions sont verrouillées 
+              sauf la <strong>vérification d'identité</strong>. Vous pouvez lui envoyer une notification 
+              pour lui demander d'ajouter son numéro.
+            </p>
+            <Button 
+              onClick={handleSendPhoneNotification} 
+              disabled={sendingPhoneNotif}
+              variant="outline"
+              className="w-full gap-2 border-amber-500/30 hover:bg-amber-500/10"
+            >
+              {sendingPhoneNotif ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Bell className="w-4 h-4 text-amber-600" />
+              )}
+              Demander l'ajout du numéro de téléphone
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* OTP Verification Gate (only when phone exists but not yet verified) */}
+      {hasPhoneNumber && !isVerified && (
         <Card className="border-primary/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -292,104 +366,104 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
               Le code est valable <strong>5 minutes</strong>.
             </p>
 
-            {profile.phone_number ? (
-              <>
-                <div className="flex items-center gap-2 text-sm bg-secondary/50 rounded-lg p-3">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span>SMS sera envoyé au : <strong>{profile.phone_number.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 ** ** ** $5')}</strong></span>
-                </div>
+            <div className="flex items-center gap-2 text-sm bg-secondary/50 rounded-lg p-3">
+              <Phone className="w-4 h-4 text-muted-foreground" />
+              <span>SMS sera envoyé au : <strong>{profile.phone_number?.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 ** ** ** $5')}</strong></span>
+            </div>
 
-                {!otpId ? (
-                  <Button onClick={handleSendOTP} disabled={otpSending} className="w-full gap-2">
-                    {otpSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    Envoyer le code de vérification
-                  </Button>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="text-center">
-                      <p className="text-sm font-medium mb-1">Entrez le code communiqué par le client</p>
-                      {countdown > 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          Expire dans : <span className="font-mono text-primary">{Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')}</span>
-                        </p>
-                      )}
-                      {countdown === 0 && otpExpiry && (
-                        <p className="text-xs text-destructive">Code expiré</p>
-                      )}
-                    </div>
-                    <div className="flex justify-center">
-                      <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={handleSendOTP} 
-                        disabled={otpSending || countdown > 240}
-                        className="flex-1"
-                        size="sm"
-                      >
-                        Renvoyer
-                      </Button>
-                      <Button 
-                        onClick={handleVerifyOTP} 
-                        disabled={otpCode.length !== 6 || otpVerifying || countdown === 0}
-                        className="flex-1 gap-1"
-                        size="sm"
-                      >
-                        {otpVerifying ? <Loader2 className="w-3 h-3 animate-spin" /> : <KeyRound className="w-3 h-3" />}
-                        Vérifier
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </>
+            {!otpId ? (
+              <Button onClick={handleSendOTP} disabled={otpSending} className="w-full gap-2">
+                {otpSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                Envoyer le code de vérification
+              </Button>
             ) : (
-              <div className="text-center py-4">
-                <Phone className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
-                <p className="text-sm text-muted-foreground">
-                  Ce membre n'a pas de numéro de téléphone enregistré.
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Demandez-lui de l'ajouter dans ses paramètres de profil.
-                </p>
+              <div className="space-y-3">
+                <div className="text-center">
+                  <p className="text-sm font-medium mb-1">Entrez le code communiqué par le client</p>
+                  {countdown > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Expire dans : <span className="font-mono text-primary">{Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')}</span>
+                    </p>
+                  )}
+                  {countdown === 0 && otpExpiry && (
+                    <p className="text-xs text-destructive">Code expiré</p>
+                  )}
+                </div>
+                <div className="flex justify-center">
+                  <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleSendOTP} 
+                    disabled={otpSending || countdown > 240}
+                    className="flex-1"
+                    size="sm"
+                  >
+                    Renvoyer
+                  </Button>
+                  <Button 
+                    onClick={handleVerifyOTP} 
+                    disabled={otpCode.length !== 6 || otpVerifying || countdown === 0}
+                    className="flex-1 gap-1"
+                    size="sm"
+                  >
+                    {otpVerifying ? <Loader2 className="w-3 h-3 animate-spin" /> : <KeyRound className="w-3 h-3" />}
+                    Vérifier
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
       )}
 
-      {/* Verified: Full dossier */}
-      {isVerified && (
-        <Tabs defaultValue="info" className="w-full">
-          <TabsList className="w-full grid grid-cols-5">
-            <TabsTrigger value="info" className="text-xs gap-1">
-              <User className="w-3 h-3" /> Infos
-            </TabsTrigger>
-            <TabsTrigger value="credits" className="text-xs gap-1">
-              <CreditCard className="w-3 h-3" /> Crédits
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="text-xs gap-1">
-              <AlertTriangle className="w-3 h-3" /> Signalements
-            </TabsTrigger>
-            <TabsTrigger value="history" className="text-xs gap-1">
-              <History className="w-3 h-3" /> Historique
-            </TabsTrigger>
-            <TabsTrigger value="actions" className="text-xs gap-1">
-              <Shield className="w-3 h-3" /> Actions
-            </TabsTrigger>
-          </TabsList>
+      {/* Tabs: always visible but locked sections show padlock overlay */}
+      <Tabs defaultValue={!hasPhoneNumber ? "verification" : "info"} className="w-full">
+        <TabsList className="w-full grid grid-cols-6">
+          <TabsTrigger value="verification" className="text-xs gap-1">
+            <Shield className="w-3 h-3" /> Identité
+          </TabsTrigger>
+          <TabsTrigger value="info" className="text-xs gap-1 relative">
+            <User className="w-3 h-3" /> Infos
+            {isSectionLocked && <Lock className="w-2.5 h-2.5 absolute -top-0.5 -right-0.5 text-muted-foreground/60" />}
+          </TabsTrigger>
+          <TabsTrigger value="credits" className="text-xs gap-1 relative">
+            <CreditCard className="w-3 h-3" /> Crédits
+            {isSectionLocked && <Lock className="w-2.5 h-2.5 absolute -top-0.5 -right-0.5 text-muted-foreground/60" />}
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="text-xs gap-1 relative">
+            <AlertTriangle className="w-3 h-3" /> Signalements
+            {isSectionLocked && <Lock className="w-2.5 h-2.5 absolute -top-0.5 -right-0.5 text-muted-foreground/60" />}
+          </TabsTrigger>
+          <TabsTrigger value="history" className="text-xs gap-1 relative">
+            <History className="w-3 h-3" /> Historique
+            {isSectionLocked && <Lock className="w-2.5 h-2.5 absolute -top-0.5 -right-0.5 text-muted-foreground/60" />}
+          </TabsTrigger>
+          <TabsTrigger value="actions" className="text-xs gap-1 relative">
+            <Shield className="w-3 h-3" /> Actions
+            {isSectionLocked && <Lock className="w-2.5 h-2.5 absolute -top-0.5 -right-0.5 text-muted-foreground/60" />}
+          </TabsTrigger>
+        </TabsList>
 
-          {/* Info Tab */}
-          <TabsContent value="info" className="mt-3 space-y-3">
+        {/* Identity Verification Tab (always accessible) */}
+        <TabsContent value="verification" className="mt-3 space-y-3">
+          <VerificationSection userId={userId} verification={verification} profile={profile} />
+        </TabsContent>
+
+        {/* Info Tab */}
+        <TabsContent value="info" className="mt-3 space-y-3">
+          <div className="relative">
+            {isSectionLocked && <LockedOverlay />}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -423,9 +497,7 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                     <p className="font-medium">{profile.region}</p>
                   </div>
                 </div>
-
                 <Separator className="my-3" />
-
                 <div>
                   <span className="text-muted-foreground text-xs">Identité vérifiée</span>
                   <div className="flex items-center gap-2 mt-1">
@@ -448,10 +520,13 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        </TabsContent>
 
-          {/* Credits Tab */}
-          <TabsContent value="credits" className="mt-3 space-y-3">
+        {/* Credits Tab */}
+        <TabsContent value="credits" className="mt-3 space-y-3">
+          <div className="relative">
+            {isSectionLocked && <LockedOverlay />}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -483,7 +558,6 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                 )}
               </CardContent>
             </Card>
-
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Dernières transactions</CardTitle>
@@ -509,10 +583,13 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                 </ScrollArea>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        </TabsContent>
 
-          {/* Reports Tab */}
-          <TabsContent value="reports" className="mt-3 space-y-3">
+        {/* Reports Tab */}
+        <TabsContent value="reports" className="mt-3 space-y-3">
+          <div className="relative">
+            {isSectionLocked && <LockedOverlay />}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -541,10 +618,13 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                 </ScrollArea>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        </TabsContent>
 
-          {/* History Tab */}
-          <TabsContent value="history" className="mt-3 space-y-3">
+        {/* History Tab */}
+        <TabsContent value="history" className="mt-3 space-y-3">
+          <div className="relative">
+            {isSectionLocked && <LockedOverlay />}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -570,10 +650,13 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                 </ScrollArea>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        </TabsContent>
 
-          {/* Actions Tab */}
-          <TabsContent value="actions" className="mt-3 space-y-3">
+        {/* Actions Tab */}
+        <TabsContent value="actions" className="mt-3 space-y-3">
+          <div className="relative">
+            {isSectionLocked && <LockedOverlay />}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -604,9 +687,404 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                 </p>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+// ---- Verification Section (always accessible) ----
+interface VerificationSectionProps {
+  userId: string;
+  verification: any;
+  profile: any;
+}
+
+const VerificationSection = ({ userId, verification, profile }: VerificationSectionProps) => {
+  const queryClient = useQueryClient();
+  const [signedUrls, setSignedUrls] = useState<{ selfie: string | null; idFront: string | null; idBack: string | null }>({
+    selfie: null, idFront: null, idBack: null,
+  });
+  const [hasViewed, setHasViewed] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  // Identity confirmation fields
+  const [confirmedFirstName, setConfirmedFirstName] = useState('');
+  const [confirmedLastName, setConfirmedLastName] = useState('');
+  const [confirmedBirthDate, setConfirmedBirthDate] = useState('');
+
+  const isPending = verification?.status === 'pending' && verification?.submitted_at;
+
+  // Calculate age from confirmed birth date
+  const calculateAge = (dateStr: string): number | null => {
+    if (!dateStr) return null;
+    const birth = new Date(dateStr);
+    if (isNaN(birth.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const confirmedAge = calculateAge(confirmedBirthDate);
+  const isAdult = confirmedAge !== null && confirmedAge >= 18;
+  const isMinor = confirmedAge !== null && confirmedAge < 18;
+
+  // Load signed URLs when pending
+  const loadSignedUrls = async () => {
+    if (!verification) return;
+    try {
+      const getSignedUrl = async (path: string | null) => {
+        if (!path) return null;
+        const filePath = path.includes('/') ? path.split('/').slice(-2).join('/') : path;
+        const { data } = await supabase.storage
+          .from('identity-documents')
+          .createSignedUrl(filePath, 300);
+        return data?.signedUrl || null;
+      };
+      const [selfie, idFront, idBack] = await Promise.all([
+        getSignedUrl(verification.selfie_url),
+        getSignedUrl(verification.id_front_url),
+        getSignedUrl(verification.id_back_url),
+      ]);
+      setSignedUrls({ selfie, idFront, idBack });
+    } catch (err) {
+      console.error('Error getting signed URLs:', err);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!verification || !confirmedFirstName.trim() || !confirmedLastName.trim() || !confirmedBirthDate || !isAdult) {
+      toast.error('Veuillez confirmer le nom, prénom et la date de naissance (≥ 18 ans)');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // Update profile with confirmed identity info
+      await supabase
+        .from('profiles')
+        .update({
+          first_name: confirmedFirstName.trim(),
+          last_name: confirmedLastName.trim(),
+          birth_date: confirmedBirthDate,
+          age: confirmedAge,
+          is_verified: true,
+        })
+        .eq('user_id', userId);
+
+      // Update verification status
+      const { data: { user: adminUser } } = await supabase.auth.getUser();
+      await supabase
+        .from('identity_verifications')
+        .update({
+          status: 'approved' as any,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: adminUser?.id,
+          documents_deleted: true,
+          selfie_url: null,
+          id_front_url: null,
+          id_back_url: null,
+        })
+        .eq('id', verification.id);
+
+      // Delete documents from storage
+      const { data: files } = await supabase.storage
+        .from('identity-documents')
+        .list(userId);
+      if (files && files.length > 0) {
+        const filePaths = files.map((f: any) => `${userId}/${f.name}`);
+        await supabase.storage.from('identity-documents').remove(filePaths);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-verification'] });
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-verifications'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-verifications-count'] });
+      toast.success('Identité vérifiée et confirmée');
+    } catch (err) {
+      toast.error('Erreur lors de l\'approbation');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!verification || !rejectReason.trim()) {
+      toast.error('Veuillez indiquer une raison de refus');
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      const { data: { user: adminUser } } = await supabase.auth.getUser();
+
+      // Delete documents
+      const { data: files } = await supabase.storage
+        .from('identity-documents')
+        .list(userId);
+      if (files && files.length > 0) {
+        const filePaths = files.map((f: any) => `${userId}/${f.name}`);
+        await supabase.storage.from('identity-documents').remove(filePaths);
+      }
+
+      await supabase
+        .from('identity_verifications')
+        .update({
+          status: 'rejected' as any,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: adminUser?.id,
+          rejection_reason: rejectReason,
+          documents_deleted: true,
+          selfie_url: null,
+          id_front_url: null,
+          id_back_url: null,
+        })
+        .eq('id', verification.id);
+
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-verification'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-verifications'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-verifications-count'] });
+      toast.success('Vérification refusée');
+      setShowRejectInput(false);
+      setRejectReason('');
+    } catch (err) {
+      toast.error('Erreur lors du refus');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (!verification || !isPending) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-muted-foreground">
+          <Shield className="w-10 h-10 mx-auto mb-3 opacity-50" />
+          <p className="text-sm">
+            {verification?.status === 'approved'
+              ? 'Identité déjà vérifiée ✅'
+              : verification?.status === 'rejected'
+              ? 'Dernière vérification refusée. En attente d\'une nouvelle soumission.'
+              : 'Aucune demande de vérification en attente.'}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Shield className="w-4 h-4 text-primary" /> Documents soumis
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!hasViewed ? (
+            <Button 
+              variant="outline" 
+              className="w-full gap-2"
+              onClick={() => {
+                setHasViewed(true);
+                loadSignedUrls();
+                // Mark as viewed
+                supabase
+                  .from('identity_verifications')
+                  .update({ admin_viewed_at: new Date().toISOString() })
+                  .eq('id', verification.id)
+                  .then(() => {});
+              }}
+            >
+              <Eye className="w-4 h-4" />
+              Afficher les documents
+            </Button>
+          ) : (
+            <div className="space-y-4 select-none" onContextMenu={(e) => e.preventDefault()}>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: 'Selfie', url: signedUrls.selfie },
+                  { label: 'Recto ID', url: signedUrls.idFront },
+                  { label: 'Verso ID', url: signedUrls.idBack },
+                ].map((doc) => (
+                  <div key={doc.label} className="space-y-1">
+                    <p className="text-xs font-medium text-center">{doc.label}</p>
+                    <div className="aspect-square bg-secondary rounded-lg overflow-hidden">
+                      {doc.url ? (
+                        <img src={doc.url} alt={doc.label} className="w-full h-full object-cover pointer-events-none" draggable={false} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Identity Confirmation Fields */}
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-primary" />
+                    Confirmation d'identité
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    Saisissez les informations telles qu'elles apparaissent sur la pièce d'identité
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Prénom</label>
+                      <Input
+                        placeholder="Prénom sur la pièce d'identité"
+                        value={confirmedFirstName}
+                        onChange={(e) => setConfirmedFirstName(e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Nom</label>
+                      <Input
+                        placeholder="Nom sur la pièce d'identité"
+                        value={confirmedLastName}
+                        onChange={(e) => setConfirmedLastName(e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Date de naissance</label>
+                    <Input
+                      type="date"
+                      value={confirmedBirthDate}
+                      onChange={(e) => setConfirmedBirthDate(e.target.value)}
+                      max={new Date().toISOString().split('T')[0]}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* Visual age detection */}
+                  {confirmedBirthDate && (
+                    <div className={`rounded-lg p-3 flex items-center gap-3 ${
+                      isMinor 
+                        ? 'bg-destructive/10 border border-destructive/30' 
+                        : isAdult 
+                        ? 'bg-green-500/10 border border-green-500/30' 
+                        : 'bg-secondary'
+                    }`}>
+                      <Calendar className={`w-5 h-5 flex-shrink-0 ${
+                        isMinor ? 'text-destructive' : isAdult ? 'text-green-600' : 'text-muted-foreground'
+                      }`} />
+                      <div>
+                        <p className={`text-sm font-semibold ${
+                          isMinor ? 'text-destructive' : isAdult ? 'text-green-600' : 'text-foreground'
+                        }`}>
+                          {confirmedAge !== null ? `${confirmedAge} ans` : 'Date invalide'}
+                        </p>
+                        {isMinor && (
+                          <p className="text-xs text-destructive font-medium">
+                            ⚠️ MINEUR — Vérification impossible, refusez la demande
+                          </p>
+                        )}
+                        {isAdult && (
+                          <p className="text-xs text-green-600">
+                            ✅ Majeur — Éligible à la vérification
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Profile comparison */}
+                  {(profile.first_name || profile.last_name || profile.birth_date) && (
+                    <div className="bg-secondary/50 rounded-lg p-3 space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">Données déclarées par l'utilisateur :</p>
+                      <div className="text-xs space-y-0.5">
+                        {profile.first_name && (
+                          <p>
+                            Prénom : <span className={confirmedFirstName && confirmedFirstName.toLowerCase() !== profile.first_name?.toLowerCase() ? 'text-amber-600 font-medium' : ''}>{profile.first_name}</span>
+                            {confirmedFirstName && confirmedFirstName.toLowerCase() !== profile.first_name?.toLowerCase() && (
+                              <span className="text-amber-600 ml-1">≠ pièce d'identité</span>
+                            )}
+                          </p>
+                        )}
+                        {profile.last_name && (
+                          <p>
+                            Nom : <span className={confirmedLastName && confirmedLastName.toLowerCase() !== profile.last_name?.toLowerCase() ? 'text-amber-600 font-medium' : ''}>{profile.last_name}</span>
+                            {confirmedLastName && confirmedLastName.toLowerCase() !== profile.last_name?.toLowerCase() && (
+                              <span className="text-amber-600 ml-1">≠ pièce d'identité</span>
+                            )}
+                          </p>
+                        )}
+                        {profile.birth_date && (
+                          <p>
+                            Naissance : {new Date(profile.birth_date).toLocaleDateString('fr-FR')}
+                            {confirmedBirthDate && confirmedBirthDate !== profile.birth_date && (
+                              <span className="text-amber-600 ml-1">≠ pièce d'identité</span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Actions */}
+              {showRejectInput ? (
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Raison du refus (ex: Photo floue, document illisible...)"
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowRejectInput(false)}>
+                      Annuler
+                    </Button>
+                    <Button variant="destructive" size="sm" className="flex-1" onClick={handleReject} disabled={isProcessing || !rejectReason.trim()}>
+                      {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Confirmer le refus'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 gap-1" 
+                    onClick={() => setShowRejectInput(true)}
+                    disabled={isProcessing}
+                    size="sm"
+                  >
+                    <XCircle className="w-4 h-4" /> Refuser
+                  </Button>
+                  <Button 
+                    variant="hero" 
+                    className="flex-1 gap-1"
+                    onClick={handleApprove}
+                    disabled={isProcessing || !confirmedFirstName.trim() || !confirmedLastName.trim() || !confirmedBirthDate || !isAdult}
+                    size="sm"
+                  >
+                    {isProcessing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4" /> Approuver
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

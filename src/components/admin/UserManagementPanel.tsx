@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -21,7 +21,7 @@ import {
   Mail,
   MoreVertical,
   ExternalLink,
-  
+  ChevronLeft,
   Trash2,
   RefreshCw,
   Euro,
@@ -60,6 +60,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import UserProfileDialog from './UserProfileDialog';
+import ClientDossierPanel from './ClientDossierPanel';
 import {
   useSuspendUser,
   useBlockUser,
@@ -327,7 +328,12 @@ const useRevokeAndRequestVerification = () => {
   });
 };
 
-const UserManagementPanel = () => {
+interface UserManagementPanelProps {
+  initialUserId?: string | null;
+  onUserSelected?: (userId: string | null) => void;
+}
+
+const UserManagementPanel = ({ initialUserId, onUserSelected }: UserManagementPanelProps = {}) => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -335,6 +341,14 @@ const UserManagementPanel = () => {
   const [actionType, setActionType] = useState<'suspend' | 'ban' | 'delete'>('suspend');
   const [suspensionReason, setSuspensionReason] = useState('');
   const [selectedDuration, setSelectedDuration] = useState<SuspensionDuration>('24hours');
+  const [viewingDossierUserId, setViewingDossierUserId] = useState<string | null>(initialUserId || null);
+
+  // Sync with external initialUserId prop
+  useEffect(() => {
+    if (initialUserId) {
+      setViewingDossierUserId(initialUserId);
+    }
+  }, [initialUserId]);
 
   const { data: users, isLoading, refetch } = useAllUsers(search, filter);
   const suspendUser = useSuspendUser();
@@ -346,12 +360,35 @@ const UserManagementPanel = () => {
   const { data: taskRates } = useTaskRates();
   const suspensionRate = taskRates?.find(r => r.task_type === 'user_suspension')?.rate_cents || 15;
 
+  const handleOpenDossier = (userId: string) => {
+    setViewingDossierUserId(userId);
+    onUserSelected?.(userId);
+  };
+
+  const handleCloseDossier = () => {
+    setViewingDossierUserId(null);
+    onUserSelected?.(null);
+  };
+
   const handleAction = (user: UserProfile, action: 'suspend' | 'ban' | 'delete') => {
     setSelectedUser(user);
     setActionType(action);
     setActionDialogOpen(true);
     setSuspensionReason('');
   };
+
+  // If viewing a user dossier, show it
+  if (viewingDossierUserId) {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={handleCloseDossier} className="gap-1.5">
+          <ChevronLeft className="w-4 h-4" />
+          Retour à la liste des utilisateurs
+        </Button>
+        <ClientDossierPanel userId={viewingDossierUserId} onClose={handleCloseDossier} />
+      </div>
+    );
+  }
 
   const executeAction = async () => {
     if (!selectedUser) return;
@@ -527,6 +564,7 @@ const UserManagementPanel = () => {
                 user={user}
                 onAction={handleAction}
                 onUnblock={handleUnblock}
+                onOpenDossier={handleOpenDossier}
               />
             ))}
           </div>
@@ -624,10 +662,12 @@ const UserCard = ({
   user,
   onAction,
   onUnblock,
+  onOpenDossier,
 }: {
   user: UserProfile;
   onAction: (user: UserProfile, action: 'suspend' | 'ban' | 'delete') => void;
   onUnblock: (userId: string, username: string) => void;
+  onOpenDossier: (userId: string) => void;
 }) => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const { data: isBlocked } = useIsUserBlocked(user.user_id);
@@ -710,7 +750,10 @@ const UserCard = ({
   };
 
   return (
-    <div className={`p-4 rounded-lg border ${isBlocked ? 'border-destructive/30 bg-destructive/5' : 'border-border bg-card'} hover:bg-secondary/30 transition-colors`}>
+    <div 
+      className={`p-4 rounded-lg border cursor-pointer ${isBlocked ? 'border-destructive/30 bg-destructive/5' : 'border-border bg-card'} hover:bg-secondary/30 hover:border-primary/30 transition-colors`}
+      onClick={() => onOpenDossier(user.user_id)}
+    >
       <div className="flex items-center gap-4">
         <div className="relative">
           <Avatar className="w-12 h-12">
@@ -748,7 +791,7 @@ const UserCard = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           {isBlocked ? (
             <Button
               variant="outline"

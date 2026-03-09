@@ -174,7 +174,11 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onNavigateToSection?.('client-dossier')}
+                  onClick={() => {
+                    if (ticket?.user_id && onNavigateToSection) {
+                      onNavigateToSection('users:' + ticket.user_id);
+                    }
+                  }}
                   className="gap-1.5"
                 >
                   <User className="w-4 h-4" />

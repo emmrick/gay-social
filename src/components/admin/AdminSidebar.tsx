@@ -50,7 +50,6 @@ const navItems: NavItem[] = [
   // Tâches quotidiennes (visible par tous)
   { id: 'pending-tasks', label: "File d'attente", icon: ListOrdered, group: 'tasks' },
   { id: 'support', label: 'Support client', icon: Headphones, group: 'tasks' },
-  { id: 'client-dossier', label: 'Dossier client', icon: IdCard, group: 'tasks' },
   { id: 'support-ratings', label: 'Avis support', icon: Star, group: 'tasks' },
 
   // Modération

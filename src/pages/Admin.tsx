@@ -53,7 +53,6 @@ import PromoImageGeneratorPanel from '@/components/admin/PromoImageGeneratorPane
 import ErrorLogsPanel from '@/components/admin/ErrorLogsPanel';
 import SecurityEventsPanel from '@/components/admin/SecurityEventsPanel';
 import ClientDossierSearch from '@/components/admin/ClientDossierSearch';
-
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -69,6 +68,7 @@ const Admin = () => {
   const { data: pendingVerificationsCount = 0 } = usePendingVerifications();
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
+  const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
@@ -84,8 +84,20 @@ const Admin = () => {
 
   const isAdminOrMod = isAdmin || isModerator;
 
-  const handleSectionChange = useCallback((section: AdminSection | string) => {
+  const handleSectionChange = useCallback((section: AdminSection | string, userId?: string) => {
+    // Support "users:userId" format from support chat
+    if (typeof section === 'string' && section.startsWith('users:')) {
+      const uid = section.split(':')[1];
+      setActiveSection('users');
+      setTargetUserId(uid);
+      return;
+    }
     setActiveSection(section as AdminSection);
+    if (section === 'users' && userId) {
+      setTargetUserId(userId);
+    } else if (section !== 'users') {
+      setTargetUserId(null);
+    }
   }, []);
 
   const { data: pendingPurchasesCount = 0 } = useQuery({
@@ -154,7 +166,7 @@ const Admin = () => {
       case 'withdrawals': return <WithdrawalRequestsPanel />;
       case 'global': return <GlobalEarningsPanel />;
       case 'stats': return <AdminStatsPanel />;
-      case 'users': return <UserManagementPanel />;
+      case 'users': return <UserManagementPanel initialUserId={targetUserId} onUserSelected={setTargetUserId} />;
       case 'credits': return <CreditsManagementPanel />;
       case 'credits-surveillance': return <CreditsSurveillancePanel />;
       case 'credit-purchases': return <CreditPurchaseRequestsPanel />;
@@ -233,7 +245,7 @@ const Admin = () => {
       case 'maintenance': return <MaintenanceTogglePanel />;
       case 'pending-tasks': return <PendingTasksPanel />;
       case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('dashboard')} onNavigateToSection={handleSectionChange} />;
-      case 'client-dossier': return <ClientDossierSearch />;
+      case 'client-dossier': return <ClientDossierSearch onOpenUserDossier={(userId: string) => handleSectionChange('users', userId)} />;
       case 'support-ratings': return <SupportRatingsPanel />;
       case 'popups': return <PopupManagementPanel />;
       case 'faq': return <FAQManagementPanel />;

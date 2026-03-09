@@ -41,7 +41,8 @@ serve(async (req) => {
       });
     }
 
-    const { action, target_user_id, ticket_id, phone_number, otp_id } = await req.json();
+    const body = await req.json();
+    const { action, target_user_id, ticket_id, phone_number, otp_id, code: submitted_code, interrupt_token } = body;
 
     if (action === 'send') {
       // Generate 6-digit OTP

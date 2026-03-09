@@ -85,8 +85,14 @@ const Admin = () => {
   const isAdminOrMod = isAdmin || isModerator;
 
   const handleSectionChange = useCallback((section: AdminSection | string, userId?: string) => {
+    // Support "users:userId" format from support chat
+    if (typeof section === 'string' && section.startsWith('users:')) {
+      const uid = section.split(':')[1];
+      setActiveSection('users');
+      setTargetUserId(uid);
+      return;
+    }
     setActiveSection(section as AdminSection);
-    // If navigating to users with a specific userId, set it
     if (section === 'users' && userId) {
       setTargetUserId(userId);
     } else if (section !== 'users') {

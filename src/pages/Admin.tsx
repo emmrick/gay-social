@@ -2,11 +2,11 @@ import { useState, useCallback, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  Shield, AlertTriangle, CheckCircle, XCircle, Clock, Eye, Loader2, Ban, Users
+  Shield, AlertTriangle, CheckCircle, XCircle, Clock, Eye, Loader2
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  useIsAdmin, useAdminReports, useReportStats, useBlockedUsers,
+  useIsAdmin, useAdminReports, useReportStats,
   ReportStatus, ReportWithProfiles
 } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,8 +21,6 @@ import AdminMobileNav from '@/components/admin/AdminMobileNav';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import ReportCard from '@/components/admin/ReportCard';
-import BlockedUserCard from '@/components/admin/BlockedUserCard';
-import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPanel';
 import PromoCodePanel from '@/components/admin/PromoCodePanel';
 import UserManagementPanel from '@/components/admin/UserManagementPanel';
 import ContentModerationPanel from '@/components/admin/ContentModerationPanel';
@@ -31,8 +29,6 @@ import ModeratorWalletPanel from '@/components/admin/ModeratorWalletPanel';
 import TaskRatesPanel from '@/components/admin/TaskRatesPanel';
 import WithdrawalRequestsPanel from '@/components/admin/WithdrawalRequestsPanel';
 import GlobalEarningsPanel from '@/components/admin/GlobalEarningsPanel';
-import ModerationHistoryPanel from '@/components/admin/ModerationHistoryPanel';
-import CreditsManagementPanel from '@/components/admin/CreditsManagementPanel';
 import CreditsSurveillancePanel from '@/components/admin/CreditsSurveillancePanel';
 import CreditPurchaseRequestsPanel from '@/components/admin/CreditPurchaseRequestsPanel';
 import BroadcastNotificationPanel from '@/components/admin/BroadcastNotificationPanel';
@@ -52,7 +48,6 @@ import FlyerGeneratorPanel from '@/components/admin/FlyerGeneratorPanel';
 import PromoImageGeneratorPanel from '@/components/admin/PromoImageGeneratorPanel';
 import ErrorLogsPanel from '@/components/admin/ErrorLogsPanel';
 import SecurityEventsPanel from '@/components/admin/SecurityEventsPanel';
-import ClientDossierSearch from '@/components/admin/ClientDossierSearch';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },

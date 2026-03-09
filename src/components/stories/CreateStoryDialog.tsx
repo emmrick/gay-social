@@ -68,13 +68,6 @@ const CreateStoryDialog = ({ isOpen, onClose }: CreateStoryDialogProps) => {
     }
   };
 
-  const handleAIGenerated = (generatedFile: File) => {
-    setFile(generatedFile);
-    setMediaType('image');
-    setPreview(URL.createObjectURL(generatedFile));
-    setShowAIGenerator(false);
-  };
-
   const handlePublish = async () => {
     if (!file) return;
     await createStory.mutateAsync({

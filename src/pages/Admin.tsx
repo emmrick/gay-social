@@ -2,11 +2,11 @@ import { useState, useCallback, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  Shield, AlertTriangle, CheckCircle, XCircle, Clock, Eye, Loader2, Ban, Users
+  Shield, AlertTriangle, CheckCircle, XCircle, Clock, Eye, Loader2
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  useIsAdmin, useAdminReports, useReportStats, useBlockedUsers,
+  useIsAdmin, useAdminReports, useReportStats,
   ReportStatus, ReportWithProfiles
 } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,8 +21,6 @@ import AdminMobileNav from '@/components/admin/AdminMobileNav';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import ReportCard from '@/components/admin/ReportCard';
-import BlockedUserCard from '@/components/admin/BlockedUserCard';
-import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPanel';
 import PromoCodePanel from '@/components/admin/PromoCodePanel';
 import UserManagementPanel from '@/components/admin/UserManagementPanel';
 import ContentModerationPanel from '@/components/admin/ContentModerationPanel';
@@ -31,8 +29,6 @@ import ModeratorWalletPanel from '@/components/admin/ModeratorWalletPanel';
 import TaskRatesPanel from '@/components/admin/TaskRatesPanel';
 import WithdrawalRequestsPanel from '@/components/admin/WithdrawalRequestsPanel';
 import GlobalEarningsPanel from '@/components/admin/GlobalEarningsPanel';
-import ModerationHistoryPanel from '@/components/admin/ModerationHistoryPanel';
-import CreditsManagementPanel from '@/components/admin/CreditsManagementPanel';
 import CreditsSurveillancePanel from '@/components/admin/CreditsSurveillancePanel';
 import CreditPurchaseRequestsPanel from '@/components/admin/CreditPurchaseRequestsPanel';
 import BroadcastNotificationPanel from '@/components/admin/BroadcastNotificationPanel';
@@ -52,7 +48,6 @@ import FlyerGeneratorPanel from '@/components/admin/FlyerGeneratorPanel';
 import PromoImageGeneratorPanel from '@/components/admin/PromoImageGeneratorPanel';
 import ErrorLogsPanel from '@/components/admin/ErrorLogsPanel';
 import SecurityEventsPanel from '@/components/admin/SecurityEventsPanel';
-import ClientDossierSearch from '@/components/admin/ClientDossierSearch';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -64,7 +59,6 @@ const Admin = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats } = useReportStats();
-  const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
   const { data: pendingVerificationsCount = 0 } = usePendingVerifications();
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
@@ -167,34 +161,8 @@ const Admin = () => {
       case 'global': return <GlobalEarningsPanel />;
       case 'stats': return <AdminStatsPanel />;
       case 'users': return <UserManagementPanel initialUserId={targetUserId} onUserSelected={setTargetUserId} />;
-      case 'credits': return <CreditsManagementPanel />;
       case 'credits-surveillance': return <CreditsSurveillancePanel />;
       case 'credit-purchases': return <CreditPurchaseRequestsPanel />;
-      case 'blocked':
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Ban className="w-5 h-5" />
-              <h2 className="text-lg font-semibold">Utilisateurs bloqués ({blockedUsers?.length || 0})</h2>
-            </div>
-            <ScrollArea className="h-[calc(100dvh-200px)]">
-              {blockedLoading ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
-                </div>
-              ) : blockedUsers?.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Aucun utilisateur bloqué</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {blockedUsers?.map((block) => <BlockedUserCard key={block.id} block={block} />)}
-                </div>
-              )}
-            </ScrollArea>
-          </div>
-        );
       case 'reports':
         return (
           <div className="space-y-4">
@@ -233,8 +201,6 @@ const Admin = () => {
           </div>
         );
       case 'moderation': return <ContentModerationPanel />;
-      case 'verification': return <IdentityVerificationPanel />;
-      case 'history': return <ModerationHistoryPanel />;
       case 'promo': return <PromoCodePanel />;
       case 'broadcast': return <BroadcastNotificationPanel />;
       case 'ai-moderation': return <AIModerationPanel />;
@@ -245,7 +211,6 @@ const Admin = () => {
       case 'maintenance': return <MaintenanceTogglePanel />;
       case 'pending-tasks': return <PendingTasksPanel />;
       case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('dashboard')} onNavigateToSection={handleSectionChange} />;
-      case 'client-dossier': return <ClientDossierSearch onOpenUserDossier={(userId: string) => handleSectionChange('users', userId)} />;
       case 'support-ratings': return <SupportRatingsPanel />;
       case 'popups': return <PopupManagementPanel />;
       case 'faq': return <FAQManagementPanel />;
@@ -267,7 +232,7 @@ const Admin = () => {
             activeSection={'dashboard'}
             onSectionChange={handleSectionChange}
             pendingReports={pendingReportsCount}
-            blockedCount={blockedUsers?.length || 0}
+            blockedCount={0}
             pendingPurchases={pendingPurchasesCount}
             pendingVerifications={pendingVerificationsCount}
             isAdmin={!!isAdmin}
@@ -282,7 +247,7 @@ const Admin = () => {
           activeSection={activeSection}
           onSectionChange={handleSectionChange}
           pendingReports={pendingReportsCount}
-          blockedCount={blockedUsers?.length || 0}
+          blockedCount={0}
           pendingPurchases={pendingPurchasesCount}
           pendingVerifications={pendingVerificationsCount}
           isAdmin={!!isAdmin}
@@ -311,7 +276,7 @@ const Admin = () => {
         activeSection={activeSection}
         onSectionChange={handleSectionChange}
         pendingReports={pendingReportsCount}
-        blockedCount={blockedUsers?.length || 0}
+        blockedCount={0}
         pendingPurchases={pendingPurchasesCount}
         pendingVerifications={pendingVerificationsCount}
         isAdmin={!!isAdmin}

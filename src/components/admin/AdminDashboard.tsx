@@ -159,7 +159,7 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
             icon={Shield}
             color="text-blue-500"
             bg="bg-blue-500/10"
-            onClick={() => onNavigate('verification')}
+            onClick={() => onNavigate('users')}
           />
           <KPICard
             title="Premium"

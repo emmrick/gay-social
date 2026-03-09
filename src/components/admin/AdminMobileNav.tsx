@@ -39,19 +39,15 @@ const navItems: NavItem[] = [
   { id: 'support-ratings', label: 'Avis', icon: Star, group: 'tasks' },
   // Modération
   { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation' },
-  { id: 'verification', label: 'Vérifications', shortLabel: 'Vérif.', icon: IdCard, group: 'moderation' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
   { id: 'ai-moderation', label: 'IA Modération', shortLabel: 'IA', icon: Bot, group: 'moderation' },
   { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, group: 'moderation' },
-  { id: 'history', label: 'Historique', icon: History, group: 'moderation' },
   // Utilisateurs
   { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users', adminOnly: true },
-  { id: 'blocked', label: 'Bloqués', icon: Ban, group: 'users', adminOnly: true },
   { id: 'stats', label: 'Stats', icon: BarChart3, group: 'users', adminOnly: true },
   { id: 'moderators', label: 'Modérateurs', shortLabel: 'Modéra.', icon: UserCog, group: 'users', adminOnly: true },
   // Finances
   { id: 'wallet', label: 'Portefeuille', icon: Wallet, group: 'finances' },
-  { id: 'credits', label: 'Crédits', icon: Coins, group: 'finances', adminOnly: true },
   { id: 'credits-surveillance', label: 'Surveillance', icon: Activity, group: 'finances', adminOnly: true },
   { id: 'credit-purchases', label: 'Achats', icon: ShoppingCart, group: 'finances' },
   { id: 'rates', label: 'Tarifs', icon: Euro, group: 'finances', adminOnly: true },
@@ -99,12 +95,10 @@ const AdminMobileNav = ({
   const getBadge = useCallback((id: AdminSection) => {
     switch (id) {
       case 'reports': return pendingReports > 0 ? pendingReports : undefined;
-      case 'blocked': return blockedCount > 0 ? blockedCount : undefined;
       case 'credit-purchases': return pendingPurchases > 0 ? pendingPurchases : undefined;
-      case 'verification': return pendingVerifications > 0 ? pendingVerifications : undefined;
       default: return undefined;
     }
-  }, [pendingReports, blockedCount, pendingPurchases, pendingVerifications]);
+  }, [pendingReports, pendingPurchases]);
 
   const activeItem = visibleItems.find(item => item.id === activeSection);
 

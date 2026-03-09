@@ -94,7 +94,6 @@ const CreateStoryDialog = ({ isOpen, onClose }: CreateStoryDialogProps) => {
     setCaption('');
     setVisibility('public');
     if (fileInputRef.current) fileInputRef.current.value = '';
-    setShowAIGenerator(false);
   };
 
   return (

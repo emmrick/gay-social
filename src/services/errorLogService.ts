@@ -1,6 +1,24 @@
 import { supabase } from "@/integrations/supabase/client";
 
 let isLogging = false;
+let cachedUserId: string | null = null;
+
+// Cache the user ID to avoid network calls on every error
+const getCachedUserId = async (): Promise<string | null> => {
+  if (cachedUserId !== null) return cachedUserId;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    cachedUserId = session?.user?.id || null;
+  } catch {
+    cachedUserId = null;
+  }
+  return cachedUserId;
+};
+
+// Listen for auth changes to update cache
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedUserId = session?.user?.id || null;
+});
 
 const logError = async (
   errorMessage: string,
@@ -8,15 +26,14 @@ const logError = async (
   errorSource?: string,
   metadata?: Record<string, unknown>
 ) => {
-  // Prevent recursive logging
   if (isLogging) return;
   isLogging = true;
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const userId = await getCachedUserId();
 
     await supabase.from("error_logs" as any).insert({
-      user_id: user?.id || null,
+      user_id: userId,
       error_message: errorMessage.slice(0, 2000),
       error_stack: errorStack?.slice(0, 5000) || null,
       error_source: errorSource || "unknown",
@@ -25,13 +42,12 @@ const logError = async (
       metadata: metadata || {},
     });
   } catch {
-    // Silently fail - we don't want error logging to cause more errors
+    // Silently fail
   } finally {
     isLogging = false;
   }
 };
 
-// Deduplicate errors within a short window
 const recentErrors = new Set<string>();
 const DEDUP_WINDOW_MS = 5000;
 
@@ -41,7 +57,7 @@ const deduplicatedLog = (
   errorSource?: string,
   metadata?: Record<string, unknown>
 ) => {
-  const key = `${errorSource}:${errorMessage}`;
+  const key = `${errorSource}:${errorMessage.slice(0, 80)}`;
   if (recentErrors.has(key)) return;
   recentErrors.add(key);
   setTimeout(() => recentErrors.delete(key), DEDUP_WINDOW_MS);
@@ -49,7 +65,6 @@ const deduplicatedLog = (
 };
 
 export const initGlobalErrorCapture = () => {
-  // Capture unhandled promise rejections
   window.addEventListener("unhandledrejection", (event) => {
     const reason = event.reason;
     const message = reason instanceof Error ? reason.message : String(reason);
@@ -57,7 +72,6 @@ export const initGlobalErrorCapture = () => {
     deduplicatedLog(message, stack, "unhandled_rejection");
   });
 
-  // Capture global errors
   window.addEventListener("error", (event) => {
     const message = event.error?.message || event.message || "Unknown error";
     const stack = event.error?.stack;
@@ -68,7 +82,7 @@ export const initGlobalErrorCapture = () => {
     });
   });
 
-  // Capture console.error calls
+  // Patch console.error – lightweight, no network per call
   const originalConsoleError = console.error;
   console.error = (...args: unknown[]) => {
     originalConsoleError.apply(console, args);
@@ -76,7 +90,6 @@ export const initGlobalErrorCapture = () => {
     const stack = args.find((a) => a instanceof Error) instanceof Error
       ? (args.find((a) => a instanceof Error) as Error).stack
       : undefined;
-    // Only log actual errors, not warnings or debug info
     const isReactWarning = message.startsWith("Warning:") || message.includes("React.forwardRef") || message.includes("Function components cannot be given refs");
     const isVagueRejection = message === "Rejected" || message === "undefined" || message === "[object Object]";
     if (!isReactWarning && !isVagueRejection && (message.includes("Error") || message.includes("error") || message.includes("failed"))) {

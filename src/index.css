@@ -521,13 +521,29 @@ html {
 /* Reduce GPU compositing on mobile */
 @media (max-width: 768px) {
   .animate-pulse {
-    animation-duration: 3s;
+    animation-duration: 4s;
   }
   .animate-bounce {
-    animation-duration: 2s;
+    animation-duration: 3s;
+  }
+  .animate-float {
+    animation-duration: 12s;
+  }
+  .animate-pulse-glow {
+    animation: none;
+  }
+  .rainbow-text {
+    animation-duration: 16s;
   }
   .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+  }
+}
+
+/* Disable non-essential animations on low-power / mobile */
+@media (hover: none) and (pointer: coarse) {
+  .glow-effect {
+    box-shadow: none;
   }
 }

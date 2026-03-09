@@ -506,7 +506,7 @@ html {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: rainbow-shift 4s ease infinite;
+  animation: rainbow-shift 8s ease infinite;
 }
 
 /* ── Performance: reduce animations for battery/heat savings ── */

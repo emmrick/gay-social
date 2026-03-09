@@ -328,7 +328,12 @@ const useRevokeAndRequestVerification = () => {
   });
 };
 
-const UserManagementPanel = () => {
+interface UserManagementPanelProps {
+  initialUserId?: string | null;
+  onUserSelected?: (userId: string | null) => void;
+}
+
+const UserManagementPanel = ({ initialUserId, onUserSelected }: UserManagementPanelProps = {}) => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -336,6 +341,14 @@ const UserManagementPanel = () => {
   const [actionType, setActionType] = useState<'suspend' | 'ban' | 'delete'>('suspend');
   const [suspensionReason, setSuspensionReason] = useState('');
   const [selectedDuration, setSelectedDuration] = useState<SuspensionDuration>('24hours');
+  const [viewingDossierUserId, setViewingDossierUserId] = useState<string | null>(initialUserId || null);
+
+  // Sync with external initialUserId prop
+  useEffect(() => {
+    if (initialUserId) {
+      setViewingDossierUserId(initialUserId);
+    }
+  }, [initialUserId]);
 
   const { data: users, isLoading, refetch } = useAllUsers(search, filter);
   const suspendUser = useSuspendUser();
@@ -347,12 +360,35 @@ const UserManagementPanel = () => {
   const { data: taskRates } = useTaskRates();
   const suspensionRate = taskRates?.find(r => r.task_type === 'user_suspension')?.rate_cents || 15;
 
+  const handleOpenDossier = (userId: string) => {
+    setViewingDossierUserId(userId);
+    onUserSelected?.(userId);
+  };
+
+  const handleCloseDossier = () => {
+    setViewingDossierUserId(null);
+    onUserSelected?.(null);
+  };
+
   const handleAction = (user: UserProfile, action: 'suspend' | 'ban' | 'delete') => {
     setSelectedUser(user);
     setActionType(action);
     setActionDialogOpen(true);
     setSuspensionReason('');
   };
+
+  // If viewing a user dossier, show it
+  if (viewingDossierUserId) {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={handleCloseDossier} className="gap-1.5">
+          <ChevronLeft className="w-4 h-4" />
+          Retour à la liste des utilisateurs
+        </Button>
+        <ClientDossierPanel userId={viewingDossierUserId} onClose={handleCloseDossier} />
+      </div>
+    );
+  }
 
   const executeAction = async () => {
     if (!selectedUser) return;

@@ -122,6 +122,7 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
   const [username, setUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [bio, setBio] = useState('');
   const [age, setAge] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);

@@ -89,7 +89,7 @@ const ClientDossierSearch = ({ onOpenUserDossier }: ClientDossierSearchProps) =>
             <Card 
               key={profile.user_id} 
               className="cursor-pointer hover:border-primary/50 transition-colors"
-              onClick={() => setSelectedUserId(profile.user_id)}
+              onClick={() => handleSelectUser(profile.user_id)}
             >
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">

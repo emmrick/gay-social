@@ -18,13 +18,13 @@ import {
 export type AdminSection = 
   | 'dashboard'
   | 'wallet' | 'withdrawals' | 'rates' | 'global' 
-  | 'stats' | 'users' | 'reports' | 'moderation' | 'blocked' 
-  | 'verification' | 'promo' | 'history' | 'credits'
+  | 'stats' | 'users' | 'reports' | 'moderation'
+  | 'promo'
   | 'credits-surveillance' | 'credit-purchases' | 'broadcast'
   | 'ai-moderation' | 'screenshot-sanctions' | 'moderators'
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
   | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
-  | 'promo-images' | 'error-logs' | 'security' | 'client-dossier';
+  | 'promo-images' | 'error-logs' | 'security';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;

@@ -23,6 +23,7 @@ import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import ReportCard from '@/components/admin/ReportCard';
 import BlockedUserCard from '@/components/admin/BlockedUserCard';
 import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPanel';
+import PromoCodePanel from '@/components/admin/PromoCodePanel';
 import UserManagementPanel from '@/components/admin/UserManagementPanel';
 import ContentModerationPanel from '@/components/admin/ContentModerationPanel';
 import AdminStatsPanel from '@/components/admin/AdminStatsPanel';

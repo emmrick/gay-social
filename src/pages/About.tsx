@@ -74,7 +74,7 @@ const About = () => {
       <SEOHead
         title="À propos de Gay Connect - Site de Rencontre Gay & Sexe Gay Sécurisé"
         description="Gay Connect : le site de rencontre gay et de sexe entre hommes n°1 en France. Espace safe, profils vérifiés, médias éphémères et modération active. Plan cul gay sécurisé."
-        canonical="https://gay-connect.lovable.app/about"
+        canonical="https://gay-connect.fr/about"
         keywords="site gay, rencontre gay, sexe gay, communauté gay france, plan cul gay sécurisé, tchat gay, espace safe gay, gay connect avis"
         jsonLd={{
           '@context': 'https://schema.org',

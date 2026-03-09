@@ -7,7 +7,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Search, User, Loader2, FileUser } from 'lucide-react';
 import ClientDossierPanel from './ClientDossierPanel';
 
-const ClientDossierSearch = () => {
+interface ClientDossierSearchProps {
+  onOpenUserDossier?: (userId: string) => void;
+}
+
+const ClientDossierSearch = ({ onOpenUserDossier }: ClientDossierSearchProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -18,7 +22,6 @@ const ClientDossierSearch = () => {
     setSearching(true);
     try {
       const q = searchQuery.trim();
-      // Search by username, first_name, last_name, or phone
       const { data, error } = await supabase
         .from('profiles')
         .select('user_id, username, first_name, last_name, avatar_url, age, region, phone_number, is_verified')
@@ -31,6 +34,14 @@ const ClientDossierSearch = () => {
       console.error('Search error:', err);
     } finally {
       setSearching(false);
+    }
+  };
+
+  const handleSelectUser = (userId: string) => {
+    if (onOpenUserDossier) {
+      onOpenUserDossier(userId);
+    } else {
+      setSelectedUserId(userId);
     }
   };
 

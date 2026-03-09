@@ -322,6 +322,7 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
         username: username.trim(),
         first_name: firstName.trim() || null,
         last_name: lastName.trim() || null,
+        phone_number: phoneNumber.trim() || null,
         bio: bio.trim() || null,
         age: ageNum,
         avatar_url: avatarUrl,

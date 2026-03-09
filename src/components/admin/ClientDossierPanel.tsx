@@ -832,18 +832,75 @@ const VerificationSection = ({ userId, verification, profile }: VerificationSect
     }
   };
 
+  const handleRequestNewVerification = async () => {
+    setIsProcessing(true);
+    try {
+      // Reset verification status so user can resubmit
+      if (verification) {
+        await supabase
+          .from('identity_verifications')
+          .update({
+            status: 'pending' as any,
+            submitted_at: null,
+            rejection_reason: null,
+            reviewed_at: null,
+            reviewed_by: null,
+            selfie_url: null,
+            id_front_url: null,
+            id_back_url: null,
+          })
+          .eq('id', verification.id);
+      } else {
+        await supabase
+          .from('identity_verifications')
+          .insert({
+            user_id: userId,
+            status: 'pending' as any,
+          });
+      }
+
+      // Notify user
+      await supabase.from('notifications').insert({
+        user_id: userId,
+        type: 'verification_required',
+        title: '🔄 Nouvelle vérification requise',
+        message: 'L\'équipe de modération vous demande de soumettre à nouveau vos documents d\'identité. Rendez-vous dans votre profil pour compléter la vérification.',
+        is_read: false,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-verification'] });
+      toast.success('Demande de re-vérification envoyée au client');
+    } catch (err) {
+      toast.error('Erreur lors de la demande');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   if (!verification || !isPending) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">
-          <Shield className="w-10 h-10 mx-auto mb-3 opacity-50" />
-          <p className="text-sm">
-            {verification?.status === 'approved'
-              ? 'Identité déjà vérifiée ✅'
-              : verification?.status === 'rejected'
-              ? 'Dernière vérification refusée. En attente d\'une nouvelle soumission.'
-              : 'Aucune demande de vérification en attente.'}
-          </p>
+        <CardContent className="py-8 text-center space-y-4">
+          <div className="text-muted-foreground">
+            <Shield className="w-10 h-10 mx-auto mb-3 opacity-50" />
+            <p className="text-sm">
+              {verification?.status === 'approved'
+                ? 'Identité déjà vérifiée ✅'
+                : verification?.status === 'rejected'
+                ? 'Dernière vérification refusée. En attente d\'une nouvelle soumission.'
+                : 'Aucune demande de vérification en attente.'}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRequestNewVerification}
+            disabled={isProcessing}
+            className="gap-2"
+          >
+            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            Demander une (re)vérification d'identité
+          </Button>
         </CardContent>
       </Card>
     );

@@ -10,12 +10,12 @@ interface BottomNavBarProps {
 }
 
 const tabs = [
-  { id: 'home' as const, icon: Home, label: 'Accueil' },
-  { id: 'swipe' as const, icon: Sparkles, label: 'Swipe' },
-  { id: 'messages' as const, icon: MessageCircle, label: 'Messages' },
+  { id: 'home' as const, icon: Home, label: 'Accueil', premium: false },
+  { id: 'swipe' as const, icon: Sparkles, label: 'Swipe', premium: false },
+  { id: 'messages' as const, icon: MessageCircle, label: 'Messages', premium: false },
   { id: 'premium' as const, icon: Crown, label: 'Crédits', premium: true },
-  { id: 'help' as const, icon: HelpCircle, label: 'Aide' },
-  { id: 'profile' as const, icon: User, label: 'Profil' },
+  { id: 'help' as const, icon: HelpCircle, label: 'Aide', premium: false },
+  { id: 'profile' as const, icon: User, label: 'Profil', premium: false },
 ] as const;
 
 const BottomNavBar = memo(({ activeTab, onTabChange, unreadCount = 0, isPremium = false }: BottomNavBarProps) => {

@@ -318,18 +318,20 @@ const Index = () => {
   // Render chatbot config view
   if (currentView === 'chatbot-config') {
     return (
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen"
-      >
-        <ChatBotConfigPage onBack={() => {
-          setCurrentView('profile');
-          setActiveTab('profile');
-        }} />
-      </motion.div>
+      <Suspense fallback={<LazyFallback />}>
+        <motion.div
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+          className="min-h-screen"
+        >
+          <ChatBotConfigPage onBack={() => {
+            setCurrentView('profile');
+            setActiveTab('profile');
+          }} />
+        </motion.div>
+      </Suspense>
     );
   }
 

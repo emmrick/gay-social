@@ -54,21 +54,17 @@ const navItems: NavItem[] = [
 
   // Modération
   { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation' },
-  { id: 'verification', label: 'Vérification identité', icon: IdCard, group: 'moderation' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
   { id: 'ai-moderation', label: 'Modération IA', icon: Bot, group: 'moderation' },
   { id: 'screenshot-sanctions', label: 'Captures écran', icon: Camera, group: 'moderation' },
-  { id: 'history', label: 'Historique', icon: History, group: 'moderation' },
 
   // Utilisateurs (admin only)
   { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users', adminOnly: true },
-  { id: 'blocked', label: 'Bloqués', icon: Ban, group: 'users', adminOnly: true },
   { id: 'stats', label: 'Statistiques', icon: BarChart3, group: 'users', adminOnly: true },
   { id: 'moderators', label: 'Modérateurs', icon: UserCog, group: 'users', adminOnly: true },
 
   // Finances
   { id: 'wallet', label: 'Portefeuille', icon: Wallet, group: 'finances' },
-  { id: 'credits', label: 'Gestion crédits', icon: Coins, group: 'finances', adminOnly: true },
   { id: 'credits-surveillance', label: 'Surveillance', icon: Activity, group: 'finances', adminOnly: true },
   { id: 'credit-purchases', label: 'Achats crédits', icon: ShoppingCart, group: 'finances' },
   { id: 'rates', label: 'Tarifs missions', icon: Euro, group: 'finances', adminOnly: true },

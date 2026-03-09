@@ -80,6 +80,7 @@ const navItems: NavItem[] = [
   { id: 'popups', label: 'Pop-ups promo', icon: Bell, group: 'communication', adminOnly: true },
   { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'communication', adminOnly: true },
   { id: 'flyers', label: 'Flyers promo', icon: FileImage, group: 'communication', adminOnly: true },
+  { id: 'promo-images', label: 'Visuels promo IA', icon: Sparkles, group: 'communication', adminOnly: true },
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'communication', adminOnly: true },
 
   // Config & Logs (admin only)

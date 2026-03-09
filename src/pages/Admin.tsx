@@ -52,6 +52,7 @@ import FlyerGeneratorPanel from '@/components/admin/FlyerGeneratorPanel';
 import PromoImageGeneratorPanel from '@/components/admin/PromoImageGeneratorPanel';
 import ErrorLogsPanel from '@/components/admin/ErrorLogsPanel';
 import SecurityEventsPanel from '@/components/admin/SecurityEventsPanel';
+import ClientDossierSearch from '@/components/admin/ClientDossierSearch';
 
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },

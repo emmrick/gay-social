@@ -81,7 +81,7 @@ serve(async (req) => {
         });
       }
 
-      const siteUrl = Deno.env.get('SITE_URL') || 'https://gay-connect.lovable.app';
+      const siteUrl = Deno.env.get('SITE_URL') || 'https://gay-connect.fr';
       const interruptLink = `${siteUrl}/?interrupt=${interruptToken}`;
 
       const smsBody = `Gay Connect - Code de vérification : ${code}\n\n` +

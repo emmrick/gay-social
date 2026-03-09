@@ -204,7 +204,7 @@ const GuidePage = () => {
       <SEOHead
         title="Guide d'utilisation - Gay Connect"
         description="Apprenez à utiliser toutes les fonctionnalités de Gay Connect : profil, messagerie, swipe, crédits, sécurité et bien plus."
-        canonical="https://gay-connect.lovable.app/guide"
+        canonical="https://gay-connect.fr/guide"
       />
       <div className="min-h-screen bg-background">
         {/* Header */}

@@ -128,7 +128,7 @@ const RegionPage = () => {
   const regionName = room?.region_name || dept?.name || regionCode;
   const pageTitle = `Gay ${regionName} (${regionCode}) - Rencontre Gay, Plan Cul Gay & Tchat | Gay Connect`;
   const pageDescription = `Rencontre gay ${regionName} : plan cul gay, sexe gay et tchat gay dans le ${regionCode}. ${dept?.description || ''} Profils vérifiés, échanges de photos et vidéos éphémères. ${total > 0 ? `${total} hommes gay inscrits.` : ''} Rejoins la communauté gay du ${regionCode} gratuitement. +18 ans.`;
-  const canonical = `https://gay-connect.lovable.app/region/${slug}`;
+  const canonical = `https://gay-connect.fr/region/${slug}`;
   const seoKeywords = `gay ${regionName?.toLowerCase()}, rencontre gay ${regionName?.toLowerCase()}, plan cul gay ${regionName?.toLowerCase()}, sexe gay ${regionName?.toLowerCase()}, tchat gay ${regionName?.toLowerCase()}, homme gay ${regionName?.toLowerCase()}, drague gay ${regionName?.toLowerCase()}, site gay ${regionCode}, mec gay ${regionName?.toLowerCase()}`;
 
   const jsonLd = {
@@ -137,7 +137,7 @@ const RegionPage = () => {
     name: pageTitle,
     description: pageDescription,
     url: canonical,
-    isPartOf: { '@type': 'WebSite', name: 'Gay Connect', url: 'https://gay-connect.lovable.app' },
+    isPartOf: { '@type': 'WebSite', name: 'Gay Connect', url: 'https://gay-connect.fr' },
     about: {
       '@type': 'Place',
       name: `${regionCode} - ${regionName}`,

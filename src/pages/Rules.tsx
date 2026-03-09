@@ -97,7 +97,7 @@ const Rules = () => {
       <SEOHead
         title="Règles de conduite - Gay Connect"
         description="Règles de conduite de la communauté Gay Connect. Respect, bienveillance et sécurité pour tous les membres."
-        canonical="https://gay-connect.lovable.app/regles"
+        canonical="https://gay-connect.fr/rules"
       />
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">

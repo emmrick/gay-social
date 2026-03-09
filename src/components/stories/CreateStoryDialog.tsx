@@ -27,12 +27,14 @@ const VISIBILITY_OPTIONS: { value: Visibility; label: string; icon: typeof Globe
 const CreateStoryDialog = ({ isOpen, onClose }: CreateStoryDialogProps) => {
   const { user } = useAuth();
   const { createStory } = useStories();
+  const { data: isAdmin } = useIsAdmin();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('public');
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [showSnapCapture, setShowSnapCapture] = useState(false);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: profile } = useQuery({

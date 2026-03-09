@@ -232,7 +232,7 @@ const Admin = () => {
             activeSection={'dashboard'}
             onSectionChange={handleSectionChange}
             pendingReports={pendingReportsCount}
-            blockedCount={blockedUsers?.length || 0}
+            blockedCount={0}
             pendingPurchases={pendingPurchasesCount}
             pendingVerifications={pendingVerificationsCount}
             isAdmin={!!isAdmin}

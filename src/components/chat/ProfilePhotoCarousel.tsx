@@ -229,17 +229,17 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
               <>
                 <button
                   onClick={(e) => { e.stopPropagation(); goFullscreenPrev(); }}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/25 transition-colors"
                   aria-label="Photo précédente"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-8 h-8" />
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); goFullscreenNext(); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/25 transition-colors"
                   aria-label="Photo suivante"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-8 h-8" />
                 </button>
               </>
             )}

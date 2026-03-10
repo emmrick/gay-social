@@ -405,7 +405,7 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
             </TabsList>
           </div>
 
-          <ScrollArea className="flex-1 min-h-0" style={{ height: '400px' }}>
+          <div className="overflow-y-auto overscroll-contain" style={{ maxHeight: '55vh' }}>
             <div className="px-5 py-4">
               {/* Photos Tab */}
               <TabsContent value="photos" className="mt-0 focus-visible:outline-none">
@@ -733,7 +733,7 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
                 </div>
               </TabsContent>
             </div>
-          </ScrollArea>
+          </div>
         </Tabs>
 
         <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border/50 bg-muted/30">

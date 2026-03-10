@@ -107,7 +107,7 @@ const ModerationMissionAlert = () => {
 
   // Listen for new moderation tasks via realtime
   useEffect(() => {
-    if (!user?.id || !isStaff || isOnAdminPage) return;
+    if (!user?.id || !isStaff || isOnAdminPage || !isTrulyOnline) return;
 
     const channel = supabase
       .channel('mission-alert-global')

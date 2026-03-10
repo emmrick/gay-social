@@ -19,6 +19,8 @@ interface AdminMobileNavProps {
   pendingPurchases?: number;
   pendingVerifications?: number;
   isAdmin?: boolean;
+  /** Slot rendered at top of dashboard scroll area (for TaskQueuePopup) */
+  dashboardTopSlot?: React.ReactNode;
 }
 
 type NavGroup = 'tasks' | 'moderation' | 'users' | 'finances' | 'communication' | 'config' | 'logs';

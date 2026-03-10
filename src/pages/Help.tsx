@@ -547,15 +547,40 @@ const Help = ({ embedded = false }: HelpProps) => {
     setRatingComment('');
   };
 
-  // Send message to agent (in agent phase)
+  // Send message to agent (in agent or waiting phase)
   const handleSendToAgent = useCallback(async () => {
     if (!freeText.trim() || !selectedTicket?.id || !user?.id) return;
     const text = freeText.trim();
     setFreeText('');
+
+    // If ticket is waiting_client, reopen it so a new mission is created
+    const currentStatus = liveTicket?.status || selectedTicket.status;
+    if (currentStatus === 'waiting_client') {
+      try {
+        // Send system message
+        await supabase
+          .from('support_messages' as any)
+          .insert({
+            ticket_id: selectedTicket.id,
+            sender_id: user.id,
+            content: '🔄 Nous vous mettons en relation avec un agent. Merci de patienter...',
+            message_type: 'system',
+          } as any);
+
+        // Reopen the ticket — the DB trigger handles creating the moderation task
+        await supabase
+          .from('support_tickets' as any)
+          .update({ status: 'open', assigned_to: null } as any)
+          .eq('id', selectedTicket.id);
+      } catch (err) {
+        console.error('Error reopening ticket:', err);
+      }
+    }
+
     await supabase
       .from('support_messages' as any)
       .insert({ ticket_id: selectedTicket.id, sender_id: user.id, content: text, message_type: 'text' } as any);
-  }, [freeText, selectedTicket?.id, user?.id]);
+  }, [freeText, selectedTicket?.id, selectedTicket?.status, liveTicket?.status, user?.id]);
 
   const handleSubmitRating = async () => {
     if (!ratingEmoji || !selectedTicket?.id) return;

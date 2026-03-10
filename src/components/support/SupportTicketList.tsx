@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import EstimatedWaitBanner from '@/components/support/EstimatedWaitBanner';
 
 interface SupportTicketListProps {
   onSelectTicket: (ticket: SupportTicket) => void;
@@ -133,7 +134,12 @@ const SupportTicketList = ({ onSelectTicket }: SupportTicketListProps) => {
                 </div>
                 <div className="flex items-center justify-between gap-2 mt-0.5">
                   <p className="text-xs text-muted-foreground truncate">{ticket.subject}</p>
-                  {getStatusBadge(ticket.status)}
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {ticket.status === 'open' && (
+                      <EstimatedWaitBanner entityId={ticket.id} compact />
+                    )}
+                    {getStatusBadge(ticket.status)}
+                  </div>
                 </div>
               </div>
             </button>

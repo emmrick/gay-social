@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import SavedRepliesSheet from '@/components/support/SavedRepliesSheet';
 import FAQSearchPanel from '@/components/support/FAQSearchPanel';
+import EstimatedWaitBanner from '@/components/support/EstimatedWaitBanner';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -607,6 +608,11 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
             Ticket #{ticket.ticket_number} • {ticket.subject}
           </p>
         </div>
+      )}
+
+      {/* Wait time banner for open tickets (client side) */}
+      {!isAgent && (ticket.status === 'open') && (
+        <EstimatedWaitBanner entityId={ticket.id} className="mx-3 mt-2" />
       )}
 
       {/* Messages area */}

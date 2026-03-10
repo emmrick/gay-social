@@ -2,9 +2,30 @@ import { Clock, LogOut, ShieldCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import EstimatedWaitBanner from '@/components/support/EstimatedWaitBanner';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const PendingApprovalScreen = () => {
-  const { signOut, profile } = useAuth();
+  const { signOut, profile, user } = useAuth();
+
+  // Get verification ID for wait time estimation
+  const { data: verificationId } = useQuery({
+    queryKey: ['pending-verification-id', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('identity_verifications')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return (data as any)?.id ?? null;
+    },
+    enabled: !!user?.id,
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
@@ -57,6 +78,9 @@ const PendingApprovalScreen = () => {
               </div>
             </div>
           </div>
+
+          {/* Wait time estimation */}
+          <EstimatedWaitBanner entityId={verificationId ?? null} />
 
           {/* Actions */}
           <div className="space-y-3">

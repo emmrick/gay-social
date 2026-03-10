@@ -79,6 +79,9 @@ const PendingApprovalScreen = () => {
             </div>
           </div>
 
+          {/* Wait time estimation */}
+          <EstimatedWaitBanner entityId={verificationId ?? null} />
+
           {/* Actions */}
           <div className="space-y-3">
             <Button

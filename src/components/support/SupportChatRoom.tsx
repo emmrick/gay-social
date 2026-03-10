@@ -610,6 +610,11 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
         </div>
       )}
 
+      {/* Wait time banner for open tickets (client side) */}
+      {!isAgent && (ticket.status === 'open') && (
+        <EstimatedWaitBanner entityId={ticket.id} className="mx-3 mt-2" />
+      )}
+
       {/* Messages area */}
       <div
         className="flex-1 overflow-y-auto overscroll-contain relative"

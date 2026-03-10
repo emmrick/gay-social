@@ -180,9 +180,6 @@ const AlbumManager = ({ isOpen, onClose, initialAlbumId }: AlbumManagerProps) =>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-            <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" onClick={handleClose}>
-              <X className="w-5 h-5" />
-            </Button>
           </div>
 
           {/* Content */}

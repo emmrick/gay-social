@@ -13,7 +13,7 @@ interface SEOHeadProps {
 
 const BASE_URL = 'https://gay-connect.fr';
 const DEFAULT_OG_IMAGE = 'https://lovable.dev/opengraph-image-p98pqg.png';
-const DEFAULT_KEYWORDS = 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, drague gay, annonce gay, homme gay, gay france, rencontre homosexuel, plan sexe gay, hookup gay, sexfriend gay, homme cherche homme';
+const DEFAULT_KEYWORDS = 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, drague gay, annonce gay, homme gay, gay france, rencontre homosexuel, plan sexe gay, hookup gay, sexfriend gay, homme cherche homme, gay paris, gay lyon, gay marseille, gay toulouse, gay bordeaux, gay nantes, gay lille, gay strasbourg, gay montpellier, gay nice, rencontre gay gratuit, tchat gay gratuit, plan cul gay ce soir, plan cul gay gratuit, site homo, site homosexuel, rencontre gay proximité, rencontre gay près de moi, appli gay, application rencontre gay, grindr alternative, site comme grindr, gay connect, gayconnect, plan discret gay, rencontre locale gay, mec cherche mec, bi curieux, bisexuel, lgbt france, communauté lgbt, gay friendly, gay dom tom, gay guadeloupe, gay martinique, gay réunion';
 
 const SEOHead = ({
   title = 'Gay Connect - Site de Rencontre Gay, Sexe Gay & Tchat Gay France',

@@ -1,6 +1,7 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { MessageCircle, User, Home, Crown, Sparkles, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 
 interface BottomNavBarProps {
   activeTab: 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile';
@@ -9,13 +10,13 @@ interface BottomNavBarProps {
   isPremium?: boolean;
 }
 
-const tabs = [
-  { id: 'home' as const, icon: Home, label: 'Accueil', premium: false },
-  { id: 'swipe' as const, icon: Sparkles, label: 'Swipe', premium: false },
-  { id: 'messages' as const, icon: MessageCircle, label: 'Messages', premium: false },
-  { id: 'premium' as const, icon: Crown, label: 'Crédits', premium: true },
-  { id: 'help' as const, icon: HelpCircle, label: 'Aide', premium: false },
-  { id: 'profile' as const, icon: User, label: 'Profil', premium: false },
+const allTabs = [
+  { id: 'home' as const, icon: Home, label: 'Accueil', premium: false, featureKey: null },
+  { id: 'swipe' as const, icon: Sparkles, label: 'Swipe', premium: false, featureKey: 'swipe_page' },
+  { id: 'messages' as const, icon: MessageCircle, label: 'Messages', premium: false, featureKey: null },
+  { id: 'premium' as const, icon: Crown, label: 'Crédits', premium: true, featureKey: 'credits_page' },
+  { id: 'help' as const, icon: HelpCircle, label: 'Aide', premium: false, featureKey: null },
+  { id: 'profile' as const, icon: User, label: 'Profil', premium: false, featureKey: null },
 ] as const;
 
 const BottomNavBar = memo(({ activeTab, onTabChange, unreadCount = 0, isPremium = false }: BottomNavBarProps) => {

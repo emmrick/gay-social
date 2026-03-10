@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import useEmblaCarousel from 'embla-carousel-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Play, Trash2, ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Play, Pause, Trash2, ZoomIn, ZoomOut, Shield, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +28,55 @@ interface ZoomState {
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;
 
+/** Image component with loading state */
+const ImageWithLoader = ({ src, alt, zoomState, isZoomed }: {
+  src: string;
+  alt: string;
+  zoomState: ZoomState;
+  isZoomed: boolean;
+}) => {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <>
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-white/50" />
+        </div>
+      )}
+      <motion.img
+        initial={{ scale: 1, opacity: 0 }}
+        animate={{
+          scale: zoomState.scale,
+          opacity: loaded ? 1 : 0,
+          x: zoomState.x,
+          y: zoomState.y,
+        }}
+        transition={{
+          scale: { type: 'spring', stiffness: 300, damping: 30 },
+          x: { type: 'spring', stiffness: 300, damping: 30 },
+          y: { type: 'spring', stiffness: 300, damping: 30 },
+          opacity: { duration: 0.3 }
+        }}
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        className={cn(
+          "max-w-full max-h-full object-contain rounded-lg select-none pointer-events-none",
+          isZoomed ? "cursor-grab active:cursor-grabbing" : "cursor-zoom-in"
+        )}
+        draggable={false}
+        onDragStart={(e) => e.preventDefault()}
+        style={{
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none',
+          filter: 'none',
+        }}
+      />
+    </>
+  );
+};
+
 const AlbumGalleryViewer = ({ 
   media, 
   initialIndex = 0, 
@@ -35,77 +84,69 @@ const AlbumGalleryViewer = ({
   onClose,
   onDelete 
 }: AlbumGalleryViewerProps) => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    startIndex: initialIndex,
+    dragFree: false,
+    align: 'center',
+    watchDrag: () => {
+      // Disable carousel drag when zoomed
+      return zoomState.scale <= 1;
+    },
+  });
   const [selectedIndex, setSelectedIndex] = useState(initialIndex);
   const [videoPlaying, setVideoPlaying] = useState<string | null>(null);
   const [zoomState, setZoomState] = useState<ZoomState>({ scale: 1, x: 0, y: 0 });
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  // Touch refs
+  
+  
+  // Touch/gesture refs
+  const imageContainerRef = useRef<HTMLDivElement>(null);
   const lastTouchRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const initialPinchDistanceRef = useRef<number | null>(null);
   const initialScaleRef = useRef<number>(1);
   const lastPanRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const touchStartXRef = useRef<number>(0);
-  const touchStartYRef = useRef<number>(0);
-  const isSwiping = useRef(false);
+  
 
-  // Deduplicate media by id
-  const uniqueMedia = media.filter((item, index, self) => 
-    index === self.findIndex(m => m.id === item.id)
-  );
-
-  // Push history state when opening, pop to close
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const safeIndex = Math.min(initialIndex, uniqueMedia.length - 1);
-    setSelectedIndex(Math.max(0, safeIndex));
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    const newIndex = emblaApi.selectedScrollSnap();
+    setSelectedIndex(newIndex);
+    // Reset zoom and pause video when swiping
     setZoomState({ scale: 1, x: 0, y: 0 });
-    setImageLoaded(false);
     setVideoPlaying(null);
+  }, [emblaApi]);
 
-    // Push a fake history entry so "back" closes the viewer
-    window.history.pushState({ albumGalleryOpen: true }, '');
-
-    const handlePopState = () => {
-      onClose();
-    };
-
-    window.addEventListener('popstate', handlePopState);
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on('select', onSelect);
     return () => {
-      window.removeEventListener('popstate', handlePopState);
+      emblaApi.off('select', onSelect);
     };
-  }, [isOpen, initialIndex, uniqueMedia.length, onClose]);
+  }, [emblaApi, onSelect]);
 
-  // Reset image loaded state when switching
+  // Reset to initial index when opening
   useEffect(() => {
-    setImageLoaded(false);
-  }, [selectedIndex]);
-
-  const goTo = useCallback((index: number) => {
-    if (zoomState.scale > 1) return;
-    const len = uniqueMedia.length;
-    const next = ((index % len) + len) % len;
-    setSelectedIndex(next);
-    setZoomState({ scale: 1, x: 0, y: 0 });
-    setVideoPlaying(null);
-  }, [uniqueMedia.length, zoomState.scale]);
-
-  const scrollPrev = useCallback(() => goTo(selectedIndex - 1), [goTo, selectedIndex]);
-  const scrollNext = useCallback(() => goTo(selectedIndex + 1), [goTo, selectedIndex]);
-
-  // Helper to close via history.back so popstate listener handles it
-  const closeViewer = useCallback(() => {
-    if (window.history.state?.albumGalleryOpen) {
-      window.history.back();
-    } else {
-      onClose();
+    if (isOpen && emblaApi) {
+      emblaApi.scrollTo(initialIndex, true);
+      setZoomState({ scale: 1, x: 0, y: 0 });
     }
-  }, [onClose]);
+  }, [isOpen, initialIndex, emblaApi]);
+
+  const scrollPrev = useCallback(() => {
+    if (zoomState.scale > 1) return;
+    emblaApi?.scrollPrev();
+  }, [emblaApi, zoomState.scale]);
+
+  const scrollNext = useCallback(() => {
+    if (zoomState.scale > 1) return;
+    emblaApi?.scrollNext();
+  }, [emblaApi, zoomState.scale]);
 
   // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
+    
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') scrollPrev();
       if (e.key === 'ArrowRight') scrollNext();
@@ -113,49 +154,80 @@ const AlbumGalleryViewer = ({
         if (zoomState.scale > 1) {
           setZoomState({ scale: 1, x: 0, y: 0 });
         } else {
-          closeViewer();
+          onClose();
         }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, scrollPrev, scrollNext, closeViewer, zoomState.scale]);
+  }, [isOpen, scrollPrev, scrollNext, onClose, zoomState.scale]);
 
-  // Double tap zoom
+  const toggleVideoPlay = (mediaId: string) => {
+    setVideoPlaying(prev => prev === mediaId ? null : mediaId);
+  };
+
+  // Handle double tap to zoom
   const handleDoubleTap = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
-    const currentItem = uniqueMedia[selectedIndex];
-    if (currentItem?.media_type !== 'image') return;
+    const currentItem = media[selectedIndex];
+    if (currentItem.media_type !== 'image') return;
 
     if (zoomState.scale > 1) {
       setZoomState({ scale: 1, x: 0, y: 0 });
     } else {
-      setZoomState({ scale: 2.5, x: 0, y: 0 });
+      // Get tap position relative to image center
+      const rect = (e.target as HTMLElement).getBoundingClientRect();
+      const clientX = 'touches' in e ? e.touches[0]?.clientX || rect.left + rect.width / 2 : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0]?.clientY || rect.top + rect.height / 2 : e.clientY;
+      
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      // Zoom towards tap position
+      const newScale = 2.5;
+      const x = (centerX - clientX) * (newScale - 1);
+      const y = (centerY - clientY) * (newScale - 1);
+      
+      setZoomState({ scale: newScale, x, y });
     }
-  }, [zoomState.scale, selectedIndex, uniqueMedia]);
+  }, [zoomState.scale, selectedIndex, media]);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      touchStartXRef.current = touch.clientX;
-      touchStartYRef.current = touch.clientY;
-      lastPanRef.current = { x: touch.clientX, y: touch.clientY };
-      isSwiping.current = false;
+  // Handle tap detection for double-tap
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const now = Date.now();
+    const touch = e.changedTouches[0];
+    
+    if (lastTouchRef.current) {
+      const timeDiff = now - lastTouchRef.current.time;
+      const distX = Math.abs(touch.clientX - lastTouchRef.current.x);
+      const distY = Math.abs(touch.clientY - lastTouchRef.current.y);
+      
+      if (timeDiff < 300 && distX < 30 && distY < 30) {
+        handleDoubleTap(e);
+        lastTouchRef.current = null;
+        return;
+      }
     }
-    if (e.touches.length === 2) {
-      initialPinchDistanceRef.current = null;
-    }
-  }, []);
+    
+    lastTouchRef.current = { x: touch.clientX, y: touch.clientY, time: now };
+    initialPinchDistanceRef.current = null;
+  }, [handleDoubleTap]);
 
+  // Handle pinch zoom
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    const currentItem = uniqueMedia[selectedIndex];
-    if (!currentItem) return;
+    const currentItem = media[selectedIndex];
+    if (currentItem.media_type !== 'image') return;
 
-    if (e.touches.length === 2 && currentItem.media_type === 'image') {
+    if (e.touches.length === 2) {
       e.preventDefault();
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
-      const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+      
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
 
       if (initialPinchDistanceRef.current === null) {
         initialPinchDistanceRef.current = distance;
@@ -163,234 +235,293 @@ const AlbumGalleryViewer = ({
       } else {
         const scaleDiff = distance / initialPinchDistanceRef.current;
         const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, initialScaleRef.current * scaleDiff));
-        if (newScale <= 1) {
-          setZoomState({ scale: 1, x: 0, y: 0 });
+        
+        // Calculate pinch center
+        const centerX = (touch1.clientX + touch2.clientX) / 2;
+        const centerY = (touch1.clientY + touch2.clientY) / 2;
+        
+        const rect = (e.target as HTMLElement).getBoundingClientRect();
+        const imageCenterX = rect.left + rect.width / 2;
+        const imageCenterY = rect.top + rect.height / 2;
+        
+        // Adjust pan based on scale change
+        if (newScale > 1) {
+          const scaleRatio = newScale / zoomState.scale;
+          const x = zoomState.x * scaleRatio + (imageCenterX - centerX) * (scaleRatio - 1);
+          const y = zoomState.y * scaleRatio + (imageCenterY - centerY) * (scaleRatio - 1);
+          setZoomState({ scale: newScale, x, y });
         } else {
-          setZoomState(prev => ({ ...prev, scale: newScale }));
+          setZoomState({ scale: 1, x: 0, y: 0 });
         }
       }
-    } else if (e.touches.length === 1) {
+    } else if (e.touches.length === 1 && zoomState.scale > 1) {
+      // Pan when zoomed
       const touch = e.touches[0];
-      const deltaX = touch.clientX - touchStartXRef.current;
-      const deltaY = touch.clientY - touchStartYRef.current;
-
-      if (zoomState.scale > 1) {
-        // Pan when zoomed
-        const panDeltaX = touch.clientX - lastPanRef.current.x;
-        const panDeltaY = touch.clientY - lastPanRef.current.y;
-        setZoomState(prev => ({ ...prev, x: prev.x + panDeltaX, y: prev.y + panDeltaY }));
-        lastPanRef.current = { x: touch.clientX, y: touch.clientY };
-      } else {
-        // Track if horizontal swipe
-        if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY)) {
-          isSwiping.current = true;
-        }
+      
+      if (lastPanRef.current.x !== 0 || lastPanRef.current.y !== 0) {
+        const deltaX = touch.clientX - lastPanRef.current.x;
+        const deltaY = touch.clientY - lastPanRef.current.y;
+        
+        setZoomState(prev => ({
+          ...prev,
+          x: prev.x + deltaX,
+          y: prev.y + deltaY,
+        }));
       }
+      
+      lastPanRef.current = { x: touch.clientX, y: touch.clientY };
     }
-  }, [zoomState, selectedIndex, uniqueMedia]);
+  }, [zoomState, selectedIndex, media]);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    const now = Date.now();
-    const touch = e.changedTouches[0];
-
-    // Double tap detection
-    if (lastTouchRef.current) {
-      const timeDiff = now - lastTouchRef.current.time;
-      const distX = Math.abs(touch.clientX - lastTouchRef.current.x);
-      const distY = Math.abs(touch.clientY - lastTouchRef.current.y);
-      if (timeDiff < 300 && distX < 30 && distY < 30) {
-        handleDoubleTap(e);
-        lastTouchRef.current = null;
-        initialPinchDistanceRef.current = null;
-        return;
-      }
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      lastPanRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }
-    lastTouchRef.current = { x: touch.clientX, y: touch.clientY, time: now };
-
-    // Swipe navigation
-    if (isSwiping.current && zoomState.scale <= 1) {
-      const deltaX = touch.clientX - touchStartXRef.current;
-      if (Math.abs(deltaX) > 60) {
-        if (deltaX > 0) scrollPrev();
-        else scrollNext();
-      }
+    if (e.touches.length === 2) {
+      initialPinchDistanceRef.current = null;
     }
+  }, []);
 
-    initialPinchDistanceRef.current = null;
+  // Reset pan reference on touch end
+  const handleTouchEndReset = useCallback(() => {
     lastPanRef.current = { x: 0, y: 0 };
-    isSwiping.current = false;
-  }, [handleDoubleTap, zoomState.scale, scrollPrev, scrollNext]);
+    initialPinchDistanceRef.current = null;
+  }, []);
 
+  // Zoom controls
   const zoomIn = useCallback(() => {
-    setZoomState(prev => ({ ...prev, scale: Math.min(MAX_SCALE, prev.scale + 0.5) }));
+    setZoomState(prev => ({
+      ...prev,
+      scale: Math.min(MAX_SCALE, prev.scale + 0.5),
+    }));
   }, []);
 
   const zoomOut = useCallback(() => {
     const newScale = Math.max(MIN_SCALE, zoomState.scale - 0.5);
-    if (newScale <= 1) setZoomState({ scale: 1, x: 0, y: 0 });
-    else setZoomState(prev => ({ ...prev, scale: newScale }));
+    if (newScale <= 1) {
+      setZoomState({ scale: 1, x: 0, y: 0 });
+    } else {
+      setZoomState(prev => ({ ...prev, scale: newScale }));
+    }
   }, [zoomState.scale]);
 
+  const resetZoom = useCallback(() => {
+    setZoomState({ scale: 1, x: 0, y: 0 });
+  }, []);
+
+  const currentMedia = media[selectedIndex];
   const isZoomed = zoomState.scale > 1;
-  const currentMedia = uniqueMedia[selectedIndex];
 
-  if (!isOpen || uniqueMedia.length === 0 || !currentMedia) return null;
+  if (!isOpen || media.length === 0) return null;
 
-  return createPortal(
+  return (
+    <>
+    {/* Preload images */}
+    {media.map(item => item.media_type === 'image' ? (
+      <link key={item.id} rel="preload" as="image" href={item.media_url} />
+    ) : null)}
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[9999] bg-black flex flex-col"
+        className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm"
         data-protected="true"
       >
+        
         {/* Header */}
-        <div className="relative z-20 flex items-center justify-between px-3 py-3 bg-black/80">
+        <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">
           <Button
             variant="ghost"
             size="icon"
-            onClick={closeViewer}
-            className="text-white hover:bg-white/20 rounded-full h-10 w-10"
+            onClick={onClose}
+            className="text-white hover:bg-white/20 rounded-full"
           >
             <X className="w-6 h-6" />
           </Button>
-
-          <span className="text-white text-sm font-medium">
-            {selectedIndex + 1} / {uniqueMedia.length}
-          </span>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-white text-sm font-medium">
+              {selectedIndex + 1} / {media.length}
+            </span>
+            {isZoomed && (
+              <span className="text-white/70 text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                {Math.round(zoomState.scale * 100)}%
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-1">
             {currentMedia.media_type === 'image' && (
               <>
-                <Button variant="ghost" size="icon" onClick={zoomOut} disabled={zoomState.scale <= MIN_SCALE}
-                  className="text-white hover:bg-white/20 rounded-full h-9 w-9 disabled:opacity-30">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={zoomOut}
+                  disabled={zoomState.scale <= MIN_SCALE}
+                  className="text-white hover:bg-white/20 rounded-full disabled:opacity-30"
+                >
                   <ZoomOut className="w-5 h-5" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={zoomIn} disabled={zoomState.scale >= MAX_SCALE}
-                  className="text-white hover:bg-white/20 rounded-full h-9 w-9 disabled:opacity-30">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={zoomIn}
+                  disabled={zoomState.scale >= MAX_SCALE}
+                  className="text-white hover:bg-white/20 rounded-full disabled:opacity-30"
+                >
                   <ZoomIn className="w-5 h-5" />
                 </Button>
               </>
             )}
             {onDelete && (
-              <Button variant="ghost" size="icon" onClick={() => onDelete(currentMedia.id)}
-                className="text-white hover:bg-destructive/80 rounded-full h-9 w-9">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onDelete(currentMedia.id)}
+                className="text-white hover:bg-destructive/80 rounded-full"
+              >
                 <Trash2 className="w-5 h-5" />
               </Button>
             )}
           </div>
         </div>
 
-        {/* Main content area */}
-        <div
-          className="flex-1 relative flex items-center justify-center overflow-hidden"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onDoubleClick={handleDoubleTap}
-          style={{ touchAction: isZoomed ? 'none' : 'pan-y' }}
-        >
-          {currentMedia.media_type === 'image' ? (
-            <div className="w-full h-full flex items-center justify-center p-2">
-              {!imageLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-white/50" />
-                </div>
-              )}
-              <motion.img
-                key={currentMedia.id}
-                animate={{
-                  scale: zoomState.scale,
-                  x: zoomState.x,
-                  y: zoomState.y,
-                }}
-                transition={{
-                  scale: { type: 'spring', stiffness: 300, damping: 30 },
-                  x: { type: 'spring', stiffness: 300, damping: 30 },
-                  y: { type: 'spring', stiffness: 300, damping: 30 },
-                }}
-                src={currentMedia.media_url}
-                alt=""
-                onLoad={() => setImageLoaded(true)}
-                className={cn(
-                  "max-w-full max-h-full object-contain select-none",
-                  imageLoaded ? "opacity-100" : "opacity-0"
-                )}
-                draggable={false}
-                style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
-              />
-            </div>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center p-2">
-              <video
-                key={currentMedia.id}
-                src={currentMedia.media_url}
-                className="max-w-full max-h-full object-contain rounded-lg select-none"
-                controls={videoPlaying === currentMedia.id}
-                autoPlay={videoPlaying === currentMedia.id}
-                playsInline
-                onClick={(e) => { e.stopPropagation(); setVideoPlaying(prev => prev === currentMedia.id ? null : currentMedia.id); }}
-                style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
-              />
-              {videoPlaying !== currentMedia.id && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setVideoPlaying(currentMedia.id); }}
-                  className="absolute inset-0 flex items-center justify-center"
+        {/* Carousel - centered with padding for header/footer */}
+        <div className="absolute inset-0 flex items-center justify-center pt-16 pb-24">
+          <div 
+            ref={emblaRef} 
+            className="overflow-hidden w-full h-full"
+            style={{ touchAction: isZoomed ? 'none' : 'pan-y pinch-zoom' }}
+          >
+            <div className="flex h-full touch-pan-x" style={{ touchAction: isZoomed ? 'none' : 'pan-x' }}>
+              {media.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="flex-[0_0_100%] min-w-0 h-full flex items-center justify-center px-4"
                 >
-                  <div className="w-16 h-16 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center">
-                    <Play className="w-8 h-8 text-white ml-1" fill="white" />
-                  </div>
-                </button>
-              )}
+                  {item.media_type === 'image' ? (
+                    <div
+                      ref={index === selectedIndex ? imageContainerRef : undefined}
+                      className="relative w-full h-full flex items-center justify-center overflow-hidden"
+                      onTouchStart={index === selectedIndex ? handleTouchStart : undefined}
+                      onTouchMove={index === selectedIndex ? handleTouchMove : undefined}
+                      onTouchEnd={index === selectedIndex ? (e) => {
+                        handleTouchEnd(e);
+                        handleTouchEndReset();
+                      } : undefined}
+                      onDoubleClick={index === selectedIndex ? handleDoubleTap : undefined}
+                    >
+                      <ImageWithLoader
+                        src={item.media_url}
+                        alt=""
+                        zoomState={index === selectedIndex ? zoomState : { scale: 1, x: 0, y: 0 }}
+                        isZoomed={isZoomed}
+                      />
+                      {!isZoomed && index === selectedIndex && (
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/40 px-3 py-1 rounded-full pointer-events-none">
+                          Double-tap ou pincez pour zoomer
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <motion.video
+                        initial={{ scale: 1, opacity: 1 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.1 }}
+                        src={item.media_url}
+                        className="max-w-full max-h-full object-contain rounded-lg select-none"
+                        controls={videoPlaying === item.id}
+                        autoPlay={videoPlaying === item.id && index === selectedIndex}
+                        playsInline
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleVideoPlay(item.id);
+                        }}
+                        
+                        style={{
+                          WebkitUserSelect: 'none',
+                          WebkitTouchCallout: 'none',
+                          filter: 'none',
+                        }}
+                      />
+                      {videoPlaying !== item.id && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleVideoPlay(item.id);
+                          }}
+                          className="absolute inset-0 flex items-center justify-center"
+                        >
+                          <div className="w-20 h-20 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center">
+                            <Play className="w-10 h-10 text-white ml-1" fill="white" />
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-          )}
-
-          {/* Nav arrows (desktop) */}
-          {uniqueMedia.length > 1 && !isZoomed && (
-            <>
-              <button onClick={scrollPrev}
-                className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm items-center justify-center text-white hover:bg-white/20 transition-colors">
-                <ChevronLeft className="w-7 h-7" />
-              </button>
-              <button onClick={scrollNext}
-                className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm items-center justify-center text-white hover:bg-white/20 transition-colors">
-                <ChevronRight className="w-7 h-7" />
-              </button>
-            </>
-          )}
-
-          {/* Reset zoom */}
-          {isZoomed && (
-            <button onClick={() => setZoomState({ scale: 1, x: 0, y: 0 })}
-              className="absolute bottom-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm hover:bg-white/30 transition-colors">
-              Réinitialiser le zoom
-            </button>
-          )}
+          </div>
         </div>
 
-        {/* Thumbnails */}
-        {uniqueMedia.length > 1 && !isZoomed && (
-          <div className="relative z-20 px-3 py-3 bg-black/80">
-            <div className="flex gap-2 justify-center overflow-x-auto scrollbar-hide">
-              {uniqueMedia.map((item, index) => (
+        {/* Navigation arrows - Desktop only (hidden when zoomed) */}
+        {media.length > 1 && !isZoomed && (
+          <>
+            <button
+              onClick={scrollPrev}
+              className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm items-center justify-center text-white hover:bg-white/20 transition-colors"
+            >
+              <ChevronLeft className="w-8 h-8" />
+            </button>
+            <button
+              onClick={scrollNext}
+              className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm items-center justify-center text-white hover:bg-white/20 transition-colors"
+            >
+              <ChevronRight className="w-8 h-8" />
+            </button>
+          </>
+        )}
+
+        {/* Reset zoom button - shown when zoomed */}
+        {isZoomed && (
+          <button
+            onClick={resetZoom}
+            className="absolute bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm hover:bg-white/30 transition-colors"
+          >
+            Réinitialiser le zoom
+          </button>
+        )}
+
+
+        {/* Thumbnails - Bottom navigation (hidden when zoomed) */}
+        {media.length > 1 && !isZoomed && (
+          <div className="absolute bottom-0 left-0 right-0 z-10 p-4 bg-gradient-to-t from-black/60 to-transparent">
+            <div className="flex gap-2 justify-center overflow-x-auto pb-2 scrollbar-hide">
+              {media.map((item, index) => (
                 <button
                   key={item.id}
-                  onClick={() => goTo(index)}
+                  onClick={() => emblaApi?.scrollTo(index)}
                   className={cn(
-                    "flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden transition-all duration-200 border-2",
-                    selectedIndex === index
-                      ? "border-white scale-110 shadow-lg"
+                    "flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden transition-all duration-200 border-2",
+                    selectedIndex === index 
+                      ? "border-white scale-110 shadow-lg shadow-white/20" 
                       : "border-transparent opacity-50 hover:opacity-80"
                   )}
                 >
                   {item.media_type === 'image' ? (
-                    <img src={item.media_url} alt="" className="w-full h-full object-cover" />
+                    <img 
+                      src={item.media_url} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <div className="w-full h-full relative bg-muted">
+                    <div className="w-full h-full relative">
                       <video src={item.media_url} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                        <Play className="w-3 h-3 text-white" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <Play className="w-4 h-4 text-white" />
                       </div>
                     </div>
                   )}
@@ -400,8 +531,8 @@ const AlbumGalleryViewer = ({
           </div>
         )}
       </motion.div>
-    </AnimatePresence>,
-    document.body
+    </AnimatePresence>
+    </>
   );
 };
 

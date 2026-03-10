@@ -5,7 +5,7 @@ import { Zap, X, ChevronRight, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const TASK_TYPE_LABELS: Record<string, string> = {
   identity_verification: '🪪 Vérification d\'identité',
@@ -104,38 +104,7 @@ const ModerationMissionAlert = () => {
   // Don't show if already on admin page (TaskQueuePopup handles it there)
   const isOnAdminPage = location.pathname === '/admin';
 
-  // Polling fallback: check for pending tasks every 15s
-  // This catches missions that were created while the realtime channel was disconnected
-  const { data: pendingTaskFromPoll } = useQuery({
-    queryKey: ['mission-alert-poll', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from('moderation_tasks')
-        .select('id, task_type, description, reward_cents, created_at')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (error) return null;
-      return data as MissionData | null;
-    },
-    enabled: !!user?.id && !!isStaff && !isOnAdminPage && !mission,
-    refetchInterval: 15_000,
-    staleTime: 10_000,
-  });
-
-  // If polling finds a mission we haven't seen, trigger the alert
-  useEffect(() => {
-    if (pendingTaskFromPoll && pendingTaskFromPoll.id !== lastSeenTaskRef.current && !mission) {
-      lastSeenTaskRef.current = pendingTaskFromPoll.id;
-      setMission(pendingTaskFromPoll);
-      setDismissed(false);
-      playAlertSound();
-    }
-  }, [pendingTaskFromPoll, mission]);
-
-  // Listen for new AND updated moderation tasks via realtime
+  // Listen for new moderation tasks via realtime
   useEffect(() => {
     if (!user?.id || !isStaff || isOnAdminPage) return;
 
@@ -144,13 +113,13 @@ const ModerationMissionAlert = () => {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to INSERT and UPDATE
+          event: 'INSERT',
           schema: 'public',
           table: 'moderation_tasks',
         },
         (payload) => {
           const task = payload.new as any;
-          if (task && task.status === 'pending' && task.id !== lastSeenTaskRef.current) {
+          if (task.status === 'pending' && task.id !== lastSeenTaskRef.current) {
             lastSeenTaskRef.current = task.id;
             setMission({
               id: task.id,

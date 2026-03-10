@@ -2,7 +2,7 @@ import {
   Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
   MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Menu, Home,
   Bell, Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, 
-  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut, Sparkles, ToggleLeft
+  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ export type AdminSection =
   | 'ai-moderation' | 'screenshot-sanctions' | 'moderators'
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
   | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
-  | 'promo-images' | 'error-logs' | 'security' | 'feature-toggles';
+  | 'promo-images' | 'error-logs' | 'security';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -83,7 +83,6 @@ const navItems: NavItem[] = [
   { id: 'credit-costs', label: 'Tarifs crédits', icon: Coins, group: 'config', adminOnly: true },
   { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'config', adminOnly: true },
   { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'config', adminOnly: true },
-  { id: 'feature-toggles', label: 'Fonctionnalités', icon: ToggleLeft, group: 'config', adminOnly: true },
   { id: 'error-logs', label: "Logs d'erreurs", icon: Activity, group: 'logs', adminOnly: true },
   { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'logs', adminOnly: true },
 ];

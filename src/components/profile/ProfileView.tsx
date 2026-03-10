@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfileStats } from '@/hooks/useProfileStats';
 import { useIsAdmin } from '@/hooks/useAdmin';
@@ -56,7 +55,6 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
   const { data: isAdminUser } = useIsAdmin();
   const { favorites } = useUserFavorites();
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const featureFlags = useFeatureFlags();
 
   if (!profile) {
     return (
@@ -108,18 +106,14 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
         />
 
         {/* Albums */}
-        {featureFlags['albums'] !== false && (
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
-            <ProfileAlbumsSection />
-          </motion.div>
-        )}
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
+          <ProfileAlbumsSection />
+        </motion.div>
 
         {/* ChatBot */}
-        {featureFlags['personal_chatbot'] !== false && (
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
-            <ChatBotProfileCard onOpen={() => onNavigateToChatbot?.()} />
-          </motion.div>
-        )}
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
+          <ChatBotProfileCard onOpen={() => onNavigateToChatbot?.()} />
+        </motion.div>
 
         {/* Reactions */}
         {profile.user_id && (

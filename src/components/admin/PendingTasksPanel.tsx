@@ -84,26 +84,14 @@ const PendingTasksPanel = () => {
                     </Badge>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 ml-3 shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    disabled={recycleTask.isPending}
-                    onClick={() => recycleTask.mutate(task.id)}
-                  >
-                    <RefreshCw className="w-3 h-3 mr-1" />
-                    Ré-attribuer
-                  </Button>
-                  <div className="text-right">
-                    <Badge variant="outline" className="text-primary border-primary/30">
-                      <Euro className="w-3 h-3 mr-1" />
-                      {formatCentsReward(task.reward_cents)}
-                    </Badge>
-                    <Badge variant="default" className="mt-1 block text-xs">
-                      Réservée
-                    </Badge>
-                  </div>
+                <div className="text-right ml-3 shrink-0">
+                  <Badge variant="outline" className="text-primary border-primary/30">
+                    <Euro className="w-3 h-3 mr-1" />
+                    {formatCentsReward(task.reward_cents)}
+                  </Badge>
+                  <Badge variant="default" className="mt-1 block text-xs">
+                    Réservée
+                  </Badge>
                 </div>
               </div>
             ))}
@@ -156,16 +144,18 @@ const PendingTasksPanel = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                      disabled={recycleTask.isPending}
-                      onClick={() => recycleTask.mutate(task.id)}
-                    >
-                      <RefreshCw className="w-3 h-3 mr-1" />
-                      Ré-attribuer
-                    </Button>
+                    {task.refused_by.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        disabled={recycleTask.isPending}
+                        onClick={() => recycleTask.mutate(task.id)}
+                      >
+                        <RefreshCw className="w-3 h-3 mr-1" />
+                        Re-proposer
+                      </Button>
+                    )}
                     <Badge variant="outline">
                       <Euro className="w-3 h-3 mr-1" />
                       {formatCentsReward(task.reward_cents)}

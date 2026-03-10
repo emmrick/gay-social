@@ -347,17 +347,9 @@ export const useRecycleTask = () => {
     mutationFn: async (taskId: string) => {
       const { error } = await supabase
         .from('moderation_tasks')
-        .update({ 
-          refused_by: [], 
-          offered_to: null, 
-          offered_at: null, 
-          reserved_by: null, 
-          reserved_at: null, 
-          status: 'pending',
-          updated_at: new Date().toISOString() 
-        } as any)
+        .update({ refused_by: [], updated_at: new Date().toISOString() } as any)
         .eq('id', taskId)
-        .in('status', ['pending', 'reserved']);
+        .eq('status', 'pending');
 
       if (error) throw error;
     },

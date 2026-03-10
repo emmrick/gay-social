@@ -139,7 +139,7 @@ const ModerationMissionAlert = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, isStaff, isOnAdminPage]);
+  }, [user?.id, isStaff, isOnAdminPage, isTrulyOnline]);
 
   // Repeat sound every 4s while mission is visible
   useEffect(() => {

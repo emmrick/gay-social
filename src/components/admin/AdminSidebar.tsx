@@ -24,7 +24,7 @@ export type AdminSection =
   | 'ai-moderation' | 'screenshot-sanctions' | 'moderators'
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
   | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
-  | 'promo-images' | 'error-logs' | 'security';
+  | 'promo-images' | 'error-logs' | 'security' | 'feature-toggles';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;

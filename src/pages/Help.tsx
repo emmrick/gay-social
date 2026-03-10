@@ -72,8 +72,18 @@ const Help = ({ embedded = false }: HelpProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
-  const [chatPhase, setChatPhase] = useState<ChatPhase>('idle');
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatPhase, setChatPhase] = useState<ChatPhase>(() => {
+    try {
+      const saved = sessionStorage.getItem('help-chat-phase');
+      return (saved as ChatPhase) || 'idle';
+    } catch { return 'idle'; }
+  });
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = sessionStorage.getItem('help-chat-messages');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [freeText, setFreeText] = useState('');
   const [ratingEmoji, setRatingEmoji] = useState<string | null>(null);
@@ -99,6 +109,14 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
   }, [freeText]);
 
+  // Persist chatbot state to sessionStorage
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('help-chat-phase', chatPhase);
+      sessionStorage.setItem('help-chat-messages', JSON.stringify(chatMessages));
+    } catch { /* noop */ }
+  }, [chatPhase, chatMessages]);
+
   // Auto-resume active ticket on mount
   const { tickets, isLoading: ticketsLoading, createTicket, closeTicket } = useSupportTickets();
   useEffect(() => {
@@ -109,18 +127,20 @@ const Help = ({ embedded = false }: HelpProps) => {
     const activeTicket = tickets.find(t => t.status === 'open' || t.status === 'assigned' || t.status === 'waiting_client');
     if (activeTicket) {
       setSelectedTicket(activeTicket);
+
+      // Restore chatbot history from ticket for all non-assigned statuses
+      if (activeTicket.chatbot_history && Array.isArray(activeTicket.chatbot_history) && chatMessages.length === 0) {
+        const restoredMessages: ChatMessage[] = (activeTicket.chatbot_history as Array<{ type: string; text: string }>).map(m => ({
+          type: m.type as 'bot' | 'user' | 'system',
+          text: m.text,
+        }));
+        setChatMessages(restoredMessages);
+      }
+
       if (activeTicket.status === 'assigned') {
         agentJoinedRef.current = true;
         setChatPhase('agent');
       } else if (activeTicket.status === 'waiting_client') {
-        // Restore chatbot history from ticket if available
-        if (activeTicket.chatbot_history && Array.isArray(activeTicket.chatbot_history)) {
-          const restoredMessages: ChatMessage[] = (activeTicket.chatbot_history as Array<{ type: string; text: string }>).map(m => ({
-            type: m.type as 'bot' | 'user' | 'system',
-            text: m.text,
-          }));
-          setChatMessages(restoredMessages);
-        }
         setChatPhase('waiting_agent');
       } else {
         setChatPhase('waiting_agent');
@@ -521,6 +541,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     setAnsweredArticleIds(new Set());
     setNoMatchCount(0);
     agentJoinedRef.current = false;
+    clearSessionState();
   };
 
   const handleCloseTicket = async () => {
@@ -532,6 +553,13 @@ const Help = ({ embedded = false }: HelpProps) => {
       // Error handled by mutation
     }
   };
+
+  const clearSessionState = useCallback(() => {
+    try {
+      sessionStorage.removeItem('help-chat-phase');
+      sessionStorage.removeItem('help-chat-messages');
+    } catch { /* noop */ }
+  }, []);
 
   const handleEndChat = () => {
     setChatPhase('idle');
@@ -545,6 +573,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     agentJoinedRef.current = false;
     setRatingEmoji(null);
     setRatingComment('');
+    clearSessionState();
   };
 
   // Send message to agent (in agent or waiting phase)

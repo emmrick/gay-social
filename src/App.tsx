@@ -16,6 +16,7 @@ import LowCreditsAlert from "@/components/credits/LowCreditsAlert";
 import { CreditDeductionProvider } from "@/components/credits/CreditDeductionAnimation";
 import { AgeConfirmationModal } from "@/components/AgeConfirmationModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import GeoBlockGuard from "@/components/GeoBlockGuard";
 import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
 import { PageFallback } from "@/components/loading/LazyPageLoader";
 import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoticeDialog";
@@ -164,6 +165,7 @@ const App = () => {
 
   return (
     <ErrorBoundary>
+      <GeoBlockGuard>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           {!appReady && <InitialLoadingScreen onComplete={handleLoadComplete} />}
@@ -174,6 +176,7 @@ const App = () => {
           </div>
         </ThemeProvider>
       </QueryClientProvider>
+      </GeoBlockGuard>
     </ErrorBoundary>
   );
 };

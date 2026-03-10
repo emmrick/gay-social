@@ -167,18 +167,18 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <GeoBlockGuard>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          {!appReady && <InitialLoadingScreen onComplete={handleLoadComplete} />}
-          {/* Render content immediately but hidden until splash finishes, 
-              so queries start prefetching during splash */}
-          <div style={appReady ? undefined : { visibility: 'hidden', position: 'fixed', inset: 0 }}>
-            <AppContent />
-          </div>
-        </ThemeProvider>
+        <GeoBlockGuard>
+          <ThemeProvider>
+            {!appReady && <InitialLoadingScreen onComplete={handleLoadComplete} />}
+            {/* Render content immediately but hidden until splash finishes, 
+                so queries start prefetching during splash */}
+            <div style={appReady ? undefined : { visibility: 'hidden', position: 'fixed', inset: 0 }}>
+              <AppContent />
+            </div>
+          </ThemeProvider>
+        </GeoBlockGuard>
       </QueryClientProvider>
-      </GeoBlockGuard>
     </ErrorBoundary>
   );
 };

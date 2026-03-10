@@ -83,6 +83,7 @@ const navItems: NavItem[] = [
   { id: 'credit-costs', label: 'Tarifs crédits', icon: Coins, group: 'config', adminOnly: true },
   { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'config', adminOnly: true },
   { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'config', adminOnly: true },
+  { id: 'feature-toggles', label: 'Fonctionnalités', icon: ToggleLeft, group: 'config', adminOnly: true },
   { id: 'error-logs', label: "Logs d'erreurs", icon: Activity, group: 'logs', adminOnly: true },
   { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'logs', adminOnly: true },
 ];

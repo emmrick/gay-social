@@ -443,7 +443,7 @@ const Index = () => {
         ) : null;
 
       case 'swipe':
-        return user ? (
+        return user && featureFlags['swipe_page'] !== false ? (
           <div className="flex-1 flex flex-col min-h-0">
             <UnifiedPageHeader
               onNavigateToCredits={() => handleTabChange('premium')}

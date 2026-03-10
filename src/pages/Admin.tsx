@@ -226,8 +226,7 @@ const Admin = () => {
   if (isMobile) {
     if (activeSection === 'dashboard') {
       return (
-        <>
-          <TaskQueuePopup onNavigateToSection={handleSectionChange} />
+        <div className="min-h-[100dvh] bg-background flex flex-col">
           <AdminMobileNav
             activeSection={'dashboard'}
             onSectionChange={handleSectionChange}
@@ -237,7 +236,18 @@ const Admin = () => {
             pendingVerifications={pendingVerificationsCount}
             isAdmin={!!isAdmin}
           />
-        </>
+          {/* Task Queue integrated inside the mobile dashboard scroll */}
+          <div className="px-3 pt-3">
+            <TaskQueuePopup onNavigateToSection={handleSectionChange} />
+          </div>
+          {selectedReport && (
+            <ReportDetailDialog
+              report={selectedReport}
+              open={!!selectedReport}
+              onOpenChange={(open) => !open && setSelectedReport(null)}
+            />
+          )}
+        </div>
       );
     }
 

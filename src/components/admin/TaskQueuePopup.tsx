@@ -12,7 +12,8 @@ import {
   Phone,
   PhoneOff,
   Headphones,
-  PauseCircle
+  PauseCircle,
+  Timer
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,8 +35,41 @@ import {
 } from '@/hooks/useModerationTaskQueue';
 import { useQueryClient } from '@tanstack/react-query';
 
+const OFFER_TTL_SECONDS = 60;
+
 // ── Mission arrival sound (synthesized rising chime) ──
 let missionAudioCtx: AudioContext | null = null;
+let audioUnlocked = false;
+
+// Unlock AudioContext on first user interaction (mobile fix)
+const unlockAudio = () => {
+  if (audioUnlocked) return;
+  try {
+    if (!missionAudioCtx || missionAudioCtx.state === 'closed') {
+      missionAudioCtx = new AudioContext();
+    }
+    if (missionAudioCtx.state === 'suspended') {
+      missionAudioCtx.resume();
+    }
+    // Play a silent buffer to unlock
+    const buffer = missionAudioCtx.createBuffer(1, 1, 22050);
+    const source = missionAudioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(missionAudioCtx.destination);
+    source.start();
+    audioUnlocked = true;
+  } catch {}
+};
+
+// Register unlock on first user gesture
+if (typeof window !== 'undefined') {
+  const events = ['touchstart', 'touchend', 'click', 'keydown'];
+  const handler = () => {
+    unlockAudio();
+    events.forEach(e => document.removeEventListener(e, handler, true));
+  };
+  events.forEach(e => document.addEventListener(e, handler, { capture: true, once: false, passive: true }));
+}
 
 const playMissionSound = () => {
   try {
@@ -46,11 +80,10 @@ const playMissionSound = () => {
     if (ctx.state === 'suspended') ctx.resume();
 
     const now = ctx.currentTime;
-    // Three-note rising chime: C5 → E5 → G5 with harmonics
     const notes = [
-      { freq: 523.25, start: 0, dur: 0.25 },    // C5
-      { freq: 659.25, start: 0.15, dur: 0.25 },  // E5
-      { freq: 783.99, start: 0.30, dur: 0.4 },   // G5
+      { freq: 523.25, start: 0, dur: 0.25 },
+      { freq: 659.25, start: 0.15, dur: 0.25 },
+      { freq: 783.99, start: 0.30, dur: 0.4 },
     ];
 
     notes.forEach(({ freq, start, dur }) => {
@@ -59,7 +92,6 @@ const playMissionSound = () => {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, now + start);
 
-      // Add a subtle harmonic
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.type = 'sine';
@@ -70,7 +102,6 @@ const playMissionSound = () => {
       osc2.start(now + start);
       osc2.stop(now + start + dur);
 
-      // Main tone with envelope
       gain.gain.setValueAtTime(0, now + start);
       gain.gain.linearRampToValueAtTime(0.35, now + start + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
@@ -91,10 +122,9 @@ const playAcceptSound = () => {
     if (ctx.state === 'suspended') ctx.resume();
 
     const now = ctx.currentTime;
-    // Satisfying confirmation: G5 → C6 (rising fifth)
     const notes = [
-      { freq: 783.99, start: 0, dur: 0.15 },     // G5
-      { freq: 1046.50, start: 0.12, dur: 0.35 },  // C6
+      { freq: 783.99, start: 0, dur: 0.15 },
+      { freq: 1046.50, start: 0.12, dur: 0.35 },
     ];
 
     notes.forEach(({ freq, start, dur }) => {
@@ -116,7 +146,7 @@ interface TaskQueuePopupProps {
   onNavigateToSection: (section: string) => void;
 }
 
-const TRANSITION_DELAY_MS = 1500; // Brief pause between tasks
+const TRANSITION_DELAY_MS = 1500;
 
 type QueueState = 'idle' | 'offering' | 'transitioning' | 'active';
 
@@ -133,17 +163,59 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
 
   const [queueState, setQueueState] = useState<QueueState>('idle');
   
+  // 60s countdown timer
+  const [countdown, setCountdown] = useState(OFFER_TTL_SECONDS);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const offerStartRef = useRef<number | null>(null);
+
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const soundIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevActiveTaskIdRef = useRef<string | null>(null);
   const prevNextTaskIdRef = useRef<string | null>(null);
 
+  // ── Countdown timer: 60s to accept or refuse ──
+  useEffect(() => {
+    if (queueState === 'offering' && nextTask && missionsActive) {
+      // Start countdown
+      offerStartRef.current = Date.now();
+      setCountdown(OFFER_TTL_SECONDS);
+      
+      countdownRef.current = setInterval(() => {
+        if (offerStartRef.current) {
+          const elapsed = Math.floor((Date.now() - offerStartRef.current) / 1000);
+          const remaining = Math.max(0, OFFER_TTL_SECONDS - elapsed);
+          setCountdown(remaining);
+          
+          // Auto-refuse when time runs out
+          if (remaining <= 0) {
+            // Time's up - the backend will automatically reassign after TTL
+            // Just refresh to get new state
+            invalidateAllTaskQueries(queryClient);
+            setQueueState('transitioning');
+            toast.info('Temps écoulé — mission transférée.');
+          }
+        }
+      }, 1000);
+    } else {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+      offerStartRef.current = null;
+    }
+
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+  }, [queueState, nextTask?.id, missionsActive, queryClient]);
+
   // ── Repeating sound while offering ──
   useEffect(() => {
     if (queueState === 'offering' && missionsActive) {
-      // Clear any existing interval
       if (soundIntervalRef.current) clearInterval(soundIntervalRef.current);
-      // Repeat sound every 8 seconds
       soundIntervalRef.current = setInterval(() => {
         playMissionSound();
       }, 3000);
@@ -161,26 +233,22 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
     };
   }, [queueState, missionsActive]);
 
-  // ── State machine: determine queue state ──
+  // ── State machine ──
   useEffect(() => {
-    // If there's an active task, always show it
     if (activeTask) {
       setQueueState('active');
       prevActiveTaskIdRef.current = activeTask.id;
       return;
     }
 
-    // If missions are off, idle
     if (!missionsActive) {
       setQueueState('idle');
       return;
     }
 
-    // Track previous nextTask id to detect new missions
     const prevNextTaskId = prevNextTaskIdRef.current;
     prevNextTaskIdRef.current = nextTask?.id ?? null;
 
-    // If we just finished/refused a task, show transition before next offer
     if (prevActiveTaskIdRef.current && nextTask) {
       prevActiveTaskIdRef.current = null;
       setQueueState('transitioning');
@@ -191,12 +259,9 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
       return;
     }
 
-    // If there's a next task available, offer it
     if (nextTask) {
-      // Only transition if we're not already offering
       if (queueState !== 'offering') {
         setQueueState('offering');
-        // Play sound when a NEW mission appears
         if (nextTask.id !== prevNextTaskId) {
           playMissionSound();
         }
@@ -213,21 +278,25 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
     };
   }, [activeTask, nextTask, missionsActive]);
 
-  // Timer removed — no time limit on tasks
-
   // ── Actions ──
   const handleAccept = useCallback(() => {
     if (!nextTask) return;
     playAcceptSound();
-    reserveTask.mutate(nextTask.id);
-  }, [nextTask, reserveTask]);
+    reserveTask.mutate(nextTask.id, {
+      onSuccess: () => {
+        // Auto-navigate to the relevant section after accepting
+        const section = getTaskTypeSection(nextTask.task_type);
+        setTimeout(() => {
+          onNavigateToSection(section);
+        }, 300);
+      },
+    });
+  }, [nextTask, reserveTask, onNavigateToSection]);
 
   const handleRefuse = useCallback(() => {
     if (!nextTask) return;
-    // Call backend to durably refuse — this is the key fix
     refuseTask.mutate(nextTask.id);
     setQueueState('transitioning');
-    // Brief transition before showing next task
     transitionTimerRef.current = setTimeout(() => {
       // State will be resolved by the useEffect above after refetch
     }, TRANSITION_DELAY_MS);
@@ -256,7 +325,6 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
       const ticketId = (activeTask.metadata as any)?.ticket_id;
       
       if (ticketId) {
-        // Send system message to client
         await supabase
           .from('support_messages' as any)
           .insert({
@@ -266,14 +334,12 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
             message_type: 'system',
           } as any);
 
-        // Update ticket status
         await supabase
           .from('support_tickets' as any)
           .update({ status: 'waiting_client', assigned_to: null } as any)
           .eq('id', ticketId);
       }
 
-      // Complete task with half reward
       const { data: holdResult } = await supabase.rpc('hold_support_task', {
         _task_id: activeTask.id,
         _user_id: user.id,
@@ -317,6 +383,10 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
       setIsHolding(false);
     }
   }, [activeTask, user?.id, queryClient]);
+
+  // Countdown display helper
+  const countdownColor = countdown <= 10 ? 'text-red-500' : countdown <= 30 ? 'text-orange-500' : 'text-primary';
+  const countdownBg = countdown <= 10 ? 'bg-red-500/20' : countdown <= 30 ? 'bg-orange-500/20' : 'bg-primary/20';
 
   return (
     <>
@@ -367,7 +437,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
         )}
       </div>
 
-      {/* ── Transition State: "Connecting to next mission…" ── */}
+      {/* ── Transition State ── */}
       <AnimatePresence>
         {queueState === 'transitioning' && (
           <motion.div
@@ -391,7 +461,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
         )}
       </AnimatePresence>
 
-      {/* ── New Task Offer ── */}
+      {/* ── New Task Offer with 60s countdown ── */}
       <AnimatePresence>
         {queueState === 'offering' && nextTask && !activeTask && missionsActive && (
           <motion.div
@@ -403,7 +473,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
             style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
           >
             <div className="rounded-2xl border-2 border-primary/30 bg-card shadow-2xl shadow-primary/10 overflow-hidden">
-              {/* Header */}
+              {/* Header with countdown */}
               <div className="bg-gradient-to-r from-primary/20 via-primary/10 to-accent/20 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
@@ -418,10 +488,29 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                     </span>
                   </div>
                 </div>
-                <Badge variant="outline" className="border-primary/50 text-primary font-bold text-xs shrink-0">
-                  <Euro className="w-3 h-3 mr-1" />
-                  {formatCentsReward(nextTask.reward_cents)}
-                </Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Countdown badge */}
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${countdownBg}`}>
+                    <Timer className={`w-3 h-3 ${countdownColor}`} />
+                    <span className={`text-xs font-bold tabular-nums ${countdownColor}`}>
+                      {countdown}s
+                    </span>
+                  </div>
+                  <Badge variant="outline" className="border-primary/50 text-primary font-bold text-xs">
+                    <Euro className="w-3 h-3 mr-1" />
+                    {formatCentsReward(nextTask.reward_cents)}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Progress bar for countdown */}
+              <div className="h-1 bg-muted">
+                <div 
+                  className={`h-full transition-all duration-1000 ease-linear ${
+                    countdown <= 10 ? 'bg-red-500' : countdown <= 30 ? 'bg-orange-500' : 'bg-primary'
+                  }`}
+                  style={{ width: `${(countdown / OFFER_TTL_SECONDS) * 100}%` }}
+                />
               </div>
 
               {/* Content */}
@@ -507,8 +596,6 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                   <span>Missions désactivées — aucune nouvelle mission après celle-ci</span>
                 </div>
               )}
-
-              {/* Exclusive distribution notice */}
 
               <div className={`grid gap-2 ${activeTask.task_type === 'support_chat' ? 'grid-cols-4' : 'grid-cols-3'}`}>
                 <Button

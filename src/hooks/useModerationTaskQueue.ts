@@ -147,7 +147,7 @@ export const useAvailableTasks = () => {
       })) as ModerationTask[];
     },
     enabled: !!user?.id,
-    refetchInterval: 30000, // Poll every 30s to check for new exclusive offers
+    refetchInterval: 15000, // Poll every 15s to check for new exclusive offers (60s TTL)
   });
 
   // Realtime: instant refresh on any task change

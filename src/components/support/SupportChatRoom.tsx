@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import SavedRepliesSheet from '@/components/support/SavedRepliesSheet';
 import FAQSearchPanel from '@/components/support/FAQSearchPanel';
+import EstimatedWaitBanner from '@/components/support/EstimatedWaitBanner';
 import { toast } from 'sonner';
 import {
   Dialog,

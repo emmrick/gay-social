@@ -79,7 +79,7 @@ interface MissionData {
 }
 
 const ModerationMissionAlert = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mission, setMission] = useState<MissionData | null>(null);

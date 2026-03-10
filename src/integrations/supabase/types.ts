@@ -3129,6 +3129,7 @@ export type Database = {
       expire_stale_moderation_tasks: { Args: never; Returns: number }
       generate_referral_code: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
+      get_estimated_wait_time: { Args: { _entity_id: string }; Returns: Json }
       get_exclusive_next_task: {
         Args: { _offer_ttl_seconds?: number; _user_id: string }
         Returns: {

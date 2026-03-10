@@ -833,7 +833,7 @@ const Help = ({ embedded = false }: HelpProps) => {
                               onClick={() => handleOptionClick(opt.value)}
                               className="w-full text-left px-3 py-2.5 text-sm font-medium rounded-xl border border-primary/20 bg-background/80 text-foreground hover:bg-primary/10 hover:border-primary/40 transition-colors active:scale-[0.98] flex items-center gap-2"
                             >
-                              {opt.icon && <span className="text-primary shrink-0">{opt.icon}</span>}
+                              {isValidElement(opt.icon) && <span className="text-primary shrink-0">{opt.icon}</span>}
                               <span className="line-clamp-2">{opt.label}</span>
                             </button>
                           ))}

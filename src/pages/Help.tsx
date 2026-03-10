@@ -507,8 +507,8 @@ const Help = ({ embedded = false }: HelpProps) => {
         console.error('[Help] Error cancelling ticket:', err);
       }
       setSelectedTicket(null);
-    } else if (ticketToCancel && (liveStatus === 'assigned')) {
-      // Agent already assigned - keep ticket so user can resume
+    } else if (ticketToCancel && (liveStatus === 'assigned' || liveStatus === 'waiting_client')) {
+      // Agent already assigned or ticket waiting for client - keep ticket so user can resume
     } else {
       setSelectedTicket(null);
     }

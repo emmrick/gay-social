@@ -114,7 +114,7 @@ export const usePendingTasksHistory = () => {
       })) as ModerationTask[];
     },
     enabled: !!user?.id,
-    refetchInterval: 60000,
+    refetchInterval: 30000,
   });
 };
 
@@ -147,7 +147,7 @@ export const useAvailableTasks = () => {
       })) as ModerationTask[];
     },
     enabled: !!user?.id,
-    refetchInterval: 15000, // Poll every 15s to check for new exclusive offers (60s TTL)
+    refetchInterval: 10000, // Poll every 10s to check for new exclusive offers (60s TTL)
   });
 
   // Realtime: instant refresh on any task change

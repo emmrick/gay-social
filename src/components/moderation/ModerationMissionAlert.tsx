@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Zap, X, ChevronRight, Timer } from 'lucide-react';
+import { Zap, X, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,7 +20,7 @@ const TASK_TYPE_LABELS: Record<string, string> = {
 
 const formatReward = (cents: number) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
 
-// Synthesized mission sound
+// ── Audio helpers ──
 let audioCtx: AudioContext | null = null;
 let audioUnlocked = false;
 
@@ -76,16 +76,20 @@ interface MissionData {
   description: string | null;
   reward_cents: number;
   created_at: string;
+  updated_at: string;
 }
 
 const ModerationMissionAlert = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
+  const [visible, setVisible] = useState(false);
   const [mission, setMission] = useState<MissionData | null>(null);
-  const [dismissed, setDismissed] = useState(false);
-  const lastSeenTaskRef = useRef<string | null>(null);
+  // Track by id+updated_at so recycled tasks (same id, new updated_at) trigger again
+  const lastSeenKeyRef = useRef<string | null>(null);
   const soundIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check if user is moderator or admin
   const { data: isStaff } = useQuery({
@@ -101,18 +105,16 @@ const ModerationMissionAlert = () => {
     staleTime: 60000,
   });
 
-  // Don't show if already on admin page (TaskQueuePopup handles it there)
   const isOnAdminPage = location.pathname === '/admin';
 
-  // Polling fallback: check for pending tasks every 15s
-  // This catches missions that were created while the realtime channel was disconnected
-  const { data: pendingTaskFromPoll } = useQuery({
+  // Poll for pending tasks every 10s (always active when staff + not on admin)
+  const { data: pendingTask } = useQuery({
     queryKey: ['mission-alert-poll', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from('moderation_tasks')
-        .select('id, task_type, description, reward_cents, created_at')
+        .select('id, task_type, description, reward_cents, created_at, updated_at')
         .eq('status', 'pending')
         .order('created_at', { ascending: true })
         .limit(1)
@@ -120,22 +122,32 @@ const ModerationMissionAlert = () => {
       if (error) return null;
       return data as MissionData | null;
     },
-    enabled: !!user?.id && !!isStaff && !isOnAdminPage && !mission,
-    refetchInterval: 15_000,
-    staleTime: 10_000,
+    enabled: !!user?.id && !!isStaff && !isOnAdminPage,
+    refetchInterval: 10_000,
+    staleTime: 8_000,
   });
 
-  // If polling finds a mission we haven't seen, trigger the alert
+  // Trigger alert when a new/recycled pending task appears
   useEffect(() => {
-    if (pendingTaskFromPoll && pendingTaskFromPoll.id !== lastSeenTaskRef.current && !mission) {
-      lastSeenTaskRef.current = pendingTaskFromPoll.id;
-      setMission(pendingTaskFromPoll);
-      setDismissed(false);
-      playAlertSound();
-    }
-  }, [pendingTaskFromPoll, mission]);
+    if (!pendingTask || isOnAdminPage) return;
+    
+    const taskKey = `${pendingTask.id}::${pendingTask.updated_at}`;
+    if (taskKey === lastSeenKeyRef.current) return;
+    
+    // New task or recycled task detected
+    lastSeenKeyRef.current = taskKey;
+    setMission(pendingTask);
+    setVisible(true);
+    playAlertSound();
 
-  // Listen for new AND updated moderation tasks via realtime
+    // Auto-dismiss after 30s
+    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    dismissTimerRef.current = setTimeout(() => {
+      setVisible(false);
+    }, 30000);
+  }, [pendingTask, isOnAdminPage]);
+
+  // Realtime: detect new/updated tasks instantly
   useEffect(() => {
     if (!user?.id || !isStaff || isOnAdminPage) return;
 
@@ -143,37 +155,41 @@ const ModerationMissionAlert = () => {
       .channel('mission-alert-global')
       .on(
         'postgres_changes',
-        {
-          event: '*', // Listen to INSERT and UPDATE
-          schema: 'public',
-          table: 'moderation_tasks',
-        },
+        { event: '*', schema: 'public', table: 'moderation_tasks' },
         (payload) => {
           const task = payload.new as any;
-          if (task && task.status === 'pending' && task.id !== lastSeenTaskRef.current) {
-            lastSeenTaskRef.current = task.id;
-            setMission({
-              id: task.id,
-              task_type: task.task_type,
-              description: task.description,
-              reward_cents: task.reward_cents,
-              created_at: task.created_at,
-            });
-            setDismissed(false);
-            playAlertSound();
-          }
+          if (!task || task.status !== 'pending') return;
+          
+          const taskKey = `${task.id}::${task.updated_at}`;
+          if (taskKey === lastSeenKeyRef.current) return;
+
+          lastSeenKeyRef.current = taskKey;
+          setMission({
+            id: task.id,
+            task_type: task.task_type,
+            description: task.description,
+            reward_cents: task.reward_cents,
+            created_at: task.created_at,
+            updated_at: task.updated_at,
+          });
+          setVisible(true);
+          playAlertSound();
+
+          if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+          dismissTimerRef.current = setTimeout(() => setVisible(false), 30000);
+          
+          // Also refresh the poll query
+          queryClient.invalidateQueries({ queryKey: ['mission-alert-poll'] });
         }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, isStaff, isOnAdminPage]);
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, isStaff, isOnAdminPage, queryClient]);
 
-  // Repeat sound every 4s while mission is visible
+  // Repeat sound every 4s while visible
   useEffect(() => {
-    if (mission && !dismissed && !isOnAdminPage) {
+    if (visible && mission && !isOnAdminPage) {
       soundIntervalRef.current = setInterval(playAlertSound, 4000);
     } else {
       if (soundIntervalRef.current) {
@@ -187,25 +203,26 @@ const ModerationMissionAlert = () => {
         soundIntervalRef.current = null;
       }
     };
-  }, [mission, dismissed, isOnAdminPage]);
+  }, [visible, mission, isOnAdminPage]);
 
-  // Auto-dismiss after 30s
+  // Cleanup on unmount
   useEffect(() => {
-    if (!mission || dismissed) return;
-    const timer = setTimeout(() => setDismissed(true), 30000);
-    return () => clearTimeout(timer);
-  }, [mission, dismissed]);
+    return () => {
+      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+      if (soundIntervalRef.current) clearInterval(soundIntervalRef.current);
+    };
+  }, []);
 
   const handleGoToMission = useCallback(() => {
-    setDismissed(true);
+    setVisible(false);
     navigate('/admin');
   }, [navigate]);
 
   const handleDismiss = useCallback(() => {
-    setDismissed(true);
+    setVisible(false);
   }, []);
 
-  if (!isStaff || isOnAdminPage || !mission || dismissed) return null;
+  if (!isStaff || isOnAdminPage || !mission || !visible) return null;
 
   return (
     <AnimatePresence>
@@ -218,23 +235,17 @@ const ModerationMissionAlert = () => {
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="bg-card border-2 border-primary/40 rounded-b-2xl sm:rounded-2xl shadow-2xl shadow-primary/20 overflow-hidden">
-          {/* Animated gradient bar */}
           <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary animate-pulse" />
 
           <div className="p-3 sm:p-4">
-            {/* Header */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
                   <Zap className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">
-                    Nouvelle mission !
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    Cliquez pour traiter
-                  </p>
+                  <p className="text-sm font-bold text-foreground">Nouvelle mission !</p>
+                  <p className="text-[10px] text-muted-foreground">Cliquez pour traiter</p>
                 </div>
               </div>
               <button
@@ -245,7 +256,6 @@ const ModerationMissionAlert = () => {
               </button>
             </div>
 
-            {/* Mission details */}
             <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 mb-3">
               <p className="text-sm font-semibold text-foreground">
                 {TASK_TYPE_LABELS[mission.task_type] || mission.task_type}
@@ -262,7 +272,6 @@ const ModerationMissionAlert = () => {
               </div>
             </div>
 
-            {/* Action button */}
             <Button
               onClick={handleGoToMission}
               className="w-full h-11 text-sm font-semibold gap-2"

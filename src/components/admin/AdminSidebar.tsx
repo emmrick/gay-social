@@ -26,6 +26,21 @@ export type AdminSection =
   | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
   | 'promo-images' | 'error-logs' | 'security' | 'feature-toggles';
 
+export interface ModPermissions {
+  can_manage_users?: boolean | null;
+  can_verify_identity?: boolean | null;
+  can_manage_reports?: boolean | null;
+  can_manage_content?: boolean | null;
+  can_manage_credits?: boolean | null;
+  can_view_stats?: boolean | null;
+  can_manage_blocked?: boolean | null;
+  can_view_history?: boolean | null;
+  can_manage_promo?: boolean | null;
+  can_broadcast?: boolean | null;
+  can_ai_moderation?: boolean | null;
+  can_screenshot_sanctions?: boolean | null;
+}
+
 interface AdminSidebarProps {
   activeSection: AdminSection;
   onSectionChange: (section: AdminSection) => void;
@@ -34,6 +49,7 @@ interface AdminSidebarProps {
   pendingPurchases?: number;
   pendingVerifications?: number;
   isAdmin?: boolean;
+  modPermissions?: ModPermissions | null;
 }
 
 type NavGroup = 'tasks' | 'moderation' | 'users' | 'finances' | 'communication' | 'config' | 'logs';

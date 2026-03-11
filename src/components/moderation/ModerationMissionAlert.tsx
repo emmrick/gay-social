@@ -90,6 +90,7 @@ const ModerationMissionAlert = () => {
   const soundIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track dismissed mission IDs so we skip them until a new one arrives
+  const cooldownUntilRef = useRef<number>(0); // timestamp until which new alerts are suppressed
   const dismissedIdsRef = useRef<Set<string>>(new Set());
 
   const isOnAdminPage = location.pathname === '/admin';

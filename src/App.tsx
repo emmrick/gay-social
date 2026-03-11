@@ -141,6 +141,7 @@ const AuthenticatedApp = () => {
                 <PromoPopup />
                 <OnboardingGuideDialog />
                 <ModerationMissionAlert />
+                <CookieConsentBanner />
               </BrowserRouter>
             </TooltipProvider>
           </ProfilePhotoGuard>

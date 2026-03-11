@@ -6,11 +6,14 @@ import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import InfractionsSidebar from '@/components/admin/InfractionsSidebar';
+import ClientDossierPanel from '@/components/admin/ClientDossierPanel';
 import { SupportTicket } from '@/hooks/useSupportTickets';
 import { useAuth } from '@/contexts/AuthContext';
-import { Headphones, Loader2, User, Shield } from 'lucide-react';
+import { Headphones, Loader2, User, Shield, FolderOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface AdminSupportChatPanelProps {
   onBack: () => void;
@@ -25,6 +28,7 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
   const autoMessageSentRef = useRef<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showInfractions, setShowInfractions] = useState(false);
+  const [showDossier, setShowDossier] = useState(false);
 
   const { data: ticket, isLoading } = useQuery({
     queryKey: ['support-ticket-detail', ticketId],
@@ -172,16 +176,15 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
                   Infractions
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={showDossier ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => {
-                    if (ticket?.user_id && onNavigateToSection) {
-                      onNavigateToSection('users:' + ticket.user_id);
-                    }
+                    setShowDossier(!showDossier);
+                    if (!showDossier) setShowInfractions(false);
                   }}
                   className="gap-1.5"
                 >
-                  <User className="w-4 h-4" />
+                  <FolderOpen className="w-4 h-4" />
                   Dossier
                 </Button>
               </div>
@@ -203,6 +206,21 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
                 ticketId={ticket.id}
                 onClose={() => setShowInfractions(false)}
               />
+            </div>
+          </div>
+        )}
+
+        {/* Right: Client Dossier sidebar */}
+        {showDossier && ticket?.user_id && (
+          <div className="w-[480px] shrink-0">
+            <div className="h-[calc(100vh-160px)] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+              <ScrollArea className="h-full">
+                <ClientDossierPanel
+                  userId={ticket.user_id}
+                  ticketId={ticket.id}
+                  onClose={() => setShowDossier(false)}
+                />
+              </ScrollArea>
             </div>
           </div>
         )}
@@ -232,6 +250,14 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
                 #{ticket.ticket_number} · {ticket.subject || 'Support'}
               </p>
             </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setShowDossier(true)}
+            >
+              <FolderOpen className="w-4 h-4" />
+            </Button>
           </div>
         </div>
 
@@ -240,6 +266,24 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
           <SupportChatRoom ticket={ticket} onBack={onBack} isAgent hideHeader />
         </div>
       </div>
+
+      {/* Mobile dossier sheet */}
+      <Sheet open={showDossier} onOpenChange={setShowDossier}>
+        <SheetContent side="bottom" className="h-[85dvh] p-0">
+          <SheetHeader className="px-4 pt-4 pb-2">
+            <SheetTitle>Dossier client</SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(85dvh-60px)]">
+            {ticket?.user_id && (
+              <ClientDossierPanel
+                userId={ticket.user_id}
+                ticketId={ticket.id}
+                onClose={() => setShowDossier(false)}
+              />
+            )}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

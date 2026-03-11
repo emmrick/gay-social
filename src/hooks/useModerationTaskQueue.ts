@@ -58,9 +58,10 @@ export const useMissionToggle = () => {
   const [isActive, setIsActive] = useState<boolean>(() => {
     try {
       const stored = localStorage.getItem(MISSION_ACTIVE_KEY);
-      return stored === null ? true : stored === 'true';
+      // Default to FALSE on fresh load (no stored value) to prevent unwanted missions
+      return stored === 'true';
     } catch {
-      return true;
+      return false;
     }
   });
 

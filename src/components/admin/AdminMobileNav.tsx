@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AdminSection } from './AdminSidebar';
+import { AdminSection, ModPermissions } from './AdminSidebar';
 
 interface AdminMobileNavProps {
   activeSection: AdminSection;
@@ -19,6 +19,7 @@ interface AdminMobileNavProps {
   pendingPurchases?: number;
   pendingVerifications?: number;
   isAdmin?: boolean;
+  modPermissions?: ModPermissions | null;
   /** Slot rendered at top of dashboard scroll area (for TaskQueuePopup) */
   dashboardTopSlot?: React.ReactNode;
 }
@@ -32,6 +33,7 @@ interface NavItem {
   icon: React.ElementType;
   group: NavGroup;
   adminOnly?: boolean;
+  permissionKey?: keyof ModPermissions;
 }
 
 const navItems: NavItem[] = [
@@ -40,28 +42,28 @@ const navItems: NavItem[] = [
   { id: 'support', label: 'Support', icon: Headphones, group: 'tasks' },
   { id: 'support-ratings', label: 'Avis', icon: Star, group: 'tasks' },
   // Modération
-  { id: 'verification', label: 'Vérification ID', shortLabel: 'Vérif. ID', icon: IdCard, group: 'moderation' },
-  { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation' },
-  { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
-  { id: 'ai-moderation', label: 'IA Modération', shortLabel: 'IA', icon: Bot, group: 'moderation' },
-  { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, group: 'moderation' },
+  { id: 'verification', label: 'Vérification ID', shortLabel: 'Vérif. ID', icon: IdCard, group: 'moderation', adminOnly: true, permissionKey: 'can_verify_identity' },
+  { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation', permissionKey: 'can_manage_reports' },
+  { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation', permissionKey: 'can_manage_content' },
+  { id: 'ai-moderation', label: 'IA Modération', shortLabel: 'IA', icon: Bot, group: 'moderation', permissionKey: 'can_ai_moderation' },
+  { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, group: 'moderation', permissionKey: 'can_screenshot_sanctions' },
   // Utilisateurs
-  { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users', adminOnly: true },
-  { id: 'stats', label: 'Stats', icon: BarChart3, group: 'users', adminOnly: true },
+  { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users', adminOnly: true, permissionKey: 'can_manage_users' },
+  { id: 'stats', label: 'Stats', icon: BarChart3, group: 'users', adminOnly: true, permissionKey: 'can_view_stats' },
   { id: 'moderators', label: 'Modérateurs', shortLabel: 'Modéra.', icon: UserCog, group: 'users', adminOnly: true },
   // Finances
   { id: 'wallet', label: 'Portefeuille', icon: Wallet, group: 'finances' },
-  { id: 'credits-surveillance', label: 'Surveillance', icon: Activity, group: 'finances', adminOnly: true },
-  { id: 'credit-purchases', label: 'Achats', icon: ShoppingCart, group: 'finances' },
+  { id: 'credits-surveillance', label: 'Surveillance', icon: Activity, group: 'finances', adminOnly: true, permissionKey: 'can_manage_credits' },
+  { id: 'credit-purchases', label: 'Achats', icon: ShoppingCart, group: 'finances', permissionKey: 'can_manage_credits' },
   { id: 'rates', label: 'Tarifs', icon: Euro, group: 'finances', adminOnly: true },
   { id: 'withdrawals', label: 'Retraits', icon: ArrowUpRight, group: 'finances', adminOnly: true },
   { id: 'global', label: 'Gains', icon: PieChart, group: 'finances', adminOnly: true },
   // Communication
-  { id: 'broadcast', label: 'Notifications', shortLabel: 'Notifs', icon: Bell, group: 'communication', adminOnly: true },
+  { id: 'broadcast', label: 'Notifications', shortLabel: 'Notifs', icon: Bell, group: 'communication', adminOnly: true, permissionKey: 'can_broadcast' },
   { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'communication', adminOnly: true },
   { id: 'faq', label: "Aide", icon: HelpCircle, group: 'communication', adminOnly: true },
   { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'communication', adminOnly: true },
-  { id: 'promo', label: 'Promo', icon: Ticket, group: 'communication', adminOnly: true },
+  { id: 'promo', label: 'Promo', icon: Ticket, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
   { id: 'promo-images' as AdminSection, label: 'Visuels promo', shortLabel: 'Visuels', icon: FileImage, group: 'communication', adminOnly: true },
   // Config
   { id: 'credit-costs', label: 'Tarifs crédits', shortLabel: 'Tarifs', icon: Coins, group: 'config', adminOnly: true },
@@ -92,10 +94,16 @@ const AdminMobileNav = ({
   pendingPurchases = 0,
   pendingVerifications = 0,
   isAdmin = false,
+  modPermissions,
   dashboardTopSlot,
 }: AdminMobileNavProps) => {
 
-  const visibleItems = navItems.filter(item => !item.adminOnly || isAdmin);
+  const visibleItems = navItems.filter(item => {
+    if (!item.adminOnly) return true;
+    if (isAdmin) return true;
+    if (item.permissionKey && modPermissions?.[item.permissionKey]) return true;
+    return false;
+  });
 
   const getBadge = useCallback((id: AdminSection) => {
     switch (id) {

@@ -25,6 +25,7 @@ Deno.serve(async (req) => {
     console.log(`[PURGE] Starting purge for accounts created before ${purgeDate.toISOString()}`)
 
     // 1. SEND WARNING NOTIFICATIONS for accounts approaching the deadline
+    // ONLY for users who have NEVER been verified (first_verified_at IS NULL)
     let warningsSent = 0
     for (const daysBefore of WARNING_DAYS) {
       const targetDate = new Date(now)
@@ -34,25 +35,26 @@ Deno.serve(async (req) => {
       const targetEnd = new Date(targetDate)
       targetEnd.setHours(23, 59, 59, 999)
 
-      // Find unverified users created on this target day
+      // Find unverified users created on this target day WHO HAVE NEVER BEEN VERIFIED
       const { data: warningUsers } = await supabase
         .from('profiles')
         .select('user_id, username')
         .eq('is_verified', false)
+        .is('first_verified_at', null) // NEVER verified before
         .gte('created_at', targetStart.toISOString())
         .lte('created_at', targetEnd.toISOString())
 
       if (warningUsers && warningUsers.length > 0) {
-        // Filter out users who have a pending verification
+        // Filter out users who have a pending/approved verification
         const userIds = warningUsers.map(u => u.user_id)
         const { data: pendingVerifs } = await supabase
           .from('identity_verifications')
           .select('user_id')
           .in('user_id', userIds)
-          .eq('status', 'approved')
+          .in('status', ['approved', 'pending'])
 
-        const approvedUserIds = new Set(pendingVerifs?.map(v => v.user_id) || [])
-        const eligibleUsers = warningUsers.filter(u => !approvedUserIds.has(u.user_id))
+        const exemptUserIds = new Set(pendingVerifs?.map(v => v.user_id) || [])
+        const eligibleUsers = warningUsers.filter(u => !exemptUserIds.has(u.user_id))
 
         for (const user of eligibleUsers) {
           // Check if notification already sent today
@@ -109,10 +111,12 @@ Deno.serve(async (req) => {
     console.log(`[PURGE] Sent ${warningsSent} warning notifications`)
 
     // 2. PURGE accounts older than 30 days without verification
+    // ONLY users who have NEVER been verified (first_verified_at IS NULL)
     const { data: accountsToPurge } = await supabase
       .from('profiles')
       .select('user_id, username')
       .eq('is_verified', false)
+      .is('first_verified_at', null) // NEVER verified before — re-verifications are excluded
       .lt('created_at', purgeDate.toISOString())
 
     if (!accountsToPurge || accountsToPurge.length === 0) {
@@ -124,7 +128,7 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // Filter out users who actually have approved verification
+    // Extra safety: filter out users who have any approved verification record
     const purgeUserIds = accountsToPurge.map(u => u.user_id)
     const { data: approvedVerifs } = await supabase
       .from('identity_verifications')
@@ -135,7 +139,7 @@ Deno.serve(async (req) => {
     const approvedSet = new Set(approvedVerifs?.map(v => v.user_id) || [])
     const finalPurgeList = accountsToPurge.filter(u => !approvedSet.has(u.user_id))
 
-    console.log(`[PURGE] Purging ${finalPurgeList.length} unverified accounts`)
+    console.log(`[PURGE] Purging ${finalPurgeList.length} never-verified accounts (excluded ${accountsToPurge.length - finalPurgeList.length} previously verified)`)
 
     let purgedCount = 0
     let errorCount = 0

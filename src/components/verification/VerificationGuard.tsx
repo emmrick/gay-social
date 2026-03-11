@@ -10,7 +10,7 @@ interface VerificationGuardProps {
 
 const VerificationGuard = ({ children }: VerificationGuardProps) => {
   const { user, profile, isLoading: authLoading } = useAuth();
-  const { canAccessApp, isLoading: verificationLoading, isVerificationPending } = useVerificationDeadline();
+  const { canAccessApp, isLoading: verificationLoading, isVerificationPending, isReVerification } = useVerificationDeadline();
 
   // Don't check if not logged in - allow access to public pages
   if (!user) {
@@ -22,8 +22,7 @@ const VerificationGuard = ({ children }: VerificationGuardProps) => {
     return <>{children}</>;
   }
 
-  // Profile not loaded yet - allow access while loading to avoid blocking
-  // The profile will load shortly and if verification is needed, it will redirect
+  // Profile not loaded yet - allow access while loading
   if (!profile) {
     return <>{children}</>;
   }
@@ -34,12 +33,13 @@ const VerificationGuard = ({ children }: VerificationGuardProps) => {
   }
 
   // If verification is pending (submitted), show pending approval screen
-  if (isVerificationPending) {
+  // But for re-verifications, don't block — just show a banner
+  if (isVerificationPending && !isReVerification) {
     return <PendingApprovalScreen />;
   }
 
-  // If deadline passed or can't access, show verification screen
-  if (!canAccessApp) {
+  // If deadline passed or can't access (only for first-time verifications)
+  if (!canAccessApp && !isReVerification) {
     return <VerificationRequiredScreen />;
   }
 

@@ -301,6 +301,8 @@ const ModerationMissionAlert = () => {
 
   const handleExecute = useCallback(() => {
     if (!mission) return;
+    // Hide this popup — TaskQueuePopup on /admin will take over
+    setVisible(false);
     const section = getTaskTypeSection(mission.task_type);
     navigate(`/admin?section=${section}`);
   }, [mission, navigate]);

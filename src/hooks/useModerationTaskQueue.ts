@@ -78,7 +78,12 @@ export const useMissionToggle = () => {
     });
   }, []);
 
-  return { isActive, toggle };
+  const setActive = useCallback((value: boolean) => {
+    setIsActive(value);
+    try { localStorage.setItem(MISSION_ACTIVE_KEY, String(value)); } catch {}
+  }, []);
+
+  return { isActive, toggle, setActive };
 };
 
 // ─── Shared invalidation helper ───

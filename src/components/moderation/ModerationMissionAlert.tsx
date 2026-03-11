@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Zap, X, ChevronRight, CheckCircle2, Play, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -131,7 +132,10 @@ const ModerationMissionAlert = () => {
   const reserveTask = useReserveTask();
   const refuseTask = useRefuseTask();
   const completeTask = useCompleteTask();
-  const { isActive: missionsActive } = useMissionToggle();
+  const { isActive: missionsActive, setActive: setMissionsActive } = useMissionToggle();
+
+  const lastMissionReceivedRef = useRef<number>(Date.now());
+  const autoOfflineTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isOnAdminPage = location.pathname === '/admin';
 
@@ -237,6 +241,7 @@ const ModerationMissionAlert = () => {
 
   const showMission = (task: MissionData, taskKey: string) => {
     lastSeenKeyRef.current = taskKey;
+    lastMissionReceivedRef.current = Date.now(); // Reset 2h inactivity timer
     setMission(task);
     setStep('propose');
     setVisible(true);
@@ -289,8 +294,45 @@ const ModerationMissionAlert = () => {
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current);
       if (soundIntervalRef.current) clearInterval(soundIntervalRef.current);
+      if (autoOfflineTimerRef.current) clearInterval(autoOfflineTimerRef.current);
     };
   }, []);
+
+  // ── Auto-offline after 2h without any mission ──
+  const AUTO_OFFLINE_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+  useEffect(() => {
+    if (!missionsActive || !isStaff) {
+      if (autoOfflineTimerRef.current) {
+        clearInterval(autoOfflineTimerRef.current);
+        autoOfflineTimerRef.current = null;
+      }
+      return;
+    }
+
+    // Reset timer start when going online
+    lastMissionReceivedRef.current = Date.now();
+
+    // Check every 60s if 2h passed without a mission
+    autoOfflineTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - lastMissionReceivedRef.current;
+      if (elapsed >= AUTO_OFFLINE_MS) {
+        setMissionsActive(false);
+        toast.info('Vous avez été passé Hors ligne automatiquement après 2h sans mission.', { duration: 8000 });
+        if (autoOfflineTimerRef.current) {
+          clearInterval(autoOfflineTimerRef.current);
+          autoOfflineTimerRef.current = null;
+        }
+      }
+    }, 60_000);
+
+    return () => {
+      if (autoOfflineTimerRef.current) {
+        clearInterval(autoOfflineTimerRef.current);
+        autoOfflineTimerRef.current = null;
+      }
+    };
+  }, [missionsActive, isStaff, setMissionsActive]);
 
   // ── Actions ──
   const handleSkip = useCallback(() => {

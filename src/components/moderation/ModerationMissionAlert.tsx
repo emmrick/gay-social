@@ -274,6 +274,16 @@ const ModerationMissionAlert = () => {
     };
   }, [visible, step, mission]);
 
+  // Hide mission when toggling offline
+  useEffect(() => {
+    if (!missionsActive && visible) {
+      setVisible(false);
+      setMission(null);
+      setStep('propose');
+      lastSeenKeyRef.current = null;
+    }
+  }, [missionsActive]);
+
   // Cleanup
   useEffect(() => {
     return () => {

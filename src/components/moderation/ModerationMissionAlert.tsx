@@ -168,8 +168,8 @@ const ModerationMissionAlert = () => {
         updated_at: t.updated_at,
       })) as MissionData[];
     },
-    enabled: !!user?.id && !!isStaff,
-    refetchInterval: 10_000,
+    enabled: !!user?.id && !!isStaff && missionsActive,
+    refetchInterval: missionsActive ? 10_000 : false,
     staleTime: 8_000,
   });
 

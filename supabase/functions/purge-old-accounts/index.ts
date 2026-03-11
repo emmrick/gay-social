@@ -21,9 +21,10 @@ Deno.serve(async (req) => {
 
     const now = new Date()
 
-    // === PART 1: Warn users approaching 5-year account age ===
+    // === PART 1: Warn users approaching 5-year inactivity (based on last_seen) ===
     let warningsSent = 0
     for (const daysBefore of WARNING_DAYS) {
+      // Find users whose last_seen is (5 years - daysBefore days) ago
       const targetDate = new Date(now)
       targetDate.setFullYear(targetDate.getFullYear() - ACCOUNT_MAX_AGE_YEARS)
       targetDate.setDate(targetDate.getDate() + daysBefore)
@@ -36,8 +37,8 @@ Deno.serve(async (req) => {
       const { data: warningUsers } = await supabase
         .from('profiles')
         .select('user_id, username')
-        .gte('created_at', dayStart.toISOString())
-        .lte('created_at', dayEnd.toISOString())
+        .gte('last_seen', dayStart.toISOString())
+        .lte('last_seen', dayEnd.toISOString())
 
       if (warningUsers?.length) {
         for (const user of warningUsers) {
@@ -54,7 +55,7 @@ Deno.serve(async (req) => {
               user_id: user.user_id,
               type: tag,
               title: '⚠️ Suppression programmée',
-              message: `Conformément à notre politique de conservation, ton compte et toutes tes données seront définitivement supprimés dans ${daysBefore} jour${daysBefore > 1 ? 's' : ''}. Exporte tes données depuis les paramètres si nécessaire.`,
+              message: `Conformément à notre politique de conservation, ton compte sera supprimé dans ${daysBefore} jour${daysBefore > 1 ? 's' : ''} faute de connexion. Connecte-toi pour repousser cette échéance.`,
               is_read: false,
             })
             warningsSent++
@@ -63,14 +64,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    // === PART 2: Delete accounts older than 5 years ===
+    // === PART 2: Delete accounts inactive for 5+ years (based on last_seen) ===
     const maxAgeDate = new Date(now)
     maxAgeDate.setFullYear(maxAgeDate.getFullYear() - ACCOUNT_MAX_AGE_YEARS)
 
     const { data: oldAccounts, error: fetchErr } = await supabase
       .from('profiles')
       .select('user_id, username')
-      .lt('created_at', maxAgeDate.toISOString())
+      .lt('last_seen', maxAgeDate.toISOString())
 
     let purgedCount = 0
     const errors: string[] = []

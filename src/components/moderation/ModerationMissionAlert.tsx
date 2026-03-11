@@ -227,14 +227,14 @@ const ModerationMissionAlert = () => {
   }, [navigate, isOnAdminPage]);
 
   const handleDismiss = useCallback(() => {
-    // Dismiss current mission and immediately look for next one
+    // Dismiss current mission and wait 5s before proposing the next one
     if (mission) {
       dismissedIdsRef.current.add(mission.id);
-      lastSeenKeyRef.current = null; // Reset so next task triggers alert
+      lastSeenKeyRef.current = null;
+      cooldownUntilRef.current = Date.now() + 5000; // 5s cooldown
     }
     setVisible(false);
     setMission(null);
-    // Force re-evaluation — the useEffect on nextAvailableTask will pick up the next one
   }, [mission]);
 
   if (!isStaff || !mission || !visible) return null;

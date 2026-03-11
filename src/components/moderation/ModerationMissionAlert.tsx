@@ -176,10 +176,19 @@ const ModerationMissionAlert = () => {
       countdownRef.current = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
-            // Time's up — auto-skip this mission
+            // Time's up — auto-skip this mission using ref to avoid stale closure
             clearInterval(countdownRef.current!);
             countdownRef.current = null;
-            handleSkip();
+            const currentMission = missionRef.current;
+            if (currentMission) {
+              dismissedIdsRef.current.add(currentMission.id);
+              cooldownUntilRef.current = Date.now() + COOLDOWN_MS;
+            }
+            lastSeenKeyRef.current = null;
+            setVisible(false);
+            setMission(null);
+            missionRef.current = null;
+            setStep('propose');
             return 0;
           }
           return prev - 1;

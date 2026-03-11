@@ -27,7 +27,7 @@ const TASK_TYPE_LABELS: Record<string, string> = {
 
 const formatReward = (cents: number) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
 
-const COUNTDOWN_SECONDS = 30;
+const COUNTDOWN_SECONDS = 60;
 const COOLDOWN_MS = 5000;
 
 // ── Audio helpers ──

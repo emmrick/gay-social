@@ -2915,6 +2915,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_security_pins: {
+        Row: {
+          biometric_credential_id: string | null
+          biometric_enabled: boolean | null
+          created_at: string | null
+          id: string
+          pin_hash: string
+          pin_salt: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          biometric_credential_id?: string | null
+          biometric_enabled?: boolean | null
+          created_at?: string | null
+          id?: string
+          pin_hash: string
+          pin_salt: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          biometric_credential_id?: string | null
+          biometric_enabled?: boolean | null
+          created_at?: string | null
+          id?: string
+          pin_hash?: string
+          pin_salt?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_usage: {
         Row: {
           albums_count: number

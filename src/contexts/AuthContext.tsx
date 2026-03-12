@@ -256,6 +256,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) throw error;
+      
+      // Reset 60-day session timer on login
+      localStorage.setItem('gc_session_expiry_days', Date.now().toString());
+      // Clear lock so PIN is required on next fresh session
+      sessionStorage.removeItem('gc_app_unlocked');
+      
       return { error: null };
     } catch (error) {
       return { error: error as Error };

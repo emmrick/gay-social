@@ -191,8 +191,8 @@ export const notifyVerificationRejected = async (userId: string, reason: string)
     'verification_rejected',
     '❌ Vérification refusée',
     `Votre demande de vérification a été refusée : ${reason}. Vous pouvez soumettre une nouvelle demande.`,
-    '/?tab=profile',
-    { notificationType: 'verification' }
+    '/?tab=profile&showVerification=true',
+    { notificationType: 'verification', url: '/?tab=profile&showVerification=true' }
   );
 };
 

@@ -310,7 +310,7 @@ const useRevokeAndRequestVerification = () => {
         type: 'verification_request',
         title: '⚠️ Nouvelle vérification requise',
         message: 'Un modérateur a des doutes sur votre identité et demande une nouvelle vérification. Veuillez soumettre de nouveaux documents pour continuer à utiliser l\'application.',
-        action_url: '/',
+        action_url: '/?tab=profile&showVerification=true',
       });
 
       if (notifError) {

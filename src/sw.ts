@@ -127,8 +127,9 @@ self.addEventListener('notificationclick', function(event: NotificationEvent) {
   // For SPA routing: encode the target path as a query parameter
   // This ensures the app loads first, then navigates internally
   const getNavigationUrl = (path: string) => {
-    if (path === '/' || path === '') {
-      return '/';
+    if (path === '/' || path === '' || path.startsWith('/?')) {
+      // Root URL or root with query params — use directly
+      return path || '/';
     }
     // Encode the path as a query param so the SPA can handle internal navigation
     return `/?redirect=${encodeURIComponent(path)}`;

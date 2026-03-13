@@ -168,7 +168,7 @@ export const notifyVerificationSubmitted = async (userId: string) => {
     '📋 Demande envoyée',
     'Votre demande de vérification d\'identité a été reçue. Un modérateur l\'examinera sous peu.',
     '/?tab=profile',
-    { notificationType: 'verification' }
+    { notificationType: 'verification', url: '/?tab=profile' }
   );
 };
 
@@ -180,7 +180,7 @@ export const notifyVerificationApproved = async (userId: string) => {
     '✅ Vérification approuvée',
     'Félicitations ! Votre identité a été vérifiée. Vous avez maintenant accès à toutes les fonctionnalités.',
     '/?tab=profile',
-    { notificationType: 'verification' }
+    { notificationType: 'verification', url: '/?tab=profile' }
   );
 };
 
@@ -191,8 +191,8 @@ export const notifyVerificationRejected = async (userId: string, reason: string)
     'verification_rejected',
     '❌ Vérification refusée',
     `Votre demande de vérification a été refusée : ${reason}. Vous pouvez soumettre une nouvelle demande.`,
-    '/?tab=profile',
-    { notificationType: 'verification' }
+    '/?tab=profile&showVerification=true',
+    { notificationType: 'verification', url: '/?tab=profile&showVerification=true' }
   );
 };
 

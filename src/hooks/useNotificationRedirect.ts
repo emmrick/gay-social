@@ -37,7 +37,12 @@ export const useNotificationRedirect = () => {
         console.log('[NotificationRedirect] Received SW message, navigating to:', targetUrl);
         
         if (targetUrl && targetUrl !== '/') {
-          navigate(targetUrl);
+          // If URL contains query params (e.g. /?tab=profile), use full navigation
+          if (targetUrl.startsWith('/?')) {
+            window.location.href = targetUrl;
+          } else {
+            navigate(targetUrl);
+          }
         }
       }
     };

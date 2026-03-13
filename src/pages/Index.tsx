@@ -118,6 +118,26 @@ const Index = () => {
   // Handle push notification redirects
   useNotificationRedirect();
 
+  // Handle query params from notification clicks (e.g. /?tab=profile&showVerification=true)
+  useEffect(() => {
+    if (!user) return;
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab') as NavTab | null;
+    const showVerif = params.get('showVerification');
+    
+    if (tabParam || showVerif) {
+      // Clean URL
+      window.history.replaceState({}, '', '/');
+      
+      if (tabParam) {
+        handleTabChange(tabParam);
+      }
+      if (showVerif === 'true') {
+        setShowVerificationDialog(true);
+      }
+    }
+  }, [location.search, user]);
+
   // Handle OTP interruption link
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

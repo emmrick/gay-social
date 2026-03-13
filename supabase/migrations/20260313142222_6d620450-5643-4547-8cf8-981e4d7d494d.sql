@@ -1,0 +1,1 @@
+ALTER TABLE public.user_credits DROP CONSTRAINT user_credits_passive_credits_check;

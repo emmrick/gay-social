@@ -116,6 +116,11 @@ const Auth = () => {
         const { error } = await signUp(email, password, username, region, ageNum);
         if (error) throw error;
         
+        // Google Ads conversion tracking
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', 'ads_conversion_Groupes_1', {});
+        }
+        
         if (referralValidation?.valid && referralCode) {
           toast.success('Compte créé avec code de parrainage ! Abonnez-vous pour débloquer votre promotion.');
         } else {

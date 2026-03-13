@@ -241,7 +241,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
       const creditTypeLabels: Record<string, string> = {
         purchased: 'Achetés', daily: 'Quotidiens', bonus: 'Bonus', passive: 'Passifs'
       };
-      const { error } = await supabase.rpc('add_credits', {
+      const { data, error } = await supabase.rpc('add_credits', {
         _user_id: ticket.user_id,
         _amount: amount,
         _credit_type: manualCreditType,
@@ -249,6 +249,10 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
         _description: `Attribution manuelle via support - ${amount} crédits (${creditTypeLabels[manualCreditType]})`,
       });
       if (error) throw error;
+      const result = data as any;
+      if (result && !result.success) {
+        throw new Error(result.error || 'Échec de l\'attribution');
+      }
 
       // Send confirmation message in the chat
       await sendMessage.mutateAsync({

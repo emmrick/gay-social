@@ -172,6 +172,7 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
           type: 'system',
           title: '📱 Numéro de téléphone requis',
           message: 'Pour assurer la sécurité de ton compte et te permettre de bénéficier d\'une assistance personnalisée, merci d\'ajouter ton numéro de téléphone dans les paramètres de ton profil. Cette information est indispensable pour que notre équipe puisse vérifier ton identité lors de demandes de support.',
+          action_url: '/?tab=profile&editProfile=true',
           is_read: false,
         });
       if (error) throw error;

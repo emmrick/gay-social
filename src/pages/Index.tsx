@@ -125,8 +125,9 @@ const Index = () => {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get('tab') as NavTab | null;
     const showVerif = params.get('showVerification');
+    const editProfile = params.get('editProfile');
     
-    if (tabParam || showVerif) {
+    if (tabParam || showVerif || editProfile) {
       // Clean URL
       window.history.replaceState({}, '', '/');
       
@@ -135,6 +136,9 @@ const Index = () => {
       }
       if (showVerif === 'true') {
         setShowVerificationDialog(true);
+      }
+      if (editProfile === 'true') {
+        setOpenEditProfile(true);
       }
     }
   }, [location.search, user]);

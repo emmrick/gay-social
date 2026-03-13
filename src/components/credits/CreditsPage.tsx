@@ -158,7 +158,7 @@ const CreditsPage = () => {
         </motion.div>
       </div>
 
-      <div className="px-4 space-y-5 -mt-2">
+      <div className="px-4 space-y-5 -mt-2 overflow-hidden">
         {/* ── BALANCE BREAKDOWN ───────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -166,7 +166,7 @@ const CreditsPage = () => {
           transition={{ delay: 0.1 }}
         >
           <CreditBalanceBar showLabel={false} showDetails={true} />
-          <div className="grid grid-cols-4 gap-2 mt-3">
+          <div className="grid grid-cols-4 gap-1.5 mt-3">
             {creditBreakdown.map((item, i) => (
               <motion.div
                 key={item.label}
@@ -176,11 +176,11 @@ const CreditsPage = () => {
                 className="relative overflow-hidden rounded-2xl bg-card border border-border/50 p-3 text-center"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-[0.06]`} />
-                <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center mx-auto mb-1.5`}>
-                  <item.icon className="w-3.5 h-3.5 text-white" />
+                <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center mx-auto mb-1`}>
+                  <item.icon className="w-3 h-3 text-white" />
                 </div>
-                <div className="text-lg font-bold tabular-nums relative">{item.value.toFixed(1)}</div>
-                <div className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider mt-0.5">{item.label}</div>
+                <div className="text-base font-bold tabular-nums relative">{item.value.toFixed(1)}</div>
+                <div className="text-[8px] text-muted-foreground font-semibold uppercase tracking-wider mt-0.5 truncate">{item.label}</div>
               </motion.div>
             ))}
           </div>

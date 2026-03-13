@@ -359,7 +359,7 @@ export const useCredits = () => {
 
   return {
     credits: query.data,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading && !!user?.id,
     transactions,
     transactionsLoading,
     // Balances

@@ -36,7 +36,39 @@ const InsufficientCreditsDialog = ({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader className="text-center">
-          {isCompletelyOut ? (
+          {hasCreditsButLocked ? (
+            <>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="mx-auto w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mb-2"
+              >
+                <AlertTriangle className="w-8 h-8 text-amber-500" />
+              </motion.div>
+              <AlertDialogTitle className="text-xl text-center">
+                Crédits verrouillés
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3 text-center">
+                <p>
+                  Vous avez <strong className="text-primary">{totalCredits.toFixed(1)} crédits</strong> au total,
+                  mais certains types de crédits sont verrouillés.
+                </p>
+                <p>
+                  L'action "<strong>{actionName}</strong>" coûte{' '}
+                  <strong className="text-primary">{requiredCredits} crédit{requiredCredits > 1 ? 's' : ''}</strong>.
+                </p>
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    💡 Débloquez vos crédits pour continuer :
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Rendez-vous dans la barre de crédits et déverrouillez les types de crédits
+                    (Passif, Bonus ou Achetés) pour les utiliser.
+                  </p>
+                </div>
+              </AlertDialogDescription>
+            </>
+          ) : isCompletelyOut ? (
             <>
               <motion.div
                 initial={{ scale: 0 }}
@@ -88,11 +120,16 @@ const InsufficientCreditsDialog = ({
                 </p>
                 <p>
                   Vous avez actuellement{' '}
-                  <strong className="text-amber-600 dark:text-amber-400">{totalCredits.toFixed(1)} crédits</strong>.
+                  <strong className="text-amber-600 dark:text-amber-400">{(availableCredits ?? totalCredits).toFixed(1)} crédits disponibles</strong>.
                   <br />
                   Il vous manque{' '}
                   <strong className="text-destructive">{missing.toFixed(1)} crédits</strong>.
                 </p>
+                {hasLockedCredits && (
+                  <p className="text-xs text-muted-foreground italic">
+                    ⚠️ Certains de vos crédits sont verrouillés. Débloquez-les pour les utiliser.
+                  </p>
+                )}
               </AlertDialogDescription>
             </>
           )}

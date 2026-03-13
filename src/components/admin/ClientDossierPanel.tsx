@@ -72,7 +72,7 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
     enabled: isVerified,
   });
 
-  // Fetch credit balance (only when verified)
+  // Fetch credit balance (only when verified) - with short staleTime for freshness
   const { data: credits } = useQuery({
     queryKey: ['client-dossier-credits', userId, isVerified],
     queryFn: async () => {
@@ -83,6 +83,7 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
       return data as any;
     },
     enabled: isVerified && !!userId,
+    staleTime: 5000,
   });
 
   // Fetch credit transactions (only when verified)
@@ -100,7 +101,47 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
       return data || [];
     },
     enabled: isVerified && !!userId,
+    staleTime: 5000,
   });
+
+  // Realtime subscription for credit changes - auto-refresh dossier when credits change
+  useEffect(() => {
+    if (!isVerified || !userId) return;
+
+    const channel = supabase
+      .channel(`dossier-credits-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'credit_transactions',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          // Invalidate both credits balance and transactions when any change occurs
+          queryClient.invalidateQueries({ queryKey: ['client-dossier-credits', userId, isVerified] });
+          queryClient.invalidateQueries({ queryKey: ['client-dossier-credit-transactions', userId, isVerified] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_credits',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['client-dossier-credits', userId, isVerified] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isVerified, userId, queryClient]);
 
   // Fetch verification status
   const { data: verification } = useQuery({

@@ -334,10 +334,10 @@ const CreditsPage = () => {
 
             <Accordion type="single" collapsible className="w-full space-y-1.5">
               {[
-                { id: 'how', q: 'Comment fonctionne le système de crédits ?', a: 'Chaque action sur GayConnect consomme des crédits. Vous recevez 15 crédits bonus à l\'inscription et 5 crédits gratuits automatiquement chaque jour à minuit.' },
-                { id: 'order', q: 'Dans quel ordre les crédits sont-ils utilisés ?', a: 'Les crédits passifs sont utilisés en premier, puis les quotidiens, les bonus, et enfin les achetés. Cela préserve vos crédits payants le plus longtemps possible.' },
+                { id: 'how', q: 'Comment fonctionne le système de crédits ?', a: 'Chaque action sur GayConnect consomme des crédits. Vous recevez 15 crédits bonus à l\'inscription et 5 crédits gratuits automatiquement chaque jour.' },
+                { id: 'order', q: 'Dans quel ordre les crédits sont-ils utilisés ?', a: 'Les crédits quotidiens sont utilisés en premier, puis les passifs, les bonus, et enfin les achetés. Vous pouvez verrouiller certains types pour les économiser.' },
                 { id: 'album', q: 'Le premier album est-il gratuit ?', a: 'Oui ! La création de votre premier album privé est entièrement gratuite. Seuls les albums suivants coûtent 10 crédits.' },
-                { id: 'daily', q: 'Comment fonctionnent les crédits quotidiens ?', a: 'Vous recevez automatiquement 5 crédits gratuits chaque jour à minuit. Si vous ne les utilisez pas, ils seront remplacés le lendemain.' },
+                { id: 'daily', q: 'Comment fonctionnent les crédits quotidiens ?', a: 'Vous recevez automatiquement jusqu\'à 5 crédits gratuits chaque jour (complément). Les crédits passifs se régénèrent à 0.1 toutes les 6h (max 10).' },
                 { id: 'referral', q: 'Comment fonctionne le parrainage ?', a: 'Partagez votre code unique. Quand un filleul s\'inscrit et complète sa vérification d\'identité, vous recevez tous les deux des crédits bonus.' },
               ].map((faq) => (
                 <AccordionItem key={faq.id} value={faq.id} className="border rounded-2xl px-3 overflow-hidden data-[state=open]:bg-muted/30">

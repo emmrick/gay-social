@@ -103,7 +103,7 @@ const CreditsPage = () => {
 
 
   return (
-    <div className="min-h-screen bg-background pb-28 max-w-2xl mx-auto">
+    <div className="bg-background pb-8 max-w-2xl mx-auto">
       {/* ── HERO ──────────────────────────────────── */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-transparent" />

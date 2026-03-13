@@ -195,8 +195,8 @@ const CreditsPage = () => {
         >
           {[
             { icon: Clock, text: `+${maxDailyCredits}/jour`, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-            { icon: Zap, text: '+0.1 passif / 2h', color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-            { icon: ArrowDownUp, text: 'Passif → Quotidien → Bonus → Achetés', color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+            { icon: Zap, text: '+0.1 passif / 6h', color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+            { icon: ArrowDownUp, text: 'Quotidien → Passif → Bonus → Achetés', color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
           ].map((chip, i) => (
             <div
               key={i}

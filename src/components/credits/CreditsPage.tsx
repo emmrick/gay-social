@@ -30,8 +30,8 @@ const CreditsPage = () => {
   }
 
   const creditBreakdown = [
-    { label: 'Passif', value: passiveCredits, icon: Zap, gradient: 'from-amber-500 to-orange-500' },
     { label: 'Quotidien', value: dailyCredits, icon: Clock, gradient: 'from-emerald-500 to-green-500' },
+    { label: 'Passif', value: passiveCredits, icon: Zap, gradient: 'from-amber-500 to-orange-500' },
     { label: 'Bonus', value: bonusCredits, icon: Gift, gradient: 'from-blue-500 to-indigo-500' },
     { label: 'Achetés', value: purchasedCredits, icon: CreditCard, gradient: 'from-violet-500 to-purple-500' },
   ];

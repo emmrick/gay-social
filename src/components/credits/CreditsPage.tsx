@@ -3,7 +3,7 @@ import {
   Coins, Gift, ShoppingCart, Users, MessageCircle, Camera,
   FolderOpen, Heart, Eye, MapPin, Loader2, Sparkles, Shield,
   Clock, Zap, HelpCircle, TrendingUp, Bot, ChevronRight,
-  ArrowDownUp, CreditCard, Rocket, Star
+  ArrowDownUp, CreditCard, Rocket
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,6 @@ import { useCredits, CREDIT_COSTS, CREDIT_REWARDS } from '@/hooks/useCredits';
 import { useDynamicCreditCosts } from '@/hooks/useDynamicCreditCosts';
 import CreditBalanceBar from './CreditBalanceBar';
 import CreditHistorySheet from './CreditHistorySheet';
-import CreditReferralSection from './CreditReferralSection';
 import BuyCreditDialog from './BuyCreditDialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -101,55 +100,49 @@ const CreditsPage = () => {
     { icon: Users, label: 'Parrainage réussi', reward: dynamicCosts?.referral_reward ?? CREDIT_REWARDS.referral_success, suffix: ' chacun', gradient: 'from-purple-500 to-violet-500' },
   ];
 
-
   return (
-    <div className="bg-background pb-8 max-w-2xl mx-auto">
+    <div className="bg-background pb-8 max-w-2xl mx-auto overflow-x-hidden">
       {/* ── HERO ──────────────────────────────────── */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-transparent" />
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[120px]" />
-        <div className="absolute top-20 -right-20 w-[200px] h-[200px] rounded-full bg-accent/15 blur-[80px]" />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative px-5 pt-10 pb-8"
+          className="relative px-4 pt-8 pb-6"
         >
-          {/* Animated coin icon */}
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="mx-auto w-20 h-20 rounded-3xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-2xl shadow-primary/30 mb-5"
+            className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-xl shadow-primary/30 mb-4"
           >
-            <Coins className="w-10 h-10 text-primary-foreground" />
+            <Coins className="w-8 h-8 text-primary-foreground" />
           </motion.div>
 
-          {/* Balance */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.15 }}
             className="text-center"
           >
-            <div className="text-5xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <div className="text-4xl font-black tracking-tight">
               {totalCredits.toFixed(1)}
             </div>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">crédits disponibles</p>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">crédits disponibles</p>
           </motion.div>
 
-          {/* Action buttons */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="flex items-center justify-center gap-3 mt-5"
+            className="flex items-center justify-center gap-3 mt-4"
           >
             <CreditHistorySheet />
             <BuyCreditDialog
               trigger={
-                <Button size="sm" className="bg-gradient-to-r from-primary to-accent text-primary-foreground gap-2 shadow-lg shadow-primary/25 px-5 h-10 rounded-xl font-semibold">
-                  <ShoppingCart className="w-4 h-4" />
+                <Button size="sm" className="bg-gradient-to-r from-primary to-accent text-primary-foreground gap-2 shadow-lg shadow-primary/25 px-4 h-9 rounded-xl font-semibold text-xs">
+                  <ShoppingCart className="w-3.5 h-3.5" />
                   Acheter
                 </Button>
               }
@@ -158,7 +151,7 @@ const CreditsPage = () => {
         </motion.div>
       </div>
 
-      <div className="px-4 space-y-5 -mt-2 overflow-hidden">
+      <div className="px-3 space-y-4 -mt-1">
         {/* ── BALANCE BREAKDOWN ───────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -166,21 +159,21 @@ const CreditsPage = () => {
           transition={{ delay: 0.1 }}
         >
           <CreditBalanceBar showLabel={false} showDetails={true} />
-          <div className="grid grid-cols-4 gap-1.5 mt-3">
+          <div className="grid grid-cols-4 gap-1 mt-2">
             {creditBreakdown.map((item, i) => (
               <motion.div
                 key={item.label}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 + i * 0.05 }}
-                className="relative overflow-hidden rounded-2xl bg-card border border-border/50 p-3 text-center"
+                className="relative overflow-hidden rounded-xl bg-card border border-border/50 p-2 text-center"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-[0.06]`} />
-                <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${item.gradient} flex items-center justify-center mx-auto mb-1`}>
-                  <item.icon className="w-3 h-3 text-white" />
+                <div className={`w-5 h-5 rounded-md bg-gradient-to-br ${item.gradient} flex items-center justify-center mx-auto mb-0.5`}>
+                  <item.icon className="w-2.5 h-2.5 text-white" />
                 </div>
-                <div className="text-base font-bold tabular-nums relative">{item.value.toFixed(1)}</div>
-                <div className="text-[8px] text-muted-foreground font-semibold uppercase tracking-wider mt-0.5 truncate">{item.label}</div>
+                <div className="text-sm font-bold tabular-nums relative">{item.value.toFixed(1)}</div>
+                <div className="text-[7px] text-muted-foreground font-semibold uppercase tracking-wider mt-0.5 truncate">{item.label}</div>
               </motion.div>
             ))}
           </div>
@@ -191,18 +184,18 @@ const CreditsPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide"
+          className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide"
         >
           {[
             { icon: Clock, text: `+${maxDailyCredits}/jour`, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-            { icon: Zap, text: '+0.1 passif / 6h', color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-            { icon: ArrowDownUp, text: 'Quotidien → Passif → Bonus → Achetés', color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+            { icon: Zap, text: '+0.1/6h', color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+            { icon: ArrowDownUp, text: 'Quot→Pass→Bon→Ach', color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
           ].map((chip, i) => (
             <div
               key={i}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-full ${chip.bg} border ${chip.border} text-xs font-medium whitespace-nowrap shrink-0`}
+              className={`flex items-center gap-1 px-2 py-1.5 rounded-full ${chip.bg} border ${chip.border} text-[10px] font-medium whitespace-nowrap shrink-0`}
             >
-              <chip.icon className={`w-3.5 h-3.5 ${chip.color}`} />
+              <chip.icon className={`w-3 h-3 ${chip.color}`} />
               <span>{chip.text}</span>
             </div>
           ))}
@@ -213,32 +206,32 @@ const CreditsPage = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="rounded-3xl bg-card border border-border/50 overflow-hidden"
+          className="rounded-2xl bg-card border border-border/50 overflow-hidden"
         >
-          <div className="p-5 space-y-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                <Gift className="w-4.5 h-4.5 text-white" />
+          <div className="p-3.5 space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                <Gift className="w-4 h-4 text-white" />
               </div>
-              <p className="font-bold text-sm">Gagner des crédits gratuits</p>
+              <p className="font-bold text-sm">Gagner des crédits</p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {earnMethods.map((m, i) => (
                 <motion.div
                   key={m.label}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.35 + i * 0.05 }}
-                  className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 hover:bg-muted/60 transition-colors"
+                  className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/40"
                 >
-                  <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${m.gradient} flex items-center justify-center shrink-0`}>
-                    <m.icon className="w-4 h-4 text-white" />
+                  <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${m.gradient} flex items-center justify-center shrink-0`}>
+                    <m.icon className="w-3.5 h-3.5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">{m.label}</p>
+                    <p className="text-xs font-semibold truncate">{m.label}</p>
                   </div>
-                  <Badge className="bg-background border border-border/60 text-foreground text-xs font-bold px-2.5 py-1 shadow-sm">
+                  <Badge className="bg-background border border-border/60 text-foreground text-[10px] font-bold px-2 py-0.5 shadow-sm shrink-0">
                     +{m.reward}{m.suffix || ''}
                   </Badge>
                 </motion.div>
@@ -247,37 +240,36 @@ const CreditsPage = () => {
           </div>
         </motion.div>
 
-
         {/* ── COÛTS DES ACTIONS ──────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="rounded-3xl bg-card border border-border/50 overflow-hidden"
+          className="rounded-2xl bg-card border border-border/50 overflow-hidden"
         >
-          <div className="p-5 pb-3">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <TrendingUp className="w-4.5 h-4.5 text-white" />
+          <div className="p-3.5 pb-3">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-white" />
               </div>
               <p className="font-bold text-sm">Coût des actions</p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {costSections.map((section) => (
                 <div key={section.id}>
                   <button
                     onClick={() => setActiveSection(activeSection === section.id ? null : section.id)}
-                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-muted/40 hover:bg-muted/60 transition-all"
+                    className="w-full flex items-center gap-2 p-2.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all"
                   >
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${section.gradient} flex items-center justify-center shrink-0`}>
-                      <section.icon className="w-4 h-4 text-white" />
+                    <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${section.gradient} flex items-center justify-center shrink-0`}>
+                      <section.icon className="w-3.5 h-3.5 text-white" />
                     </div>
-                    <span className="text-sm font-semibold flex-1 text-left">{section.title}</span>
-                    <Badge variant="secondary" className="text-[10px] font-bold mr-1">
+                    <span className="text-xs font-semibold flex-1 text-left">{section.title}</span>
+                    <Badge variant="secondary" className="text-[9px] font-bold px-1.5">
                       {section.items.length}
                     </Badge>
-                    <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${activeSection === section.id ? 'rotate-90' : ''}`} />
+                    <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${activeSection === section.id ? 'rotate-90' : ''}`} />
                   </button>
 
                   <AnimatePresence>
@@ -289,20 +281,20 @@ const CreditsPage = () => {
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
-                        <div className="pt-1.5 pb-1 px-1 space-y-1">
+                        <div className="pt-1 pb-0.5 space-y-0.5">
                           {section.items.map((item, i) => (
                             <div
                               key={i}
-                              className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-background/60"
+                              className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-background/60"
                             >
-                              <item.icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                              <item.icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                               <div className="flex-1 min-w-0">
-                                <p className="text-[13px] font-medium leading-tight">{item.label}</p>
+                                <p className="text-xs font-medium leading-tight truncate">{item.label}</p>
                                 {item.note && (
-                                  <p className="text-[10px] text-muted-foreground mt-0.5">{item.note}</p>
+                                  <p className="text-[9px] text-muted-foreground mt-0.5 truncate">{item.note}</p>
                                 )}
                               </div>
-                              <span className="text-xs font-bold font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-md shrink-0">
+                              <span className="text-[10px] font-bold font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded-md shrink-0">
                                 -{item.cost}
                               </span>
                             </div>
@@ -322,27 +314,27 @@ const CreditsPage = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
-          className="rounded-3xl bg-card border border-border/50 overflow-hidden"
+          className="rounded-2xl bg-card border border-border/50 overflow-hidden"
         >
-          <div className="p-5">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
-                <HelpCircle className="w-4.5 h-4.5 text-white" />
+          <div className="p-3.5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                <HelpCircle className="w-4 h-4 text-white" />
               </div>
               <p className="font-bold text-sm">Questions fréquentes</p>
             </div>
 
-            <Accordion type="single" collapsible className="w-full space-y-1.5">
+            <Accordion type="single" collapsible className="w-full space-y-1">
               {[
-                { id: 'how', q: 'Comment fonctionne le système de crédits ?', a: 'Chaque action sur GayConnect consomme des crédits. Vous recevez 15 crédits bonus à l\'inscription et 5 crédits gratuits automatiquement chaque jour à minuit.' },
-                { id: 'order', q: 'Dans quel ordre les crédits sont-ils utilisés ?', a: 'Les crédits quotidiens sont utilisés en premier, puis les passifs, les bonus, et enfin les achetés. Vous pouvez verrouiller (🔒) les crédits Passif, Bonus ou Achetés pour les économiser — le système les sautera automatiquement.' },
-                { id: 'album', q: 'Le premier album est-il gratuit ?', a: 'Oui ! La création de votre premier album privé est entièrement gratuite. Seuls les albums suivants coûtent 10 crédits.' },
-                { id: 'daily', q: 'Comment fonctionnent les crédits quotidiens ?', a: 'Vous recevez automatiquement 5 crédits gratuits chaque jour à minuit. Si vous ne les utilisez pas, ils seront remplacés le lendemain.' },
-                { id: 'referral', q: 'Comment fonctionne le parrainage ?', a: 'Partagez votre code unique. Quand un filleul s\'inscrit et complète sa vérification d\'identité, vous recevez tous les deux des crédits bonus.' },
+                { id: 'how', q: 'Comment fonctionne le système ?', a: 'Chaque action consomme des crédits. 15 crédits bonus à l\'inscription, 5 gratuits chaque jour à minuit.' },
+                { id: 'order', q: 'Ordre d\'utilisation ?', a: 'Quotidiens → Passifs → Bonus → Achetés. Verrouillez (🔒) pour économiser.' },
+                { id: 'album', q: 'Premier album gratuit ?', a: 'Oui ! Seuls les albums suivants coûtent 10 crédits.' },
+                { id: 'daily', q: 'Crédits quotidiens ?', a: '5 crédits gratuits chaque jour à minuit. Non cumulables.' },
+                { id: 'referral', q: 'Parrainage ?', a: 'Partagez votre code. Après vérification du filleul, vous recevez tous les deux des crédits bonus.' },
               ].map((faq) => (
-                <AccordionItem key={faq.id} value={faq.id} className="border rounded-2xl px-3 overflow-hidden data-[state=open]:bg-muted/30">
-                  <AccordionTrigger className="text-[13px] font-semibold py-3 hover:no-underline">{faq.q}</AccordionTrigger>
-                  <AccordionContent className="text-[13px] text-muted-foreground pb-3 leading-relaxed">
+                <AccordionItem key={faq.id} value={faq.id} className="border rounded-xl px-2.5 overflow-hidden data-[state=open]:bg-muted/30">
+                  <AccordionTrigger className="text-xs font-semibold py-2.5 hover:no-underline">{faq.q}</AccordionTrigger>
+                  <AccordionContent className="text-xs text-muted-foreground pb-2.5 leading-relaxed">
                     {faq.a}
                   </AccordionContent>
                 </AccordionItem>

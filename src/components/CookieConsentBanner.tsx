@@ -112,34 +112,32 @@ const CookieConsentBanner = () => {
                         <p className="text-xs font-medium text-foreground">Essentiels</p>
                         <p className="text-[11px] text-muted-foreground">Auth, session, sécurité</p>
                       </div>
-                      <div className="text-xs text-muted-foreground italic">Obligatoire</div>
+                      <div className="text-[11px] text-muted-foreground italic">Obligatoire</div>
                     </label>
 
-                    {/* Preferences */}
-                    <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer">
+                    <label className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50 cursor-pointer">
                       <div>
-                        <p className="text-sm font-medium text-foreground">Préférences</p>
-                        <p className="text-xs text-muted-foreground">Thème, langue, navigation mémorisée</p>
+                        <p className="text-xs font-medium text-foreground">Préférences</p>
+                        <p className="text-[11px] text-muted-foreground">Thème, langue, navigation</p>
                       </div>
                       <input
                         type="checkbox"
                         checked={preferences.preferences}
                         onChange={(e) => setPreferences(p => ({ ...p, preferences: e.target.checked }))}
-                        className="w-4 h-4 rounded accent-primary"
+                        className="w-3.5 h-3.5 rounded accent-primary"
                       />
                     </label>
 
-                    {/* Analytics */}
-                    <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer">
+                    <label className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50 cursor-pointer">
                       <div>
-                        <p className="text-sm font-medium text-foreground">Statistiques anonymes</p>
-                        <p className="text-xs text-muted-foreground">Amélioration du service (aucun tiers)</p>
+                        <p className="text-xs font-medium text-foreground">Statistiques anonymes</p>
+                        <p className="text-[11px] text-muted-foreground">Amélioration du service</p>
                       </div>
                       <input
                         type="checkbox"
                         checked={preferences.analytics}
                         onChange={(e) => setPreferences(p => ({ ...p, analytics: e.target.checked }))}
-                        className="w-4 h-4 rounded accent-primary"
+                        className="w-3.5 h-3.5 rounded accent-primary"
                       />
                     </label>
                   </div>
@@ -149,7 +147,7 @@ const CookieConsentBanner = () => {
           </div>
 
           {/* Buttons */}
-          <div className="p-5 pt-3 flex flex-col sm:flex-row gap-2">
+          <div className="px-4 pb-3 pt-2 flex gap-2">
             <Button
               variant="outline"
               size="sm"

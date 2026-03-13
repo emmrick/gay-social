@@ -158,7 +158,7 @@ const CreditsPage = () => {
         </motion.div>
       </div>
 
-      <div className="px-4 space-y-5 -mt-2">
+      <div className="px-4 space-y-5 -mt-2 overflow-hidden">
         {/* ── BALANCE BREAKDOWN ───────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}

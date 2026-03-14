@@ -306,6 +306,63 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
             </div>
           </div>
 
+          {/* Profile details for moderation */}
+          {reportedProfile && (
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                <User className="w-3 h-3 inline mr-1" />
+                Informations du profil
+              </Label>
+              <div className="p-3 rounded-lg bg-muted space-y-2">
+                {reportedProfile.bio && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Bio :</p>
+                    <p className="text-sm whitespace-pre-wrap">{reportedProfile.bio}</p>
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  {reportedProfile.age && <span>Âge : {reportedProfile.age} ans</span>}
+                  {reportedProfile.region && <span>• Région : {reportedProfile.region}</span>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Profile photos for moderation */}
+          {profilePhotos && profilePhotos.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                <Image className="w-3 h-3 inline mr-1" />
+                Photos du profil ({profilePhotos.length})
+              </Label>
+              <div className="grid grid-cols-3 gap-2">
+                {profilePhotos.map((photo) => (
+                  <div key={photo.id} className="relative group rounded-lg overflow-hidden border border-border">
+                    <img
+                      src={photo.photo_url}
+                      alt="Photo profil"
+                      className="w-full h-24 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => handleHidePhoto(photo.id)}
+                      >
+                        <EyeOff className="w-3 h-3 mr-1" />
+                        Supprimer
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground italic">
+                Survolez une photo pour la supprimer du profil
+              </p>
+            </div>
+          )}
+
           {/* Reporter */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground uppercase tracking-wide">

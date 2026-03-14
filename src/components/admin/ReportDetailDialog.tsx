@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   Flag, 
   Calendar, 
@@ -13,7 +14,10 @@ import {
   ShieldOff,
   Clock,
   AlertTriangle,
-  Euro
+  Euro,
+  Image,
+  EyeOff,
+  User
 } from 'lucide-react';
 import {
   Dialog,
@@ -47,6 +51,7 @@ import {
 import { reportReasonLabels, reportReasonDescriptions } from '@/hooks/useReports';
 import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModeratorEarnings';
 import { useLogModerationAction } from '@/hooks/useModerationActions';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface ReportDetailDialogProps {

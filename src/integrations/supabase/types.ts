@@ -1613,6 +1613,42 @@ export type Database = {
         }
         Relationships: []
       }
+      paypal_orders: {
+        Row: {
+          captured_at: string | null
+          created_at: string
+          credits_amount: number
+          id: string
+          paypal_order_id: string
+          price_euros: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          captured_at?: string | null
+          created_at?: string
+          credits_amount: number
+          id?: string
+          paypal_order_id: string
+          price_euros: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          captured_at?: string | null
+          created_at?: string
+          credits_amount?: number
+          id?: string
+          paypal_order_id?: string
+          price_euros?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pinned_messages: {
         Row: {
           chat_room_id: string

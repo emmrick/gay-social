@@ -77,6 +77,7 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
   const [resolutionNotes, setResolutionNotes] = useState(report.resolution_notes || '');
   const [suspensionReason, setSuspensionReason] = useState('');
   const [selectedDuration, setSelectedDuration] = useState<SuspensionDuration>('24hours');
+  const queryClient = useQueryClient();
   
   const updateStatus = useUpdateReportStatus();
   const suspendUser = useSuspendUser();
@@ -88,6 +89,52 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
   const { data: taskRates } = useTaskRates();
   const reportRate = taskRates?.find(r => r.task_type === 'report_response')?.rate_cents || 10;
   const suspensionRate = taskRates?.find(r => r.task_type === 'user_suspension')?.rate_cents || 15;
+
+  // Fetch reported user's full profile
+  const { data: reportedProfile } = useQuery({
+    queryKey: ['admin-reported-profile', report.reported_user_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', report.reported_user_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: open,
+  });
+
+  // Fetch reported user's profile photos
+  const { data: profilePhotos, refetch: refetchPhotos } = useQuery({
+    queryKey: ['admin-profile-photos', report.reported_user_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profile_photos')
+        .select('*')
+        .eq('user_id', report.reported_user_id)
+        .order('display_order', { ascending: true });
+      return data || [];
+    },
+    enabled: open,
+  });
+
+  // Hide a photo (set is_hidden flag or delete)
+  const handleHidePhoto = async (photoId: string) => {
+    // We'll delete the photo to hide it from everyone
+    const { error } = await supabase
+      .from('profile_photos')
+      .delete()
+      .eq('id', photoId);
+    
+    if (error) {
+      toast.error('Erreur lors de la suppression de la photo');
+      return;
+    }
+    
+    toast.success('Photo supprimée du profil');
+    refetchPhotos();
+    queryClient.invalidateQueries({ queryKey: ['profile-photos'] });
+  };
 
   const handleUpdateStatus = async (status: ReportStatus) => {
     await updateStatus.mutateAsync({

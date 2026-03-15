@@ -17,12 +17,14 @@ export const useSupportTypingIndicator = (ticketId: string | null) => {
   useEffect(() => {
     if (!ticketId || !user?.id) return;
 
-    const channel = supabase.channel(`support-typing-${ticketId}`);
+    const channel = supabase.channel(`support-typing-${ticketId}`, {
+      config: { broadcast: { self: false } },
+    });
     channelRef.current = channel;
 
     channel
       .on('broadcast', { event: 'typing' }, ({ payload }) => {
-        if (payload.user_id === user.id) return;
+        if (!payload || payload.user_id === user.id) return;
 
         setTypingUsers((prev) => {
           const exists = prev.some((u) => u.user_id === payload.user_id);
@@ -44,14 +46,18 @@ export const useSupportTypingIndicator = (ticketId: string | null) => {
         }, 4000);
       })
       .on('broadcast', { event: 'stop_typing' }, ({ payload }) => {
-        if (payload.user_id === user.id) return;
+        if (!payload || payload.user_id === user.id) return;
         setTypingUsers((prev) => prev.filter((u) => u.user_id !== payload.user_id));
         if (typingTimeoutsRef.current[payload.user_id]) {
           clearTimeout(typingTimeoutsRef.current[payload.user_id]);
           delete typingTimeoutsRef.current[payload.user_id];
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`[Support Typing] Subscribed to channel for ticket ${ticketId}`);
+        }
+      });
 
     return () => {
       Object.values(typingTimeoutsRef.current).forEach(clearTimeout);

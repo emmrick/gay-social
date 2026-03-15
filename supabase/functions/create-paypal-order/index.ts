@@ -72,12 +72,17 @@ Deno.serve(async (req) => {
           },
           description: `${credits} crédits GayConnect`,
         }],
-        application_context: {
-          brand_name: 'GayConnect',
-          landing_page: 'NO_PREFERENCE',
-          user_action: 'PAY_NOW',
-          return_url: return_url || 'https://gay-connect.lovable.app/paypal-return',
-          cancel_url: return_url ? return_url.replace('paypal-return', '') : 'https://gay-connect.lovable.app/',
+        payment_source: {
+          paypal: {
+            experience_context: {
+              brand_name: 'GayConnect',
+              landing_page: 'GUEST_CHECKOUT',
+              user_action: 'PAY_NOW',
+              payment_method_preference: 'UNRESTRICTED',
+              return_url: return_url || 'https://gay-connect.lovable.app/paypal-return',
+              cancel_url: return_url ? return_url.replace('paypal-return', '') : 'https://gay-connect.lovable.app/',
+            },
+          },
         },
       }),
     })

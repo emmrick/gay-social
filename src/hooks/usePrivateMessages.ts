@@ -241,6 +241,13 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         if (otherUserId && user) {
           (async () => {
             try {
+              // Check if recipient is already viewing this conversation
+              const isViewing = await isUserViewingPrivateChat(otherUserId, user.id);
+              if (isViewing) {
+                // Recipient is already in the conversation, skip notifications
+                return;
+              }
+
               const { data: senderProfile } = await supabase
                 .from('profiles')
                 .select('username')

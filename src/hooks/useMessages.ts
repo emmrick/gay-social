@@ -240,9 +240,18 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
               ? (content || '').substring(0, 50)
               : messageType === 'image' ? '📷 Photo' : '🎥 Vidéo';
 
-            // Send push notifications in parallel (fire-and-forget)
+            // Filter out members who are currently viewing this chat room
+            const membersToNotify = await Promise.all(
+              memberIds.map(async (memberId) => {
+                const isViewing = await isUserViewingChatRoom(memberId, chatRoomId);
+                return isViewing ? null : memberId;
+              })
+            );
+            const filteredMembers = membersToNotify.filter(Boolean) as string[];
+
+            // Send push notifications only to members NOT viewing (fire-and-forget)
             Promise.allSettled(
-              memberIds.map(memberId =>
+              filteredMembers.map(memberId =>
                 notifyNewGroupMessage(memberId, roomName, senderName, messagePreview, regionCode)
               )
             );

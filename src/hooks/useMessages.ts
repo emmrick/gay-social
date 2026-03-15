@@ -5,6 +5,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { playNotificationSoundStandalone, playAnnouncementSoundStandalone } from '@/hooks/useNotificationSound';
 import { notifyNewGroupMessage } from '@/services/pushNotificationService';
+import { isUserViewingChatRoom } from '@/hooks/useActiveConversation';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
 
 type Message = Tables<'messages'>;
@@ -141,14 +142,7 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
             }
           );
 
-          // Play notification sound for incoming messages (not our own)
-          if (newMsg.sender_id !== user?.id) {
-            if (isAnnouncementChannel) {
-              playAnnouncementSoundStandalone();
-            } else {
-              playNotificationSoundStandalone();
-            }
-          }
+          // Don't play sound - user is already viewing this chat room
         }
       )
       .subscribe();
@@ -246,9 +240,18 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
               ? (content || '').substring(0, 50)
               : messageType === 'image' ? '📷 Photo' : '🎥 Vidéo';
 
-            // Send push notifications in parallel (fire-and-forget)
+            // Filter out members who are currently viewing this chat room
+            const membersToNotify = await Promise.all(
+              memberIds.map(async (memberId) => {
+                const isViewing = await isUserViewingChatRoom(memberId, chatRoomId);
+                return isViewing ? null : memberId;
+              })
+            );
+            const filteredMembers = membersToNotify.filter(Boolean) as string[];
+
+            // Send push notifications only to members NOT viewing (fire-and-forget)
             Promise.allSettled(
-              memberIds.map(memberId =>
+              filteredMembers.map(memberId =>
                 notifyNewGroupMessage(memberId, roomName, senderName, messagePreview, regionCode)
               )
             );

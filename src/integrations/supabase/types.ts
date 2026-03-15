@@ -2638,6 +2638,27 @@ export type Database = {
           },
         ]
       }
+      user_active_conversations: {
+        Row: {
+          active_chat_room_id: string | null
+          active_private_user_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          active_chat_room_id?: string | null
+          active_private_user_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          active_chat_room_id?: string | null
+          active_private_user_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_albums: {
         Row: {
           created_at: string

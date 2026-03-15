@@ -16,6 +16,7 @@ import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHasBlockedUser, useUnblockUserAction, useIsStaffUser } from '@/hooks/useUserBlock';
 import { usePrivateTypingIndicator } from '@/hooks/usePrivateTypingIndicator';
+import { useActiveConversation } from '@/hooks/useActiveConversation';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -60,6 +61,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const unblockUser = useUnblockUserAction();
   const { data: isStaffUser } = useIsStaffUser(otherUserId);
   const { isOtherTyping, startTyping, stopTyping } = usePrivateTypingIndicator(otherUserId);
+  
+  // Track active conversation for notification suppression
+  useActiveConversation(otherUserId, null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);

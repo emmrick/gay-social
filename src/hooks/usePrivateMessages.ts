@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRecordEarning } from '@/hooks/useModeratorEarnings';
 import { notifyNewPrivateMessage, notifyPrivateMessageInApp } from '@/services/pushNotificationService';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
+import { isUserViewingPrivateChat } from '@/hooks/useActiveConversation';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
 
 type Message = Tables<'messages'>;
@@ -132,9 +133,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
               }
             );
 
-            if (newMsg.sender_id !== user.id) {
-              playNotificationSoundStandalone();
-            }
+            // Don't play sound - user is already viewing this conversation
 
             queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
           }
@@ -242,6 +241,13 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         if (otherUserId && user) {
           (async () => {
             try {
+              // Check if recipient is already viewing this conversation
+              const isViewing = await isUserViewingPrivateChat(otherUserId, user.id);
+              if (isViewing) {
+                // Recipient is already in the conversation, skip notifications
+                return;
+              }
+
               const { data: senderProfile } = await supabase
                 .from('profiles')
                 .select('username')

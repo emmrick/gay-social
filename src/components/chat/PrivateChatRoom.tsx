@@ -16,6 +16,7 @@ import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHasBlockedUser, useUnblockUserAction, useIsStaffUser } from '@/hooks/useUserBlock';
 import { usePrivateTypingIndicator } from '@/hooks/usePrivateTypingIndicator';
+import { useActiveConversation } from '@/hooks/useActiveConversation';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {

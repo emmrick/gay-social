@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
 const PAYPAL_API = 'https://api-m.paypal.com'
@@ -57,11 +57,15 @@ Deno.serve(async (req) => {
     // Create PayPal order
     const accessToken = await getPayPalAccessToken()
 
+    const returnUrlFinal = return_url || 'https://gay-connect.lovable.app/paypal-return'
+    const cancelUrl = return_url ? return_url.replace('paypal-return', '') : 'https://gay-connect.lovable.app/'
+
     const orderRes = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
       },
       body: JSON.stringify({
         intent: 'CAPTURE',
@@ -76,11 +80,11 @@ Deno.serve(async (req) => {
           paypal: {
             experience_context: {
               brand_name: 'GayConnect',
-              landing_page: 'GUEST_CHECKOUT',
+              landing_page: 'NO_PREFERENCE',
               user_action: 'PAY_NOW',
               payment_method_preference: 'UNRESTRICTED',
-              return_url: return_url || 'https://gay-connect.lovable.app/paypal-return',
-              cancel_url: return_url ? return_url.replace('paypal-return', '') : 'https://gay-connect.lovable.app/',
+              return_url: returnUrlFinal,
+              cancel_url: cancelUrl,
             },
           },
         },
@@ -88,6 +92,9 @@ Deno.serve(async (req) => {
     })
 
     const orderData = await orderRes.json()
+    console.log('PayPal order response status:', orderRes.status)
+    console.log('PayPal order response:', JSON.stringify(orderData))
+
     if (!orderRes.ok) {
       throw new Error(`PayPal create order failed: ${JSON.stringify(orderData)}`)
     }
@@ -106,11 +113,13 @@ Deno.serve(async (req) => {
       status: 'created',
     })
 
-    const approveLink = orderData.links?.find((l: any) => l.rel === 'approve')?.href
+    // PayPal returns 'payer-action' link when payment_source is specified
+    const redirectLink = orderData.links?.find((l: any) => l.rel === 'payer-action')?.href
+      || orderData.links?.find((l: any) => l.rel === 'approve')?.href
 
     return new Response(JSON.stringify({
       order_id: orderData.id,
-      approve_url: approveLink,
+      approve_url: redirectLink,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

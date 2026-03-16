@@ -210,7 +210,7 @@ const IdentityVerificationPanel = () => {
     }
   };
 
-
+  const handleViewVerification = async (verification: VerificationWithProfile) => {
     setSelectedVerification(verification);
     setHasViewed(false);
     setSignedUrls({ selfie: null, idFront: null, idBack: null });

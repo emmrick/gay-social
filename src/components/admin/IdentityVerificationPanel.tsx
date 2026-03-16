@@ -190,7 +190,27 @@ const IdentityVerificationPanel = () => {
     };
   }, [viewDialogOpen, detectScreenshot, selectedVerification]);
 
-  const handleViewVerification = async (verification: VerificationWithProfile) => {
+  const handleAiAnalysis = async () => {
+    const imageUrl = signedUrls.idFront || signedUrls.idBack;
+    if (!imageUrl) {
+      toast.error('Aucun document disponible pour l\'analyse');
+      return;
+    }
+    setAiAnalysis({ isLoading: true, result: null });
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-id-document', {
+        body: { imageUrl },
+      });
+      if (error) throw error;
+      setAiAnalysis({ isLoading: false, result: data });
+    } catch (err) {
+      console.error('AI analysis error:', err);
+      toast.error('Erreur lors de l\'analyse IA');
+      setAiAnalysis({ isLoading: false, result: null });
+    }
+  };
+
+
     setSelectedVerification(verification);
     setHasViewed(false);
     setSignedUrls({ selfie: null, idFront: null, idBack: null });

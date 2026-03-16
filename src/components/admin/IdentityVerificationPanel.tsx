@@ -486,6 +486,122 @@ const IdentityVerificationPanel = () => {
                 </div>
               )}
 
+              {/* AI Analysis Section */}
+              {hasViewed && (
+                <div className="rounded-xl border border-border p-3 sm:p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                      <span className="font-semibold text-sm sm:text-base">Analyse IA</span>
+                    </div>
+                    {!aiAnalysis.result && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={handleAiAnalysis}
+                        disabled={aiAnalysis.isLoading || (!signedUrls.idFront && !signedUrls.idBack)}
+                        className="h-8 text-xs"
+                      >
+                        {aiAnalysis.isLoading ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                        ) : (
+                          <Brain className="w-3.5 h-3.5 mr-1.5" />
+                        )}
+                        {aiAnalysis.isLoading ? 'Analyse...' : 'Analyser le document'}
+                      </Button>
+                    )}
+                  </div>
+
+                  {aiAnalysis.isLoading && (
+                    <div className="flex items-center justify-center py-4 gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Analyse du document en cours...
+                    </div>
+                  )}
+
+                  {aiAnalysis.result && (
+                    <div className="space-y-2.5">
+                      {/* Age Result - Main highlight */}
+                      {aiAnalysis.result.calculated_age !== null && aiAnalysis.result.calculated_age !== undefined ? (
+                        <div className={`rounded-xl p-3 sm:p-4 border-2 ${
+                          aiAnalysis.result.is_adult 
+                            ? 'bg-emerald-500/10 border-emerald-500/30' 
+                            : 'bg-destructive/10 border-destructive/30'
+                        }`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-lg sm:text-xl ${
+                              aiAnalysis.result.is_adult 
+                                ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
+                                : 'bg-destructive/20 text-destructive'
+                            }`}>
+                              {aiAnalysis.result.calculated_age}
+                            </div>
+                            <div>
+                              <p className={`font-bold text-sm sm:text-base ${
+                                aiAnalysis.result.is_adult 
+                                  ? 'text-emerald-600 dark:text-emerald-400' 
+                                  : 'text-destructive'
+                              }`}>
+                                {aiAnalysis.result.is_adult ? '✅ Majeur' : '🚫 MINEUR — Accès interdit'}
+                              </p>
+                              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                <CalendarDays className="w-3 h-3" />
+                                Né(e) le {new Date(aiAnalysis.result.date_of_birth!).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-sm text-amber-600 dark:text-amber-400">
+                          ⚠️ {aiAnalysis.result.error || 'Date de naissance non détectée'}
+                        </div>
+                      )}
+
+                      {/* Additional info */}
+                      <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
+                        {aiAnalysis.result.document_type && (
+                          <div className="bg-muted/50 rounded-lg p-2">
+                            <span className="text-muted-foreground">Document :</span>
+                            <p className="font-medium truncate">{aiAnalysis.result.document_type}</p>
+                          </div>
+                        )}
+                        {aiAnalysis.result.name_on_document && (
+                          <div className="bg-muted/50 rounded-lg p-2">
+                            <span className="text-muted-foreground">Nom :</span>
+                            <p className="font-medium truncate">{aiAnalysis.result.name_on_document}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Confidence */}
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>Fiabilité :</span>
+                        <Badge variant={
+                          aiAnalysis.result.confidence === 'high' ? 'default' :
+                          aiAnalysis.result.confidence === 'medium' ? 'secondary' : 'outline'
+                        } className="text-[10px]">
+                          {aiAnalysis.result.confidence === 'high' ? '🟢 Haute' :
+                           aiAnalysis.result.confidence === 'medium' ? '🟡 Moyenne' :
+                           aiAnalysis.result.confidence === 'low' ? '🔴 Faible' : '⚪ Aucune'}
+                        </Badge>
+                      </div>
+
+                      {/* Re-analyze button */}
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={handleAiAnalysis}
+                        disabled={aiAnalysis.isLoading}
+                        className="h-7 text-xs text-muted-foreground"
+                      >
+                        <Brain className="w-3 h-3 mr-1" />
+                        Ré-analyser
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Actions */}
               <div className="flex gap-2.5 sm:gap-3">
                 <Button 

@@ -69,6 +69,18 @@ const IdentityVerificationPanel = () => {
     isOpen: false, imageUrl: null, title: '', zoom: 1, rotation: 0,
     panX: 0, panY: 0, isDragging: false, startX: 0, startY: 0,
   });
+  const [aiAnalysis, setAiAnalysis] = useState<{
+    isLoading: boolean;
+    result: {
+      date_of_birth: string | null;
+      calculated_age: number | null;
+      is_adult: boolean;
+      confidence: string;
+      document_type?: string;
+      name_on_document?: string;
+      error?: string;
+    } | null;
+  }>({ isLoading: false, result: null });
   
   const isMobile = useIsMobile();
   const recordEarning = useRecordEarning();

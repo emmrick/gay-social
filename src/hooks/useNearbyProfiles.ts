@@ -109,7 +109,13 @@ export const useNearbyProfiles = (
         });
 
       if (error) throw error;
-      return (data || []).map(fixStaleOnlineStatus);
+      const geoProfiles = (data || []).map(fixStaleOnlineStatus);
+
+      // Filter out suspended/blocked users
+      const checks = await Promise.all(
+        geoProfiles.map(p => supabase.rpc('is_user_suspended_or_blocked', { _user_id: p.user_id }))
+      );
+      return geoProfiles.filter((_, i) => checks[i].data !== true);
     },
     enabled: !!user && latitude != null && longitude != null,
     staleTime: 45000,

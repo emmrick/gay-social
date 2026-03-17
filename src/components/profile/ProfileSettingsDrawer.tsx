@@ -172,6 +172,37 @@ const ProfileSettingsDrawer = ({
               </>
             )}
 
+            {/* Data Management Section */}
+            <Separator className="my-4" />
+            <div className="mb-2 px-1">
+              <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                Mes données (RGPD)
+              </h3>
+            </div>
+            <div className="space-y-2">
+              <button
+                onClick={() => { setOpen(false); setShowDataExport(true); }}
+                className="w-full flex items-center gap-4 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-all active:scale-[0.98]"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Download className="w-5 h-5 text-blue-500" />
+                </div>
+                <span className="flex-1 text-left font-medium text-sm">Télécharger mes données</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+              <button
+                onClick={() => { setOpen(false); setShowDeleteAccount(true); }}
+                className="w-full flex items-center gap-4 p-3 rounded-xl bg-destructive/5 hover:bg-destructive/10 transition-all active:scale-[0.98]"
+              >
+                <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-destructive" />
+                </div>
+                <span className="flex-1 text-left font-medium text-sm text-destructive">Supprimer mon compte</span>
+                <ChevronRight className="w-4 h-4 text-destructive/60" />
+              </button>
+            </div>
+
             <Separator className="my-4" />
 
             {/* Sign out */}

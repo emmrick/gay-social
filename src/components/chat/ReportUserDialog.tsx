@@ -106,9 +106,15 @@ const ReportUserDialog = ({
               <CheckCircle className="w-8 h-8 text-primary" />
             </div>
             <h3 className="text-lg font-semibold mb-2">Signalement envoyé</h3>
-            <p className="text-muted-foreground text-sm">
-              Merci pour votre signalement. Notre équipe va l'examiner dans les plus brefs délais.
+            <p className="text-muted-foreground text-sm mb-3">
+              L'utilisateur avec lequel vous avez échangé a été signalé.
             </p>
+            <div className="bg-muted/60 rounded-lg p-3 text-left">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">🔍 Que se passe-t-il maintenant ?</strong><br />
+                Vous ne verrez aucun changement de votre côté. Seule notre équipe de modération analysera l'ensemble des conversations pour déterminer si cet utilisateur respecte les conditions d'utilisation du site. Des mesures seront prises si nécessaire.
+              </p>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

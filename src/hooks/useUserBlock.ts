@@ -105,10 +105,31 @@ export const useBlockUserAction = () => {
         } as any);
 
       if (error) throw error;
+
+      // Mark conversation as deleted for the blocker
+      const { data: conv } = await supabase
+        .from('private_conversations')
+        .select('id')
+        .or(`and(user1_id.eq.${user.id},user2_id.eq.${blockedUserId}),and(user1_id.eq.${blockedUserId},user2_id.eq.${user.id})`)
+        .maybeSingle();
+
+      if (conv) {
+        await supabase
+          .from('private_conversation_status')
+          .upsert({
+            conversation_id: conv.id,
+            user_id: user.id,
+            is_deleted: true,
+            is_archived: false,
+          }, {
+            onConflict: 'conversation_id,user_id',
+          });
+      }
     },
     onSuccess: (_, blockedUserId) => {
       queryClient.invalidateQueries({ queryKey: ['user-block', user?.id, blockedUserId] });
-      queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversation-status', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['blocked-users', user?.id] });
       toast.success('Utilisateur bloqué');
     },

@@ -43,6 +43,8 @@ const ProfileSettingsDrawer = ({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [showPinManagement, setShowPinManagement] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [showDataExport, setShowDataExport] = useState(false);
 
   const menuItems = [
     { icon: Bell, label: 'Notifications', action: () => { setOpen(false); setSettingsType('notifications'); }, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },

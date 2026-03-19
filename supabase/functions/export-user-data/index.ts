@@ -326,7 +326,18 @@ Pour toute question, contactez notre support.
     // Close ZIP and get blob
     const zipBlob = await zipWriter.close();
     const zipArrayBuffer = await zipBlob.arrayBuffer();
-    const zipBase64 = btoa(String.fromCharCode(...new Uint8Array(zipArrayBuffer)));
+    
+    // Convert to base64 in chunks to avoid stack overflow
+    const bytes = new Uint8Array(zipArrayBuffer);
+    const chunkSize = 8192;
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+      for (let j = 0; j < chunk.length; j++) {
+        binary += String.fromCharCode(chunk[j]);
+      }
+    }
+    const zipBase64 = btoa(binary);
 
     logStep("ZIP archive created", { 
       photos: photoCount,

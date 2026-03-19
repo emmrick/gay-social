@@ -29,6 +29,8 @@ import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
 import BirthdayGiftButton from '@/components/profile/BirthdayGiftButton';
 import MemberProfileAlbumsSection from '@/components/albums/MemberProfileAlbumsSection';
 import AlbumPreviewBlocks from '@/components/albums/AlbumPreviewBlocks';
+import { useAlbums } from '@/hooks/useAlbums';
+import type { AlbumSlide } from '@/components/chat/ProfilePhotoCarousel';
 
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {

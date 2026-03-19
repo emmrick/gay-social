@@ -212,6 +212,11 @@ const AlbumManager = ({ isOpen, onClose, initialAlbumId }: AlbumManagerProps) =>
                       onMediaClick={(media, index) => setGalleryState({ media, index })} />
                   </motion.div>
                 )}
+                {view === 'access' && (
+                  <motion.div key="access" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                    <AlbumAccessView albums={albums} useAlbumShares={useAlbumShares} stopSharing={stopSharing} />
+                  </motion.div>
+                )}
               </AnimatePresence>
             </div>
           </ScrollArea>

@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Sparkles, MessageCircle, Loader2, RefreshCw, X, EyeOff, Flame, Zap, Rocket, Crown, Users, ShieldCheck } from 'lucide-react';
 import { useSwipeActions } from '@/hooks/useSwipeActions';
 import SwipeCard from './SwipeCard';
+import MatchPopup from './MatchPopup';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,6 +12,7 @@ import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import { useProfileBoost } from '@/hooks/useProfileBoost';
 import { useCreditCheck } from '@/hooks/useCreditCheck';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SwipePageProps {
   onStartChat: (userId: string) => void;
@@ -27,11 +29,15 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
     creditCosts,
   } = useSwipeActions();
 
+  const { profile: myProfile } = useAuth();
   const { isBoostActive, activateBoost, isActivating, boostCost, boostExpiresAt } = useProfileBoost();
   const { totalCredits } = useCreditCheck();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'swipe' | 'likes'>('swipe');
+  const [matchPopup, setMatchPopup] = useState<{ isOpen: boolean; username: string; avatar: string | null; userId: string }>({
+    isOpen: false, username: '', avatar: null, userId: '',
+  });
 
   const handleSwipe = useCallback((direction: 'left' | 'right' | 'up') => {
     const currentProfile = profiles[currentIndex];
@@ -41,7 +47,15 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
     
     swipe({ 
       targetUserId: currentProfile.user_id, 
-      actionType 
+      actionType,
+      onMatch: (matchedProfile) => {
+        setMatchPopup({
+          isOpen: true,
+          username: matchedProfile.username,
+          avatar: matchedProfile.avatar_url,
+          userId: matchedProfile.user_id,
+        });
+      },
     });
 
     setTimeout(() => {
@@ -49,7 +63,20 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
     }, 300);
   }, [profiles, currentIndex, swipe]);
 
+  // Preload images of next profiles
   const remainingProfiles = profiles.slice(currentIndex);
+  useEffect(() => {
+    remainingProfiles.slice(1, 4).forEach(p => {
+      if (p.avatar_url) {
+        const img = new Image();
+        img.src = p.avatar_url;
+      }
+      (p as any)._photos?.forEach((url: string) => {
+        const img = new Image();
+        img.src = url;
+      });
+    });
+  }, [currentIndex, remainingProfiles]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -103,7 +130,7 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
               <EmptySwipeState onRefresh={refetchProfiles} />
             ) : (
               <>
-                {/* Cards stack */}
+                {/* Cards stack - show up to 3 stacked */}
                 <div className="flex-1 relative min-h-0">
                   <AnimatePresence mode="popLayout">
                     {remainingProfiles.slice(0, 3).map((profile, index) => (
@@ -112,13 +139,14 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                         profile={profile}
                         onSwipe={handleSwipe}
                         isTop={index === 0}
+                        stackIndex={index}
                       />
                     ))}
                   </AnimatePresence>
                 </div>
 
                 {/* Action buttons */}
-                <div className="relative z-20 flex justify-center items-center gap-5 py-5 px-6">
+                <div className="relative z-20 flex justify-center items-center gap-5 py-4 px-6">
                   <ActionButton
                     onClick={() => remainingProfiles[0] && handleSwipe('left')}
                     color="destructive"
@@ -167,6 +195,19 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Match Popup */}
+      <MatchPopup
+        isOpen={matchPopup.isOpen}
+        onClose={() => setMatchPopup(prev => ({ ...prev, isOpen: false }))}
+        onSendMessage={() => {
+          setMatchPopup(prev => ({ ...prev, isOpen: false }));
+          onStartChat(matchPopup.userId);
+        }}
+        myAvatar={myProfile?.avatar_url}
+        matchAvatar={matchPopup.avatar}
+        matchUsername={matchPopup.username}
+      />
     </div>
   );
 };
@@ -273,7 +314,7 @@ const EmptySwipeState = ({ onRefresh }: { onRefresh: () => void }) => (
         <Zap className="w-6 h-6 text-accent" />
       </motion.div>
     </motion.div>
-    <h3 className="text-2xl font-black mb-3 text-foreground" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+    <h3 className="text-2xl font-black mb-3 text-foreground">
       C'est tout pour le moment !
     </h3>
     <p className="text-muted-foreground text-sm mb-8 max-w-[280px] leading-relaxed">
@@ -368,7 +409,7 @@ const LikedProfilesList = ({
             <Sparkles className="w-5 h-5 text-rose-400" />
           </motion.div>
         </motion.div>
-        <h3 className="text-2xl font-black mb-3 text-foreground" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+        <h3 className="text-2xl font-black mb-3 text-foreground">
           Aucun like
         </h3>
         <p className="text-muted-foreground text-sm max-w-[260px] leading-relaxed">
@@ -431,7 +472,6 @@ const LikedProfileCard = ({
 
   return (
     <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-card border border-border/30 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
-      {/* Avatar */}
       <button
         onClick={() => navigate(`/profile/${userId}`)}
         className="relative shrink-0"
@@ -447,7 +487,6 @@ const LikedProfileCard = ({
         )}
       </button>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <span className="font-bold text-sm text-foreground truncate">{profile.username}</span>
@@ -461,7 +500,6 @@ const LikedProfileCard = ({
         <p className="text-xs text-muted-foreground truncate">{profile.region}</p>
       </div>
 
-      {/* Action */}
       <motion.div whileTap={{ scale: 0.9 }}>
         <Button
           size="sm"
@@ -475,6 +513,5 @@ const LikedProfileCard = ({
     </div>
   );
 };
-
 
 export default SwipePage;

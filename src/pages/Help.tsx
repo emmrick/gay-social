@@ -2,7 +2,9 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle, BookOpen, MessageCircle, Shield, CreditCard, Users, Settings, Sparkles, LifeBuoy, Headset, MessageSquareText, Scale, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle, BookOpen, MessageCircle, Shield, CreditCard, Users, Settings, Sparkles, LifeBuoy, Headset, MessageSquareText, Scale, RotateCcw, Clock, AlertTriangle } from 'lucide-react';
+import { useEstimatedWaitTime } from '@/hooks/useEstimatedWaitTime';
+import { Progress } from '@/components/ui/progress';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useSupportTickets, useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { useSupportTypingIndicator } from '@/hooks/useSupportTypingIndicator';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
+import WaitTimeBanner from '@/components/support/WaitTimeBanner';
 
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -125,6 +128,12 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [noMatchCount, setNoMatchCount] = useState(0);
   const [isBotTyping, setIsBotTyping] = useState(false);
+  const [waitStartTime, setWaitStartTime] = useState<number | null>(() => {
+    try {
+      const saved = localStorage.getItem('gc-help-wait-start');
+      return saved ? parseInt(saved, 10) : null;
+    } catch { return null; }
+  });
 
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const freeTextRef = useRef<HTMLTextAreaElement>(null);
@@ -175,6 +184,9 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   // Support tickets
   const { tickets, isLoading: ticketsLoading, createTicket, closeTicket } = useSupportTickets();
+
+  // Wait time estimation (real-time, polls every 30s)
+  const waitTimeData = useEstimatedWaitTime(selectedTicket?.id ?? null);
 
   // Auto-resume active ticket on mount
   useEffect(() => {
@@ -502,6 +514,9 @@ const Help = ({ embedded = false }: HelpProps) => {
         { type: 'system', text: 'Nous vous mettons en relation avec le prochain agent disponible. Merci de patienter...' },
       ]);
       setChatPhase('waiting_agent');
+      const now = Date.now();
+      setWaitStartTime(now);
+      try { localStorage.setItem('gc-help-wait-start', String(now)); } catch {}
 
       const history = chatMessages.map(m => ({ type: m.type, text: m.text }));
       const ticket = await createTicket.mutateAsync("Demande d'assistance");
@@ -566,9 +581,11 @@ const Help = ({ embedded = false }: HelpProps) => {
     setFreeText('');
     setCurrentCategory(null);
     setNoMatchCount(0);
+    setWaitStartTime(null);
     agentJoinedRef.current = false;
     hasInitializedRef.current = false;
     clearPersistedState();
+    try { localStorage.removeItem('gc-help-wait-start'); } catch {}
   };
 
   const handleCloseTicket = async () => {
@@ -945,10 +962,14 @@ const Help = ({ embedded = false }: HelpProps) => {
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
       >
         {isWaiting && (
-          <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs mb-2">
-            <Loader2 className="w-3 h-3 animate-spin" />
-            <span>Recherche d'un agent disponible...</span>
-          </div>
+          <WaitTimeBanner
+            estimatedMinutes={waitTimeData.estimatedMinutes}
+            position={waitTimeData.position}
+            onlineModerators={waitTimeData.onlineModerators}
+            found={waitTimeData.found}
+            isLoading={waitTimeData.isLoading}
+            waitStartTime={waitStartTime}
+          />
         )}
 
         {/* Always-visible "Contact agent" button in chatbot phase */}

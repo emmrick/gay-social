@@ -30,6 +30,7 @@ import EphemeralMessage from './EphemeralMessage';
 import EphemeralMessageRow from './EphemeralMessageRow';
 import RegularMediaMessage from './RegularMediaMessage';
 import SharedAlbumMessage from './SharedAlbumMessage';
+import AlbumAccessRequestMessage from './AlbumAccessRequestMessage';
 import CreditRequestMessage from './CreditRequestMessage';
 import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
@@ -342,6 +343,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               const isEphemeralMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && !message.content.startsWith('http');
               const isRegularMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && message.content.startsWith('http');
               const isAlbumShare = message.message_type === 'album_share';
+              const isAlbumAccessRequest = message.message_type === 'album_access_request';
               const isCreditRequest = message.message_type === 'credit_request';
               const isSystemScreenshot = message.message_type === 'system_screenshot';
 
@@ -350,6 +352,13 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 try {
                   const parsed = JSON.parse(message.content);
                   albumShareData = parsed.shareId ? parsed : parsed.data || null;
+                } catch { /* ignore */ }
+              }
+
+              let albumAccessRequestData: { albumIds: string[]; albumNames: string[]; requesterId: string } | null = null;
+              if (isAlbumAccessRequest && message.content) {
+                try {
+                  albumAccessRequestData = JSON.parse(message.content);
                 } catch { /* ignore */ }
               }
 
@@ -430,7 +439,15 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                           </div>
                         )}
 
-                        {isAlbumShare && albumShareData ? (
+                        {isAlbumAccessRequest && albumAccessRequestData ? (
+                          <AlbumAccessRequestMessage
+                            albumIds={albumAccessRequestData.albumIds}
+                            albumNames={albumAccessRequestData.albumNames}
+                            requesterId={albumAccessRequestData.requesterId}
+                            isOwn={isOwn}
+                            messageId={message.id}
+                          />
+                        ) : isAlbumShare && albumShareData ? (
                           <SharedAlbumMessage
                             shareId={albumShareData.shareId}
                             albumId={albumShareData.albumId}

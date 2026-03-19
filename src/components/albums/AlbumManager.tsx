@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   FolderLock, Plus, Trash2, Share2, X, Clock, ImagePlus, Loader2,
-  Users, StopCircle, ArrowLeft, Play, MoreVertical, Images, ChevronLeft
+  Users, StopCircle, ArrowLeft, Play, MoreVertical, Images, ChevronLeft, Shield, Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -19,6 +19,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAlbums } from '@/hooks/useAlbums';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -39,7 +41,7 @@ interface AlbumManagerProps {
   initialAlbumId?: string;
 }
 
-type View = 'list' | 'detail' | 'create';
+type View = 'list' | 'detail' | 'create' | 'access';
 
 const AlbumManager = ({ isOpen, onClose, initialAlbumId }: AlbumManagerProps) => {
   const {
@@ -149,16 +151,21 @@ const AlbumManager = ({ isOpen, onClose, initialAlbumId }: AlbumManagerProps) =>
             )}
             <div className="flex-1 min-w-0">
               <h2 className="font-bold text-lg">
-                {view === 'create' ? 'Nouvel album' : view === 'detail' && selectedAlbum ? selectedAlbum.name : 'Mes albums'}
+                {view === 'create' ? 'Nouvel album' : view === 'detail' && selectedAlbum ? selectedAlbum.name : view === 'access' ? 'Accès à mes albums' : 'Mes albums'}
               </h2>
               {view === 'list' && (
                 <p className="text-xs text-muted-foreground">{albums.length} album{albums.length !== 1 ? 's' : ''}</p>
               )}
             </div>
             {view === 'list' && (
-              <Button size="sm" className="rounded-xl gap-1.5 h-9" onClick={() => setView('create')}>
-                <Plus className="w-4 h-4" /> Créer
-              </Button>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="outline" className="rounded-xl gap-1.5 h-9" onClick={() => setView('access')}>
+                  <Shield className="w-4 h-4" /> Accès
+                </Button>
+                <Button size="sm" className="rounded-xl gap-1.5 h-9" onClick={() => setView('create')}>
+                  <Plus className="w-4 h-4" /> Créer
+                </Button>
+              </div>
             )}
             {view === 'detail' && selectedAlbumId && (
               <DropdownMenu>
@@ -205,6 +212,11 @@ const AlbumManager = ({ isOpen, onClose, initialAlbumId }: AlbumManagerProps) =>
                       onAddMedia={() => fileInputRef.current?.click()}
                       onDeleteMedia={(mediaId) => setDeleteMediaConfirm({ albumId: selectedAlbumId, mediaId })}
                       onMediaClick={(media, index) => setGalleryState({ media, index })} />
+                  </motion.div>
+                )}
+                {view === 'access' && (
+                  <motion.div key="access" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                    <AlbumAccessView albums={albums} useAlbumShares={useAlbumShares} stopSharing={stopSharing} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -507,6 +519,117 @@ const SharesDialog = ({
         )}
       </DialogContent>
     </Dialog>
+  );
+};
+
+/* ===================== ACCESS VIEW ===================== */
+const AlbumAccessView = ({
+  albums, useAlbumShares, stopSharing,
+}: {
+  albums: any[]; useAlbumShares: (id: string) => any; stopSharing: any;
+}) => {
+  return (
+    <div className="space-y-4">
+      <div className="text-center py-2">
+        <p className="text-sm text-muted-foreground">
+          Gérez qui a accès à vos albums
+        </p>
+      </div>
+      {albums.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <Shield className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">Aucun album créé</p>
+        </div>
+      ) : (
+        albums.map((album) => (
+          <AlbumAccessItem key={album.id} album={album} useAlbumShares={useAlbumShares} stopSharing={stopSharing} />
+        ))
+      )}
+    </div>
+  );
+};
+
+const AlbumAccessItem = ({
+  album, useAlbumShares, stopSharing,
+}: {
+  album: any; useAlbumShares: (id: string) => any; stopSharing: any;
+}) => {
+  const { data: shares = [], isLoading } = useAlbumShares(album.id);
+
+  return (
+    <div className="rounded-2xl border border-border/50 overflow-hidden">
+      <div className="flex items-center gap-3 p-3 bg-muted/30">
+        <FolderLock className="w-5 h-5 text-primary flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm truncate">{album.name}</p>
+          <p className="text-[11px] text-muted-foreground">
+            {isLoading ? '...' : `${shares.length} accès actif${shares.length !== 1 ? 's' : ''}`}
+          </p>
+        </div>
+      </div>
+
+      {!isLoading && shares.length > 0 && (
+        <div className="divide-y divide-border/30">
+          {shares.map((share: any) => (
+            <ShareAccessRow key={share.id} share={share} stopSharing={stopSharing} />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && shares.length === 0 && (
+        <div className="p-3 text-center">
+          <p className="text-xs text-muted-foreground">Aucun accès actif</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ShareAccessRow = ({ share, stopSharing }: { share: any; stopSharing: any }) => {
+  const { data: profile } = useQuery({
+    queryKey: ['profile-mini', share.shared_with_user_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('user_id', share.shared_with_user_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!share.shared_with_user_id,
+  });
+
+  return (
+    <div className="flex items-center gap-3 p-3">
+      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+        {profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <Users className="w-4 h-4 text-primary" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{profile?.username || 'Utilisateur'}</p>
+        {share.expires_at ? (
+          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            Expire {formatDistanceToNow(new Date(share.expires_at), { addSuffix: true, locale: fr })}
+          </p>
+        ) : (
+          <p className="text-[11px] text-muted-foreground">Accès illimité</p>
+        )}
+      </div>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl h-8 text-xs"
+        onClick={() => stopSharing.mutateAsync(share.id)}
+        disabled={stopSharing.isPending}
+      >
+        <StopCircle className="w-3.5 h-3.5 mr-1" />
+        Révoquer
+      </Button>
+    </div>
   );
 };
 

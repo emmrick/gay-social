@@ -163,6 +163,45 @@ export type Database = {
           },
         ]
       }
+      album_access_requests: {
+        Row: {
+          album_ids: string[]
+          album_owner_id: string
+          created_at: string | null
+          duration: string | null
+          id: string
+          message_id: string | null
+          requester_id: string
+          responded_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          album_ids: string[]
+          album_owner_id: string
+          created_at?: string | null
+          duration?: string | null
+          id?: string
+          message_id?: string | null
+          requester_id: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          album_ids?: string[]
+          album_owner_id?: string
+          created_at?: string | null
+          duration?: string | null
+          id?: string
+          message_id?: string | null
+          requester_id?: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       album_media: {
         Row: {
           album_id: string

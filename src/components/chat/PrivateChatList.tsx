@@ -99,6 +99,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
     if (message_type === 'image') return '📷 Photo';
     if (message_type === 'video') return '🎥 Vidéo';
     if (message_type === 'album_share') return '📁 Album partagé';
+    if (message_type === 'album_access_request') return '🔒 Demande d\'accès album';
     if (content && content.length > 40) return content.substring(0, 40) + '…';
     return content || 'Nouvelle conversation';
   };

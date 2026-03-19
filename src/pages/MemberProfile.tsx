@@ -27,6 +27,7 @@ import { useChatbotConfig } from '@/hooks/useChatbotConfig';
 import ChatBotDialog from '@/components/chatbot/ChatBotDialog';
 import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
 import BirthdayGiftButton from '@/components/profile/BirthdayGiftButton';
+import MemberProfileAlbumsSection from '@/components/albums/MemberProfileAlbumsSection';
 
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {
@@ -586,11 +587,26 @@ const MemberProfile = () => {
           </motion.div>
         )}
 
+        {/* Albums */}
+        {userId && user?.id !== userId && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.45 }}
+          >
+            <MemberProfileAlbumsSection
+              profileUserId={userId}
+              profileUsername={profile.username}
+              onStartChat={handleStartChat}
+            />
+          </motion.div>
+        )}
+
         {/* Member since */}
         <motion.div 
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.45 }}
+          transition={{ delay: 0.5 }}
           className="flex items-center gap-2 text-sm text-muted-foreground pt-4"
         >
           <Calendar className="w-4 h-4" />

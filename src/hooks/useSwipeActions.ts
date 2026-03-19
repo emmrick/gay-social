@@ -43,6 +43,13 @@ interface SwipeableProfile {
   height: number | null;
   weight: number | null;
   body_type: string | null;
+  _photos?: string[];
+}
+
+interface MatchedProfile {
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
 }
 
 export const useSwipeActions = () => {
@@ -55,17 +62,15 @@ export const useSwipeActions = () => {
     queryKey: ['swipe-actions', user?.id],
     queryFn: async (): Promise<SwipeAction[]> => {
       if (!user?.id) return [];
-
       const { data, error } = await supabase
         .from('swipe_actions')
         .select('*')
         .eq('user_id', user.id);
-
       if (error) throw error;
       return data as SwipeAction[];
     },
     enabled: !!user?.id,
-    staleTime: 0, // Always refetch
+    staleTime: 0,
   });
 
   // Fetch active boosted user IDs
@@ -90,15 +95,12 @@ export const useSwipeActions = () => {
     queryFn: async (): Promise<SwipeableProfile[]> => {
       if (!user?.id) return [];
 
-      // First fetch current swipe actions directly
       const { data: currentActions, error: actionsError } = await supabase
         .from('swipe_actions')
         .select('*')
         .eq('user_id', user.id);
-      
       if (actionsError) throw actionsError;
 
-      // Get IDs of profiles to exclude
       const now = new Date();
       const excludedIds = (currentActions || [])
         .filter(action => {
@@ -128,13 +130,41 @@ export const useSwipeActions = () => {
       const { data, error } = await query;
       if (error) throw error;
 
-      return (data || []) as SwipeableProfile[];
+      const profilesList = (data || []) as SwipeableProfile[];
+
+      // Fetch profile photos for all profiles in one batch
+      if (profilesList.length > 0) {
+        const userIds = profilesList.map(p => p.user_id);
+        const { data: allPhotos } = await supabase
+          .from('profile_photos')
+          .select('user_id, photo_url')
+          .in('user_id', userIds)
+          .order('display_order', { ascending: true });
+
+        if (allPhotos) {
+          const photosByUser = new Map<string, string[]>();
+          allPhotos.forEach(photo => {
+            const existing = photosByUser.get(photo.user_id) || [];
+            existing.push(photo.photo_url);
+            photosByUser.set(photo.user_id, existing);
+          });
+
+          profilesList.forEach(p => {
+            const userPhotos = photosByUser.get(p.user_id);
+            if (userPhotos && userPhotos.length > 0) {
+              p._photos = userPhotos;
+            }
+          });
+        }
+      }
+
+      return profilesList;
     },
     enabled: !!user?.id,
     staleTime: 0,
   });
 
-  // Inject boosted profiles at random positions (1-3 times)
+  // Inject boosted profiles at random positions
   const profiles = useMemo(() => {
     if (!rawProfiles.length || !boostedUserIds.length) return rawProfiles;
     
@@ -144,7 +174,6 @@ export const useSwipeActions = () => {
     if (!boostedProfiles.length) return rawProfiles;
 
     const result = [...nonBoosted];
-    // Insert each boosted profile at a random position in the first 10 cards
     boostedProfiles.forEach(bp => {
       const pos = Math.min(Math.floor(Math.random() * 5), result.length);
       result.splice(pos, 0, { ...bp, _isBoosted: true } as any);
@@ -153,47 +182,43 @@ export const useSwipeActions = () => {
     return result;
   }, [rawProfiles, boostedUserIds]);
 
-  // Get profiles that user has liked - fetch directly from DB to ensure freshness
+  // Get profiles that user has liked
   const { data: likedProfiles = [], refetch: refetchLiked } = useQuery({
     queryKey: ['liked-profiles', user?.id],
     queryFn: async (): Promise<string[]> => {
       if (!user?.id) return [];
-
-      // Fetch likes directly from database, sorted by most recent first
       const { data, error } = await supabase
         .from('swipe_actions')
         .select('target_user_id, created_at')
         .eq('user_id', user.id)
         .eq('action_type', 'like')
         .order('created_at', { ascending: false });
-
       if (error) throw error;
-
       return (data || []).map(action => action.target_user_id);
     },
     enabled: !!user?.id,
-    staleTime: 0, // Always refetch
+    staleTime: 0,
   });
 
   // Perform swipe action mutation
   const swipeMutation = useMutation({
     mutationFn: async ({ 
       targetUserId, 
-      actionType 
+      actionType,
+      onMatch,
     }: { 
       targetUserId: string; 
       actionType: SwipeActionType;
+      onMatch?: (matchedProfile: MatchedProfile) => void;
     }) => {
       if (!user?.id) throw new Error('Not authenticated');
 
       const cost = SWIPE_CREDIT_COSTS[actionType];
       
-      // Check credits first
       if (totalCredits < cost) {
         throw new Error('Crédits insuffisants');
       }
 
-      // Deduct credits
       const deductResult = await deductCredits(
         user.id,
         cost,
@@ -209,12 +234,10 @@ export const useSwipeActions = () => {
         throw new Error(deductResult.error || 'Erreur lors de la déduction des crédits');
       }
 
-      // Calculate expiration for dislike (3 months)
       const expiresAt = actionType === 'dislike' 
         ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
         : null;
 
-      // Record swipe action
       const { error } = await supabase
         .from('swipe_actions')
         .upsert({
@@ -240,7 +263,6 @@ export const useSwipeActions = () => {
           .maybeSingle();
 
         if (mutualLike) {
-          // Get both usernames
           const { data: myProfile } = await supabase
             .from('profiles')
             .select('username')
@@ -249,9 +271,19 @@ export const useSwipeActions = () => {
           
           const { data: targetProfile } = await supabase
             .from('profiles')
-            .select('username')
+            .select('username, avatar_url')
             .eq('user_id', targetUserId)
             .maybeSingle();
+
+          // Trigger haptic for match
+          try { navigator.vibrate?.([50, 30, 100]); } catch {}
+
+          // Show match popup
+          onMatch?.({
+            user_id: targetUserId,
+            username: targetProfile?.username || 'Quelqu\'un',
+            avatar_url: targetProfile?.avatar_url || null,
+          });
 
           // Notify both users
           notifySwipeMatch(user.id, targetProfile?.username || 'Quelqu\'un', targetUserId);
@@ -262,7 +294,6 @@ export const useSwipeActions = () => {
       return { actionType, targetUserId };
     },
     onSuccess: async (data) => {
-      // Immediately invalidate and refetch to ensure UI is up to date
       await queryClient.invalidateQueries({ queryKey: ['liked-profiles', user?.id] });
       await queryClient.invalidateQueries({ queryKey: ['swipe-actions', user?.id] });
       await queryClient.invalidateQueries({ queryKey: ['swipeable-profiles', user?.id] });
@@ -287,22 +318,16 @@ export const useSwipeActions = () => {
     },
   });
 
-  // Check if user can start conversation with liked profile
   const canStartConversation = (targetUserId: string): boolean => {
     return likedProfiles.includes(targetUserId);
   };
 
-  // Start conversation with liked profile (costs additional credits)
   const startConversationWithLike = async (targetUserId: string): Promise<boolean> => {
     if (!user?.id) return false;
-    
-    // Check if already liked
     if (!canStartConversation(targetUserId)) {
       toast.error('Tu dois d\'abord aimer ce profil');
       return false;
     }
-
-    // Conversation start cost is handled by the messaging system
     return true;
   };
 

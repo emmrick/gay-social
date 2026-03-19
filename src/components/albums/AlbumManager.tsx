@@ -39,7 +39,7 @@ interface AlbumManagerProps {
   initialAlbumId?: string;
 }
 
-type View = 'list' | 'detail' | 'create';
+type View = 'list' | 'detail' | 'create' | 'access';
 
 const AlbumManager = ({ isOpen, onClose, initialAlbumId }: AlbumManagerProps) => {
   const {

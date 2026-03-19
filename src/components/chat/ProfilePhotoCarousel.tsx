@@ -199,7 +199,9 @@ const ProfilePhotoCarousel = ({ photos, username, className, albumSlides = [], o
     return () => { document.body.style.overflow = ''; };
   }, [fullscreenOpen]);
 
-  if (photos.length === 0) {
+  const totalSlides = photos.length + albumSlides.length;
+
+  if (photos.length === 0 && albumSlides.length === 0) {
     return (
       <div className={cn("relative w-full aspect-square bg-gradient-to-br from-primary to-accent flex items-center justify-center", className)}>
         <User className="w-20 h-20 text-white/80" />
@@ -213,7 +215,7 @@ const ProfilePhotoCarousel = ({ photos, username, className, albumSlides = [], o
         <div ref={emblaRef} className="overflow-hidden rounded-lg">
           <div className="flex">
             {photos.map((photo, index) => (
-              <div key={index} className="flex-[0_0_100%] min-w-0">
+              <div key={`photo-${index}`} className="flex-[0_0_100%] min-w-0">
                 <div
                   className="aspect-square relative cursor-pointer"
                   onClick={() => openFullscreen(index)}
@@ -228,28 +230,68 @@ const ProfilePhotoCarousel = ({ photos, username, className, albumSlides = [], o
                 </div>
               </div>
             ))}
+            {/* Album slides after photos */}
+            {albumSlides.map((album) => (
+              <div key={`album-${album.id}`} className="flex-[0_0_100%] min-w-0">
+                <div
+                  className="aspect-square relative cursor-pointer overflow-hidden"
+                  onClick={() => onAlbumClick?.(album.id)}
+                >
+                  {/* Blurred cover or gradient placeholder */}
+                  {album.coverUrl ? (
+                    <img
+                      src={album.coverUrl}
+                      alt={album.name}
+                      className="w-full h-full object-cover select-none blur-xl scale-110"
+                      draggable={false}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-violet-500/30 to-purple-600/30" />
+                  )}
+
+                  {/* Dark overlay */}
+                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-3">
+                    <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                      <Lock className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center px-6">
+                      <p className="text-white font-semibold text-lg drop-shadow-lg">{album.name}</p>
+                      <p className="text-white/70 text-sm mt-1">
+                        {album.mediaCount} {album.mediaCount > 1 ? 'médias' : 'média'} • Album {album.is_private ? 'privé' : 'public'}
+                      </p>
+                    </div>
+                    <Badge className="bg-white/20 text-white border-0 backdrop-blur-sm mt-1">
+                      <Lock className="w-3 h-3 mr-1" />
+                      Demander l'accès
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {photos.length > 1 && (
+        {totalSlides > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {photos.map((_, index) => (
+            {Array.from({ length: totalSlides }).map((_, index) => (
               <button
                 key={index}
                 onClick={() => emblaApi?.scrollTo(index)}
                 className={cn(
                   "w-2 h-2 rounded-full transition-all duration-200",
-                  selectedIndex === index ? "bg-white w-4" : "bg-white/50 hover:bg-white/70"
+                  selectedIndex === index ? "bg-white w-4" : "bg-white/50 hover:bg-white/70",
+                  index >= photos.length && "bg-violet-400/50",
+                  selectedIndex === index && index >= photos.length && "bg-violet-400 w-4"
                 )}
-                aria-label={`Aller à la photo ${index + 1}`}
+                aria-label={index < photos.length ? `Photo ${index + 1}` : `Album`}
               />
             ))}
           </div>
         )}
 
-        {photos.length > 1 && (
+        {totalSlides > 1 && (
           <div className="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
-            {selectedIndex + 1} / {photos.length}
+            {selectedIndex + 1} / {totalSlides}
           </div>
         )}
       </div>

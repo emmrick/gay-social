@@ -36,13 +36,11 @@ export const useStories = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch all visible stories grouped by user
   const storiesQuery = useQuery({
     queryKey: ['stories', user?.id],
     queryFn: async (): Promise<StoryGroup[]> => {
       if (!user) return [];
 
-      // Fetch active stories (not expired)
       const { data: stories, error } = await supabase
         .from('stories')
         .select('*')
@@ -53,45 +51,35 @@ export const useStories = () => {
       if (error) throw error;
       if (!stories || stories.length === 0) return [];
 
-      // Get unique user IDs
       const userIds = [...new Set(stories.map(s => s.user_id))];
-
-      // Fetch profiles
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, username, avatar_url')
-        .in('user_id', userIds);
-
-      // Fetch views for current user
       const storyIds = stories.map(s => s.id);
-      const { data: views } = await supabase
-        .from('story_views')
-        .select('story_id')
-        .eq('viewer_user_id', user.id)
-        .in('story_id', storyIds);
 
-      const viewedSet = new Set(views?.map(v => v.story_id) || []);
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      // Parallel fetches
+      const [profilesRes, viewsRes] = await Promise.all([
+        supabase.from('profiles').select('user_id, username, avatar_url').in('user_id', userIds),
+        supabase.from('story_views').select('story_id').eq('viewer_user_id', user.id).in('story_id', storyIds),
+      ]);
 
-      // Get signed URLs for all stories
-      const storiesWithUrls = await Promise.all(
-        stories.map(async (story) => {
-          const { data: signedUrlData } = await supabase.storage
-            .from('stories')
-            .createSignedUrl(story.media_url, 3600);
+      const viewedSet = new Set(viewsRes.data?.map(v => v.story_id) || []);
+      const profileMap = new Map(profilesRes.data?.map(p => [p.user_id, p]) || []);
 
-          return {
-            ...story,
-            signedUrl: signedUrlData?.signedUrl || '',
-            profile: profileMap.get(story.user_id),
-            has_viewed: viewedSet.has(story.id),
-          };
-        })
-      );
+      // Batch signed URLs (up to 100 at a time)
+      const mediaPaths = stories.map(s => s.media_url);
+      const { data: signedUrls } = await supabase.storage
+        .from('stories')
+        .createSignedUrls(mediaPaths, 3600);
 
-      // Group by user - own stories first
+      const urlMap = new Map(signedUrls?.map(s => [s.path, s.signedUrl]) || []);
+
+      const storiesWithUrls = stories.map((story) => ({
+        ...story,
+        signedUrl: urlMap.get(story.media_url) || '',
+        profile: profileMap.get(story.user_id),
+        has_viewed: viewedSet.has(story.id),
+      }));
+
+      // Group by user
       const groupMap = new Map<string, StoryGroup>();
-
       for (const story of storiesWithUrls) {
         const profile = profileMap.get(story.user_id);
         if (!groupMap.has(story.user_id)) {
@@ -110,7 +98,6 @@ export const useStories = () => {
         }
       }
 
-      // Sort: own stories first, then unviewed, then viewed
       const groups = Array.from(groupMap.values());
       groups.sort((a, b) => {
         if (a.user_id === user.id) return -1;
@@ -123,10 +110,10 @@ export const useStories = () => {
       return groups;
     },
     enabled: !!user,
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 60000,
+    staleTime: 30000,
   });
 
-  // Create a new story
   const createStory = useMutation({
     mutationFn: async ({
       file,
@@ -143,18 +130,20 @@ export const useStories = () => {
     }) => {
       if (!user) throw new Error('Not authenticated');
 
-      // Upload to stories bucket
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop() || (mediaType === 'image' ? 'webp' : 'mp4');
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('stories')
-        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type,
+        });
 
       if (uploadError) throw uploadError;
 
-      // Create story record
       const { data, error } = await supabase
         .from('stories')
         .insert({
@@ -174,8 +163,7 @@ export const useStories = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['stories'] });
       toast.success('Story publiée !');
-      
-      // Send notification to relevant users (fire-and-forget)
+
       if (data && user) {
         void (async () => {
           try {
@@ -184,15 +172,14 @@ export const useStories = () => {
               .select('username')
               .eq('user_id', user.id)
               .single();
-            
+
             const username = myProfile?.username || 'Un membre';
-            
-            // Create in-app notification for followers/favorites
+
             const { data: fans } = await supabase
               .from('user_favorites')
               .select('user_id')
               .eq('favorite_user_id', user.id);
-            
+
             if (fans && fans.length > 0) {
               const notifications = fans.map(f => ({
                 user_id: f.user_id,
@@ -214,18 +201,15 @@ export const useStories = () => {
     },
   });
 
-  // Mark story as viewed
   const viewStory = useMutation({
     mutationFn: async (storyId: string) => {
       if (!user) throw new Error('Not authenticated');
-
       const { error } = await supabase
         .from('story_views')
         .upsert(
           { story_id: storyId, viewer_user_id: user.id },
           { onConflict: 'story_id,viewer_user_id' }
         );
-
       if (error) throw error;
     },
     onSuccess: () => {
@@ -233,18 +217,15 @@ export const useStories = () => {
     },
   });
 
-  // Report screenshot on story
   const reportScreenshot = useMutation({
     mutationFn: async (storyId: string) => {
       if (!user) throw new Error('Not authenticated');
-
       await supabase
         .from('story_views')
         .update({ screenshot_detected: true })
         .eq('story_id', storyId)
         .eq('viewer_user_id', user.id);
 
-      // Get story owner to notify
       const { data: story } = await supabase
         .from('stories')
         .select('user_id')
@@ -257,35 +238,28 @@ export const useStories = () => {
           .select('username')
           .eq('user_id', user.id)
           .single();
-
-        // Import dynamically to avoid circular deps
         const { notifyEphemeralScreenshot } = await import('@/services/pushNotificationService');
         await notifyEphemeralScreenshot(story.user_id, profile?.username || 'Un membre');
       }
     },
   });
 
-  // Delete own story
   const deleteStory = useMutation({
     mutationFn: async (storyId: string) => {
       if (!user) throw new Error('Not authenticated');
-
       const { data: story } = await supabase
         .from('stories')
         .select('media_url')
         .eq('id', storyId)
         .single();
-
       if (story) {
         await supabase.storage.from('stories').remove([story.media_url]);
       }
-
       const { error } = await supabase
         .from('stories')
         .delete()
         .eq('id', storyId)
         .eq('user_id', user.id);
-
       if (error) throw error;
     },
     onSuccess: () => {
@@ -294,21 +268,14 @@ export const useStories = () => {
     },
   });
 
-  // Real-time subscription
   useEffect(() => {
     if (!user) return;
-
     const channel = supabase
       .channel('stories-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'stories' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['stories'] });
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stories' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['stories'] });
+      })
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [user, queryClient]);
 

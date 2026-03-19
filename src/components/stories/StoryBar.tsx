@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useStories, StoryGroup } from '@/hooks/useStories';
@@ -6,6 +6,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import CreateStoryDialog from './CreateStoryDialog';
 import StoryViewer from './StoryViewer';
+
+const StoryAvatar = memo(({ url, fallback, className }: { url?: string | null; fallback: string; className?: string }) => (
+  <div className={`w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-muted ${className || ''}`}>
+    {url ? (
+      <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+    ) : (
+      <span className="text-base font-bold text-muted-foreground">{fallback}</span>
+    )}
+  </div>
+));
+StoryAvatar.displayName = 'StoryAvatar';
 
 const StoryBar = () => {
   const { user } = useAuth();
@@ -19,7 +30,7 @@ const StoryBar = () => {
       <div className="flex gap-3 px-1 py-2">
         {[...Array(5)].map((_, i) => (
           <div key={i} className="flex flex-col items-center gap-1.5 flex-shrink-0">
-            <div className="w-16 h-16 rounded-full bg-muted animate-pulse" />
+            <div className="w-[68px] h-[68px] rounded-full bg-muted animate-pulse" />
             <div className="w-12 h-2 rounded bg-muted animate-pulse" />
           </div>
         ))}
@@ -29,6 +40,7 @@ const StoryBar = () => {
 
   const ownGroup = storyGroups.find(g => g.user_id === user?.id);
   const hasOwnStories = !!ownGroup;
+  const otherGroups = storyGroups.filter(g => g.user_id !== user?.id);
 
   const handleOpenViewer = (group: StoryGroup, index: number) => {
     setViewingGroup(group);
@@ -37,11 +49,8 @@ const StoryBar = () => {
 
   const handleOwnStoryClick = () => {
     if (hasOwnStories && ownGroup) {
-      // Open viewer for own stories
-      const index = storyGroups.indexOf(ownGroup);
-      handleOpenViewer(ownGroup, index);
+      handleOpenViewer(ownGroup, storyGroups.indexOf(ownGroup));
     } else {
-      // No stories, open create dialog
       setShowCreateDialog(true);
     }
   };
@@ -60,92 +69,69 @@ const StoryBar = () => {
     <>
       <ScrollArea className="w-full">
         <div className="flex gap-3 px-1 py-2">
-          {/* Own story button */}
+          {/* Own story */}
           <motion.button
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.93 }}
             onClick={handleOwnStoryClick}
-            className="flex flex-col items-center gap-1.5 flex-shrink-0"
+            className="flex flex-col items-center gap-1 flex-shrink-0"
           >
-            <div className="relative w-16 h-16">
+            <div className="relative w-[68px] h-[68px]">
               {hasOwnStories ? (
-                <div className="w-full h-full rounded-full border-2 border-primary p-0.5">
-                  <div className="w-full h-full rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                    {ownGroup.avatar_url ? (
-                      <img
-                        src={ownGroup.avatar_url}
-                        alt="My story"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-lg font-bold text-muted-foreground">
-                        {ownGroup.username?.charAt(0).toUpperCase() || '?'}
-                      </span>
-                    )}
+                <div className="w-full h-full rounded-full p-[2.5px] bg-gradient-to-br from-primary via-accent to-primary">
+                  <div className="w-full h-full rounded-full bg-background p-[2px]">
+                    <StoryAvatar url={ownGroup.avatar_url} fallback={ownGroup.username?.charAt(0).toUpperCase() || '?'} />
                   </div>
                 </div>
               ) : (
-                <div className="w-full h-full rounded-full bg-muted/50 border-2 border-dashed border-border flex items-center justify-center">
+                <div className="w-full h-full rounded-full bg-muted/50 border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
                   <Plus className="w-6 h-6 text-muted-foreground" />
                 </div>
               )}
-              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-primary flex items-center justify-center border-2 border-background">
-                <Plus className="w-3 h-3 text-primary-foreground" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center border-2 border-background shadow-sm">
+                <Plus className="w-2.5 h-2.5 text-primary-foreground" />
               </div>
             </div>
-            <span className="text-[10px] text-muted-foreground font-medium max-w-16 truncate">
-              {hasOwnStories ? `Ma story (${ownGroup.stories.length})` : 'Ma story'}
+            <span className="text-[10px] text-muted-foreground font-medium max-w-[68px] truncate leading-tight">
+              {hasOwnStories ? `Ma story` : 'Ma story'}
             </span>
           </motion.button>
 
-          {/* Other users' stories */}
-          {storyGroups
-            .filter(g => g.user_id !== user?.id)
-            .map((group) => (
+          {/* Others */}
+          {otherGroups.map((group) => {
+            const idx = storyGroups.indexOf(group);
+            return (
               <motion.button
                 key={group.user_id}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleOpenViewer(group, storyGroups.indexOf(group))}
-                className="flex flex-col items-center gap-1.5 flex-shrink-0"
+                whileTap={{ scale: 0.93 }}
+                onClick={() => handleOpenViewer(group, idx)}
+                className="flex flex-col items-center gap-1 flex-shrink-0"
               >
-                <div className={`w-16 h-16 rounded-full p-0.5 ${
+                <div className={`w-[68px] h-[68px] rounded-full p-[2.5px] ${
                   group.hasUnviewed
                     ? 'bg-gradient-to-br from-primary via-accent to-primary'
-                    : 'bg-muted-foreground/30'
+                    : 'bg-muted-foreground/20'
                 }`}>
-                  <div className="w-full h-full rounded-full bg-background p-0.5">
-                    <div className="w-full h-full rounded-full bg-muted overflow-hidden flex items-center justify-center">
-                      {group.avatar_url ? (
-                        <img
-                          src={group.avatar_url}
-                          alt={group.username}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-lg font-bold text-muted-foreground">
-                          {group.username.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
+                  <div className="w-full h-full rounded-full bg-background p-[2px]">
+                    <StoryAvatar url={group.avatar_url} fallback={group.username.charAt(0).toUpperCase()} />
                   </div>
                 </div>
-                <span className={`text-[10px] font-medium max-w-16 truncate ${
+                <span className={`text-[10px] font-medium max-w-[68px] truncate leading-tight ${
                   group.hasUnviewed ? 'text-foreground' : 'text-muted-foreground'
                 }`}>
                   {group.username}
                 </span>
               </motion.button>
-            ))}
+            );
+          })}
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
-      {/* Create story dialog */}
       <CreateStoryDialog
         isOpen={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
       />
 
-      {/* Story viewer */}
       {viewingGroup && (
         <StoryViewer
           group={viewingGroup}

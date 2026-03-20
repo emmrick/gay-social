@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -11,8 +12,8 @@ interface CreditCost {
   updated_at: string;
 }
 
-// Fallback defaults if DB is unreachable
-const FALLBACK_COSTS: Record<string, number> = {
+// Original default costs (used to detect promos)
+export const DEFAULT_COSTS: Record<string, number> = {
   private_message_text: 0.1,
   private_message_media: 0.2,
   group_message_text: 0.1,
@@ -37,6 +38,48 @@ const FALLBACK_COSTS: Record<string, number> = {
 };
 
 export const useDynamicCreditCosts = () => {
+  const queryClient = useQueryClient();
+
+  // Realtime subscription to credit_costs changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('credit-costs-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'credit_costs' },
+        (payload) => {
+          console.log('[Realtime] credit_costs changed:', payload.eventType);
+          queryClient.invalidateQueries({ queryKey: ['credit-costs'] });
+          queryClient.invalidateQueries({ queryKey: ['admin-credit-costs'] });
+
+          // Show toast to user about price change
+          if (payload.eventType === 'UPDATE') {
+            const newRow = payload.new as any;
+            const oldRow = payload.old as any;
+            if (newRow && oldRow && newRow.cost_value !== oldRow.cost_value) {
+              const isPromo = newRow.cost_value < (DEFAULT_COSTS[newRow.cost_key] ?? oldRow.cost_value);
+              if (isPromo) {
+                toast.info('🎉 Promotion en cours !', {
+                  description: `${newRow.label || newRow.cost_key} : ${oldRow.cost_value} → ${newRow.cost_value} crédits`,
+                  duration: 6000,
+                });
+              } else {
+                toast.info('💰 Tarif mis à jour', {
+                  description: `${newRow.label || newRow.cost_key} : ${newRow.cost_value} crédits`,
+                  duration: 4000,
+                });
+              }
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['credit-costs'],
     queryFn: async (): Promise<Record<string, number>> => {
@@ -46,16 +89,16 @@ export const useDynamicCreditCosts = () => {
 
       if (error || !data) {
         console.error('Error fetching credit costs:', error);
-        return FALLBACK_COSTS;
+        return DEFAULT_COSTS;
       }
 
-      const costs: Record<string, number> = { ...FALLBACK_COSTS };
+      const costs: Record<string, number> = { ...DEFAULT_COSTS };
       (data as any[]).forEach((row) => {
         costs[row.cost_key] = Number(row.cost_value);
       });
       return costs;
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 min
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 };
@@ -88,6 +131,8 @@ export const useUpdateCreditCost = () => {
 
       if (error) throw error;
 
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+
       // Log the change in audit table
       const { error: auditError } = await supabase
         .from('credit_cost_audit_log' as any)
@@ -96,16 +141,56 @@ export const useUpdateCreditCost = () => {
           cost_key,
           old_value,
           new_value: cost_value,
-          changed_by: (await supabase.auth.getUser()).data.user?.id,
+          changed_by: userId,
         } as any);
 
       if (auditError) console.error('Audit log error:', auditError);
+
+      // Auto-announce: fetch the label for a nice message
+      const { data: costRow } = await supabase
+        .from('credit_costs' as any)
+        .select('label')
+        .eq('id', id)
+        .single();
+
+      const label = (costRow as any)?.label || cost_key;
+      const isPromo = cost_value < (DEFAULT_COSTS[cost_key] ?? old_value);
+      const isFree = cost_value === 0;
+
+      // Create a global notification for all users
+      let title: string;
+      let message: string;
+
+      if (isFree) {
+        title = '🎁 Action gratuite !';
+        message = `${label} est maintenant gratuit ! Profitez-en.`;
+      } else if (isPromo) {
+        const discount = Math.round((1 - cost_value / old_value) * 100);
+        title = '🔥 Promotion en cours !';
+        message = `${label} passe de ${old_value} à ${cost_value} crédits (-${discount}%).`;
+      } else {
+        title = '💰 Tarif mis à jour';
+        message = `${label} : ${old_value} → ${cost_value} crédits.`;
+      }
+
+      // Broadcast notification to all users via edge function
+      try {
+        await supabase.functions.invoke('broadcast-notification', {
+          body: {
+            title,
+            body: message,
+            target_type: 'all',
+          },
+        });
+      } catch (e) {
+        console.warn('Failed to broadcast price change notification:', e);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-credit-costs'] });
       queryClient.invalidateQueries({ queryKey: ['credit-costs'] });
       queryClient.invalidateQueries({ queryKey: ['credit-cost-audit-log'] });
-      toast.success('Tarif mis à jour');
+      toast.success('Tarif mis à jour et annonce envoyée');
     },
     onError: () => {
       toast.error('Erreur lors de la mise à jour');

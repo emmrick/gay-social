@@ -21,6 +21,8 @@ interface ChatInputProps {
   onFocus?: () => void;
   onVoiceToggle?: () => void;
   showVoiceButton?: boolean;
+  onCreatePoll?: (question: string, options: string[], isMultipleChoice: boolean) => void;
+  showPollButton?: boolean;
 }
 
 const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, isSending = false, onTyping, onFocus, onVoiceToggle, showVoiceButton }: ChatInputProps) => {

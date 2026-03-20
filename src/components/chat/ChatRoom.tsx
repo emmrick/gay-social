@@ -500,6 +500,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           onFocus={handleInputFocus}
           onVoiceToggle={() => setShowVoiceRecorder(!showVoiceRecorder)}
           showVoiceButton
+          showPollButton
+          onCreatePoll={handleCreatePoll}
         />
       </div>
     </div>

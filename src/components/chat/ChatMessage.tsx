@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { Message } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Reply, CornerUpLeft, Flag, Trash2, Loader2 } from 'lucide-react';
+import { Reply, CornerUpLeft, Flag, Trash2, Loader2, Check, CheckCheck } from 'lucide-react';
 import EphemeralMessage from './EphemeralMessage';
 import EmojiMessageEffect, { isEmojiOnlyMessage } from './EmojiMessageEffect';
 import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
-import MessageReadReceipts from './MessageReadReceipts';
 import ReportMessageDialog from './ReportMessageDialog';
 import MentionHighlight from './MentionHighlight';
 import { Button } from '@/components/ui/button';
 import { useDeleteMessage } from '@/hooks/useDeleteMessage';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,6 +50,10 @@ interface ChatMessageProps {
   readers?: ReadReceipt[];
   totalMembers?: number;
   chatRoomId?: string;
+  /** Whether this is the last message in a group of consecutive messages from the same sender */
+  isLastInGroup?: boolean;
+  /** Whether this is the last own message overall — controls read receipt display */
+  isLastOwnMessage?: boolean;
   onReply?: (message: { id: string; content: string; senderName: string }) => void;
   onAvatarClick?: (userId: string) => void;
   onToggleReaction?: (messageId: string, emoji: string) => void;
@@ -63,6 +67,8 @@ const ChatMessage = ({
   readers = [],
   totalMembers,
   chatRoomId,
+  isLastInGroup = true,
+  isLastOwnMessage = false,
   onReply, 
   onAvatarClick,
   onToggleReaction,
@@ -93,37 +99,53 @@ const ChatMessage = ({
     onToggleReaction?.(message.id, emoji);
   };
 
+  // Determine read status from readers array for groups
+  const otherReaders = readers.filter(r => r.user_id !== message.senderId);
+  const hasBeenRead = otherReaders.length > 0;
+  const allRead = totalMembers ? otherReaders.length >= (totalMembers - 1) : hasBeenRead;
+
   return (
     <>
-      <div 
-        className={`group flex gap-3 ${isOwn ? 'flex-row-reverse' : 'flex-row'} animate-slide-up ${
-          isHighlighted ? 'bg-primary/10 -mx-4 px-4 py-2 rounded-lg' : ''
-        }`}
+      <div
+        className={cn(
+          "flex items-end gap-2",
+          isOwn ? "justify-end" : "justify-start",
+          isLastInGroup ? "mb-2" : "mb-px",
+          isHighlighted && "bg-primary/10 -mx-3 px-3 py-1.5 rounded-lg"
+        )}
         id={`message-${message.id}`}
       >
-        {/* Avatar */}
+        {/* Avatar for received — only last in group */}
         {!isOwn && (
-          <button
-            onClick={handleAvatarClick}
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 hover:scale-105 transition-transform cursor-pointer overflow-hidden"
-          >
-            {message.senderAvatar ? (
-              <img
-                src={message.senderAvatar}
-                alt={message.senderName}
-                className="w-full h-full rounded-full object-cover"
-                loading="lazy"
-              />
+          <div className="flex-shrink-0 w-7">
+            {isLastInGroup ? (
+              <button
+                onClick={handleAvatarClick}
+                className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center hover:scale-105 transition-transform cursor-pointer"
+              >
+                {message.senderAvatar ? (
+                  <img
+                    src={message.senderAvatar}
+                    alt={message.senderName}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="text-xs font-semibold text-primary">
+                    {message.senderName.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </button>
             ) : (
-              message.senderName.charAt(0).toUpperCase()
+              <div className="w-7" />
             )}
-          </button>
+          </div>
         )}
-        
-        <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[75%]`}>
-          {/* Sender name */}
-          {!isOwn && (
-            <span className="text-xs text-muted-foreground mb-1 px-1">
+
+        <div className={cn("max-w-[78%] flex flex-col", isOwn ? "items-end" : "items-start")}>
+          {/* Sender name — only for received, first in group */}
+          {!isOwn && isLastInGroup && (
+            <span className="text-[11px] text-muted-foreground mb-0.5 px-1 font-medium">
               {message.senderName}
             </span>
           )}
@@ -131,9 +153,10 @@ const ChatMessage = ({
           {/* Reply reference */}
           {message.replyToMessage && (
             <div 
-              className={`flex items-center gap-1 text-xs text-muted-foreground mb-1 px-2 py-1 rounded bg-secondary/50 border-l-2 border-primary cursor-pointer hover:bg-secondary/80 transition-colors ${
-                isOwn ? 'ml-auto' : ''
-              }`}
+              className={cn(
+                "flex items-center gap-1 text-xs text-muted-foreground mb-1 px-2 py-1 rounded bg-secondary/50 border-l-2 border-primary cursor-pointer hover:bg-secondary/80 transition-colors",
+                isOwn && "ml-auto"
+              )}
               onClick={() => {
                 const el = document.getElementById(`message-${message.replyToMessage?.id}`);
                 el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -144,27 +167,29 @@ const ChatMessage = ({
               <span className="truncate max-w-[150px]">{message.replyToMessage.content}</span>
             </div>
           )}
-          
-          {/* Message content */}
-          <div className="relative flex items-center gap-1">
+
+          {/* Bubble + reaction picker */}
+          <div className="group/msg relative flex items-center gap-1">
             {/* Action buttons - left side for own messages */}
             {isOwn && !isEphemeral && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                  className="h-7 w-7 opacity-0 group-hover/msg:opacity-100 transition-opacity text-destructive hover:text-destructive"
                   onClick={() => setShowDeleteDialog(true)}
                   title="Supprimer ce message"
                   disabled={isDeleting}
                 >
                   {isDeleting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   )}
                 </Button>
-                <EmojiReactionPicker onSelect={handleReaction} />
+                <div className="hidden md:block opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                  <EmojiReactionPicker onSelect={handleReaction} />
+                </div>
               </div>
             )}
 
@@ -179,34 +204,50 @@ const ChatMessage = ({
             ) : isEmojiOnlyMessage(message.content) ? (
               <EmojiMessageEffect content={message.content} isOwn={isOwn} messageId={message.id} />
             ) : (
-              <div className={`message-bubble ${isOwn ? 'message-bubble-sent' : 'message-bubble-received'}`}>
+              <div
+                className={cn(
+                  "px-4 py-2 pb-5 text-[14.5px] leading-[1.45] whitespace-pre-wrap break-words rounded-[20px] relative",
+                  isOwn
+                    ? "bg-primary text-primary-foreground rounded-br-[6px] shadow-[0_1px_3px_hsl(215_85%_45%/0.15)]"
+                    : "bg-secondary text-foreground rounded-bl-[6px] shadow-[0_1px_2px_hsl(220_30%_20%/0.06)]",
+                )}
+                style={{ wordBreak: 'break-word' }}
+              >
                 <MentionHighlight 
                   content={message.content} 
-                  className="text-sm leading-relaxed whitespace-pre-wrap break-words"
+                  className="text-sm leading-relaxed"
                 />
+                <span className={cn(
+                  "absolute bottom-1 right-3 text-[10px] leading-none",
+                  isOwn ? "text-primary-foreground/60" : "text-muted-foreground"
+                )}>
+                  {format(message.timestamp, 'HH:mm', { locale: fr })}
+                </span>
               </div>
             )}
 
             {/* Action buttons - right side for received messages */}
             {!isOwn && !isEphemeral && (
-              <div className="flex items-center gap-1">
-                <EmojiReactionPicker onSelect={handleReaction} />
+              <div className="flex items-center gap-0.5">
+                <div className="hidden md:block opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                  <EmojiReactionPicker onSelect={handleReaction} />
+                </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-7 w-7 opacity-0 group-hover/msg:opacity-100 transition-opacity"
                   onClick={handleReply}
                 >
-                  <Reply className="w-4 h-4" />
+                  <Reply className="w-3.5 h-3.5" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                  className="h-7 w-7 opacity-0 group-hover/msg:opacity-100 transition-opacity text-destructive hover:text-destructive"
                   onClick={() => setShowReportDialog(true)}
                   title="Signaler ce message"
                 >
-                  <Flag className="w-4 h-4" />
+                  <Flag className="w-3.5 h-3.5" />
                 </Button>
               </div>
             )}
@@ -218,19 +259,19 @@ const ChatMessage = ({
             onToggleReaction={handleReaction}
             isOwn={isOwn}
           />
-          
-          {/* Read receipts */}
-          <MessageReadReceipts
-            readers={readers}
-            isOwn={isOwn}
-            totalMembers={totalMembers}
-            senderId={message.senderId}
-          />
 
-          {/* Timestamp */}
-          <span className="text-[10px] text-muted-foreground mt-1 px-1">
-            {format(message.timestamp, 'HH:mm', { locale: fr })}
-          </span>
+          {/* Read receipt — Google Messages style: only on last own message */}
+          {isLastInGroup && isLastOwnMessage && isOwn && (
+            <div className="flex items-center gap-0.5 mt-0.5 px-1 justify-end">
+              {allRead ? (
+                <CheckCheck className="w-3.5 h-3.5 text-primary" />
+              ) : hasBeenRead ? (
+                <CheckCheck className="w-3.5 h-3.5 text-primary" />
+              ) : (
+                <Check className="w-3.5 h-3.5 text-muted-foreground/50" />
+              )}
+            </div>
+          )}
         </div>
       </div>
 

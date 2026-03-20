@@ -11,6 +11,7 @@ import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesGrid from './FavoritesGrid';
 import AdFreeBanner from './AdFreeBanner';
 import StoryBar from '@/components/stories/StoryBar';
+import AdBanner from '@/components/ads/AdBanner';
 
 interface HomeViewProps {
   onViewProfile?: (userId: string) => void;
@@ -47,6 +48,7 @@ const HomeView = ({
       <div className="px-4 py-4 space-y-4">
         {featureFlags['stories'] !== false && <StoryBar />}
         <AdFreeBanner />
+        <AdBanner placement="native" className="mb-1" />
 
         <Tabs defaultValue="nearby" className="w-full">
           <div className="flex items-center gap-2">

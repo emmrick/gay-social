@@ -10,6 +10,7 @@ import CreditCostsAccordion from './CreditCostsAccordion';
 import CreditFAQSection from './CreditFAQSection';
 import SendGiftSection from './SendGiftSection';
 import ContactCreditIssueDialog from './ContactCreditIssueDialog';
+import AdBanner from '@/components/ads/AdBanner';
 import { motion } from 'framer-motion';
 
 const CreditsPage = () => {
@@ -76,6 +77,9 @@ const CreditsPage = () => {
 
         {/* Missions */}
         <CreditMissionsSection />
+
+        {/* Ad */}
+        <AdBanner placement="compact" />
 
         {/* Costs */}
         <CreditCostsAccordion />

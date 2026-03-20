@@ -3793,6 +3793,8 @@ export type Database = {
         Args: { _task_id: string; _user_id: string }
         Returns: Json
       }
+      increment_ad_clicks: { Args: { _ad_id: string }; Returns: undefined }
+      increment_ad_impressions: { Args: { _ad_id: string }; Returns: undefined }
       is_group_admin: {
         Args: { _chat_room_id: string; _user_id: string }
         Returns: boolean

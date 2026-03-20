@@ -257,46 +257,44 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
       {/* Suspension banner */}
 
       {/* Header - fixed at top */}
-      <header className="flex-shrink-0 flex items-center gap-3 p-4 border-b border-border bg-card/80 backdrop-blur-lg sticky top-0 z-20">
-        <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0">
+      <header className="flex-shrink-0 flex items-center gap-2.5 px-2 py-2.5 bg-card/95 backdrop-blur-lg border-b border-border/60 sticky top-0 z-20 shadow-[0_1px_3px_hsl(220_30%_20%/0.04)]">
+        <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0 rounded-full hover:bg-secondary">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white text-sm flex-shrink-0">
+        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold text-white text-sm flex-shrink-0 shadow-sm">
           {isCustomGroup ? regionName.charAt(0).toUpperCase() : regionCode}
         </div>
         
         <div className="flex-1 min-w-0">
-          <h1 className="font-display font-semibold text-foreground truncate text-sm">
+          <h1 className="font-semibold text-foreground truncate text-[15px] leading-tight">
             {isCustomGroup ? regionName : `${regionName} (${regionCode})`}
           </h1>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Users className="w-3.5 h-3.5 flex-shrink-0" />
+          <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mt-0.5">
+            <Users className="w-3 h-3 flex-shrink-0" />
             <span>{memberCount} membres</span>
             {typingUsers.length > 0 && (
-              <span className="text-primary animate-pulse truncate">• écrit...</span>
+              <span className="text-primary font-medium animate-pulse truncate">• écrit…</span>
             )}
           </div>
         </div>
 
-        {/* Mute button */}
         <MuteButton conversationId={roomId} />
 
-        {/* Search button */}
-        <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
+        <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)} className="rounded-full hover:bg-secondary">
           <Search className="w-5 h-5" />
         </Button>
         
         <Sheet open={showMembers} onOpenChange={setShowMembers}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-secondary">
               <Users className="w-5 h-5" />
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="p-0 w-80">
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <h2 className="font-semibold">Membres</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowMembers(false)}>
+            <div className="flex items-center justify-between p-4 border-b border-border/60">
+              <h2 className="font-semibold text-[15px]">Membres</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowMembers(false)} className="rounded-full">
                 <X className="w-4 h-4" />
               </Button>
             </div>
@@ -311,13 +309,12 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           </SheetContent>
         </Sheet>
 
-        <Button variant="ghost" size="icon" onClick={() => setShowMediaGallery(true)}>
+        <Button variant="ghost" size="icon" onClick={() => setShowMediaGallery(true)} className="rounded-full hover:bg-secondary">
           <Image className="w-5 h-5" />
         </Button>
 
-        {/* Settings (custom groups only) */}
         {isCustomGroup && (
-          <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)}>
+          <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)} className="rounded-full hover:bg-secondary">
             <Settings className="w-5 h-5" />
           </Button>
         )}

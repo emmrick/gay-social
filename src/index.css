@@ -157,20 +157,30 @@ html {
   }
 
   .message-bubble {
-    @apply rounded-2xl px-3.5 py-2;
-    max-width: min(78%, 340px);
+    @apply rounded-[20px] px-4 py-2.5;
+    max-width: min(80%, 380px);
     min-width: fit-content;
     word-break: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
+    font-size: 14.5px;
+    line-height: 1.45;
   }
 
   .message-bubble-sent {
-    @apply bg-primary text-primary-foreground rounded-br-md;
+    @apply bg-primary text-primary-foreground;
+    border-bottom-right-radius: 6px;
+    box-shadow: 0 1px 3px hsl(215 85% 45% / 0.15);
   }
 
   .message-bubble-received {
-    @apply bg-secondary text-foreground rounded-bl-md;
+    @apply bg-secondary text-foreground;
+    border-bottom-left-radius: 6px;
+    box-shadow: 0 1px 2px hsl(220 30% 20% / 0.06);
+  }
+
+  .dark .message-bubble-received {
+    box-shadow: 0 1px 3px hsl(0 0% 0% / 0.2);
   }
 
   .message-bubble p {

@@ -100,19 +100,20 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
     if (message_type === 'video') return '🎥 Vidéo';
     if (message_type === 'album_share') return '📁 Album partagé';
     if (message_type === 'album_access_request') return '🔒 Demande d\'accès album';
-    if (content && content.length > 40) return content.substring(0, 40) + '…';
+    if (message_type === 'credit_gift') return '🎁 Cadeau de crédits';
+    if (content && content.length > 45) return content.substring(0, 45) + '…';
     return content || 'Nouvelle conversation';
   };
 
   if (isLoading) {
     return (
-      <div className="divide-y divide-border">
+      <div className="px-2 py-2 space-y-1">
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex items-center gap-3 px-4 py-3">
-            <Skeleton className="w-12 h-12 rounded-full flex-shrink-0" />
-            <div className="flex-1 space-y-1.5">
+          <div key={i} className="flex items-center gap-3 px-3 py-3 rounded-2xl">
+            <Skeleton className="w-14 h-14 rounded-full flex-shrink-0" />
+            <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-3.5 w-44" />
+              <Skeleton className="h-3.5 w-48" />
             </div>
           </div>
         ))}
@@ -122,21 +123,21 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
 
   if (displayConversations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+      <div className="flex flex-col items-center justify-center py-24 text-center px-8">
+        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-5">
           {showArchived ? (
-            <Archive className="w-7 h-7 text-muted-foreground" />
+            <Archive className="w-9 h-9 text-primary/60" />
           ) : (
-            <MessageCircle className="w-7 h-7 text-muted-foreground" />
+            <MessageCircle className="w-9 h-9 text-primary/60" />
           )}
         </div>
-        <h3 className="font-medium text-foreground mb-1">
+        <h3 className="font-semibold text-foreground text-lg mb-1.5">
           {showArchived ? 'Aucune archive' : 'Aucune conversation'}
         </h3>
-        <p className="text-sm text-muted-foreground max-w-xs">
+        <p className="text-sm text-muted-foreground max-w-[260px] leading-relaxed">
           {showArchived
             ? 'Vos conversations archivées apparaîtront ici'
-            : 'Appuyez sur + pour démarrer une conversation'}
+            : 'Démarrez une conversation pour commencer à discuter'}
         </p>
       </div>
     );
@@ -144,10 +145,11 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
 
   return (
     <>
-      <div className="divide-y divide-border/50">
+      <div className="px-2 py-1">
         {displayConversations.map((conv) => {
           const unreadCount = getUnreadCount(conv.otherUser.user_id);
           const hasUnread = unreadCount > 0;
+          const isSelected = selectedUserId === conv.otherUser.user_id;
 
           return (
             <div
@@ -161,44 +163,49 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
               onPointerUp={handleLongPressEnd}
               onPointerLeave={handleLongPressEnd}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors select-none",
-                "hover:bg-muted/50 active:bg-muted",
-                selectedUserId === conv.otherUser.user_id && "bg-primary/5"
+                "flex items-center gap-3 px-3 py-3.5 cursor-pointer transition-all duration-200 select-none rounded-2xl mx-1 my-0.5",
+                "hover:bg-secondary/70 active:scale-[0.98]",
+                isSelected && "bg-primary/8 ring-1 ring-primary/15",
+                hasUnread && !isSelected && "bg-primary/[0.03]"
               )}
             >
               {/* Avatar */}
               <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-muted">
+                <div className={cn(
+                  "w-14 h-14 rounded-full overflow-hidden transition-shadow duration-200",
+                  hasUnread && "ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
+                )}>
                   {conv.otherUser.avatar_url ? (
                     <img
                       src={conv.otherUser.avatar_url}
                       alt={conv.otherUser.username}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   ) : (
-                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-primary font-bold text-xl">
                       {conv.otherUser.username.charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>
                 {shouldShowOnlineIndicator(conv.otherUser) && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                  <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-[2.5px] border-background shadow-sm" />
                 )}
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 mb-0.5">
                   <span className={cn(
-                    "text-[15px] truncate",
-                    hasUnread ? "font-semibold text-foreground" : "font-normal text-foreground"
+                    "text-[15px] truncate leading-tight",
+                    hasUnread ? "font-bold text-foreground" : "font-medium text-foreground"
                   )}>
                     {conv.otherUser.username}
                   </span>
                   {conv.lastMessage && (
                     <span className={cn(
-                      "text-xs flex-shrink-0",
-                      hasUnread ? "text-primary font-medium" : "text-muted-foreground"
+                      "text-[11px] flex-shrink-0 tabular-nums",
+                      hasUnread ? "text-primary font-semibold" : "text-muted-foreground"
                     )}>
                       {formatDistanceToNow(new Date(conv.lastMessage.created_at), {
                         addSuffix: false,
@@ -207,15 +214,15 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                     </span>
                   )}
                 </div>
-                <div className="flex items-center justify-between gap-2 mt-0.5">
+                <div className="flex items-center justify-between gap-2">
                   <p className={cn(
-                    "text-sm truncate",
-                    hasUnread ? "text-foreground font-medium" : "text-muted-foreground"
+                    "text-[13px] truncate leading-snug",
+                    hasUnread ? "text-foreground/80 font-medium" : "text-muted-foreground"
                   )}>
                     {getMessagePreview(conv)}
                   </p>
                   {hasUnread && (
-                    <span className="flex-shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center">
+                    <span className="flex-shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center shadow-sm">
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
@@ -228,30 +235,30 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                   asChild
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button className="p-1.5 rounded-full hover:bg-muted text-muted-foreground flex-shrink-0">
+                  <button className="p-2 -mr-1 rounded-full hover:bg-muted/80 text-muted-foreground/60 hover:text-muted-foreground flex-shrink-0 transition-colors">
                     <MoreVertical className="w-4 h-4" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuContent align="end" className="w-52" onClick={(e) => e.stopPropagation()}>
                   {hasUnread ? (
                     <DropdownMenuItem onClick={(e) => handleMarkAsRead(e, conv.otherUser.user_id)}>
-                      <MailOpen className="w-4 h-4 mr-2" />
+                      <MailOpen className="w-4 h-4 mr-2.5" />
                       Marquer comme lu
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem onClick={(e) => handleMarkAsUnread(e, conv.otherUser.user_id)}>
-                      <Mail className="w-4 h-4 mr-2" />
+                      <Mail className="w-4 h-4 mr-2.5" />
                       Marquer comme non lu
                     </DropdownMenuItem>
                   )}
                   {showArchived ? (
                     <DropdownMenuItem onClick={(e) => handleUnarchive(e, conv.id)}>
-                      <ArchiveRestore className="w-4 h-4 mr-2" />
+                      <ArchiveRestore className="w-4 h-4 mr-2.5" />
                       Restaurer
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem onClick={(e) => handleArchive(e, conv.id)}>
-                      <Archive className="w-4 h-4 mr-2" />
+                      <Archive className="w-4 h-4 mr-2.5" />
                       Archiver
                     </DropdownMenuItem>
                   )}
@@ -261,14 +268,14 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                       setAutoDeleteSheet({ conversationId: conv.id, username: conv.otherUser.username });
                     }}
                   >
-                    <Timer className="w-4 h-4 mr-2" />
+                    <Timer className="w-4 h-4 mr-2.5" />
                     Messages éphémères
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={(e) => handleDeleteClick(e, conv.id)}
                     className="text-destructive focus:text-destructive"
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-4 h-4 mr-2.5" />
                     Supprimer
                   </DropdownMenuItem>
                 </DropdownMenuContent>

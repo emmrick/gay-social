@@ -240,25 +240,28 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
       {/* Header */}
       <header
-        className="flex-shrink-0 flex items-center gap-2 px-2 py-2 border-b border-border bg-card z-20"
-        style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))' }}
+        className="flex-shrink-0 flex items-center gap-2.5 px-2 py-2.5 bg-card/95 backdrop-blur-lg border-b border-border/60 z-20 shadow-[0_1px_3px_hsl(220_30%_20%/0.04)]"
+        style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top, 0px))' }}
       >
-        <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0 h-10 w-10">
+        <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0 h-10 w-10 rounded-full hover:bg-secondary">
           <ArrowLeft className="w-5 h-5" />
         </Button>
 
         {profileLoading ? (
           <div className="flex items-center gap-3 flex-1">
-            <Skeleton className="w-10 h-10 rounded-full" />
-            <Skeleton className="h-4 w-24" />
+            <Skeleton className="w-11 h-11 rounded-full" />
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-16" />
+            </div>
           </div>
         ) : (
           <button
             onClick={() => navigate(`/profile/${otherUserId}`)}
-            className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity active:scale-[0.98]"
           >
             <div className="relative flex-shrink-0">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-muted">
+              <div className="w-11 h-11 rounded-full overflow-hidden bg-muted ring-1 ring-border/30">
                 {otherUserProfile?.avatar_url ? (
                   <img
                     src={`${otherUserProfile.avatar_url}${otherUserProfile.avatar_url.includes('?') ? '&' : '?'}v=${otherUserProfile.updated_at || ''}`}
@@ -266,26 +269,26 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                  <div className="w-full h-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center text-primary font-bold text-base">
                     {otherUserProfile?.username.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
               {isUserTrulyOnline(otherUserProfile) && (
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-card shadow-sm" />
               )}
             </div>
             <div className="min-w-0">
-              <h2 className="font-semibold text-[15px] text-foreground truncate">
+              <h2 className="font-semibold text-[15px] text-foreground truncate leading-tight">
                 {otherUserProfile?.username}
               </h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[12px] mt-0.5">
                 {isOtherTyping ? (
-                  <span className="text-primary">écrit…</span>
+                  <span className="text-primary font-medium animate-pulse">écrit…</span>
                 ) : isUserTrulyOnline(otherUserProfile) ? (
-                  <span className="text-green-500">En ligne</span>
+                  <span className="text-green-500 font-medium">En ligne</span>
                 ) : (
-                  'Hors ligne'
+                  <span className="text-muted-foreground">Hors ligne</span>
                 )}
               </p>
             </div>
@@ -295,30 +298,30 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
         <MuteButton conversationId={otherUserId} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0">
+            <Button variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0 rounded-full hover:bg-secondary">
               <MoreVertical className="w-5 h-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-52">
             {isStaffUser ? (
               <DropdownMenuItem disabled className="text-muted-foreground">
-                <Ban className="w-4 h-4 mr-2" />
+                <Ban className="w-4 h-4 mr-2.5" />
                 Membre de l'équipe (non blocable)
               </DropdownMenuItem>
             ) : hasBlocked ? (
               <DropdownMenuItem onClick={handleUnblock} disabled={unblockUser.isPending}>
-                <UserCheck className="w-4 h-4 mr-2" />
+                <UserCheck className="w-4 h-4 mr-2.5" />
                 Débloquer
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setShowBlockDialog(true)}>
-                <Ban className="w-4 h-4 mr-2" />
+                <Ban className="w-4 h-4 mr-2.5" />
                 Bloquer
               </DropdownMenuItem>
             )}
             {!isStaffUser && (
               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setShowReportDialog(true)}>
-                <Flag className="w-4 h-4 mr-2" />
+                <Flag className="w-4 h-4 mr-2.5" />
                 Signaler
               </DropdownMenuItem>
             )}
@@ -513,12 +516,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                         ) : (
                           <div
                             className={cn(
-                              "px-3.5 py-2 text-[14.5px] leading-[1.4] whitespace-pre-wrap break-words",
+                              "px-4 py-2.5 text-[14.5px] leading-[1.45] whitespace-pre-wrap break-words rounded-[20px]",
                               isOwn
-                                ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
-                                : "bg-secondary text-foreground rounded-2xl rounded-bl-md",
+                                ? "bg-primary text-primary-foreground rounded-br-[6px] shadow-[0_1px_3px_hsl(215_85%_45%/0.15)]"
+                                : "bg-secondary text-foreground rounded-bl-[6px] shadow-[0_1px_2px_hsl(220_30%_20%/0.06)]",
                             )}
-                            style={{ wordBreak: 'break-word' }}
+                            style={{ wordBreak: 'break-word', maxWidth: 'min(80%, 380px)' }}
                           >
                             {message.content}
                           </div>
@@ -578,19 +581,19 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           {/* Typing indicator */}
           {isOtherTyping && (
             <div className="flex items-end gap-2 mb-2">
-              <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+              <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border/20">
                 {otherUserProfile?.avatar_url ? (
                   <img src={otherUserProfile.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold">
+                  <div className="w-full h-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center text-primary text-xs font-semibold">
                     {otherUserProfile?.username?.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
-              <div className="bg-secondary rounded-2xl rounded-bl-md px-3.5 py-2.5 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="bg-secondary rounded-[20px] rounded-bl-[6px] px-4 py-3 flex items-center gap-2 shadow-[0_1px_2px_hsl(220_30%_20%/0.06)]">
+                <span className="w-2 h-2 rounded-full bg-muted-foreground/30 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 rounded-full bg-muted-foreground/30 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 rounded-full bg-muted-foreground/30 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           )}

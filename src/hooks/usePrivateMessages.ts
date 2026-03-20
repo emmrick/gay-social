@@ -7,7 +7,7 @@ import { useRecordEarning } from '@/hooks/useModeratorEarnings';
 import { notifyNewPrivateMessage, notifyPrivateMessageInApp } from '@/services/pushNotificationService';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 import { isUserViewingPrivateChat } from '@/hooks/useActiveConversation';
-import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
+import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
 
 type Message = Tables<'messages'>;
 

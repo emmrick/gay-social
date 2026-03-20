@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { playNotificationSoundStandalone, playAnnouncementSoundStandalone } from '@/hooks/useNotificationSound';
 import { notifyNewGroupMessage } from '@/services/pushNotificationService';
 import { isUserViewingChatRoom } from '@/hooks/useActiveConversation';
-import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
+import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
 
 type Message = Tables<'messages'>;
 

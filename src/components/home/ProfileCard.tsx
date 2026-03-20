@@ -192,28 +192,6 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
           )}
         </div>
 
-        {/* Quick action buttons (appear on hover/touch) */}
-        {!profile.isCurrentUser && (
-          <div className={cn(
-            "absolute bottom-12 left-0 right-0 flex justify-center gap-3 z-10",
-            "opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0",
-            "transition-all duration-200"
-          )}>
-            <button
-              onClick={handleView}
-              className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-colors border border-white/10"
-            >
-              <Eye className="w-4 h-4 text-white" />
-            </button>
-            <button
-              onClick={handleLike}
-              className="w-9 h-9 rounded-full bg-red-500/80 backdrop-blur-md flex items-center justify-center hover:bg-red-500 transition-colors border border-white/10"
-            >
-              <Heart className="w-4 h-4 text-white" />
-            </button>
-          </div>
-        )}
-
         {/* Hover overlay */}
         {!profile.isCurrentUser && (
           <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />

@@ -36,6 +36,7 @@ const shouldShow = (): boolean => {
 
 const AdFreeBanner = () => {
   const [visible, setVisible] = useState(() => shouldShow());
+  const [showSubscribeDialog, setShowSubscribeDialog] = useState(false);
 
   if (!visible) return null;
 
@@ -53,36 +54,52 @@ const AdFreeBanner = () => {
   };
 
   return (
-    <div className="relative rounded-xl border border-border/50 bg-gradient-to-r from-secondary/60 via-background to-secondary/60 p-4 space-y-2">
-      <button
-        onClick={handleDismiss}
-        className="absolute top-2 right-2 p-1 rounded-full hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
-        aria-label="Fermer"
-      >
-        <X className="w-4 h-4" />
-      </button>
-      <div className="flex items-center gap-2.5 pr-6">
-        <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-          <BanIcon className="w-4.5 h-4.5 text-primary" />
+    <>
+      <div className="relative rounded-xl border border-border/50 bg-gradient-to-r from-secondary/60 via-background to-secondary/60 p-4 space-y-2">
+        <button
+          onClick={handleDismiss}
+          className="absolute top-2 right-2 p-1 rounded-full hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Fermer"
+        >
+          <X className="w-4 h-4" />
+        </button>
+        <div className="flex items-center gap-2.5 pr-6">
+          <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+            <BanIcon className="w-4.5 h-4.5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground leading-tight">
+              🤝 Publicités respectueuses
+            </p>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground leading-tight">
-            🤝 Publicités respectueuses
-          </p>
+        <p className="text-xs text-muted-foreground leading-relaxed pl-[46px]">
+          Nous ne diffusons que des <span className="font-medium text-foreground">annonces discrètes et vérifiées</span>, sans pop-up ni vidéo invasive. 
+          Votre expérience reste notre priorité.
+        </p>
+        <div className="flex items-center gap-3 pl-[46px] pt-1">
+          <button
+            onClick={() => setShowSubscribeDialog(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Naviguer sans pub
+          </button>
+          <a
+            href="/?tab=help"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:underline"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            En savoir plus
+          </a>
         </div>
       </div>
-      <p className="text-xs text-muted-foreground leading-relaxed pl-[46px]">
-        Nous ne diffusons que des <span className="font-medium text-foreground">annonces discrètes et vérifiées</span>, sans pop-up ni vidéo invasive. 
-        Votre expérience reste notre priorité. L'économie du site repose sur les <span className="font-medium text-foreground">crédits</span> et des partenariats sélectionnés.
-      </p>
-      <a
-        href="/?tab=help"
-        className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline pl-[46px] pt-1"
-      >
-        <HelpCircle className="w-3.5 h-3.5" />
-        Consultez la FAQ dédiée pour comprendre les crédits
-      </a>
-    </div>
+
+      <AdFreeSubscriptionDialog
+        open={showSubscribeDialog}
+        onOpenChange={setShowSubscribeDialog}
+      />
+    </>
   );
 };
 

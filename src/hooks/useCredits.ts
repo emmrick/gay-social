@@ -80,6 +80,25 @@ export interface CreditTransaction {
   created_at: string;
 }
 
+// Standalone utility to fetch a dynamic credit cost from DB, with static fallback
+export const getDynamicCreditCost = async (costKey: string): Promise<number> => {
+  try {
+    const { data, error } = await supabase
+      .from('credit_costs' as any)
+      .select('cost_value')
+      .eq('cost_key', costKey)
+      .maybeSingle();
+
+    if (!error && data) {
+      return Number((data as any).cost_value);
+    }
+  } catch (e) {
+    console.warn('Failed to fetch dynamic cost for', costKey, e);
+  }
+  // Fallback to static cost
+  return CREDIT_COSTS[costKey as keyof typeof CREDIT_COSTS] ?? 0.1;
+};
+
 // Standalone utility function to check if user has enough credits
 export const checkSufficientCredits = async (userId: string, amount: number): Promise<boolean> => {
   const { data, error } = await supabase.rpc('check_sufficient_credits', {

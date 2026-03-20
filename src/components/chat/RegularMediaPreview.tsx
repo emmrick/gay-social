@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { X, Send, Loader2, ShieldOff, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCredits, CREDIT_COSTS } from '@/hooks/useCredits';
+import { useDynamicCreditCosts } from '@/hooks/useDynamicCreditCosts';
 
 interface RegularMediaPreviewProps {
   previewUrl: string;
@@ -30,7 +32,9 @@ const RegularMediaPreview = ({
   isPrivate = false,
 }: RegularMediaPreviewProps) => {
   const { totalCredits } = useCredits();
-  const creditCost = isPrivate ? CREDIT_COSTS.private_message_media : CREDIT_COSTS.group_message_media;
+  const { data: dynamicCosts } = useDynamicCreditCosts();
+  const costKey = isPrivate ? 'private_message_media' : 'group_message_media';
+  const creditCost = dynamicCosts?.[costKey] ?? CREDIT_COSTS[isPrivate ? 'private_message_media' : 'group_message_media'];
   const hasEnoughCredits = totalCredits >= creditCost;
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>

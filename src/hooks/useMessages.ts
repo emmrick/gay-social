@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { playNotificationSoundStandalone, playAnnouncementSoundStandalone } from '@/hooks/useNotificationSound';
 import { notifyNewGroupMessage } from '@/services/pushNotificationService';
 import { isUserViewingChatRoom } from '@/hooks/useActiveConversation';
-import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
+import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
 
 type Message = Tables<'messages'>;
 
@@ -167,10 +167,9 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
       sendingRef.current = true;
 
       try {
-        // Calculate credit cost based on message type (group messages have different costs)
-        const creditCost = messageType === 'text' 
-          ? CREDIT_COSTS.group_message_text 
-          : CREDIT_COSTS.group_message_media;
+        // Calculate credit cost based on message type - use dynamic costs from DB
+        const costKey = messageType === 'text' ? 'group_message_text' : 'group_message_media';
+        const creditCost = await getDynamicCreditCost(costKey);
 
         // Check if user has enough credits
         const hasCredits = await checkSufficientCredits(user.id, creditCost);

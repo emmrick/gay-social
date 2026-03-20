@@ -638,6 +638,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
             isSending={sendMessage.isPending}
             onFocus={handleInputFocus}
             onTyping={startTyping}
+            onSendGift={handleSendGift}
           />
         )}
       </div>

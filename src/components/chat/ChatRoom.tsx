@@ -197,6 +197,26 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
     }
   };
 
+  const handleCreatePoll = async (question: string, options: string[], isMultipleChoice: boolean) => {
+    if (!user) return;
+    // Create a message first for the poll
+    const { data: msg } = await supabase
+      .from('messages')
+      .insert({
+        chat_room_id: roomId,
+        sender_id: user.id,
+        content: `📊 ${question}`,
+        message_type: 'poll',
+        is_private: false,
+      })
+      .select()
+      .single();
+
+    if (msg) {
+      await createPoll.mutateAsync({ question, options, isMultipleChoice, messageId: msg.id });
+    }
+  };
+
   const handleTyping = (hasText: boolean) => {
     startTyping(hasText);
   };

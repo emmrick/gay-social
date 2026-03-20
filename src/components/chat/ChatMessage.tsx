@@ -177,7 +177,7 @@ const ChatMessage = ({
                 chatRoomId={chatRoomId}
               />
             ) : isEmojiOnlyMessage(message.content) ? (
-              <EmojiMessageEffect content={message.content} isOwn={isOwn} />
+              <EmojiMessageEffect content={message.content} isOwn={isOwn} messageId={message.id} />
             ) : (
               <div className={`message-bubble ${isOwn ? 'message-bubble-sent' : 'message-bubble-received'}`}>
                 <MentionHighlight 

@@ -22,6 +22,7 @@ const categoryLabels: Record<string, string> = {
   groupes: '👥 Groupes',
   chatbot: '🤖 ChatBot',
   parrainage: '🎁 Parrainage',
+  missions: '🎯 Missions',
 };
 
 const categoryColors: Record<string, string> = {

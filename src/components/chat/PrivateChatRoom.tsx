@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useHasBlockedUser, useUnblockUserAction, useIsStaffUser } from '@/hooks/useUserBlock';
 import { usePrivateTypingIndicator } from '@/hooks/usePrivateTypingIndicator';
 import { useActiveConversation } from '@/hooks/useActiveConversation';
+import { useCreditGifts } from '@/hooks/useCreditGifts';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -32,6 +33,7 @@ import RegularMediaMessage from './RegularMediaMessage';
 import SharedAlbumMessage from './SharedAlbumMessage';
 import AlbumAccessRequestMessage from './AlbumAccessRequestMessage';
 import CreditRequestMessage from './CreditRequestMessage';
+import GiftMessage from './GiftMessage';
 import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
 import ReportUserDialog from './ReportUserDialog';

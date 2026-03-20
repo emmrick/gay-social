@@ -66,14 +66,13 @@ const AdFreeBanner = () => {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground leading-tight">
-            🚫 Zéro publicité. Pour toujours.
+            🤝 Publicités respectueuses
           </p>
         </div>
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed pl-[46px]">
-        Notre site est construit sur des bases solides et <span className="font-medium text-foreground">sans aucune publicité</span>. 
-        Parce que la pub, c'est très emmerdant ! Nous ne voulons pas gâcher votre expérience. 
-        La seule économie du site repose sur les <span className="font-medium text-foreground">crédits</span>, rechargeables de plusieurs façons.
+        Nous ne diffusons que des <span className="font-medium text-foreground">annonces discrètes et vérifiées</span>, sans pop-up ni vidéo invasive. 
+        Votre expérience reste notre priorité. L'économie du site repose sur les <span className="font-medium text-foreground">crédits</span> et des partenariats sélectionnés.
       </p>
       <a
         href="/?tab=help"

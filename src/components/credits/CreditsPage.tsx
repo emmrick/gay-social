@@ -78,6 +78,9 @@ const CreditsPage = () => {
         {/* Missions */}
         <CreditMissionsSection />
 
+        {/* Ad */}
+        <AdBanner placement="compact" />
+
         {/* Costs */}
         <CreditCostsAccordion />
 

@@ -1,10 +1,11 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AlertTriangle, Clock, Shield } from 'lucide-react';
+import { AlertTriangle, Clock, Shield, MessageCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import BlockedUserSupportChat from '@/components/support/BlockedUserSupportChat';
 
 const SuspendedUserScreen = () => {
   const { user, signOut } = useAuth();
@@ -89,10 +90,16 @@ const SuspendedUserScreen = () => {
           </ul>
         </div>
 
-        <p className="text-xs text-center text-muted-foreground">
-          Si vous pensez qu'il s'agit d'une erreur, veuillez patienter. Notre équipe
-          s'efforce de traiter les signalements le plus rapidement possible.
-        </p>
+        {/* Support contact info */}
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 text-center">
+          <div className="flex items-center gap-2 justify-center mb-2">
+            <MessageCircle className="w-4 h-4 text-primary" />
+            <p className="text-sm font-medium text-foreground">Contactez le support</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Cliquez sur le bouton en bas à droite pour discuter avec un agent et demander des explications ou un déblocage.
+          </p>
+        </div>
 
         <button
           onClick={signOut}
@@ -101,6 +108,9 @@ const SuspendedUserScreen = () => {
           Se déconnecter
         </button>
       </div>
+
+      {/* Support chat widget */}
+      <BlockedUserSupportChat />
     </div>
   );
 };

@@ -99,6 +99,7 @@ const navItems: NavItem[] = [
   { id: 'promo-images', label: 'Visuels promo IA', icon: Sparkles, group: 'communication', adminOnly: true },
   { id: 'site-updates', label: 'Mises à jour site', icon: Rocket, group: 'communication', adminOnly: true },
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
+  { id: 'ads', label: 'Annonces pub', icon: Megaphone, group: 'communication', adminOnly: true },
 
   // Config & Logs (admin only)
   { id: 'credit-costs', label: 'Tarifs crédits', icon: Coins, group: 'config', adminOnly: true },

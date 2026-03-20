@@ -50,6 +50,7 @@ import ErrorLogsPanel from '@/components/admin/ErrorLogsPanel';
 import SecurityEventsPanel from '@/components/admin/SecurityEventsPanel';
 import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPanel';
 import FeatureTogglesPanel from '@/components/admin/FeatureTogglesPanel';
+import SiteUpdatesPanel from '@/components/admin/SiteUpdatesPanel';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
@@ -269,6 +270,7 @@ const Admin = () => {
       case 'security': return <SecurityEventsPanel />;
       case 'verification': return <IdentityVerificationPanel />;
       case 'feature-toggles': return <FeatureTogglesPanel />;
+      case 'site-updates': return <SiteUpdatesPanel />;
       default: return null;
     }
   };

@@ -35,6 +35,10 @@ export const DEFAULT_COSTS: Record<string, number> = {
   chatbot_info_extra: 20.0,
   chatbot_activate: 10.0,
   referral_reward: 30.0,
+  mission_identity_verification: 30.0,
+  mission_add_photos: 2.0,
+  mission_complete_profile: 3.0,
+  mission_send_messages: 1.0,
 };
 
 export const useDynamicCreditCosts = () => {

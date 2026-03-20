@@ -85,11 +85,17 @@ const CreditMissionsSection = () => {
     });
   };
 
+  const missionVerifReward = dynamicCosts?.mission_identity_verification ?? CREDIT_REWARDS.identity_verification;
+  const missionReferralReward = dynamicCosts?.referral_reward ?? CREDIT_REWARDS.referral_success;
+  const missionPhotosReward = dynamicCosts?.mission_add_photos ?? 2;
+  const missionProfileReward = dynamicCosts?.mission_complete_profile ?? 3;
+  const missionMessagesReward = dynamicCosts?.mission_send_messages ?? 1;
+
   const missions = [
     {
       icon: Shield,
       label: 'Vérifier mon identité',
-      reward: `+${CREDIT_REWARDS.identity_verification}`,
+      reward: `+${missionVerifReward}`,
       color: 'text-blue-500 bg-blue-500/10',
       completedColor: 'text-emerald-500 bg-emerald-500/10',
       done: isVerified,
@@ -99,7 +105,7 @@ const CreditMissionsSection = () => {
     {
       icon: Users,
       label: 'Parrainer un ami',
-      reward: `+${dynamicCosts?.referral_reward ?? CREDIT_REWARDS.referral_success}`,
+      reward: `+${missionReferralReward}`,
       color: 'text-purple-500 bg-purple-500/10',
       completedColor: 'text-emerald-500 bg-emerald-500/10',
       done: hasReferrals,
@@ -109,7 +115,7 @@ const CreditMissionsSection = () => {
     {
       icon: Camera,
       label: 'Ajouter 3+ photos',
-      reward: '+2',
+      reward: `+${missionPhotosReward}`,
       color: 'text-pink-500 bg-pink-500/10',
       completedColor: 'text-emerald-500 bg-emerald-500/10',
       done: hasPhotos,
@@ -119,7 +125,7 @@ const CreditMissionsSection = () => {
     {
       icon: UserCheck,
       label: 'Compléter mon profil',
-      reward: '+3',
+      reward: `+${missionProfileReward}`,
       color: 'text-emerald-500 bg-emerald-500/10',
       completedColor: 'text-emerald-500 bg-emerald-500/10',
       done: isProfileComplete,
@@ -129,7 +135,7 @@ const CreditMissionsSection = () => {
     {
       icon: MessageCircle,
       label: 'Envoyer 10 messages',
-      reward: '+1',
+      reward: `+${missionMessagesReward}`,
       color: 'text-amber-500 bg-amber-500/10',
       completedColor: 'text-emerald-500 bg-emerald-500/10',
       done: hasSent10Messages,

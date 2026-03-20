@@ -22,6 +22,7 @@ const categoryLabels: Record<string, string> = {
   groupes: '👥 Groupes',
   chatbot: '🤖 ChatBot',
   parrainage: '🎁 Parrainage',
+  missions: '🎯 Missions',
 };
 
 const categoryColors: Record<string, string> = {
@@ -33,6 +34,7 @@ const categoryColors: Record<string, string> = {
   groupes: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
   chatbot: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
   parrainage: 'bg-orange-500/10 text-orange-600 border-orange-500/20',
+  missions: 'bg-teal-500/10 text-teal-600 border-teal-500/20',
 };
 
 const CreditCostsPanel = () => {

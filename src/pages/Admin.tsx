@@ -51,6 +51,7 @@ import SecurityEventsPanel from '@/components/admin/SecurityEventsPanel';
 import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPanel';
 import FeatureTogglesPanel from '@/components/admin/FeatureTogglesPanel';
 import SiteUpdatesPanel from '@/components/admin/SiteUpdatesPanel';
+import AdsManagementPanel from '@/components/admin/AdsManagementPanel';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },

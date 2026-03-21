@@ -665,14 +665,14 @@ const Index = () => {
               </div>
             </div>
           )}
-        </main>
 
-        {/* Global Ad Banner - shown on all pages except admin/moderator */}
-        {showGlobalAd && currentView !== 'chat' && currentView !== 'private' && (
-          <div className="px-3 py-1">
-            <AdBanner placement="compact" />
-          </div>
-        )}
+          {/* Global Ad Banner - shown on all pages except admin/moderator */}
+          {showGlobalAd && currentView !== 'chat' && currentView !== 'private' && (
+            <div className="px-3 py-1 shrink-0">
+              <AdBanner placement="compact" />
+            </div>
+          )}
+        </main>
 
         {/* Bottom Navigation Bar */}
         {showBottomNav && (

@@ -51,6 +51,7 @@ const Rules = lazy(() => import("./pages/Rules"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const GuidePage = lazy(() => import("./pages/Guide"));
 const PaypalReturn = lazy(() => import("./pages/PaypalReturn"));
+const Advertise = lazy(() => import("./pages/Advertise"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 

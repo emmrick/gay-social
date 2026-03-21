@@ -833,6 +833,48 @@ export type Database = {
           },
         ]
       }
+      credit_offers: {
+        Row: {
+          created_at: string
+          credits: number
+          discount_percent: number | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          is_highlighted: boolean | null
+          label: string | null
+          original_price_euros: number | null
+          price_euros: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          discount_percent?: number | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_highlighted?: boolean | null
+          label?: string | null
+          original_price_euros?: number | null
+          price_euros: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          discount_percent?: number | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_highlighted?: boolean | null
+          label?: string | null
+          original_price_euros?: number | null
+          price_euros?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_purchase_requests: {
         Row: {
           admin_notes: string | null

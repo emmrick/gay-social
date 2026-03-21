@@ -3724,63 +3724,34 @@ export type Database = {
       generate_referral_code: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
       get_estimated_wait_time: { Args: { _entity_id: string }; Returns: Json }
-      get_exclusive_next_task:
-        | {
-            Args: { _user_id: string }
-            Returns: {
-              completed_at: string | null
-              completed_by: string | null
-              created_at: string
-              description: string | null
-              id: string
-              metadata: Json | null
-              offered_at: string | null
-              offered_to: string | null
-              refused_by: string[] | null
-              reserved_at: string | null
-              reserved_by: string | null
-              reward_cents: number
-              status: string
-              target_entity_id: string | null
-              target_user_id: string | null
-              task_type: string
-              updated_at: string
-            }[]
-            SetofOptions: {
-              from: "*"
-              to: "moderation_tasks"
-              isOneToOne: false
-              isSetofReturn: true
-            }
-          }
-        | {
-            Args: { _offer_ttl_seconds?: number; _user_id: string }
-            Returns: {
-              completed_at: string | null
-              completed_by: string | null
-              created_at: string
-              description: string | null
-              id: string
-              metadata: Json | null
-              offered_at: string | null
-              offered_to: string | null
-              refused_by: string[] | null
-              reserved_at: string | null
-              reserved_by: string | null
-              reward_cents: number
-              status: string
-              target_entity_id: string | null
-              target_user_id: string | null
-              task_type: string
-              updated_at: string
-            }[]
-            SetofOptions: {
-              from: "*"
-              to: "moderation_tasks"
-              isOneToOne: false
-              isSetofReturn: true
-            }
-          }
+      get_exclusive_next_task: {
+        Args: { _offer_ttl_seconds?: number; _user_id: string }
+        Returns: {
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          offered_at: string | null
+          offered_to: string | null
+          refused_by: string[] | null
+          reserved_at: string | null
+          reserved_by: string | null
+          reward_cents: number
+          status: string
+          target_entity_id: string | null
+          target_user_id: string | null
+          task_type: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "moderation_tasks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_nearby_profiles: {
         Args: {
           limit_count?: number

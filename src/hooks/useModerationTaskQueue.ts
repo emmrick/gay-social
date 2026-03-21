@@ -26,6 +26,7 @@ const TASK_TYPE_LABELS: Record<string, string> = {
   identity_verification: '🪪 Vérification d\'identité',
   report_review: '🚨 Examen de signalement',
   content_moderation: '📸 Modération de contenu',
+  ad_review: '📢 Examen annonce publicitaire',
   user_suspension: '🔒 Suspension utilisateur',
   credit_management: '💰 Gestion de crédits',
   withdrawal_management: '🏦 Demande de retrait',
@@ -36,7 +37,7 @@ const TASK_TYPE_LABELS: Record<string, string> = {
 const TASK_TYPE_SECTIONS: Record<string, string> = {
   identity_verification: 'verification',
   report_review: 'reports',
-  content_moderation: 'moderation',
+  content_moderation: 'ads',
   user_suspension: 'users',
   credit_management: 'credits',
   withdrawal_management: 'credits',

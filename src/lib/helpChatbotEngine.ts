@@ -66,7 +66,7 @@ export const STATIC_KNOWLEDGE: StaticKnowledge[] = [
     category: 'Général',
     question: "Qu'est-ce que Gay Social ?",
     answer: "**Gay Social** est un site de rencontre gay **100% français**, organisé par **101 départements**. L'inscription est **gratuite**, les profils sont **vérifiés par pièce d'identité**, et il n'y a **aucune publicité**. Le site est réservé aux **+18 ans**.",
-    keywords: ['gaysocial', 'gay connect', 'site', 'quoi', 'cest quoi', 'presentation', 'a propos'],
+    keywords: ['gaysocial', 'gay social', 'site', 'quoi', 'cest quoi', 'presentation', 'a propos'],
   },
   {
     id: 'static-features',

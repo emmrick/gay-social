@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import AdBanner from '@/components/ads/AdBanner';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';

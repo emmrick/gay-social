@@ -77,7 +77,7 @@ const HelpCenter = () => {
   if (selectedArticle) {
     return (
       <>
-        <SEOHead title={`${selectedArticle.question} - Aide Gay Connect`} description={selectedArticle.answer.slice(0, 160)} />
+        <SEOHead title={`${selectedArticle.question} - Aide Gay Social`} description={selectedArticle.answer.slice(0, 160)} />
         <div className="min-h-screen bg-background">
           <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
             <div className="container mx-auto px-4 py-4 flex items-center gap-3">
@@ -146,7 +146,7 @@ const HelpCenter = () => {
     const meta = getIconForCategory(decodedCategory);
     return (
       <>
-        <SEOHead title={`${decodedCategory} - Aide Gay Connect`} description={meta.description} />
+        <SEOHead title={`${decodedCategory} - Aide Gay Social`} description={meta.description} />
         <div className="min-h-screen bg-background">
           <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
             <div className="container mx-auto px-4 py-4 flex items-center gap-3">
@@ -215,8 +215,8 @@ const HelpCenter = () => {
   return (
     <>
       <SEOHead
-        title="Centre d'aide - Gay Connect"
-        description="Trouvez des réponses à vos questions sur Gay Connect. FAQ, règles, et assistance."
+        title="Centre d'aide - Gay Social"
+        description="Trouvez des réponses à vos questions sur Gay Social. FAQ, règles, et assistance."
         canonical="https://gay-connect.fr/help-center"
       />
       <div className="min-h-screen bg-background">

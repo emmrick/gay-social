@@ -1,10 +1,10 @@
 import { memo } from 'react';
 
 /**
- * Discrete rainbow watermark "Gay Connect" overlay for images
+ * Discrete rainbow watermark "Gay Social" overlay for images
  * Renders a semi-transparent diagonal text across the image
  */
-const GayConnectWatermark = memo(({ className = '' }: { className?: string }) => {
+const GaySocialWatermark = memo(({ className = '' }: { className?: string }) => {
   return (
     <div
       className={`absolute inset-0 pointer-events-none overflow-hidden select-none ${className}`}
@@ -35,7 +35,7 @@ const GayConnectWatermark = memo(({ className = '' }: { className?: string }) =>
                     userSelect: 'none',
                   }}
                 >
-                  Gay Connect
+                  Gay Social
                 </span>
               ))}
             </div>
@@ -46,6 +46,6 @@ const GayConnectWatermark = memo(({ className = '' }: { className?: string }) =>
   );
 });
 
-GayConnectWatermark.displayName = 'GayConnectWatermark';
+GaySocialWatermark.displayName = 'GaySocialWatermark';
 
-export default GayConnectWatermark;
+export default GaySocialWatermark;

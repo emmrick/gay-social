@@ -62,7 +62,7 @@ const ReferralSection = () => {
           </h4>
           <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
             <li>Partagez votre lien de parrainage</li>
-            <li>Votre ami s'inscrit sur GayConnect</li>
+            <li>Votre ami s'inscrit sur GaySocial</li>
             <li>Il vérifie son identité</li>
             <li><span className="text-primary font-medium">Vous recevez tous les deux {referralReward} crédits !</span></li>
           </ol>
@@ -81,7 +81,7 @@ const ReferralSection = () => {
             </li>
             <li className="flex items-start gap-2">
               <Heart className="w-3.5 h-3.5 mt-0.5 text-pink-500 flex-shrink-0" />
-              <span><strong>Parlez de votre expérience</strong> — dites ce que vous aimez sur GayConnect, ça donne envie de rejoindre.</span>
+              <span><strong>Parlez de votre expérience</strong> — dites ce que vous aimez sur GaySocial, ça donne envie de rejoindre.</span>
             </li>
             <li className="flex items-start gap-2">
               <Gift className="w-3.5 h-3.5 mt-0.5 text-green-500 flex-shrink-0" />

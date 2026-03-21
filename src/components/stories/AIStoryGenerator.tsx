@@ -101,7 +101,7 @@ const AIStoryGenerator = ({ onImageGenerated }: AIStoryGeneratorProps) => {
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-sm font-medium text-primary">
         <Sparkles className="w-4 h-4" />
-        Génération IA — Promo Gay Connect
+        Génération IA — Promo Gay Social
       </div>
 
       {/* Mode toggle */}

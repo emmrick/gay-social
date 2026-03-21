@@ -510,7 +510,7 @@ const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDi
               {/* Version info */}
               <div className="text-center pt-4 border-t border-border/50">
                 <p className="text-xs text-muted-foreground">
-                  GayConnect v1.0.0 • © 2025
+                  GaySocial v1.0.0 • © 2025
                 </p>
               </div>
             </div>

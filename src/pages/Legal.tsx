@@ -64,8 +64,8 @@ const Legal = () => {
   return (
     <>
       <SEOHead
-        title="Mentions légales & CGU - Gay Connect"
-        description="Conditions générales d'utilisation, politique de confidentialité RGPD, et mentions légales de Gay Connect. Site réservé aux +18 ans."
+        title="Mentions légales & CGU - Gay Social"
+        description="Conditions générales d'utilisation, politique de confidentialité RGPD, et mentions légales de Gay Social. Site réservé aux +18 ans."
         canonical="https://gay-connect.fr/legal"
       />
       <DataExportDialog open={showExportDialog} onOpenChange={setShowExportDialog} />
@@ -90,7 +90,7 @@ const Legal = () => {
                 Site réservé aux adultes (+18 ans)
               </h2>
               <p className="text-muted-foreground">
-                L'accès à Gay Connect est strictement réservé aux personnes majeures (18 ans et plus) 
+                L'accès à Gay Social est strictement réservé aux personnes majeures (18 ans et plus) 
                 et exclusivement aux hommes. Une vérification d'identité est requise lors de l'inscription.
               </p>
             </div>
@@ -107,7 +107,7 @@ const Legal = () => {
             Cadre juridique
           </h2>
           <p className="text-muted-foreground mt-1">
-            Consultez l'ensemble des documents légaux régissant l'utilisation de GayConnect.
+            Consultez l'ensemble des documents légaux régissant l'utilisation de GaySocial.
           </p>
         </div>
 
@@ -173,7 +173,7 @@ const Legal = () => {
                 <h4 className="font-semibold text-foreground mb-2">1. Objet</h4>
                 <p>
                   Les présentes Conditions Générales d'Utilisation régissent l'accès et l'utilisation 
-                  de la plateforme Gay Connect, un service de mise en relation pour adultes majeurs 
+                  de la plateforme Gay Social, un service de mise en relation pour adultes majeurs 
                   de sexe masculin.
                 </p>
               </div>
@@ -427,9 +427,9 @@ const Legal = () => {
               </div>
 
               <div>
-                <h4 className="font-semibold text-foreground mb-2">2. Cookies utilisés par Gay Connect</h4>
+                <h4 className="font-semibold text-foreground mb-2">2. Cookies utilisés par Gay Social</h4>
                 <p className="mb-3">
-                  Gay Connect utilise <strong className="text-foreground">uniquement des cookies techniques 
+                  Gay Social utilise <strong className="text-foreground">uniquement des cookies techniques 
                   et fonctionnels</strong>. Nous n'utilisons <strong className="text-foreground">aucun cookie publicitaire, 
                   aucun traceur tiers, ni aucun outil de profilage marketing</strong>.
                 </p>
@@ -494,7 +494,7 @@ const Legal = () => {
               <div>
                 <h4 className="font-semibold text-foreground mb-2">4. Cookies tiers</h4>
                 <p>
-                  <strong className="text-foreground">Gay Connect n'utilise aucun cookie tiers.</strong> Nous 
+                  <strong className="text-foreground">Gay Social n'utilise aucun cookie tiers.</strong> Nous 
                   n'intégrons aucun outil de tracking externe (pas de Google Analytics, Facebook Pixel, 
                   ni aucun réseau publicitaire). Votre activité sur notre site n'est jamais partagée avec 
                   des annonceurs ou des réseaux sociaux.
@@ -540,7 +540,7 @@ const Legal = () => {
             <AccordionContent className="text-muted-foreground space-y-4 pt-4">
               <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
                 <p className="font-semibold text-amber-700 dark:text-amber-400">
-                  🔒 Transparence totale — Gay Connect applique une politique stricte de conservation 
+                  🔒 Transparence totale — Gay Social applique une politique stricte de conservation 
                   limitée des données, conformément au principe de minimisation du RGPD (art. 5.1.e).
                 </p>
               </div>
@@ -702,7 +702,7 @@ const Legal = () => {
               <div>
                 <h4 className="font-semibold text-foreground mb-2">1. Principe</h4>
                 <p>
-                  La vérification d'identité est obligatoire pour utiliser GayConnect. Afin de garantir 
+                  La vérification d'identité est obligatoire pour utiliser GaySocial. Afin de garantir 
                   la sécurité de notre communauté et le respect de la législation sur les contenus adultes, 
                   tout utilisateur dispose d'un délai de <strong className="text-foreground">30 jours calendaires</strong> à 
                   compter de son inscription pour compléter sa vérification d'identité.
@@ -831,7 +831,7 @@ const Legal = () => {
               <div>
                 <h4 className="font-semibold text-foreground mb-2">Monétisation du site</h4>
                 <p>
-                  Gay Connect fonctionne avec un système de crédits. Les crédits permettent 
+                  Gay Social fonctionne avec un système de crédits. Les crédits permettent 
                   d'utiliser les différentes fonctionnalités de la plateforme et servent à 
                   financer le développement et la maintenance du service.
                 </p>
@@ -939,7 +939,7 @@ const Legal = () => {
               <div className="bg-destructive/10 rounded-xl p-4 border border-destructive/20">
                 <h4 className="font-semibold text-destructive mb-2">🛡️ Protection contre les personnes mal intentionnées</h4>
                 <p className="mb-3">
-                  Gay Connect met en place des mesures strictes pour protéger ses membres :
+                  Gay Social met en place des mesures strictes pour protéger ses membres :
                 </p>
                 <ul className="list-disc pl-5 space-y-2">
                   <li>
@@ -1003,7 +1003,7 @@ const Legal = () => {
               <div>
                 <h4 className="font-semibold text-foreground mb-2">Notre engagement</h4>
                 <p>
-                  Gay Connect s'engage à fournir un environnement sûr et respectueux pour 
+                  Gay Social s'engage à fournir un environnement sûr et respectueux pour 
                   tous ses membres. Nous mettons en œuvre des technologies et des processus 
                   de modération pour garantir votre sécurité.
                 </p>
@@ -1037,7 +1037,7 @@ const Legal = () => {
                 </h4>
                 <p className="text-sm mb-3">
                   <strong className="text-foreground">Transparence :</strong> Aucune technologie ne permet 
-                  d'empêcher physiquement une capture d'écran sur un appareil. Cependant, Gay Connect a mis 
+                  d'empêcher physiquement une capture d'écran sur un appareil. Cependant, Gay Social a mis 
                   en place un <strong>système de détection et de sanctions automatiques</strong> pour dissuader 
                   et punir cette pratique.
                 </p>
@@ -1134,7 +1134,7 @@ const Legal = () => {
               <div>
                 <h4 className="font-semibold text-foreground mb-2">5. Propriété intellectuelle</h4>
                 <p>
-                  L'ensemble du contenu du site Gay Connect (textes, images, logos, code source) 
+                  L'ensemble du contenu du site Gay Social (textes, images, logos, code source) 
                   est la propriété exclusive de BAYART Emmrick. Toute reproduction, même partielle, 
                   est interdite sans autorisation préalable.
                 </p>

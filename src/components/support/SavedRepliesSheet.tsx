@@ -17,7 +17,7 @@ const DEFAULT_QUICK_REPLIES = [
   { label: '📋 Infos nécessaires', content: 'Pour traiter votre demande, j\'aurais besoin des informations suivantes :\n- Votre nom d\'utilisateur\n- La date du problème\n- Une description détaillée' },
   { label: '🚫 Signalement traité', content: 'Le signalement a bien été pris en compte et des mesures appropriées ont été prises. Merci de contribuer à la sécurité de la communauté.' },
   { label: '🔄 Redémarrage', content: 'Essayez de vider le cache de votre navigateur et de vous reconnecter. Si le problème persiste, revenez vers nous.' },
-  { label: '👋 Clôture', content: 'Merci pour votre patience. Je vais maintenant clôturer ce ticket. Bonne continuation sur GayConnect ! 💜' },
+  { label: '👋 Clôture', content: 'Merci pour votre patience. Je vais maintenant clôturer ce ticket. Bonne continuation sur GaySocial ! 💜' },
   { label: '⚠️ Règles', content: 'Je vous rappelle que le non-respect des règles de la communauté peut entraîner une suspension de votre compte. Merci de votre compréhension.' },
 ];
 

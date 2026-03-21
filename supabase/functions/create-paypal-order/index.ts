@@ -74,12 +74,12 @@ Deno.serve(async (req) => {
             currency_code: 'EUR',
             value: price.toFixed(2),
           },
-          description: `${credits} crédits GayConnect`,
+          description: `${credits} crédits GaySocial`,
         }],
         payment_source: {
           paypal: {
             experience_context: {
-              brand_name: 'GayConnect',
+              brand_name: 'GaySocial',
               landing_page: 'NO_PREFERENCE',
               user_action: 'PAY_NOW',
               payment_method_preference: 'UNRESTRICTED',

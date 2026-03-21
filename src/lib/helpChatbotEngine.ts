@@ -64,22 +64,22 @@ export const STATIC_KNOWLEDGE: StaticKnowledge[] = [
   {
     id: 'static-what-is-gc',
     category: 'Général',
-    question: "Qu'est-ce que Gay Connect ?",
-    answer: "**Gay Connect** est un site de rencontre gay **100% français**, organisé par **101 départements**. L'inscription est **gratuite**, les profils sont **vérifiés par pièce d'identité**, et il n'y a **aucune publicité**. Le site est réservé aux **+18 ans**.",
+    question: "Qu'est-ce que Gay Social ?",
+    answer: "**Gay Social** est un site de rencontre gay **100% français**, organisé par **101 départements**. L'inscription est **gratuite**, les profils sont **vérifiés par pièce d'identité**, et il n'y a **aucune publicité**. Le site est réservé aux **+18 ans**.",
     keywords: ['gayconnect', 'gay connect', 'site', 'quoi', 'cest quoi', 'presentation', 'a propos'],
   },
   {
     id: 'static-features',
     category: 'Fonctionnalités',
     question: 'Quelles sont les fonctionnalités disponibles ?',
-    answer: "Gay Connect propose :\n\n• **Chat de groupe** par département (101 salons)\n• **Messages privés** entre membres\n• **Swipe / Match** pour trouver des profils compatibles\n• **Albums photos** privés avec partage sélectif\n• **Stories** éphémères\n• **Médias éphémères** (photos/vidéos qui disparaissent après consultation)\n• **Groupes thématiques** personnalisés\n• **Protection anti-capture d'écran**\n• **ChatBot personnel** configurable sur votre profil\n• **Vérification d'identité** pour plus de sécurité",
+    answer: "Gay Social propose :\n\n• **Chat de groupe** par département (101 salons)\n• **Messages privés** entre membres\n• **Swipe / Match** pour trouver des profils compatibles\n• **Albums photos** privés avec partage sélectif\n• **Stories** éphémères\n• **Médias éphémères** (photos/vidéos qui disparaissent après consultation)\n• **Groupes thématiques** personnalisés\n• **Protection anti-capture d'écran**\n• **ChatBot personnel** configurable sur votre profil\n• **Vérification d'identité** pour plus de sécurité",
     keywords: ['fonctionnalites', 'features', 'options', 'quoi faire', 'possible', 'disponible'],
   },
   {
     id: 'static-credits-system',
     category: 'Crédits & Paiements',
     question: 'Comment fonctionne le système de crédits ?',
-    answer: "Le système de crédits Gay Connect comprend **4 types** :\n\n1. **Crédits quotidiens** : 5 crédits rechargés automatiquement chaque jour (max 7 jours/mois)\n2. **Crédits passifs** : +0.1 crédit toutes les 6h, jusqu'à 10 max\n3. **Crédits bonus** : obtenus via parrainage, vérification d'identité, codes promo\n4. **Crédits achetés** : via PayPal ou virement\n\nLes crédits sont utilisés pour : envoyer des messages privés, booster votre profil, utiliser le swipe, activer votre ChatBot, etc.\n\n💡 **Astuce** : Vous pouvez **verrouiller** certains types de crédits pour les protéger !",
+    answer: "Le système de crédits Gay Social comprend **4 types** :\n\n1. **Crédits quotidiens** : 5 crédits rechargés automatiquement chaque jour (max 7 jours/mois)\n2. **Crédits passifs** : +0.1 crédit toutes les 6h, jusqu'à 10 max\n3. **Crédits bonus** : obtenus via parrainage, vérification d'identité, codes promo\n4. **Crédits achetés** : via PayPal ou virement\n\nLes crédits sont utilisés pour : envoyer des messages privés, booster votre profil, utiliser le swipe, activer votre ChatBot, etc.\n\n💡 **Astuce** : Vous pouvez **verrouiller** certains types de crédits pour les protéger !",
     keywords: ['credit', 'credits', 'systeme', 'fonctionnement', 'types', 'quotidien', 'passif', 'bonus', 'achete'],
   },
   {
@@ -107,14 +107,14 @@ export const STATIC_KNOWLEDGE: StaticKnowledge[] = [
     id: 'static-screenshot-protection',
     category: 'Sécurité',
     question: "Comment fonctionne la protection anti-capture ?",
-    answer: "Gay Connect intègre une **protection anti-capture d'écran** :\n\n• Les médias éphémères sont **protégés** contre les captures\n• Si une capture est détectée, l'expéditeur est **alerté**\n• Les récidivistes peuvent recevoir des **sanctions** (avertissement, suspension)\n• Un filigrane invisible est ajouté sur certains contenus\n\n⚠️ **Attention** : les captures d'écran de contenu protégé sont interdites et peuvent entraîner la **suspension** de votre compte.",
+    answer: "Gay Social intègre une **protection anti-capture d'écran** :\n\n• Les médias éphémères sont **protégés** contre les captures\n• Si une capture est détectée, l'expéditeur est **alerté**\n• Les récidivistes peuvent recevoir des **sanctions** (avertissement, suspension)\n• Un filigrane invisible est ajouté sur certains contenus\n\n⚠️ **Attention** : les captures d'écran de contenu protégé sont interdites et peuvent entraîner la **suspension** de votre compte.",
     keywords: ['capture', 'screenshot', 'protection', 'anti', 'ecran', 'filigrane', 'watermark', 'detecte'],
   },
   {
     id: 'static-groups',
     category: 'Messagerie',
     question: 'Comment fonctionnent les groupes de discussion ?',
-    answer: "Gay Connect propose **deux types de groupes** :\n\n**1. Salons départementaux (101)**\n• Un salon par département français\n• Rejoignez les salons de votre région\n• Discutez avec les membres proches de vous\n\n**2. Groupes thématiques**\n• Créez ou rejoignez des groupes sur des thèmes spécifiques\n• Chaque groupe a un administrateur\n• Partagez des événements dans vos groupes\n\n💡 Vous pouvez **couper les notifications** d'un groupe sans le quitter.",
+    answer: "Gay Social propose **deux types de groupes** :\n\n**1. Salons départementaux (101)**\n• Un salon par département français\n• Rejoignez les salons de votre région\n• Discutez avec les membres proches de vous\n\n**2. Groupes thématiques**\n• Créez ou rejoignez des groupes sur des thèmes spécifiques\n• Chaque groupe a un administrateur\n• Partagez des événements dans vos groupes\n\n💡 Vous pouvez **couper les notifications** d'un groupe sans le quitter.",
     keywords: ['groupe', 'groupes', 'salon', 'departement', 'region', 'thematique', 'rejoindre', 'creer groupe'],
   },
   {
@@ -135,7 +135,7 @@ export const STATIC_KNOWLEDGE: StaticKnowledge[] = [
     id: 'static-privacy',
     category: 'Sécurité',
     question: 'Comment protéger ma vie privée ?',
-    answer: "Gay Connect offre de nombreuses options de **confidentialité** :\n\n• **Verrouillage PIN** : protégez l'accès à l'app avec un code\n• **Blocage** : bloquez tout utilisateur indésirable\n• **Signalement** : signalez les comportements abusifs\n• **Médias éphémères** : envoyez du contenu auto-destructible\n• **Protection anti-capture** : détection des screenshots\n• **Suppression de compte** : avec effacement complet des données\n\n⚠️ **Important** : Ne partagez jamais vos informations personnelles (téléphone, réseaux sociaux) avec d'autres membres.",
+    answer: "Gay Social offre de nombreuses options de **confidentialité** :\n\n• **Verrouillage PIN** : protégez l'accès à l'app avec un code\n• **Blocage** : bloquez tout utilisateur indésirable\n• **Signalement** : signalez les comportements abusifs\n• **Médias éphémères** : envoyez du contenu auto-destructible\n• **Protection anti-capture** : détection des screenshots\n• **Suppression de compte** : avec effacement complet des données\n\n⚠️ **Important** : Ne partagez jamais vos informations personnelles (téléphone, réseaux sociaux) avec d'autres membres.",
     keywords: ['confidentialite', 'prive', 'donnees', 'rgpd', 'vie privee', 'protection', 'pin', 'verrouillage'],
   },
   {
@@ -149,7 +149,7 @@ export const STATIC_KNOWLEDGE: StaticKnowledge[] = [
     id: 'static-rules',
     category: 'Sécurité',
     question: 'Quelles sont les règles de la communauté ?',
-    answer: "Les **règles principales** de Gay Connect :\n\n✅ **Respectez** tous les membres\n✅ **Vérifiez** votre identité\n✅ Utilisez un **langage correct**\n\n❌ Pas de **spam** ni publicité\n❌ Pas de contenu **illégal**\n❌ Pas de **faux profils**\n❌ Pas de **harcèlement**\n❌ Pas de partage d'**informations personnelles** d'autrui\n\n⚠️ Le non-respect des règles entraîne un **avertissement**, une **suspension temporaire** ou un **bannissement définitif**.\n\n📖 Consultez les règles complètes dans la section **Règles** de l'application.",
+    answer: "Les **règles principales** de Gay Social :\n\n✅ **Respectez** tous les membres\n✅ **Vérifiez** votre identité\n✅ Utilisez un **langage correct**\n\n❌ Pas de **spam** ni publicité\n❌ Pas de contenu **illégal**\n❌ Pas de **faux profils**\n❌ Pas de **harcèlement**\n❌ Pas de partage d'**informations personnelles** d'autrui\n\n⚠️ Le non-respect des règles entraîne un **avertissement**, une **suspension temporaire** ou un **bannissement définitif**.\n\n📖 Consultez les règles complètes dans la section **Règles** de l'application.",
     keywords: ['regles', 'reglement', 'interdit', 'autorise', 'sanction', 'ban', 'suspension', 'avertissement'],
   },
   {

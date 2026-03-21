@@ -296,7 +296,7 @@ const Advertise = () => {
   if (submitted) {
     return (
       <>
-        <SEOHead title="Demande envoyée — GayConnect Publicité" description="Votre demande de publicité a été soumise avec succès." />
+        <SEOHead title="Demande envoyée — GaySocial Publicité" description="Votre demande de publicité a été soumise avec succès." />
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
           <Card className="max-w-md w-full text-center">
             <CardContent className="pt-8 pb-8 space-y-4">
@@ -326,7 +326,7 @@ const Advertise = () => {
   if (activeEmail) {
     return (
       <>
-        <SEOHead title="Espace Annonceur — GayConnect" description="Gérez vos campagnes publicitaires sur GayConnect." />
+        <SEOHead title="Espace Annonceur — GaySocial" description="Gérez vos campagnes publicitaires sur GaySocial." />
         <div className="min-h-screen bg-background pb-20">
           {/* Header */}
           <div className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-40">
@@ -367,7 +367,7 @@ const Advertise = () => {
   return (
     <>
       <SEOHead
-        title="Annoncez sur GayConnect — Publicité partenaire"
+        title="Annoncez sur GaySocial — Publicité partenaire"
         description="Faites découvrir votre marque à une communauté LGBTQ+ engagée. Formats publicitaires non intrusifs et modérés."
       />
       <div className="min-h-screen bg-background pb-20">

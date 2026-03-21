@@ -78,13 +78,13 @@ Deno.serve(async (req) => {
         intent: 'CAPTURE',
         purchase_units: [{
           amount: { currency_code: 'EUR', value: amount_euros.toFixed(2) },
-          description: `Recharge portefeuille publicitaire GayConnect (${amount_euros}€)`,
+          description: `Recharge portefeuille publicitaire GaySocial (${amount_euros}€)`,
           custom_id: deposit.id,
         }],
         payment_source: {
           paypal: {
             experience_context: {
-              brand_name: 'GayConnect Ads',
+              brand_name: 'GaySocial Ads',
               landing_page: 'NO_PREFERENCE',
               user_action: 'PAY_NOW',
               payment_method_preference: 'UNRESTRICTED',

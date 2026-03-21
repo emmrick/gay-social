@@ -16,8 +16,8 @@ const DEFAULT_OG_IMAGE = 'https://lovable.dev/opengraph-image-p98pqg.png';
 const DEFAULT_KEYWORDS = 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, drague gay, annonce gay, homme gay, gay france, rencontre homosexuel, plan sexe gay, hookup gay, sexfriend gay, homme cherche homme, gay paris, gay lyon, gay marseille, gay toulouse, gay bordeaux, gay nantes, gay lille, gay strasbourg, gay montpellier, gay nice, rencontre gay gratuit, tchat gay gratuit, plan cul gay ce soir, plan cul gay gratuit, site homo, site homosexuel, rencontre gay proximité, rencontre gay près de moi, appli gay, application rencontre gay, grindr alternative, site comme grindr, gay connect, gayconnect, plan discret gay, rencontre locale gay, mec cherche mec, bi curieux, bisexuel, lgbt france, communauté lgbt, gay friendly, gay dom tom, gay guadeloupe, gay martinique, gay réunion';
 
 const SEOHead = ({
-  title = 'Gay Connect - Site de Rencontre Gay, Sexe Gay & Tchat Gay France',
-  description = 'Gay Connect : le site gay n°1 pour les rencontres et le sexe entre hommes en France. Tchat gay gratuit, plan cul gay par département, échanges de photos et vidéos. Communauté gay vérifiée. +18 ans.',
+  title = 'Gay Social - Site de Rencontre Gay, Sexe Gay & Tchat Gay France',
+  description = 'Gay Social : le site gay n°1 pour les rencontres et le sexe entre hommes en France. Tchat gay gratuit, plan cul gay par département, échanges de photos et vidéos. Communauté gay vérifiée. +18 ans.',
   canonical,
   ogImage = DEFAULT_OG_IMAGE,
   ogType = 'website',
@@ -56,7 +56,7 @@ const SEOHead = ({
     setMeta('property', 'og:description', description);
     setMeta('property', 'og:type', ogType);
     setMeta('property', 'og:image', ogImage);
-    setMeta('property', 'og:site_name', 'Gay Connect');
+    setMeta('property', 'og:site_name', 'Gay Social');
     setMeta('property', 'og:locale', 'fr_FR');
     if (canonical) {
       setMeta('property', 'og:url', canonical);
@@ -121,8 +121,8 @@ export default SEOHead;
 export const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  name: 'Gay Connect',
-  alternateName: ['GayConnect', 'Gay Connect France'],
+  name: 'Gay Social',
+  alternateName: ['GaySocial', 'Gay Social France'],
   url: BASE_URL,
   description: 'Site de rencontre gay et sexe entre hommes en France. Tchat gay gratuit, plan cul gay local, échanges de photos et vidéos entre mecs. Communauté gay vérifiée. +18 ans.',
   inLanguage: 'fr-FR',
@@ -142,7 +142,7 @@ export const websiteJsonLd = {
 export const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'Gay Connect',
+  name: 'Gay Social',
   url: BASE_URL,
   logo: `${BASE_URL}/pwa-512x512.png`,
   sameAs: [],

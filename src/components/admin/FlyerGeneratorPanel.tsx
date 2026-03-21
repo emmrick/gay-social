@@ -26,7 +26,7 @@ interface FlyerConfig {
 }
 
 const defaultConfig: FlyerConfig = {
-  title: 'GayConnect',
+  title: 'GaySocial',
   slogan: 'Connecte-toi. Rencontre. Vis.',
   description: 'La communauté gay francophone #1. Rejoins des milliers de membres près de chez toi !',
   siteUrl: 'https://gay-connect.fr',

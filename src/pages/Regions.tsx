@@ -10,7 +10,7 @@ const Regions = () => {
   const { data: rooms, isLoading } = useChatRooms();
   const { data: counts } = useRegionMemberCounts();
 
-  const pageTitle = 'Rencontre Gay par Département - Plan Cul Gay, Sexe Gay & Tchat Local | Gay Connect';
+  const pageTitle = 'Rencontre Gay par Département - Plan Cul Gay, Sexe Gay & Tchat Local | Gay Social';
   const pageDescription = 'Trouve un plan cul gay ou une rencontre gay près de chez toi. 101 départements français, tchat gay gratuit, sexe gay local, profils vérifiés. Le site gay n°1 en France. +18 ans.';
   const canonical = 'https://gay-connect.fr/regions';
 
@@ -20,7 +20,7 @@ const Regions = () => {
     name: pageTitle,
     description: pageDescription,
     url: canonical,
-    isPartOf: { '@type': 'WebSite', name: 'Gay Connect', url: 'https://gay-connect.fr' },
+    isPartOf: { '@type': 'WebSite', name: 'Gay Social', url: 'https://gay-connect.fr' },
     numberOfItems: rooms?.length || 101,
   };
 
@@ -42,7 +42,7 @@ const Regions = () => {
       {/* Nav */}
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
         <div className="container max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="font-display font-bold text-xl gradient-text">Gay Connect</Link>
+          <Link to="/" className="font-display font-bold text-xl gradient-text">Gay Social</Link>
           <Button size="sm" asChild>
             <Link to="/auth">S'inscrire</Link>
           </Button>
@@ -127,7 +127,7 @@ const Regions = () => {
       <section className="py-12 bg-secondary/30 border-t border-border">
         <div className="container max-w-3xl mx-auto px-4 text-center">
           <h2 className="font-display text-2xl font-bold text-foreground mb-3">
-            Rejoins Gay Connect gratuitement
+            Rejoins Gay Social gratuitement
           </h2>
           <p className="text-muted-foreground mb-6">
             Inscription en 30 secondes. Accède au chat de ta région immédiatement.
@@ -144,7 +144,7 @@ const Regions = () => {
       {/* Footer */}
       <footer className="border-t border-border py-6 bg-card/50">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-muted-foreground">
-          <span>© 2025 Gay Connect</span>
+          <span>© 2025 Gay Social</span>
           <Link to="/legal" className="hover:text-primary transition-colors">Mentions légales</Link>
           <Link to="/about" className="hover:text-primary transition-colors">À propos</Link>
           <span className="flex items-center gap-1">

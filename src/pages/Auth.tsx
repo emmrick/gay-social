@@ -157,7 +157,7 @@ const Auth = () => {
           {/* Logo */}
           <div className="text-center mb-8">
             <h1 className="font-display text-3xl font-bold gradient-text mb-2">
-              GayConnect
+              GaySocial
             </h1>
             <p className="text-muted-foreground text-sm">
               {isLogin ? 'Bon retour parmi nous !' : 'Rejoins la communauté'}

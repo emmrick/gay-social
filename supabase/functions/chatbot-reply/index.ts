@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
     if (profileData?.relationship_status) profileDetails.push(`Statut : ${profileData.relationship_status}`)
     if (profileData?.hiv_status) profileDetails.push(`Statut VIH : ${profileData.hiv_status}`)
 
-    const systemPrompt = `Tu es l'assistant personnel de ${username} sur une application de rencontres gay appelée GayConnect.
+    const systemPrompt = `Tu es l'assistant personnel de ${username} sur une application de rencontres gay appelée GaySocial.
 
 ## TON RÔLE
 Tu représentes ${username} et tu réponds aux questions des visiteurs de son profil. Tu dois être chaleureux, naturel et utile. Réponds TOUJOURS en français.

@@ -66,7 +66,7 @@ const GeoBlockGuard = ({ children }: { children: React.ReactNode }) => {
             Service non disponible
           </h1>
           <p className="text-muted-foreground leading-relaxed">
-            GayConnect est actuellement disponible uniquement en <strong className="text-foreground">France métropolitaine</strong> et dans les <strong className="text-foreground">territoires d'outre-mer</strong>.
+            GaySocial est actuellement disponible uniquement en <strong className="text-foreground">France métropolitaine</strong> et dans les <strong className="text-foreground">territoires d'outre-mer</strong>.
           </p>
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <MapPin className="w-4 h-4" />

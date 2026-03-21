@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Image, Play, Download, ExternalLink, Loader2 } from 'lucide-react';
-import GayConnectWatermark from '@/components/security/GayConnectWatermark';
+import GaySocialWatermark from '@/components/security/GaySocialWatermark';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -120,7 +120,7 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
               className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
               onError={() => setImageError(true)}
             />
-            <GayConnectWatermark />
+            <GaySocialWatermark />
           </div>
         ) : (
           <div className="relative">
@@ -129,7 +129,7 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
               className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
               preload="metadata"
             />
-            <GayConnectWatermark />
+            <GaySocialWatermark />
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl">
               <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
                 <Play className="w-6 h-6 text-foreground fill-current ml-1" />
@@ -155,7 +155,7 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
                   alt="Photo partagée"
                   className="max-w-full max-h-[85vh] object-contain"
                 />
-                <GayConnectWatermark />
+                <GaySocialWatermark />
               </div>
             ) : (
               <video

@@ -46,7 +46,7 @@ const UnifiedPageHeader = ({
       <div className="px-5 pb-4 flex items-center justify-between w-full">
         <div className="min-w-0 flex items-center gap-2">
           <h1 className="font-display text-xl font-extrabold rainbow-text leading-tight">
-            Gay Connect
+            Gay Social
           </h1>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">

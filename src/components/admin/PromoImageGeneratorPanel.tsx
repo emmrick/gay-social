@@ -60,7 +60,7 @@ const PromoImageGeneratorPanel = () => {
       if (!imageUrl) throw new Error('Aucune image générée');
 
       const formatLabel = FORMATS.find(f => f.id === selectedFormat)?.label || 'Story';
-      const name = `GayConnect-Promo-${formatLabel}-${Date.now()}.png`;
+      const name = `GaySocial-Promo-${formatLabel}-${Date.now()}.png`;
       
       setGeneratedImages(prev => [{ url: imageUrl, name }, ...prev]);
       toast.success('Image promo générée !');
@@ -161,7 +161,7 @@ const PromoImageGeneratorPanel = () => {
             </div>
           ) : (
             <Textarea
-              placeholder={"Décris le visuel promo que tu veux créer...\nEx: Une image festive avec le drapeau arc-en-ciel et le texte 'Rejoins GayConnect !'"}
+              placeholder={"Décris le visuel promo que tu veux créer...\nEx: Une image festive avec le drapeau arc-en-ciel et le texte 'Rejoins GaySocial !'"}
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               className="resize-none h-28"

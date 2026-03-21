@@ -202,8 +202,8 @@ const GuidePage = () => {
   return (
     <>
       <SEOHead
-        title="Guide d'utilisation - Gay Connect"
-        description="Apprenez à utiliser toutes les fonctionnalités de Gay Connect : profil, messagerie, swipe, crédits, sécurité et bien plus."
+        title="Guide d'utilisation - Gay Social"
+        description="Apprenez à utiliser toutes les fonctionnalités de Gay Social : profil, messagerie, swipe, crédits, sécurité et bien plus."
         canonical="https://gay-connect.fr/guide"
       />
       <div className="min-h-screen bg-background">
@@ -215,7 +215,7 @@ const GuidePage = () => {
             </Button>
             <div className="flex-1">
               <h1 className="font-display text-lg font-bold">Guide d'utilisation</h1>
-              <p className="text-[11px] text-muted-foreground">Tout savoir sur Gay Connect</p>
+              <p className="text-[11px] text-muted-foreground">Tout savoir sur Gay Social</p>
             </div>
             <span className="text-2xl">📖</span>
           </div>
@@ -235,7 +235,7 @@ const GuidePage = () => {
                   <BookOpen className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-base">Bienvenue sur Gay Connect ! 🎉</h2>
+                  <h2 className="font-bold text-base">Bienvenue sur Gay Social ! 🎉</h2>
                   <p className="text-xs text-muted-foreground">Ce guide vous accompagne pas à pas</p>
                 </div>
               </div>

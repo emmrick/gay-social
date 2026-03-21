@@ -60,7 +60,7 @@ self.addEventListener('push', function(event: PushEvent) {
   console.log('[SW] Push event data:', event.data ? 'present' : 'empty');
   
   let data = {
-    title: 'GayConnect',
+    title: 'GaySocial',
     body: 'Nouvelle notification',
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',

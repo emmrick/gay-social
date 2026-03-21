@@ -37,7 +37,7 @@ serve(async (req) => {
     const label = taskTypeLabels[task_type] || task_type;
     const reward = reward_cents ? `${(reward_cents / 100).toFixed(2)}€` : '';
 
-    const smsBody = `🔔 Gay Connect — Nouvelle mission\n\n` +
+    const smsBody = `🔔 Gay Social — Nouvelle mission\n\n` +
       `Type : ${label}\n` +
       `${description ? `Détail : ${description}\n` : ''}` +
       `${reward ? `Rémunération : ${reward}\n` : ''}` +

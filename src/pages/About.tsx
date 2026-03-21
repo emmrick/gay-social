@@ -72,15 +72,15 @@ const About = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="À propos de Gay Connect - Site de Rencontre Gay & Sexe Gay Sécurisé"
-        description="Gay Connect : le site de rencontre gay et de sexe entre hommes n°1 en France. Espace safe, profils vérifiés, médias éphémères et modération active. Plan cul gay sécurisé."
+        title="À propos de Gay Social - Site de Rencontre Gay & Sexe Gay Sécurisé"
+        description="Gay Social : le site de rencontre gay et de sexe entre hommes n°1 en France. Espace safe, profils vérifiés, médias éphémères et modération active. Plan cul gay sécurisé."
         canonical="https://gay-connect.fr/about"
         keywords="site gay, rencontre gay, sexe gay, communauté gay france, plan cul gay sécurisé, tchat gay, espace safe gay, gay connect avis"
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'AboutPage',
-          name: 'À propos de Gay Connect - Rencontre Gay & Sexe Gay',
-          description: 'Gay Connect : site de rencontre gay et de sexe entre hommes sécurisé en France. Profils vérifiés, médias éphémères, anti-capture d\'écran.',
+          name: 'À propos de Gay Social - Rencontre Gay & Sexe Gay',
+          description: 'Gay Social : site de rencontre gay et de sexe entre hommes sécurisé en France. Profils vérifiés, médias éphémères, anti-capture d\'écran.',
           url: 'https://gay-connect.fr/about',
         }}
       />
@@ -110,7 +110,7 @@ const About = () => {
               Un espace <span className="gradient-text">safe</span> pour la communauté
             </h2>
             <p className="text-xl text-muted-foreground mb-8">
-              Gay Connect est né d'un besoin simple : créer un lieu de rencontre respectueux, 
+              Gay Social est né d'un besoin simple : créer un lieu de rencontre respectueux, 
               sécurisé et bienveillant pour la communauté gay en France.
             </p>
             <Button variant="hero" size="xl" onClick={() => navigate('/auth')}>
@@ -233,7 +233,7 @@ const About = () => {
       {/* Footer */}
       <footer className="py-8 border-t border-border">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p className="mb-2">© 2025 Gay Connect. Tous droits réservés.</p>
+          <p className="mb-2">© 2025 Gay Social. Tous droits réservés.</p>
           <Button 
             variant="link" 
             className="text-muted-foreground hover:text-primary"

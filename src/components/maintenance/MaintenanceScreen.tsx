@@ -175,7 +175,7 @@ const MaintenanceScreen = ({ message, estimatedEndAt, onStaffLogin }: Maintenanc
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Votre site <span className="font-semibold text-primary">Gay Connect</span> est actuellement en maintenance pour travaux et amélioration.
+            Votre site <span className="font-semibold text-primary">Gay Social</span> est actuellement en maintenance pour travaux et amélioration.
           </p>
           <p className="text-muted-foreground">
             Merci de revenir dans quelques heures pour profiter de vos services.

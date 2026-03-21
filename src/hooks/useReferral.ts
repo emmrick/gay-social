@@ -175,7 +175,7 @@ export const useReferral = () => {
     const reward = rewardAmount ?? 30;
     const link = `${window.location.origin}/auth?ref=${referralData.code}`;
     const shareData = {
-      title: 'Rejoins GayConnect !',
+      title: 'Rejoins GaySocial !',
       text: `Inscris-toi avec mon lien et gagne ${reward} crédits gratuits après vérification de ton identité !`,
       url: link
     };

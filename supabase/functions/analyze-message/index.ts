@@ -35,7 +35,7 @@ serve(async (req) => {
       .map((m: any) => `[${m.sender}]: ${m.content}`)
       .join("\n");
 
-    const systemPrompt = `Tu es un modérateur expert pour une application de rencontres gay francophone (Gay Connect).
+    const systemPrompt = `Tu es un modérateur expert pour une application de rencontres gay francophone (Gay Social).
 Tu dois analyser un message qui contient le mot/expression détecté(e) : "${detected_word}".
 
 Ton rôle est de déterminer si le message est RÉELLEMENT hostile, offensant ou enfreint les règles, OU s'il s'agit de :

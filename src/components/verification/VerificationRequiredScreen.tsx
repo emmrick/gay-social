@@ -43,7 +43,7 @@ const VerificationRequiredScreen = () => {
             <p className="text-muted-foreground text-sm">
               {isVerificationRejected 
                 ? 'Ta demande de vérification n\'a pas pu être validée. Tu peux soumettre une nouvelle demande.'
-                : 'Avant d\'accéder à GayConnect, tu dois vérifier ton identité.'
+                : 'Avant d\'accéder à GaySocial, tu dois vérifier ton identité.'
               }
             </p>
           </div>

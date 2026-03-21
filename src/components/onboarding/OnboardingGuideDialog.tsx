@@ -28,7 +28,7 @@ interface OnboardingStep {
 const STEPS: OnboardingStep[] = [
   {
     icon: <Zap className="w-8 h-8" />,
-    title: 'Bienvenue sur Gay Connect ! 🎉',
+    title: 'Bienvenue sur Gay Social ! 🎉',
     description: 'Découvrez une communauté bienveillante. Votre profil et votre vérification d\'identité vous donnent accès à toutes les fonctionnalités.',
     color: 'text-primary',
   },

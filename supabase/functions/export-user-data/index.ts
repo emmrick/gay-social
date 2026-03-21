@@ -156,7 +156,7 @@ serve(async (req) => {
         exported_at: new Date().toISOString(),
         user_id: userId,
         email: userEmail,
-        platform: "Gay Connect",
+        platform: "Gay Social",
         rgpd_article: "Article 20 - Droit à la portabilité des données",
         description: "Ce fichier contient l'ensemble de vos données personnelles conformément au RGPD. Les médias sont organisés dans des dossiers séparés.",
       },
@@ -209,7 +209,7 @@ serve(async (req) => {
     const readmeContent = `
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    EXPORT DE VOS DONNÉES                         ║
-║                        Gay Connect                               ║
+║                        Gay Social                               ║
 ╚══════════════════════════════════════════════════════════════════╝
 
 Date d'export: ${new Date().toLocaleString('fr-FR')}
@@ -242,7 +242,7 @@ couramment utilisé et lisible par machine.
 Pour toute question, contactez notre support.
 
 ────────────────────────────────────────────────────────────────────
-                     © ${new Date().getFullYear()} Gay Connect
+                     © ${new Date().getFullYear()} Gay Social
 `;
     await zipWriter.add("LISEZ_MOI.txt", new TextReader(readmeContent));
 

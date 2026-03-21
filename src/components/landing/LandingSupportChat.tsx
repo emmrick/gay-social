@@ -193,7 +193,7 @@ const LandingSupportChat = () => {
   const handleStart = () => {
     setStarted(true);
     setMessages([
-      { type: 'bot', text: "Bonjour ! 👋 Je suis l'assistant **Gay Connect**. Comment puis-je t'aider ?" },
+      { type: 'bot', text: "Bonjour ! 👋 Je suis l'assistant **Gay Social**. Comment puis-je t'aider ?" },
     ]);
     setTimeout(() => {
       const options: ChatOption[] = faqCategories.map(cat => ({
@@ -319,7 +319,7 @@ const LandingSupportChat = () => {
                     </span>
                   </div>
                   <div>
-                    <h3 className="font-display text-sm font-bold text-foreground">Support Gay Connect</h3>
+                    <h3 className="font-display text-sm font-bold text-foreground">Support Gay Social</h3>
                     <p className="text-[11px] text-muted-foreground">En ligne • Réponse instantanée</p>
                   </div>
                 </div>

@@ -36,7 +36,7 @@ const InitialLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
               <span className="text-xl">💬</span>
             </div>
             <h1 className="text-lg font-bold text-foreground tracking-tight">
-              Gay Connect
+              Gay Social
             </h1>
           </div>
         </motion.div>

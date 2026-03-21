@@ -373,7 +373,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     const displayName = userProfile?.username || 'cher utilisateur';
     const greeting: ChatMessage = {
       type: 'bot',
-      text: `Bonjour **${displayName}** ! 👋 Je suis l'assistant **Gay Connect**. Je suis là pour t'aider à trouver des réponses à tes questions.`,
+      text: `Bonjour **${displayName}** ! 👋 Je suis l'assistant **Gay Social**. Je suis là pour t'aider à trouver des réponses à tes questions.`,
     };
     setChatMessages([greeting]);
 
@@ -774,7 +774,7 @@ const Help = ({ embedded = false }: HelpProps) => {
                 <Bot className="w-4.5 h-4.5 text-primary" />
               </div>
               <div className="min-w-0">
-                <span className="font-semibold text-sm truncate block">Assistant Gay Connect</span>
+                <span className="font-semibold text-sm truncate block">Assistant Gay Social</span>
                 <span className="text-[11px] text-green-500 flex items-center gap-1">
                   <MessageSquareText className="w-3 h-3" />
                   {isWaiting ? "Recherche d'un agent..." : 'Chatbot • En ligne'}

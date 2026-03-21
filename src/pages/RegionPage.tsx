@@ -126,7 +126,7 @@ const RegionPage = () => {
   const { data: profiles, isLoading: profilesLoading } = useProfilesByRegion(regionCode);
   
   const regionName = room?.region_name || dept?.name || regionCode;
-  const pageTitle = `Gay ${regionName} (${regionCode}) - Rencontre Gay, Plan Cul Gay & Tchat | Gay Connect`;
+  const pageTitle = `Gay ${regionName} (${regionCode}) - Rencontre Gay, Plan Cul Gay & Tchat | Gay Social`;
   const pageDescription = `Rencontre gay ${regionName} : plan cul gay, sexe gay et tchat gay dans le ${regionCode}. ${dept?.description || ''} Profils vérifiés, échanges de photos et vidéos éphémères. ${total > 0 ? `${total} hommes gay inscrits.` : ''} Rejoins la communauté gay du ${regionCode} gratuitement. +18 ans.`;
   const canonical = `https://gay-connect.fr/region/${slug}`;
   const seoKeywords = `gay ${regionName?.toLowerCase()}, rencontre gay ${regionName?.toLowerCase()}, plan cul gay ${regionName?.toLowerCase()}, sexe gay ${regionName?.toLowerCase()}, tchat gay ${regionName?.toLowerCase()}, homme gay ${regionName?.toLowerCase()}, drague gay ${regionName?.toLowerCase()}, site gay ${regionCode}, mec gay ${regionName?.toLowerCase()}`;
@@ -137,7 +137,7 @@ const RegionPage = () => {
     name: pageTitle,
     description: pageDescription,
     url: canonical,
-    isPartOf: { '@type': 'WebSite', name: 'Gay Connect', url: 'https://gay-connect.fr' },
+    isPartOf: { '@type': 'WebSite', name: 'Gay Social', url: 'https://gay-connect.fr' },
     about: {
       '@type': 'Place',
       name: `${regionCode} - ${regionName}`,
@@ -177,7 +177,7 @@ const RegionPage = () => {
       {/* Nav */}
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
         <div className="container max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="font-display font-bold text-xl gradient-text">Gay Connect</Link>
+          <Link to="/" className="font-display font-bold text-xl gradient-text">Gay Social</Link>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" asChild>
               <Link to="/regions">
@@ -348,7 +348,7 @@ const RegionPage = () => {
           </h2>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
             <p>
-              Tu cherches un <strong>plan cul gay dans le {regionCode} {regionName}</strong> ? Gay Connect est la plateforme 
+              Tu cherches un <strong>plan cul gay dans le {regionCode} {regionName}</strong> ? Gay Social est la plateforme 
               idéale pour rencontrer des <strong>hommes gay</strong> près de chez toi. {dept?.description && `Notre communauté couvre ${dept.description} et toutes les villes alentour.`}
             </p>
             <p>
@@ -358,7 +358,7 @@ const RegionPage = () => {
             </p>
             <p>
               Que tu sois <strong>actif, passif ou versatile</strong>, bear, twink, daddy ou muscle, 
-              tu trouveras sur Gay Connect des profils qui correspondent à tes envies dans le <strong>{regionCode}</strong>. 
+              tu trouveras sur Gay Social des profils qui correspondent à tes envies dans le <strong>{regionCode}</strong>. 
               Inscription gratuite et immédiate !
             </p>
           </div>
@@ -380,7 +380,7 @@ const RegionPage = () => {
       {/* Footer */}
       <footer className="border-t border-border py-6 bg-card/50">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-muted-foreground">
-          <span>© 2025 Gay Connect</span>
+          <span>© 2025 Gay Social</span>
           <Link to="/legal" className="hover:text-primary transition-colors">Mentions légales</Link>
           <Link to="/about" className="hover:text-primary transition-colors">À propos</Link>
           <Link to="/regions" className="hover:text-primary transition-colors">Toutes les régions</Link>

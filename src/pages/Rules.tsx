@@ -66,7 +66,7 @@ const RULES_SECTIONS = [
     border: 'border-violet-500/20',
     title: 'Communication',
     rules: [
-      { title: 'Reste dans la plateforme', desc: 'Communique via Gay Connect. Nous ne pourrons pas t\'aider en cas de problème sur des canaux externes.' },
+      { title: 'Reste dans la plateforme', desc: 'Communique via Gay Social. Nous ne pourrons pas t\'aider en cas de problème sur des canaux externes.' },
       { title: 'Signale les abus', desc: 'Si tu es témoin ou victime d\'un comportement inapproprié, signale-le immédiatement via le bouton de signalement.' },
       { title: 'Pas d\'usurpation d\'identité', desc: 'Ne te fais pas passer pour un autre membre, un modérateur ou un administrateur.' },
     ],
@@ -95,8 +95,8 @@ const Rules = () => {
   return (
     <>
       <SEOHead
-        title="Règles de conduite - Gay Connect"
-        description="Règles de conduite de la communauté Gay Connect. Respect, bienveillance et sécurité pour tous les membres."
+        title="Règles de conduite - Gay Social"
+        description="Règles de conduite de la communauté Gay Social. Respect, bienveillance et sécurité pour tous les membres."
         canonical="https://gay-connect.fr/rules"
       />
       <div className="min-h-screen bg-background">
@@ -107,7 +107,7 @@ const Rules = () => {
             </Button>
             <div>
               <h1 className="font-display text-xl font-bold">Règles de conduite</h1>
-              <p className="text-xs text-muted-foreground">Communauté Gay Connect</p>
+              <p className="text-xs text-muted-foreground">Communauté Gay Social</p>
             </div>
           </div>
         </header>
@@ -119,7 +119,7 @@ const Rules = () => {
               <div>
                 <h2 className="font-display text-lg font-bold mb-1">Notre engagement</h2>
                 <p className="text-muted-foreground text-sm">
-                  Gay Connect s'engage à offrir un espace sûr, respectueux et bienveillant pour tous ses membres.
+                  Gay Social s'engage à offrir un espace sûr, respectueux et bienveillant pour tous ses membres.
                   Le non-respect de ces règles entraîne des sanctions immédiates.
                 </p>
               </div>

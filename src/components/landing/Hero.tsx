@@ -82,12 +82,12 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const seoFaqs = [
-    { question: 'Comment fonctionne Gay Connect ?', answer: 'Gay Connect est un site de rencontre gay gratuit qui permet aux hommes de se rencontrer par département. Créez votre profil, rejoignez le chat de votre région et échangez avec des hommes près de chez vous.' },
-    { question: 'Gay Connect est-il gratuit ?', answer: "Oui, l'inscription et l'accès au chat de groupe sont gratuits. Des fonctionnalités premium comme le boost de profil sont disponibles avec des crédits." },
+    { question: 'Comment fonctionne Gay Social ?', answer: 'Gay Social est un site de rencontre gay gratuit qui permet aux hommes de se rencontrer par département. Créez votre profil, rejoignez le chat de votre région et échangez avec des hommes près de chez vous.' },
+    { question: 'Gay Social est-il gratuit ?', answer: "Oui, l'inscription et l'accès au chat de groupe sont gratuits. Des fonctionnalités premium comme le boost de profil sont disponibles avec des crédits." },
     { question: 'Le site est-il sécurisé ?', answer: 'Oui, nous vérifions l\'identité des membres, détectons les captures d\'écran et modérons activement la plateforme. Vos données restent confidentielles.' },
     { question: 'Comment trouver un plan cul gay près de chez moi ?', answer: 'Rejoignez le chat de votre département pour rencontrer des hommes gay de votre région. Utilisez la fonction de proximité pour voir les membres les plus proches.' },
-    { question: 'Peut-on envoyer des photos et vidéos ?', answer: 'Oui, Gay Connect permet l\'envoi de photos et vidéos éphémères qui disparaissent après consultation, ainsi que des médias classiques dans les conversations privées.' },
-    { question: 'Quelle est la différence avec Grindr ?', answer: 'Gay Connect est un site français centré sur la communauté locale par département, avec des chats de groupe, la vérification d\'identité, et une protection anti-capture d\'écran unique.' },
+    { question: 'Peut-on envoyer des photos et vidéos ?', answer: 'Oui, Gay Social permet l\'envoi de photos et vidéos éphémères qui disparaissent après consultation, ainsi que des médias classiques dans les conversations privées.' },
+    { question: 'Quelle est la différence avec Grindr ?', answer: 'Gay Social est un site français centré sur la communauté locale par département, avec des chats de groupe, la vérification d\'identité, et une protection anti-capture d\'écran unique.' },
   ];
 
   const combinedJsonLd = { ...websiteJsonLd, ...organizationJsonLd };
@@ -147,8 +147,8 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
   return (
     <section className="relative flex flex-col overflow-hidden">
       <SEOHead
-        title="Gay Connect - Site de Rencontre Gay, Sexe Gay & Tchat Gay France"
-        description="Gay Connect : le site gay n°1 pour les rencontres et le sexe entre hommes en France. Tchat gay gratuit, plan cul gay par département, échanges de photos et vidéos. Communauté vérifiée. +18 ans."
+        title="Gay Social - Site de Rencontre Gay, Sexe Gay & Tchat Gay France"
+        description="Gay Social : le site gay n°1 pour les rencontres et le sexe entre hommes en France. Tchat gay gratuit, plan cul gay par département, échanges de photos et vidéos. Communauté vérifiée. +18 ans."
         canonical="https://gay-connect.fr/"
         keywords="site gay, rencontre gay, sexe gay, plan cul gay, tchat gay, chat gay, plan gay, drague gay, annonce gay, homme cherche homme, hookup gay, sexfriend gay, gay paris, gay lyon, gay marseille, gay toulouse, gay bordeaux, gay nantes, gay lille, rencontre sexe gay, plan cul homme, site plan cul gay, appli gay, application rencontre gay, mec gay, gay actif, gay passif, gay versatile, bear gay, twink, daddy gay, ours gay"
         jsonLd={combinedJsonLd}
@@ -159,7 +159,7 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
         <div className="container mx-auto flex items-center gap-2.5">
           
           <h1 className="font-display text-2xl font-extrabold rainbow-text leading-tight">
-            Gay Connect
+            Gay Social
           </h1>
         </div>
       </div>
@@ -320,7 +320,7 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
               Découvre l'expérience
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Un aperçu de ce qui t'attend sur Gay Connect. Des profils réels, des conversations authentiques.
+              Un aperçu de ce qui t'attend sur Gay Social. Des profils réels, des conversations authentiques.
             </p>
           </FadeInWhenVisible>
 
@@ -508,13 +508,13 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
               <div className="space-y-4">
                 <h3 className="font-display text-lg font-semibold text-foreground">Rencontres gay & sexe gay par département</h3>
                 <p>
-                  Gay Connect est le <strong>site de rencontre gay</strong> et de <strong>sexe entre hommes</strong> n°1 en France. 
+                  Gay Social est le <strong>site de rencontre gay</strong> et de <strong>sexe entre hommes</strong> n°1 en France. 
                   Que tu cherches un <strong>plan cul gay</strong>, une <strong>rencontre gay sérieuse</strong> ou simplement 
                   un <strong>tchat gay gratuit</strong>, notre plateforme te connecte avec des milliers d'hommes dans les 
                   <strong> 101 départements français</strong>.
                 </p>
                 <p>
-                  Contrairement aux autres sites comme Grindr ou Scruff, Gay Connect est 100% français et organisé 
+                  Contrairement aux autres sites comme Grindr ou Scruff, Gay Social est 100% français et organisé 
                   par région. Trouve des <strong>mecs gay près de chez toi</strong> : <strong>gay Paris</strong>, <strong>gay Lyon</strong>, 
                   <strong> gay Marseille</strong>, <strong>gay Toulouse</strong>, <strong>gay Bordeaux</strong> et partout en France !
                 </p>
@@ -524,7 +524,7 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
               <div className="space-y-4">
                 <h3 className="font-display text-lg font-semibold text-foreground">Plan cul gay sécurisé & discret</h3>
                 <p>
-                  Sur Gay Connect, ta <strong>vie privée</strong> est notre priorité. Tous les profils sont 
+                  Sur Gay Social, ta <strong>vie privée</strong> est notre priorité. Tous les profils sont 
                   <strong> vérifiés par pièce d'identité</strong>, les <strong>médias éphémères</strong> disparaissent après 
                   consultation, et notre technologie <strong>anti-capture d'écran</strong> protège tes photos et vidéos.
                 </p>
@@ -592,7 +592,7 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
       <footer className="relative z-20 py-8 border-t border-border/30 bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-muted-foreground">
-            <span>© 2025 Gay Connect</span>
+            <span>© 2025 Gay Social</span>
             <span className="hidden md:inline">•</span>
             <Link to="/legal" className="hover:text-primary transition-colors">Mentions légales & CGU</Link>
             <span className="hidden md:inline">•</span>

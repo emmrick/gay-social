@@ -153,7 +153,7 @@ const VisitorSupportChat = ({ isOpen, onClose }: VisitorSupportChatProps) => {
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">Service Client</h3>
-              <p className="text-[11px] text-muted-foreground">Gay Connect · Assistance</p>
+              <p className="text-[11px] text-muted-foreground">Gay Social · Assistance</p>
             </div>
           </div>
           <button

@@ -90,8 +90,8 @@ serve(async (req) => {
       const siteUrl = Deno.env.get('SITE_URL') || 'https://gay-connect.fr';
       const interruptLink = `${siteUrl}/?interrupt=${interruptToken}`;
 
-      const smsBody = `Gay Connect - Code de vérification : ${code}\n\n` +
-        `Ce code est utilisable uniquement avec un conseiller Gay Connect et est valable 5 minutes.\n\n` +
+      const smsBody = `Gay Social - Code de vérification : ${code}\n\n` +
+        `Ce code est utilisable uniquement avec un conseiller Gay Social et est valable 5 minutes.\n\n` +
         `Si vous n'avez pas contacté le service client, cliquez ici pour interrompre l'accès à votre dossier : ${interruptLink}`;
 
       const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;

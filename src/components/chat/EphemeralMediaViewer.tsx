@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { X, Eye, EyeOff, AlertTriangle, Shield, Play, Download, Infinity as InfinityIcon, Check, Send, RotateCcw } from 'lucide-react';
-import GayConnectWatermark from '@/components/security/GayConnectWatermark';
+import GaySocialWatermark from '@/components/security/GaySocialWatermark';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -503,7 +503,7 @@ const EphemeralMediaViewer = ({
                       draggable={false}
                       style={{ pointerEvents: 'none' }}
                     />
-                    <GayConnectWatermark />
+                    <GaySocialWatermark />
                   </div>
                 ) : (
                   <video 

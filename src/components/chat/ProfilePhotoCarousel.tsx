@@ -3,7 +3,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { User, X, ChevronLeft, ChevronRight, Lock, FolderLock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import GayConnectWatermark from '@/components/security/GayConnectWatermark';
+import GaySocialWatermark from '@/components/security/GaySocialWatermark';
 import { Badge } from '@/components/ui/badge';
 
 export interface AlbumSlide {
@@ -226,7 +226,7 @@ const ProfilePhotoCarousel = ({ photos, username, className, albumSlides = [], o
                     className="w-full h-full object-cover select-none"
                     draggable={false}
                   />
-                  <GayConnectWatermark />
+                  <GaySocialWatermark />
                 </div>
               </div>
             ))}
@@ -343,7 +343,7 @@ const ProfilePhotoCarousel = ({ photos, username, className, albumSlides = [], o
                 }}
                 onDoubleClick={() => handleDoubleTap()}
               />
-              <GayConnectWatermark />
+              <GaySocialWatermark />
             </motion.div>
 
             {photos.length > 1 && zoomState.scale <= 1 && (

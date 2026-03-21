@@ -18,18 +18,18 @@ serve(async (req) => {
     let finalPrompt = "";
 
     const templates: Record<string, string> = {
-      welcome: "Create a vibrant, modern promotional image for a gay social networking app called 'Gay Connect'. Show a welcoming rainbow-themed design with silhouettes of diverse men connecting, chatting icons, and the text 'Rejoins la communauté !' in bold white letters. Use warm purple and rainbow gradient colors. Mobile app style, 9:16 aspect ratio, clean and professional.",
-      swipe: "Create an exciting promotional image for 'Gay Connect' dating app feature. Show a stylized swipe card interface with attractive profile cards, hearts floating, and the text 'Swipe & Match !' in bold. Use vibrant purple, pink and blue gradient colors with a modern UI aesthetic. 9:16 mobile story format.",
-      chat: "Create a promotional image for 'Gay Connect' group chat feature. Show colorful chat bubbles, a map of France with regional pins, and the text 'Discute avec ta région !' in bold. Use rainbow accents on a dark modern background. 9:16 mobile story format, clean design.",
-      stories: "Create a promotional image for 'Gay Connect' Stories feature. Show a phone screen with story circles, camera icon, and sparkle effects. Text: 'Partage ta Story !' in bold white. Purple to pink gradient background with modern glassmorphism effects. 9:16 format.",
-      security: "Create a promotional image for 'Gay Connect' emphasizing safety and verification. Show a shield icon with a checkmark, lock symbols, and the text 'Profils vérifiés, communauté safe !' in bold. Use deep blue and purple tones with gold accents. 9:16 mobile story format.",
-      premium: "Create a luxurious promotional image for 'Gay Connect Premium'. Show a golden crown, sparkles, exclusive badge, and the text 'Passe Premium 👑' in elegant gold letters on a dark purple background. 9:16 format, premium and sophisticated look.",
+      welcome: "Create a vibrant, modern promotional image for a gay social networking app called 'Gay Social'. Show a welcoming rainbow-themed design with silhouettes of diverse men connecting, chatting icons, and the text 'Rejoins la communauté !' in bold white letters. Use warm purple and rainbow gradient colors. Mobile app style, 9:16 aspect ratio, clean and professional.",
+      swipe: "Create an exciting promotional image for 'Gay Social' dating app feature. Show a stylized swipe card interface with attractive profile cards, hearts floating, and the text 'Swipe & Match !' in bold. Use vibrant purple, pink and blue gradient colors with a modern UI aesthetic. 9:16 mobile story format.",
+      chat: "Create a promotional image for 'Gay Social' group chat feature. Show colorful chat bubbles, a map of France with regional pins, and the text 'Discute avec ta région !' in bold. Use rainbow accents on a dark modern background. 9:16 mobile story format, clean design.",
+      stories: "Create a promotional image for 'Gay Social' Stories feature. Show a phone screen with story circles, camera icon, and sparkle effects. Text: 'Partage ta Story !' in bold white. Purple to pink gradient background with modern glassmorphism effects. 9:16 format.",
+      security: "Create a promotional image for 'Gay Social' emphasizing safety and verification. Show a shield icon with a checkmark, lock symbols, and the text 'Profils vérifiés, communauté safe !' in bold. Use deep blue and purple tones with gold accents. 9:16 mobile story format.",
+      premium: "Create a luxurious promotional image for 'Gay Social Premium'. Show a golden crown, sparkles, exclusive badge, and the text 'Passe Premium 👑' in elegant gold letters on a dark purple background. 9:16 format, premium and sophisticated look.",
     };
 
     if (template_id && templates[template_id]) {
       finalPrompt = templates[template_id];
     } else if (prompt) {
-      finalPrompt = `Create a promotional image for a gay social networking app called 'Gay Connect'. The image should be in 9:16 mobile story format with modern, vibrant design. ${prompt}`;
+      finalPrompt = `Create a promotional image for a gay social networking app called 'Gay Social'. The image should be in 9:16 mobile story format with modern, vibrant design. ${prompt}`;
     } else {
       throw new Error("Either prompt or template_id is required");
     }

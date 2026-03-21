@@ -66,43 +66,47 @@ const PendingTasksPanel = () => {
             {reservedTasks.map((task) => (
               <div
                 key={task.id}
-                className="rounded-xl p-4 border border-primary/30 bg-primary/5 flex items-center justify-between"
+                className="rounded-xl border border-primary/30 bg-primary/5 p-4"
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {getTaskTypeLabel(task.task_type)}
-                  </p>
-                  {task.description && (
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">
-                      {task.description}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {getTaskTypeLabel(task.task_type)}
                     </p>
-                  )}
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <Badge variant="secondary" className="text-xs">
-                      <Clock className="w-3 h-3 mr-1" />
-                      {task.reserved_at && formatDistanceToNow(new Date(task.reserved_at), { addSuffix: true, locale: fr })}
-                    </Badge>
+                    {task.description && (
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        {task.description}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                      <Badge variant="secondary" className="text-xs max-w-full">
+                        <Clock className="w-3 h-3 mr-1 shrink-0" />
+                        <span className="truncate">
+                          {task.reserved_at && formatDistanceToNow(new Date(task.reserved_at), { addSuffix: true, locale: fr })}
+                        </span>
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 ml-3 shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    disabled={recycleTask.isPending}
-                    onClick={() => recycleTask.mutate(task.id)}
-                  >
-                    <RefreshCw className="w-3 h-3 mr-1" />
-                    Ré-attribuer
-                  </Button>
-                  <div className="text-right">
-                    <Badge variant="outline" className="text-primary border-primary/30">
-                      <Euro className="w-3 h-3 mr-1" />
-                      {formatCentsReward(task.reward_cents)}
-                    </Badge>
-                    <Badge variant="default" className="mt-1 block text-xs">
-                      Réservée
-                    </Badge>
+                  <div className="flex flex-col gap-2 sm:items-end sm:text-right">
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                      <Badge variant="outline" className="text-primary border-primary/30">
+                        <Euro className="w-3 h-3 mr-1" />
+                        {formatCentsReward(task.reward_cents)}
+                      </Badge>
+                      <Badge variant="default" className="text-xs">
+                        Réservée
+                      </Badge>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs sm:w-auto"
+                      disabled={recycleTask.isPending}
+                      onClick={() => recycleTask.mutate(task.id)}
+                    >
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                      Ré-attribuer
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -117,7 +121,7 @@ const PendingTasksPanel = () => {
           <Clock className="w-3 h-3" />
           En attente ({pendingTasks.length})
         </p>
-        <ScrollArea className="h-[calc(100vh-380px)]">
+        <ScrollArea className="h-[min(58vh,28rem)] pr-2 sm:h-[calc(100vh-380px)]">
           {pendingTasks.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <ListOrdered className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -129,47 +133,49 @@ const PendingTasksPanel = () => {
               {pendingTasks.map((task, index) => (
                 <div
                   key={task.id}
-                  className="rounded-xl p-4 border border-border bg-card flex items-center justify-between hover:bg-muted/50 transition-colors"
+                  className="rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/50"
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-muted-foreground">#{index + 1}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {getTaskTypeLabel(task.task_type)}
-                      </p>
-                      {task.description && (
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {task.description}
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <span className="text-xs font-bold text-muted-foreground">#{index + 1}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {getTaskTypeLabel(task.task_type)}
                         </p>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        <Clock className="w-3 h-3 inline mr-1" />
-                        {formatDistanceToNow(new Date(task.created_at), { addSuffix: true, locale: fr })}
-                        {task.refused_by.length > 0 && (
-                          <span className="ml-2 text-destructive">
-                            · {task.refused_by.length} refus
-                          </span>
+                        {task.description && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            {task.description}
+                          </p>
                         )}
-                      </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          {formatDistanceToNow(new Date(task.created_at), { addSuffix: true, locale: fr })}
+                          {task.refused_by.length > 0 && (
+                            <span className="ml-2 text-destructive">
+                              · {task.refused_by.length} refus
+                            </span>
+                          )}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 ml-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                      disabled={recycleTask.isPending}
-                      onClick={() => recycleTask.mutate(task.id)}
-                    >
-                      <RefreshCw className="w-3 h-3 mr-1" />
-                      Ré-attribuer
-                    </Button>
-                    <Badge variant="outline">
-                      <Euro className="w-3 h-3 mr-1" />
-                      {formatCentsReward(task.reward_cents)}
-                    </Badge>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center shrink-0">
+                      <Badge variant="outline" className="w-fit">
+                        <Euro className="w-3 h-3 mr-1" />
+                        {formatCentsReward(task.reward_cents)}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs sm:w-auto"
+                        disabled={recycleTask.isPending}
+                        onClick={() => recycleTask.mutate(task.id)}
+                      >
+                        <RefreshCw className="w-3 h-3 mr-1" />
+                        Ré-attribuer
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}

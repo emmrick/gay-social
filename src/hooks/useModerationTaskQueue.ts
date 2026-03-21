@@ -138,9 +138,6 @@ export const usePendingTasksHistory = () => {
     queryFn: async (): Promise<ModerationTask[]> => {
       if (!user?.id) return [];
 
-      await supabase.rpc('expire_stale_moderation_tasks');
-      await supabase.rpc('recycle_fully_refused_tasks');
-
       const { data, error } = await supabase
         .from('moderation_tasks')
         .select('*')
@@ -175,6 +172,7 @@ export const useAvailableTasks = () => {
       // and recycling refused tasks internally — no redundant calls needed
       const { data, error } = await supabase.rpc('get_exclusive_next_task', {
         _user_id: user.id,
+        _offer_ttl_seconds: 60,
       });
 
       if (error) throw error;

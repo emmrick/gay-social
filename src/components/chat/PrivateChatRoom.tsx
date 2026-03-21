@@ -192,6 +192,25 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     // Scroll handled by visualViewport resize (keyboard open)
   }, []);
 
+  // Auto-scroll when content grows (media loads, ephemeral elements expand)
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      if (isNearBottomRef.current && initialScrollDone.current) {
+        requestAnimationFrame(() => {
+          if (el) el.scrollTop = el.scrollHeight;
+        });
+      }
+    });
+    if (el.firstElementChild) {
+      observer.observe(el.firstElementChild);
+    } else {
+      observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, [otherUserId]);
+
   const handleScroll = useCallback(() => {
     const el = messagesContainerRef.current;
     if (el) {

@@ -148,6 +148,26 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
     }
   }, [typingUsers.length, searchQuery, scrollToBottom]);
 
+  // Auto-scroll when content grows (media loads, ephemeral elements expand)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      if (isNearBottomRef.current && initialScrollDone.current) {
+        requestAnimationFrame(() => {
+          if (el) el.scrollTop = el.scrollHeight;
+        });
+      }
+    });
+    // Observe the inner content wrapper
+    if (el.firstElementChild) {
+      observer.observe(el.firstElementChild);
+    } else {
+      observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, [roomId]);
+
   // Handle scroll to show/hide scroll button + track position
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;

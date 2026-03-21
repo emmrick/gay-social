@@ -120,8 +120,9 @@ const playAcceptSound = () => {
   } catch {}
 };
 
-type QueueState = 'idle' | 'offering' | 'transitioning' | 'active';
+type QueueState = 'idle' | 'offering' | 'transitioning' | 'cooldown' | 'active';
 const TRANSITION_DELAY_MS = 1500;
+const REFUSE_COOLDOWN_MS = 5000;
 
 const GlobalMissionOverlay = () => {
   const { user } = useAuth();
@@ -166,6 +167,7 @@ const GlobalMissionOverlay = () => {
   const soundIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevActiveTaskIdRef = useRef<string | null>(null);
   const prevNextTaskIdRef = useRef<string | null>(null);
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Countdown
   useEffect(() => {
@@ -222,6 +224,7 @@ const GlobalMissionOverlay = () => {
       return;
     }
     if (!missionsActive) { setQueueState('idle'); return; }
+    if (queueState === 'cooldown') return;
 
     const prevNextTaskId = prevNextTaskIdRef.current;
     prevNextTaskIdRef.current = nextTask?.id ?? null;
@@ -243,11 +246,11 @@ const GlobalMissionOverlay = () => {
       }
     } else {
       prevActiveTaskIdRef.current = null;
-      setQueueState('idle');
+      if (queueState !== 'cooldown') setQueueState('idle');
     }
 
     return () => { if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current); };
-  }, [activeTask, nextTask, missionsActive, shouldActivate, queryClient]);
+  }, [activeTask, nextTask, missionsActive, shouldActivate, queryClient, queueState]);
 
   const handleAccept = useCallback(() => {
     if (!nextTask) return;
@@ -265,9 +268,14 @@ const GlobalMissionOverlay = () => {
   const handleRefuse = useCallback(() => {
     if (!nextTask) return;
     refuseTask.mutate(nextTask.id);
-    setQueueState('transitioning');
-    transitionTimerRef.current = setTimeout(() => {}, TRANSITION_DELAY_MS);
-  }, [nextTask, refuseTask]);
+    setQueueState('cooldown');
+    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+    cooldownTimerRef.current = setTimeout(() => {
+      cooldownTimerRef.current = null;
+      invalidateAllTaskQueries(queryClient);
+      setQueueState('idle');
+    }, REFUSE_COOLDOWN_MS);
+  }, [nextTask, refuseTask, queryClient]);
 
   const handleGoToTask = useCallback(() => {
     if (!activeTask) return;
@@ -327,7 +335,7 @@ const GlobalMissionOverlay = () => {
 
   // Don't render if not admin/mod, loading, or on admin page
   if (!shouldActivate || roleLoading) return null;
-  if (queueState === 'idle' && !activeTask) return null;
+  if (queueState === 'idle' && !activeTask && !nextTask) return null;
 
   const countdownColor = countdown <= 10 ? 'text-red-500' : countdown <= 30 ? 'text-orange-500' : 'text-primary';
   const countdownBg = countdown <= 10 ? 'bg-red-500/20' : countdown <= 30 ? 'bg-orange-500/20' : 'bg-primary/20';
@@ -336,7 +344,7 @@ const GlobalMissionOverlay = () => {
     <>
       {/* Transitioning */}
       <AnimatePresence>
-        {queueState === 'transitioning' && (
+        {(queueState === 'transitioning' || queueState === 'cooldown') && (
           <motion.div
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -347,7 +355,9 @@ const GlobalMissionOverlay = () => {
             <div className="rounded-xl border border-primary/20 bg-card shadow-lg p-4">
               <div className="flex items-center justify-center gap-3">
                 <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                <p className="text-sm font-medium text-foreground">Connexion à la mission suivante…</p>
+                <p className="text-sm font-medium text-foreground">
+                  {queueState === 'cooldown' ? 'Recherche de la prochaine mission…' : 'Connexion à la mission suivante…'}
+                </p>
               </div>
             </div>
           </motion.div>

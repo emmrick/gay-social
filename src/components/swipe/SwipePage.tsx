@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import AdBanner from '@/components/ads/AdBanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Sparkles, MessageCircle, Loader2, RefreshCw, X, EyeOff, Flame, Zap, Rocket, Crown, Users, ShieldCheck } from 'lucide-react';
 import { useSwipeActions } from '@/hooks/useSwipeActions';

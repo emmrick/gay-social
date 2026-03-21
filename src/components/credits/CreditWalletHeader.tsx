@@ -45,7 +45,7 @@ const CreditWalletHeader = ({ onOpenGift }: CreditWalletHeaderProps) => {
           style={{
             background: 'linear-gradient(90deg, transparent 40%, hsl(var(--primary) / 0.06) 50%, transparent 60%)',
           }}
-          animate={{ x: ['0%', '100%'] }}
+          animate={{ x: ['-100%', '100%'] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'linear', repeatDelay: 2 }}
         />
       </div>

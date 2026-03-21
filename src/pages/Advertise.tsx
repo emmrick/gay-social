@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, Megaphone, Send, CheckCircle2, BarChart3, Users, Shield, Sparkles, Wallet, Eye, MousePointerClick, Pencil, RefreshCw, CreditCard, Loader2, Search, ArrowUpRight } from 'lucide-react';
+import { ArrowLeft, Megaphone, Send, CheckCircle2, BarChart3, Users, Shield, Sparkles, Wallet, Eye, MousePointerClick, Pencil, CreditCard, Loader2, Search, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import SEOHead from '@/components/seo/SEOHead';
 import { format } from 'date-fns';
@@ -27,7 +26,6 @@ const advertiseSchema = z.object({
   advertiser_email: z.string().trim().email('Email invalide').max(255),
   title: z.string().trim().min(3, 'Titre requis (min. 3 caractères)').max(120),
   description: z.string().trim().max(500, 'Max 500 caractères').optional(),
-  image_url: z.string().url('URL invalide').max(500).optional().or(z.literal('')),
   link_url: z.string().url('URL invalide').max(500).optional().or(z.literal('')),
   placement: z.enum(['compact', 'native', 'sponsored_card']),
   budget_cents: z.coerce.number().min(500, 'Budget minimum : 5€').max(1000000),
@@ -48,6 +46,96 @@ const benefits = [
   { icon: Sparkles, title: 'Non intrusif', desc: 'Formats respectueux intégrés à l\'expérience utilisateur.' },
 ];
 
+// ─── Image Upload Component ───
+const AdImageUpload = ({ value, onChange, label = "Image de l'annonce" }: { value: string; onChange: (url: string) => void; label?: string }) => {
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState(value || '');
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setPreview(value || ''); }, [value]);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Seules les images sont acceptées');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Taille maximale : 5 Mo');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('ad-images')
+        .upload(path, file, { contentType: file.type, upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('ad-images').getPublicUrl(path);
+      const publicUrl = urlData.publicUrl;
+
+      setPreview(publicUrl);
+      onChange(publicUrl);
+      toast.success('Image téléchargée');
+    } catch (err: any) {
+      toast.error('Erreur lors du téléchargement : ' + (err.message || 'Inconnue'));
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const handleRemove = () => {
+    setPreview('');
+    onChange('');
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-foreground">{label}</label>
+      {preview ? (
+        <div className="relative rounded-lg overflow-hidden border border-border bg-muted/30">
+          <img src={preview} alt="Aperçu" className="w-full h-40 object-cover" />
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            className="absolute top-2 right-2 h-7 w-7"
+            onClick={handleRemove}
+          >
+            <X className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="w-full h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer disabled:opacity-50"
+        >
+          {uploading ? (
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
+          ) : (
+            <Upload className="w-6 h-6 text-muted-foreground" />
+          )}
+          <span className="text-xs text-muted-foreground">
+            {uploading ? 'Téléchargement...' : 'Cliquez pour ajouter une image'}
+          </span>
+          <span className="text-[10px] text-muted-foreground">JPG, PNG, WebP — Max 5 Mo — 600×300px recommandé</span>
+        </button>
+      )}
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+    </div>
+  );
+};
+
 const Advertise = () => {
   const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
@@ -58,6 +146,8 @@ const Advertise = () => {
   const [topupAmount, setTopupAmount] = useState(10);
   const [topupLoading, setTopupLoading] = useState(false);
   const [editingAd, setEditingAd] = useState<any>(null);
+  const [adImageUrl, setAdImageUrl] = useState('');
+  const [showSubmitForm, setShowSubmitForm] = useState(false);
   const queryClient = useQueryClient();
 
   // Check URL params for PayPal return
@@ -171,7 +261,6 @@ const Advertise = () => {
       advertiser_email: '',
       title: '',
       description: '',
-      image_url: '',
       link_url: '',
       placement: 'native',
       budget_cents: 1000,
@@ -186,7 +275,7 @@ const Advertise = () => {
         advertiser_email: values.advertiser_email,
         title: values.title,
         description: values.description || null,
-        image_url: values.image_url || null,
+        image_url: adImageUrl || null,
         link_url: values.link_url || null,
         placement: values.placement,
         budget_cents: values.budget_cents,
@@ -195,9 +284,10 @@ const Advertise = () => {
       });
       if (error) throw error;
       setSubmitted(true);
+      setAdImageUrl('');
       toast.success('Demande envoyée avec succès !');
     } catch {
-      toast.error('Erreur lors de l\'envoi. Veuillez réessayer.');
+      toast.error("Erreur lors de l'envoi. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -232,6 +322,48 @@ const Advertise = () => {
     );
   }
 
+  // ─── Dashboard mode (advertiser logged in) ───
+  if (activeEmail) {
+    return (
+      <>
+        <SEOHead title="Espace Annonceur — GayConnect" description="Gérez vos campagnes publicitaires sur GayConnect." />
+        <div className="min-h-screen bg-background pb-20">
+          {/* Header */}
+          <div className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-40">
+            <div className="max-w-5xl mx-auto flex items-center gap-3 px-4 h-14">
+              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setActiveEmail(null)}>
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <Megaphone className="w-5 h-5 text-primary" />
+                <span className="font-bold text-sm">Espace Annonceurs</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+            <AdvertiserDashboard
+              email={activeEmail}
+              wallet={wallet}
+              campaigns={campaigns || []}
+              deposits={deposits || []}
+              onTopup={() => setShowTopup(true)}
+              onEditAd={setEditingAd}
+              onUpdateAd={handleUpdateAd}
+              onLogout={() => setActiveEmail(null)}
+              onNewCampaign={() => { setActiveEmail(null); setShowSubmitForm(true); }}
+            />
+          </div>
+        </div>
+
+        {/* Top-up dialog */}
+        <TopupDialog open={showTopup} onClose={() => setShowTopup(false)} topupAmount={topupAmount} setTopupAmount={setTopupAmount} onTopup={handleTopup} topupLoading={topupLoading} />
+        {editingAd && <EditAdDialog ad={editingAd} onClose={() => setEditingAd(null)} onSave={handleUpdateAd} />}
+      </>
+    );
+  }
+
+  // ─── Public landing + submit form ───
   return (
     <>
       <SEOHead
@@ -281,27 +413,13 @@ const Advertise = () => {
             </CardContent>
           </Card>
 
-          {/* Advertiser Dashboard */}
-          {activeEmail && (
-            <AdvertiserDashboard
-              email={activeEmail}
-              wallet={wallet}
-              campaigns={campaigns || []}
-              deposits={deposits || []}
-              onTopup={() => setShowTopup(true)}
-              onEditAd={setEditingAd}
-              onUpdateAd={handleUpdateAd}
-              onLogout={() => setActiveEmail(null)}
-            />
-          )}
-
           {/* Hero */}
           <div className="text-center space-y-3">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
               Faites rayonner votre marque
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
-              Touchez une communauté LGBTQ+ active avec des formats publicitaires 
+              Touchez une communauté LGBTQ+ active avec des formats publicitaires
               respectueux et non intrusifs. Chaque annonce est vérifiée manuellement.
             </p>
           </div>
@@ -320,6 +438,27 @@ const Advertise = () => {
               </Card>
             ))}
           </div>
+
+          {/* Pricing */}
+          <Card className="border-border/50 bg-muted/30">
+            <CardContent className="p-6 space-y-3">
+              <h3 className="font-bold text-foreground text-sm">💰 Tarification</h3>
+              <div className="grid sm:grid-cols-3 gap-4 text-xs text-muted-foreground">
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">CPC (Coût par clic)</p>
+                  <p>À partir de 0,02 € par clic. Vous ne payez que lorsqu'un utilisateur clique.</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">CPM (Coût pour 1000 impressions)</p>
+                  <p>À partir de 0,10 € pour 1000 affichages de votre annonce.</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">Budget flexible</p>
+                  <p>Définissez votre budget maximal. La diffusion s'arrête automatiquement une fois atteint.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Form */}
           <Card className="border-border/50">
@@ -385,18 +524,7 @@ const Advertise = () => {
                   />
 
                   <div className="grid sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="image_url"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>URL de l'image</FormLabel>
-                          <FormControl><Input placeholder="https://..." {...field} /></FormControl>
-                          <FormDescription>Format recommandé : 600×300px</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <AdImageUpload value={adImageUrl} onChange={setAdImageUrl} />
                     <FormField
                       control={form.control}
                       name="link_url"
@@ -467,75 +595,8 @@ const Advertise = () => {
               </Form>
             </CardContent>
           </Card>
-
-          {/* Pricing info — only show when not in dashboard mode */}
-          {!activeEmail && (
-          <Card className="border-border/50 bg-muted/30">
-            <CardContent className="p-6 space-y-3">
-              <h3 className="font-bold text-foreground text-sm">💰 Tarification</h3>
-              <div className="grid sm:grid-cols-3 gap-4 text-xs text-muted-foreground">
-                <div className="space-y-1">
-                  <p className="font-semibold text-foreground">CPC (Coût par clic)</p>
-                  <p>À partir de 0,02 € par clic. Vous ne payez que lorsqu'un utilisateur clique.</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-foreground">CPM (Coût pour 1000 impressions)</p>
-                  <p>À partir de 0,10 € pour 1000 affichages de votre annonce.</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-foreground">Budget flexible</p>
-                  <p>Définissez votre budget maximal. La diffusion s'arrête automatiquement une fois atteint.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          )}
         </div>
       </div>
-
-      {/* Top-up dialog */}
-      <Dialog open={showTopup} onOpenChange={setShowTopup}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-primary" />
-              Recharger mon portefeuille
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid grid-cols-3 gap-2">
-              {[5, 10, 20, 50, 100, 200].map(v => (
-                <Button
-                  key={v}
-                  variant={topupAmount === v ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setTopupAmount(v)}
-                  className="text-xs"
-                >
-                  {v} €
-                </Button>
-              ))}
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Ou montant personnalisé :</label>
-              <Input type="number" min={5} value={topupAmount} onChange={e => setTopupAmount(Number(e.target.value))} className="mt-1" />
-            </div>
-            <p className="text-xs text-muted-foreground">Le paiement sera effectué via PayPal. Montant minimum : 5€.</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTopup(false)}>Annuler</Button>
-            <Button onClick={handleTopup} disabled={topupLoading || topupAmount < 5} className="gap-2">
-              {topupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-              Payer {topupAmount}€ via PayPal
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit ad dialog */}
-      {editingAd && (
-        <EditAdDialog ad={editingAd} onClose={() => setEditingAd(null)} onSave={handleUpdateAd} />
-      )}
     </>
   );
 };
@@ -550,9 +611,10 @@ interface DashboardProps {
   onEditAd: (ad: any) => void;
   onUpdateAd: (id: string, updates: any) => void;
   onLogout: () => void;
+  onNewCampaign: () => void;
 }
 
-const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEditAd, onUpdateAd, onLogout }: DashboardProps) => {
+const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEditAd, onUpdateAd, onLogout, onNewCampaign }: DashboardProps) => {
   const totalImpressions = campaigns.reduce((s, c) => s + (c.impressions_count || 0), 0);
   const totalClicks = campaigns.reduce((s, c) => s + (c.clicks_count || 0), 0);
   const totalSpent = campaigns.reduce((s, c) => s + (c.spent_cents || 0), 0);
@@ -572,7 +634,12 @@ const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEd
           <h2 className="text-lg font-bold text-foreground">Mon espace annonceur</h2>
           <p className="text-xs text-muted-foreground">{email}</p>
         </div>
-        <Button variant="ghost" size="sm" onClick={onLogout} className="text-xs">Déconnexion</Button>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={onNewCampaign} className="text-xs gap-1">
+            <Megaphone className="w-3.5 h-3.5" /> Nouvelle campagne
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onLogout} className="text-xs">Déconnexion</Button>
+        </div>
       </div>
 
       {/* Wallet + Stats */}
@@ -633,7 +700,12 @@ const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEd
 
         <TabsContent value="campaigns" className="space-y-3 mt-4">
           {campaigns.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">Aucune campagne. Soumettez votre première annonce ci-dessous.</p>
+            <div className="text-center py-8 space-y-3">
+              <p className="text-sm text-muted-foreground">Aucune campagne.</p>
+              <Button onClick={onNewCampaign} className="gap-2">
+                <Megaphone className="w-4 h-4" /> Créer ma première campagne
+              </Button>
+            </div>
           ) : (
             campaigns.map(campaign => {
               const budgetPct = campaign.budget_cents > 0 ? Math.min(100, ((campaign.spent_cents || 0) / campaign.budget_cents) * 100) : 0;
@@ -642,9 +714,15 @@ const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEd
                 <Card key={campaign.id} className="overflow-hidden">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-sm text-foreground truncate">{campaign.title}</p>
-                        {campaign.description && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{campaign.description}</p>}
+                      <div className="min-w-0 flex-1 flex gap-3">
+                        {campaign.image_url && (
+                          <img src={campaign.image_url} alt="" className="w-16 h-16 rounded-lg object-cover shrink-0 border border-border" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm text-foreground truncate">{campaign.title}</p>
+                          {campaign.description && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{campaign.description}</p>}
+                          <p className="text-[10px] text-muted-foreground mt-1">{placementLabels[campaign.placement]?.label || campaign.placement}</p>
+                        </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <Badge variant="outline" className={`text-[10px] ${sc.color}`}>{sc.label}</Badge>
@@ -721,7 +799,50 @@ const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEd
   );
 };
 
-// ─── Edit Ad Dialog ───
+// ─── Top-up Dialog ───
+const TopupDialog = ({ open, onClose, topupAmount, setTopupAmount, onTopup, topupLoading }: {
+  open: boolean; onClose: () => void; topupAmount: number; setTopupAmount: (v: number) => void; onTopup: () => void; topupLoading: boolean;
+}) => (
+  <Dialog open={open} onOpenChange={onClose}>
+    <DialogContent className="max-w-sm">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <CreditCard className="w-5 h-5 text-primary" />
+          Recharger mon portefeuille
+        </DialogTitle>
+      </DialogHeader>
+      <div className="space-y-4 py-2">
+        <div className="grid grid-cols-3 gap-2">
+          {[5, 10, 20, 50, 100, 200].map(v => (
+            <Button
+              key={v}
+              variant={topupAmount === v ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTopupAmount(v)}
+              className="text-xs"
+            >
+              {v} €
+            </Button>
+          ))}
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground">Ou montant personnalisé :</label>
+          <Input type="number" min={5} value={topupAmount} onChange={e => setTopupAmount(Number(e.target.value))} className="mt-1" />
+        </div>
+        <p className="text-xs text-muted-foreground">Le paiement sera effectué via PayPal. Montant minimum : 5€.</p>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>Annuler</Button>
+        <Button onClick={onTopup} disabled={topupLoading || topupAmount < 5} className="gap-2">
+          {topupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+          Payer {topupAmount}€ via PayPal
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+);
+
+// ─── Edit Ad Dialog (with image upload) ───
 const EditAdDialog = ({ ad, onClose, onSave }: { ad: any; onClose: () => void; onSave: (id: string, u: any) => void }) => {
   const [title, setTitle] = useState(ad.title);
   const [description, setDescription] = useState(ad.description || '');
@@ -735,7 +856,7 @@ const EditAdDialog = ({ ad, onClose, onSave }: { ad: any; onClose: () => void; o
         <div className="space-y-3">
           <div><label className="text-xs font-medium">Titre</label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
           <div><label className="text-xs font-medium">Description</label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} /></div>
-          <div><label className="text-xs font-medium">URL image</label><Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} /></div>
+          <AdImageUpload value={imageUrl} onChange={setImageUrl} label="Image de l'annonce" />
           <div><label className="text-xs font-medium">URL destination</label><Input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} /></div>
         </div>
         <DialogFooter>

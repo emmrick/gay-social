@@ -31,6 +31,7 @@ import { Loader2, Plus, User, Users } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
+import AdBanner from '@/components/ads/AdBanner';
 
 // Lazy-load heavy sub-views to reduce initial JS bundle
 const ChatRoom = lazy(() => import('@/components/chat/ChatRoom'));

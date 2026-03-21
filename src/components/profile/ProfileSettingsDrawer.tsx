@@ -143,6 +143,22 @@ const ProfileSettingsDrawer = ({
               ))}
             </div>
 
+            {/* Advertise link */}
+            <Separator className="my-4" />
+            <button
+              onClick={() => { setOpen(false); navigate('/advertise'); }}
+              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/15 hover:to-pink-500/15 transition-all active:scale-[0.98]"
+            >
+              <div className="w-11 h-11 rounded-xl bg-purple-500/15 flex items-center justify-center">
+                <Megaphone className="w-5 h-5 text-purple-500" />
+              </div>
+              <div className="flex-1 text-left">
+                <span className="font-medium text-sm">Faire de la publicité</span>
+                <p className="text-[11px] text-muted-foreground">Promouvoir votre activité</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
+
             {/* Admin / Moderator button */}
             {(isAdmin || isModerator) && onNavigateToAdmin && (
               <>

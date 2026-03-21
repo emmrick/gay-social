@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Clock, Loader2, ListOrdered, Euro, User, Lock, RefreshCw } from 'lucide-react';
+import { Clock, Loader2, ListOrdered, Euro, Lock, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -121,7 +121,7 @@ const PendingTasksPanel = () => {
           <Clock className="w-3 h-3" />
           En attente ({pendingTasks.length})
         </p>
-        <ScrollArea className="h-[min(58vh,28rem)] pr-2 sm:h-[calc(100vh-380px)]">
+      <ScrollArea className="max-h-[60vh] pr-1 sm:max-h-[calc(100vh-380px)]">
           {pendingTasks.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <ListOrdered className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -133,11 +133,11 @@ const PendingTasksPanel = () => {
               {pendingTasks.map((task, index) => (
                 <div
                   key={task.id}
-                  className="rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/50"
+                  className="rounded-xl border border-border bg-card p-3 sm:p-4 transition-colors hover:bg-muted/50"
                 >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                         <span className="text-xs font-bold text-muted-foreground">#{index + 1}</span>
                       </div>
                       <div className="flex-1 min-w-0">
@@ -145,30 +145,33 @@ const PendingTasksPanel = () => {
                           {getTaskTypeLabel(task.task_type)}
                         </p>
                         {task.description && (
-                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
                             {task.description}
                           </p>
                         )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          <Clock className="w-3 h-3 inline mr-1" />
-                          {formatDistanceToNow(new Date(task.created_at), { addSuffix: true, locale: fr })}
-                          {task.refused_by.length > 0 && (
-                            <span className="ml-2 text-destructive">
-                              · {task.refused_by.length} refus
-                            </span>
-                          )}
-                        </p>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center shrink-0">
-                      <Badge variant="outline" className="w-fit">
-                        <Euro className="w-3 h-3 mr-1" />
+                    <div className="flex flex-wrap items-center gap-1.5 pl-9 sm:pl-11">
+                      <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                        <Clock className="w-3 h-3 mr-1 shrink-0" />
+                        {formatDistanceToNow(new Date(task.created_at), { addSuffix: true, locale: fr })}
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px] sm:text-xs">
+                        <Euro className="w-3 h-3 mr-1 shrink-0" />
                         {formatCentsReward(task.reward_cents)}
                       </Badge>
+                      {task.refused_by.length > 0 && (
+                        <Badge variant="destructive" className="text-[10px] sm:text-xs">
+                          <AlertTriangle className="w-3 h-3 mr-1 shrink-0" />
+                          {task.refused_by.length} refus
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="pl-9 sm:pl-11">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full text-xs sm:w-auto"
+                        className="w-full text-xs sm:w-auto h-8"
                         disabled={recycleTask.isPending}
                         onClick={() => recycleTask.mutate(task.id)}
                       >

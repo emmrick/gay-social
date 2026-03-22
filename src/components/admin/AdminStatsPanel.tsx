@@ -26,9 +26,7 @@ const useDetailedStats = () => {
       const weekAgo = subDays(today, 7).toISOString();
       const monthAgo = subDays(today, 30).toISOString();
 
-      const [
-        r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12
-      ] = await Promise.all([
+      const [r1, r2, r3, r4, r5, r6, r7, r8] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_online', true),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_verified', true),
@@ -37,19 +35,20 @@ const useDetailedStats = () => {
         supabase.from('messages').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
         supabase.from('messages').select('*', { count: 'exact', head: true }).gte('created_at', startOfToday),
         supabase.from('profile_photos').select('*', { count: 'exact', head: true }),
+      ] as const);
+
+      const [r9, r10, r11, r12, r13, r14, r15, r16] = await Promise.all([
         supabase.from('user_albums').select('*', { count: 'exact', head: true }),
         supabase.from('private_conversations').select('*', { count: 'exact', head: true }),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', startOfToday),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
-      ]);
-
-      const [
-        r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24
-      ] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', monthAgo),
         supabase.from('reports').select('*', { count: 'exact', head: true }),
         supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('identity_verifications').select('*', { count: 'exact', head: true }),
+      ] as const);
+
+      const [r17, r18, r19, r20, r21, r22, r23, r24] = await Promise.all([
         supabase.from('identity_verifications').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
         supabase.from('moderation_tasks').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
         supabase.from('swipe_actions').select('*', { count: 'exact', head: true }).eq('action', 'like'),
@@ -58,7 +57,7 @@ const useDetailedStats = () => {
         supabase.from('profiles').select('created_at').gte('created_at', subDays(today, 14).toISOString()).order('created_at', { ascending: true }),
         supabase.from('messages').select('created_at').gte('created_at', weekAgo).order('created_at', { ascending: true }),
         supabase.from('identity_verifications').select('status'),
-      ]);
+      ] as const);
 
       const totalUsers = r1.count || 0;
       const onlineUsers = r2.count || 0;

@@ -1,9 +1,10 @@
 import { memo, useCallback } from 'react';
 import { 
   Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
-  MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Bell, Home,
+  MessageSquare, IdCard, Ticket, Coins, Bell,
   Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, ListOrdered, 
-  Headphones, Star, HelpCircle, ArrowLeft, FileImage, Megaphone
+  Headphones, Star, HelpCircle, ArrowLeft, FileImage, Megaphone, Sparkles, ToggleLeft, Rocket,
+  ChevronLeft, Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,6 @@ interface AdminMobileNavProps {
   pendingVerifications?: number;
   isAdmin?: boolean;
   modPermissions?: ModPermissions | null;
-  /** Slot rendered at top of dashboard scroll area (for TaskQueuePopup) */
   dashboardTopSlot?: React.ReactNode;
 }
 
@@ -37,52 +37,47 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  // Tâches
-  { id: 'pending-tasks', label: 'File missions', shortLabel: 'Missions', icon: ListOrdered, group: 'tasks' },
+  { id: 'pending-tasks', label: 'Missions', icon: ListOrdered, group: 'tasks' },
   { id: 'support', label: 'Support', icon: Headphones, group: 'tasks' },
   { id: 'support-ratings', label: 'Avis', icon: Star, group: 'tasks' },
-  // Modération
-  { id: 'verification', label: 'Vérification ID', shortLabel: 'Vérif. ID', icon: IdCard, group: 'moderation', adminOnly: true, permissionKey: 'can_verify_identity' },
+  { id: 'verification', label: 'Identité', icon: IdCard, group: 'moderation', adminOnly: true, permissionKey: 'can_verify_identity' },
   { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation', permissionKey: 'can_manage_reports' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation', permissionKey: 'can_manage_content' },
-  { id: 'ai-moderation', label: 'IA Modération', shortLabel: 'IA', icon: Bot, group: 'moderation', permissionKey: 'can_ai_moderation' },
+  { id: 'ai-moderation', label: 'IA', icon: Bot, group: 'moderation', permissionKey: 'can_ai_moderation' },
   { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, group: 'moderation', permissionKey: 'can_screenshot_sanctions' },
-  // Utilisateurs
-  { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users', adminOnly: true, permissionKey: 'can_manage_users' },
+  { id: 'users', label: 'Membres', icon: Users, group: 'users', adminOnly: true, permissionKey: 'can_manage_users' },
   { id: 'stats', label: 'Stats', icon: BarChart3, group: 'users', adminOnly: true, permissionKey: 'can_view_stats' },
-  { id: 'moderators', label: 'Modérateurs', shortLabel: 'Modéra.', icon: UserCog, group: 'users', adminOnly: true },
-  // Finances
+  { id: 'moderators', label: 'Équipe', icon: UserCog, group: 'users', adminOnly: true },
   { id: 'wallet', label: 'Portefeuille', icon: Wallet, group: 'finances' },
   { id: 'credits-surveillance', label: 'Surveillance', icon: Activity, group: 'finances', adminOnly: true, permissionKey: 'can_manage_credits' },
   { id: 'credit-purchases', label: 'Achats', icon: ShoppingCart, group: 'finances', permissionKey: 'can_manage_credits' },
   { id: 'rates', label: 'Tarifs', icon: Euro, group: 'finances', adminOnly: true },
   { id: 'withdrawals', label: 'Retraits', icon: ArrowUpRight, group: 'finances', adminOnly: true },
   { id: 'global', label: 'Gains', icon: PieChart, group: 'finances', adminOnly: true },
-  // Communication
-  { id: 'broadcast', label: 'Notifications', shortLabel: 'Notifs', icon: Bell, group: 'communication', adminOnly: true, permissionKey: 'can_broadcast' },
+  { id: 'broadcast', label: 'Push', icon: Bell, group: 'communication', adminOnly: true, permissionKey: 'can_broadcast' },
   { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'communication', adminOnly: true },
-  { id: 'faq', label: "Aide", icon: HelpCircle, group: 'communication', adminOnly: true },
+  { id: 'faq', label: 'Aide', icon: HelpCircle, group: 'communication', adminOnly: true },
   { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'communication', adminOnly: true },
-  { id: 'promo', label: 'Promo', icon: Ticket, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
+  { id: 'promo', label: 'Promos', icon: Ticket, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
   { id: 'ads' as AdminSection, label: 'Annonces', icon: Megaphone, group: 'communication', permissionKey: 'can_manage_content' },
-  { id: 'promo-images' as AdminSection, label: 'Visuels promo', shortLabel: 'Visuels', icon: FileImage, group: 'communication', adminOnly: true },
-  // Config
-  { id: 'credit-costs', label: 'Tarifs crédits', shortLabel: 'Tarifs', icon: Coins, group: 'config', adminOnly: true },
+  { id: 'promo-images' as AdminSection, label: 'Visuels', icon: Sparkles, group: 'communication', adminOnly: true },
+  { id: 'site-updates' as AdminSection, label: 'Updates', icon: Rocket, group: 'communication', adminOnly: true },
+  { id: 'credit-costs', label: 'Crédits', icon: Coins, group: 'config', adminOnly: true },
   { id: 'swipe-stats', label: 'Swipe', icon: Heart, group: 'config', adminOnly: true },
   { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'config', adminOnly: true },
-  // Logs
+  { id: 'feature-toggles' as AdminSection, label: 'Toggles', icon: ToggleLeft, group: 'config', adminOnly: true },
   { id: 'error-logs', label: 'Erreurs', icon: Activity, group: 'logs', adminOnly: true },
   { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'logs', adminOnly: true },
 ];
 
-const groupConfig: Record<NavGroup, { label: string; emoji: string; accent: string; bg: string }> = {
-  tasks: { label: 'Mes tâches', emoji: '⚡', accent: 'border-orange-500/30', bg: 'bg-orange-500/5' },
-  moderation: { label: 'Modération', emoji: '🛡️', accent: 'border-amber-500/30', bg: 'bg-amber-500/5' },
-  users: { label: 'Utilisateurs', emoji: '👥', accent: 'border-blue-500/30', bg: 'bg-blue-500/5' },
-  finances: { label: 'Finances', emoji: '💰', accent: 'border-emerald-500/30', bg: 'bg-emerald-500/5' },
-  communication: { label: 'Communication', emoji: '📢', accent: 'border-violet-500/30', bg: 'bg-violet-500/5' },
-  config: { label: 'Configuration', emoji: '⚙️', accent: 'border-muted-foreground/20', bg: 'bg-muted/30' },
-  logs: { label: 'Monitoring', emoji: '📊', accent: 'border-red-500/20', bg: 'bg-red-500/5' },
+const groupConfig: Record<NavGroup, { label: string; emoji: string }> = {
+  tasks: { label: 'Tâches', emoji: '⚡' },
+  moderation: { label: 'Modération', emoji: '🛡️' },
+  users: { label: 'Utilisateurs', emoji: '👥' },
+  finances: { label: 'Finances', emoji: '💰' },
+  communication: { label: 'Communication', emoji: '📢' },
+  config: { label: 'Configuration', emoji: '⚙️' },
+  logs: { label: 'Monitoring', emoji: '📊' },
 };
 
 const groupOrder: NavGroup[] = ['tasks', 'moderation', 'users', 'finances', 'communication', 'config', 'logs'];
@@ -126,20 +121,18 @@ const AdminMobileNav = ({
   if (activeSection !== 'dashboard' && activeItem) {
     const ActiveIcon = activeItem.icon;
     return (
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/40">
         <div className="flex items-center gap-3 px-3 py-2.5" style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top, 0px))' }}>
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => onSectionChange('dashboard')}
-            className="h-9 w-9 rounded-xl shrink-0"
+            className="h-8 w-8 rounded-lg shrink-0"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <ActiveIcon className="w-4 h-4 text-primary" />
-            </div>
+            <ActiveIcon className="w-4 h-4 text-primary flex-shrink-0" />
             <span className="font-semibold text-sm truncate">{activeItem.label}</span>
           </div>
         </div>
@@ -151,36 +144,32 @@ const AdminMobileNav = ({
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/40">
         <div className="flex items-center justify-between px-4 py-2.5" style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top, 0px))' }}>
           <Button 
             variant="ghost" 
             size="sm"
             onClick={() => window.history.back()}
-            className="gap-1 text-muted-foreground -ml-2 h-9"
+            className="gap-1 text-muted-foreground -ml-2 h-8"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span className="text-sm">Retour</span>
+            <span className="text-xs">Retour</span>
           </Button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-sm">
-              <Shield className="w-4 h-4 text-primary-foreground" />
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Shield className="w-3.5 h-3.5 text-primary" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-sm leading-none">
-                {isAdmin ? 'Admin' : 'Modérateur'}
-              </span>
-              <span className="text-[9px] text-muted-foreground leading-none mt-0.5">Tableau de bord</span>
-            </div>
+            <span className="font-semibold text-sm">
+              {isAdmin ? 'Admin' : 'Modération'}
+            </span>
           </div>
           <div className="w-16" />
         </div>
       </div>
 
       {/* Dashboard Grid */}
-      <ScrollArea className="h-[calc(100dvh-56px)]">
-        <div className="px-3 py-4 space-y-4 pb-8">
-          {/* Task queue slot at top of dashboard */}
+      <ScrollArea className="h-[calc(100dvh-52px)]">
+        <div className="px-3 py-3 space-y-3 pb-8">
           {dashboardTopSlot}
           {groupOrder.map((group) => {
             const items = groupedItems[group];
@@ -189,50 +178,44 @@ const AdminMobileNav = ({
             return (
               <div key={group}>
                 <div className="flex items-center gap-2 mb-2 px-1">
-                  <span className="text-sm">{config.emoji}</span>
-                  <span className="text-xs font-semibold text-foreground/70 uppercase tracking-wide">
+                  <span className="text-xs">{config.emoji}</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                     {config.label}
                   </span>
-                  <div className="flex-1 h-px bg-border/40" />
+                  <div className="flex-1 h-px bg-border/30" />
                 </div>
-                <div className={cn(
-                  "rounded-2xl border p-2",
-                  config.accent,
-                  config.bg
-                )}>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {items.map((item) => {
-                      const Icon = item.icon;
-                      const badge = getBadge(item.id);
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => onSectionChange(item.id)}
-                          className={cn(
-                            "relative flex flex-col items-center gap-1 p-2.5 rounded-xl",
-                            "bg-card/90 backdrop-blur-sm",
-                            "active:scale-[0.97] transition-all duration-100",
-                            "hover:shadow-sm"
-                          )}
-                        >
-                          <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center">
-                            <Icon className="w-4 h-4 text-foreground/60" />
-                          </div>
-                          <span className="text-[10px] font-medium text-foreground/70 text-center leading-tight line-clamp-2">
-                            {item.shortLabel || item.label}
-                          </span>
-                          {badge !== undefined && badge > 0 && (
-                            <Badge 
-                              variant="destructive" 
-                              className="absolute -top-0.5 -right-0.5 text-[9px] px-1 py-0 min-w-[16px] h-4 text-center"
-                            >
-                              {badge}
-                            </Badge>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {items.map((item) => {
+                    const Icon = item.icon;
+                    const badge = getBadge(item.id);
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => onSectionChange(item.id)}
+                        className={cn(
+                          "relative flex flex-col items-center gap-1.5 p-3 rounded-xl",
+                          "bg-card border border-border/30",
+                          "active:scale-[0.97] transition-all duration-100",
+                          "hover:border-border/50 hover:shadow-sm"
+                        )}
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                          <Icon className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <span className="text-[10px] font-medium text-muted-foreground text-center leading-tight line-clamp-1">
+                          {item.shortLabel || item.label}
+                        </span>
+                        {badge !== undefined && badge > 0 && (
+                          <Badge 
+                            variant="destructive" 
+                            className="absolute -top-1 -right-1 text-[9px] px-1 py-0 min-w-[16px] h-4 text-center"
+                          >
+                            {badge}
+                          </Badge>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             );

@@ -124,6 +124,23 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
     );
   }
 
+  // Visitor support session handling
+  if (isVisitorTask && visitorSessionId) {
+    return (
+      <div className="max-w-2xl mx-auto w-full">
+        <div className="flex flex-col h-[calc(100vh-160px)] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+          <VisitorSupportChatAdmin
+            sessionId={visitorSessionId}
+            visitorName={taskMetadata?.visitor_name || 'Visiteur'}
+            visitorEmail={taskMetadata?.visitor_email}
+            onBack={onBack}
+            onComplete={onBack}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (!ticket) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center px-6">

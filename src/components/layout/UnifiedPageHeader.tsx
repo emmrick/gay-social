@@ -45,8 +45,8 @@ const UnifiedPageHeader = ({
       style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
     >
       <div className="px-5 pb-4 flex items-center justify-between w-full">
-        <div className="min-w-0 flex items-center gap-2">
-          <img src={logoSrc} alt="Gay Social" className="w-8 h-8 object-contain rounded-full" />
+        <div className="min-w-0 flex items-center gap-2.5">
+          <img src={logoSrc} alt="Gay Social" className="w-9 h-9 rounded-full object-cover shadow-md ring-2 ring-primary/30 flex-shrink-0" />
           <h1 className="font-display text-xl font-extrabold rainbow-text leading-tight">
             Gay Social
           </h1>

@@ -52,6 +52,9 @@ const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const GuidePage = lazy(() => import("./pages/Guide"));
 const PaypalReturn = lazy(() => import("./pages/PaypalReturn"));
 const Advertise = lazy(() => import("./pages/Advertise"));
+const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const Security = lazy(() => import("./pages/Security"));
+const Community = lazy(() => import("./pages/Community"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 
@@ -135,6 +138,9 @@ const AuthenticatedApp = () => {
                     <Route path="/guide" element={<Suspense fallback={<PageFallback />}><GuidePage /></Suspense>} />
                     <Route path="/paypal-return" element={<Suspense fallback={<PageFallback />}><PaypalReturn /></Suspense>} />
                     <Route path="/advertise" element={<Suspense fallback={<PageFallback />}><Advertise /></Suspense>} />
+                    <Route path="/comment-ca-marche" element={<Suspense fallback={<PageFallback />}><HowItWorks /></Suspense>} />
+                    <Route path="/securite" element={<Suspense fallback={<PageFallback />}><Security /></Suspense>} />
+                    <Route path="/communaute" element={<Suspense fallback={<PageFallback />}><Community /></Suspense>} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                   </Routes>

@@ -154,13 +154,23 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
         jsonLd={combinedJsonLd}
       />
 
-      {/* Top bar with branding */}
+      {/* Top bar with branding + nav */}
       <div className="bg-background/95 backdrop-blur-lg border-b border-border/50 py-3 px-5 relative z-20">
-        <div className="container mx-auto flex items-center gap-2.5">
-          
+        <div className="container mx-auto flex items-center justify-between">
           <h1 className="font-display text-2xl font-extrabold rainbow-text leading-tight">
             Gay Social
           </h1>
+          <nav className="hidden sm:flex items-center gap-5 text-sm text-muted-foreground">
+            <Link to="/comment-ca-marche" className="hover:text-primary transition-colors">Comment ça marche</Link>
+            <Link to="/securite" className="hover:text-primary transition-colors">Sécurité</Link>
+            <Link to="/communaute" className="hover:text-primary transition-colors">Communauté</Link>
+            <Link to="/regions" className="hover:text-primary transition-colors">Régions</Link>
+            <Button size="sm" onClick={onGetStarted}>S'inscrire</Button>
+          </nav>
+          {/* Mobile: just CTA */}
+          <div className="sm:hidden">
+            <Button size="sm" onClick={onGetStarted}>S'inscrire</Button>
+          </div>
         </div>
       </div>
 
@@ -589,33 +599,68 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
       </div>
 
       {/* ===== FOOTER ===== */}
-      <footer className="relative z-20 py-8 border-t border-border/30 bg-card/50 backdrop-blur-sm">
+      <footer className="relative z-20 py-10 border-t border-border/30 bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-muted-foreground">
+          {/* Footer navigation grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8 max-w-4xl mx-auto text-sm">
+            <div>
+              <h4 className="font-semibold text-foreground mb-3">Découvrir</h4>
+              <div className="space-y-2 text-muted-foreground">
+                <Link to="/comment-ca-marche" className="block hover:text-primary transition-colors">Comment ça marche</Link>
+                <Link to="/securite" className="block hover:text-primary transition-colors">Sécurité</Link>
+                <Link to="/communaute" className="block hover:text-primary transition-colors">Communauté</Link>
+                <Link to="/regions" className="block hover:text-primary transition-colors">Toutes les régions</Link>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-3">Informations</h4>
+              <div className="space-y-2 text-muted-foreground">
+                <Link to="/about" className="block hover:text-primary transition-colors">À propos</Link>
+                <Link to="/aide" className="block hover:text-primary transition-colors">Centre d'aide</Link>
+                <Link to="/regles" className="block hover:text-primary transition-colors">Règles du site</Link>
+                <Link to="/guide" className="block hover:text-primary transition-colors">Guide d'utilisation</Link>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-3">Légal</h4>
+              <div className="space-y-2 text-muted-foreground">
+                <Link to="/legal" className="block hover:text-primary transition-colors">Mentions légales</Link>
+                <Link to="/legal" className="block hover:text-primary transition-colors">CGU</Link>
+                <Link to="/legal" className="block hover:text-primary transition-colors">Politique de confidentialité</Link>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-3">Villes populaires</h4>
+              <div className="space-y-2 text-muted-foreground">
+                <Link to="/region/75-paris" className="block hover:text-primary transition-colors">Gay Paris</Link>
+                <Link to="/region/69-rhone" className="block hover:text-primary transition-colors">Gay Lyon</Link>
+                <Link to="/region/13-bouches-du-rhone" className="block hover:text-primary transition-colors">Gay Marseille</Link>
+                <Link to="/region/31-haute-garonne" className="block hover:text-primary transition-colors">Gay Toulouse</Link>
+                <Link to="/region/33-gironde" className="block hover:text-primary transition-colors">Gay Bordeaux</Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom line */}
+          <div className="border-t border-border/30 pt-6 flex flex-col sm:flex-row items-center justify-center gap-3 text-sm text-muted-foreground">
             <span>© 2025 Gay Social</span>
-            <span className="hidden md:inline">•</span>
-            <Link to="/legal" className="hover:text-primary transition-colors">Mentions légales & CGU</Link>
-            <span className="hidden md:inline">•</span>
-            <Link to="/about" className="hover:text-primary transition-colors">À propos</Link>
-            <span className="hidden md:inline">•</span>
-            <Link to="/regions" className="hover:text-primary transition-colors">Toutes les régions</Link>
-            <span className="hidden md:inline">•</span>
+            <span className="hidden sm:inline">•</span>
             <span className="flex items-center gap-1">
               <AlertTriangle className="w-4 h-4 text-destructive" />
               Réservé aux +18 ans
             </span>
           </div>
-          <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground/60">
-            <Link to="/region/75-paris" className="hover:text-primary transition-colors">Gay Paris</Link>
-            <Link to="/region/69-rhone" className="hover:text-primary transition-colors">Gay Lyon</Link>
-            <Link to="/region/13-bouches-du-rhone" className="hover:text-primary transition-colors">Gay Marseille</Link>
-            <Link to="/region/31-haute-garonne" className="hover:text-primary transition-colors">Gay Toulouse</Link>
-            <Link to="/region/33-gironde" className="hover:text-primary transition-colors">Gay Bordeaux</Link>
+
+          {/* SEO city links */}
+          <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground/50">
             <Link to="/region/44-loire-atlantique" className="hover:text-primary transition-colors">Gay Nantes</Link>
             <Link to="/region/59-nord" className="hover:text-primary transition-colors">Gay Lille</Link>
             <Link to="/region/67-bas-rhin" className="hover:text-primary transition-colors">Gay Strasbourg</Link>
             <Link to="/region/34-herault" className="hover:text-primary transition-colors">Gay Montpellier</Link>
             <Link to="/region/06-alpes-maritimes" className="hover:text-primary transition-colors">Gay Nice</Link>
+            <Link to="/region/35-ille-et-vilaine" className="hover:text-primary transition-colors">Gay Rennes</Link>
+            <Link to="/region/76-seine-maritime" className="hover:text-primary transition-colors">Gay Rouen</Link>
+            <Link to="/region/38-isere" className="hover:text-primary transition-colors">Gay Grenoble</Link>
           </div>
         </div>
       </footer>

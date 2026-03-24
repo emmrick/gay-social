@@ -51,15 +51,18 @@ const ChatBotConfigSection = () => {
     const trimmed = newInfo.trim();
     if (!trimmed) return;
     
-    const cost = infos.length >= 10 ? CREDIT_COSTS.chatbot_info_extra : CREDIT_COSTS.chatbot_info;
-    if (!hasEnoughCredits(cost)) {
+    const cost = infos.length >= 10 
+      ? await getDynamicCreditCost('chatbot_info_extra') 
+      : await getDynamicCreditCost('chatbot_info');
+    if (cost > 0 && !hasEnoughCredits(cost)) {
       toast.error(`Crédits insuffisants (${cost} crédits par information)`);
       return;
     }
 
     try {
-      await deductCredits.mutateAsync({
-        amount: cost,
+      if (cost > 0) {
+        await deductCredits.mutateAsync({
+          amount: cost,
         transactionType: infos.length >= 10 ? 'chatbot_info_extra' : 'chatbot_info',
         description: `Info chatbot (${infos.length + 1}${infos.length >= 10 ? ' - extra' : ''})`,
       });

@@ -8,21 +8,15 @@ interface MentionHighlightProps {
   className?: string;
 }
 
+// Combined regex: matches @mentions OR URLs
+const tokenRegex = /(https?:\/\/[^\s<]+[^\s<.,;:!?)}\]'"])|(@\w+)/g;
+
 const MentionHighlight = ({ content, className = '' }: MentionHighlightProps) => {
   const navigate = useNavigate();
-  
-  // Regex to match @mentions (@ followed by word characters)
-  const mentionRegex = /(@\w+)/g;
-  
-  // Split content by mentions while keeping the mentions in the array
-  const parts = content.split(mentionRegex);
 
   const handleMentionClick = useCallback(async (username: string) => {
-    // Remove the @ symbol
     const cleanUsername = username.substring(1).toLowerCase();
-    
     try {
-      // Look up the user by username
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('user_id')
@@ -41,18 +35,40 @@ const MentionHighlight = ({ content, className = '' }: MentionHighlightProps) =>
       toast.error('Erreur lors de la recherche du profil');
     }
   }, [navigate]);
-  
-  if (parts.length === 1) {
-    // No mentions found, return plain text
+
+  // Split content by tokens while keeping them
+  const parts = content.split(tokenRegex).filter(p => p !== undefined);
+
+  if (parts.length <= 1 && !tokenRegex.test(content)) {
     return <p className={className}>{content}</p>;
   }
+
+  // Reset after test
+  tokenRegex.lastIndex = 0;
 
   return (
     <p className={className}>
       {parts.map((part, index) => {
-        if (mentionRegex.test(part)) {
-          // Reset regex lastIndex for next test
-          mentionRegex.lastIndex = 0;
+        if (!part) return null;
+
+        // Check if it's a URL
+        if (/^https?:\/\//.test(part)) {
+          return (
+            <a
+              key={index}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-primary underline hover:text-primary/80 break-all transition-colors"
+            >
+              {part}
+            </a>
+          );
+        }
+
+        // Check if it's a mention
+        if (/^@\w+$/.test(part)) {
           return (
             <button
               key={index}
@@ -66,6 +82,7 @@ const MentionHighlight = ({ content, className = '' }: MentionHighlightProps) =>
             </button>
           );
         }
+
         return <Fragment key={index}>{part}</Fragment>;
       })}
     </p>

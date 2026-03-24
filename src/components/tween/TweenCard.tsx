@@ -8,7 +8,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToggleTweenLike, useDeleteTween, useVoteTweenPoll, type Tween } from '@/hooks/useTweens';
-import { useSignedUrl } from '@/hooks/useSignedUrl';
 import TweenDetailDialog from './TweenDetailDialog';
 
 interface TweenCardProps {
@@ -16,7 +15,6 @@ interface TweenCardProps {
 }
 
 const TweenPoll = ({ tween }: { tween: Tween }) => {
-  const { user } = useAuth();
   const votePoll = useVoteTweenPoll();
   const options = tween.poll_options || [];
   const totalVotes = options.reduce((sum: number, o: any) => sum + (o.votes || 0), 0);
@@ -28,7 +26,7 @@ const TweenPoll = ({ tween }: { tween: Tween }) => {
         return (
           <button
             key={i}
-            onClick={() => votePoll.mutate({ tweenId: tween.id, optionIndex: i })}
+            onClick={(e) => { e.stopPropagation(); votePoll.mutate({ tweenId: tween.id, optionIndex: i }); }}
             className="w-full relative overflow-hidden rounded-lg border border-border p-3 text-left text-sm transition-colors hover:bg-muted/50"
           >
             <div
@@ -45,16 +43,6 @@ const TweenPoll = ({ tween }: { tween: Tween }) => {
       <p className="text-xs text-muted-foreground">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</p>
     </div>
   );
-};
-
-const TweenMediaDisplay = ({ mediaUrl, mediaType }: { mediaUrl: string; mediaType: string }) => {
-  const { data: signedUrl } = useSignedUrl('media', mediaUrl);
-  const url = signedUrl || mediaUrl;
-
-  if (mediaType === 'video') {
-    return <video src={url} controls className="w-full rounded-xl mt-3 max-h-80 object-cover" />;
-  }
-  return <img src={url} alt="" className="w-full rounded-xl mt-3 max-h-80 object-cover" loading="lazy" />;
 };
 
 const TweenCard = ({ tween }: TweenCardProps) => {
@@ -123,8 +111,11 @@ const TweenCard = ({ tween }: TweenCardProps) => {
             <p className="mt-1 text-sm whitespace-pre-wrap break-words">{tween.content}</p>
 
             {/* Media */}
-            {tween.media_url && tween.media_type && (
-              <TweenMediaDisplay mediaUrl={tween.media_url} mediaType={tween.media_type} />
+            {tween.media_url && tween.media_type === 'image' && (
+              <img src={tween.media_url} alt="" className="w-full rounded-xl mt-3 max-h-80 object-cover" loading="lazy" />
+            )}
+            {tween.media_url && tween.media_type === 'video' && (
+              <video src={tween.media_url} controls className="w-full rounded-xl mt-3 max-h-80 object-cover" />
             )}
 
             {/* Poll */}
@@ -134,8 +125,10 @@ const TweenCard = ({ tween }: TweenCardProps) => {
             <div className="flex items-center gap-6 mt-3 -ml-2">
               <button
                 className={cn(
-                  "flex items-center gap-1.5 text-sm transition-colors px-2 py-1 rounded-lg hover:bg-destructive/10",
-                  tween.user_has_liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+                  "flex items-center gap-1.5 text-sm transition-colors px-2 py-1 rounded-lg",
+                  tween.user_has_liked
+                    ? "text-destructive"
+                    : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                 )}
                 onClick={handleLike}
               >

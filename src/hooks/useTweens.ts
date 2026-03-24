@@ -41,6 +41,22 @@ export interface TweenComment {
 
 const PAGE_SIZE = 20;
 
+async function enrichWithProfiles(items: any[], userIdField = 'user_id') {
+  const userIds = [...new Set(items.map(i => i[userIdField]))];
+  if (!userIds.length) return items;
+
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('user_id, username, avatar_url')
+    .in('user_id', userIds);
+
+  const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+  return items.map(item => ({
+    ...item,
+    profiles: profileMap.get(item[userIdField]) || null,
+  }));
+}
+
 export function useTweenFeed() {
   const { user } = useAuth();
 
@@ -52,15 +68,17 @@ export function useTweenFeed() {
 
       const { data: tweens, error } = await supabase
         .from('tweens')
-        .select('*, profiles!tweens_user_id_fkey(username, avatar_url, user_id)')
+        .select('*')
         .eq('is_deleted', false)
         .order('created_at', { ascending: false })
         .range(from, to);
 
       if (error) throw error;
+      if (!tweens?.length) return [] as Tween[];
 
-      // Check which ones the user has liked
-      if (user && tweens?.length) {
+      let enriched = await enrichWithProfiles(tweens);
+
+      if (user) {
         const tweenIds = tweens.map(t => t.id);
         const { data: likes } = await supabase
           .from('tween_likes')
@@ -69,10 +87,10 @@ export function useTweenFeed() {
           .in('tween_id', tweenIds);
 
         const likedSet = new Set(likes?.map(l => l.tween_id) || []);
-        return tweens.map(t => ({ ...t, user_has_liked: likedSet.has(t.id) })) as Tween[];
+        enriched = enriched.map(t => ({ ...t, user_has_liked: likedSet.has(t.id) }));
       }
 
-      return (tweens || []) as Tween[];
+      return enriched as Tween[];
     },
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length === PAGE_SIZE ? allPages.length : undefined;
@@ -90,15 +108,18 @@ export function useUserTweens(userId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tweens')
-        .select('*, profiles!tweens_user_id_fkey(username, avatar_url, user_id)')
+        .select('*')
         .eq('user_id', userId!)
         .eq('is_deleted', false)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
+      if (!data?.length) return [] as Tween[];
 
-      if (user && data?.length) {
+      let enriched = await enrichWithProfiles(data);
+
+      if (user) {
         const tweenIds = data.map(t => t.id);
         const { data: likes } = await supabase
           .from('tween_likes')
@@ -107,10 +128,10 @@ export function useUserTweens(userId: string | undefined) {
           .in('tween_id', tweenIds);
 
         const likedSet = new Set(likes?.map(l => l.tween_id) || []);
-        return data.map(t => ({ ...t, user_has_liked: likedSet.has(t.id) })) as Tween[];
+        enriched = enriched.map(t => ({ ...t, user_has_liked: likedSet.has(t.id) }));
       }
 
-      return (data || []) as Tween[];
+      return enriched as Tween[];
     },
     enabled: !!userId,
   });
@@ -200,14 +221,14 @@ export function useTweenComments(tweenId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tween_comments')
-        .select('*, profiles!tween_comments_user_id_fkey(username, avatar_url, user_id)')
+        .select('*')
         .eq('tween_id', tweenId!)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
 
-      // Build nested structure
-      const comments = (data || []) as TweenComment[];
+      const enriched = await enrichWithProfiles(data || []);
+      const comments = enriched as TweenComment[];
       const topLevel = comments.filter(c => !c.parent_comment_id);
       const replies = comments.filter(c => c.parent_comment_id);
 
@@ -296,9 +317,9 @@ export function useVoteTweenPoll() {
         .eq('id', tweenId)
         .single();
 
-      if (tween?.poll_options) {
-        const options = [...tween.poll_options];
-        options[optionIndex] = { ...options[optionIndex], votes: (options[optionIndex].votes || 0) + 1 };
+      if (tween?.poll_options && Array.isArray(tween.poll_options)) {
+        const options = [...(tween.poll_options as any[])];
+        options[optionIndex] = { ...options[optionIndex], votes: (options[optionIndex]?.votes || 0) + 1 };
         await supabase.from('tweens').update({ poll_options: options }).eq('id', tweenId);
       }
     },

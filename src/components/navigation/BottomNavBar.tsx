@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 
 interface BottomNavBarProps {
-  activeTab: 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile';
-  onTabChange: (tab: 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile') => void;
+  activeTab: 'home' | 'swipe' | 'messages' | 'tween' | 'premium' | 'help' | 'profile';
+  onTabChange: (tab: 'home' | 'swipe' | 'messages' | 'tween' | 'premium' | 'help' | 'profile') => void;
   unreadCount?: number;
   isPremium?: boolean;
 }

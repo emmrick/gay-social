@@ -1758,6 +1758,7 @@ export type Database = {
           reserved_at: string | null
           reserved_by: string | null
           reward_cents: number
+          sms_notified: boolean
           status: string
           target_entity_id: string | null
           target_user_id: string | null
@@ -1777,6 +1778,7 @@ export type Database = {
           reserved_at?: string | null
           reserved_by?: string | null
           reward_cents?: number
+          sms_notified?: boolean
           status?: string
           target_entity_id?: string | null
           target_user_id?: string | null
@@ -1796,6 +1798,7 @@ export type Database = {
           reserved_at?: string | null
           reserved_by?: string | null
           reward_cents?: number
+          sms_notified?: boolean
           status?: string
           target_entity_id?: string | null
           target_user_id?: string | null
@@ -4042,6 +4045,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_stale_tasks_send_sms: { Args: never; Returns: undefined }
       check_sufficient_credits: {
         Args: { _amount: number; _user_id: string }
         Returns: boolean
@@ -4080,6 +4084,7 @@ export type Database = {
           reserved_at: string | null
           reserved_by: string | null
           reward_cents: number
+          sms_notified: boolean
           status: string
           target_entity_id: string | null
           target_user_id: string | null

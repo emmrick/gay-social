@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { deductCredits, checkSufficientCredits, CREDIT_COSTS } from '@/hooks/useCredits';
+import { deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
 import { toast } from 'sonner';
 
 const MAX_GROUPS = 3;

@@ -286,7 +286,9 @@ const Index = () => {
 
   const handleTabChange = (tab: NavTab) => {
     if (tab === 'tween') {
-      navigate('/tween');
+      setPreviousTab(activeTab);
+      setActiveTab(tab);
+      setCurrentView('tween');
       return;
     }
     if (tab === 'help') {

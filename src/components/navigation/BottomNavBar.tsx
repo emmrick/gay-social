@@ -14,8 +14,8 @@ const allTabs = [
   { id: 'home' as const, icon: Home, label: 'Accueil', premium: false, featureKey: null },
   { id: 'swipe' as const, icon: Sparkles, label: 'Swipe', premium: false, featureKey: 'swipe_page' },
   { id: 'messages' as const, icon: MessageCircle, label: 'Messages', premium: false, featureKey: null },
+  { id: 'tween' as const, icon: Rss, label: 'Tween', premium: false, featureKey: null },
   { id: 'premium' as const, icon: Crown, label: 'Crédits', premium: true, featureKey: 'credits_page' },
-  { id: 'help' as const, icon: HelpCircle, label: 'Aide', premium: false, featureKey: null },
   { id: 'profile' as const, icon: User, label: 'Profil', premium: false, featureKey: null },
 ] as const;
 

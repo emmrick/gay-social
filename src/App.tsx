@@ -55,6 +55,7 @@ const Advertise = lazy(() => import("./pages/Advertise"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Security = lazy(() => import("./pages/Security"));
 const Community = lazy(() => import("./pages/Community"));
+const TweenPage = lazy(() => import("./pages/Tween"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 

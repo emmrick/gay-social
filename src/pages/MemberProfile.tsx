@@ -163,17 +163,27 @@ const MemberProfile = () => {
       }
 
       try {
+        // Fetch dynamic cost from DB (respects admin promo settings)
+        const dynamicCost = await getDynamicCreditCost('profile_view');
+        
+        // If cost is 0, profile view is free - just record it
+        if (dynamicCost <= 0) {
+          await recordProfileView.mutateAsync(userId);
+          setHasChargedView(true);
+          return;
+        }
+
         // Check if user has enough credits
-        const hasCredits = await checkSufficientCredits(user.id, CREDIT_COSTS.profile_view);
+        const hasCredits = await checkSufficientCredits(user.id, dynamicCost);
         if (!hasCredits) {
-          showInsufficientCreditsDialog(CREDIT_COSTS.profile_view, 'Voir un profil');
+          showInsufficientCreditsDialog(dynamicCost, 'Voir un profil');
           return;
         }
 
         // Deduct credits
         const deductResult = await deductCredits(
           user.id,
-          CREDIT_COSTS.profile_view,
+          dynamicCost,
           'profile_view',
           `Consultation du profil de ${profile?.username || 'membre'}`
         );

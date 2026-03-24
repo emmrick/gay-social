@@ -142,6 +142,7 @@ const AuthenticatedApp = () => {
                     <Route path="/comment-ca-marche" element={<Suspense fallback={<PageFallback />}><HowItWorks /></Suspense>} />
                     <Route path="/securite" element={<Suspense fallback={<PageFallback />}><Security /></Suspense>} />
                     <Route path="/communaute" element={<Suspense fallback={<PageFallback />}><Community /></Suspense>} />
+                    <Route path="/tween" element={<Suspense fallback={<PageFallback />}><TweenPage /></Suspense>} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                   </Routes>

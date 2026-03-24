@@ -25,17 +25,19 @@ const ChatBotConfigSection = () => {
 
   const handleToggle = async () => {
     if (!isActive) {
-      // Activation costs 10 credits
-      if (!hasEnoughCredits(CREDIT_COSTS.chatbot_activate)) {
-        toast.error(`Crédits insuffisants (${CREDIT_COSTS.chatbot_activate} crédits pour activer)`);
+      const activateCost = await getDynamicCreditCost('chatbot_activate');
+      if (activateCost > 0 && !hasEnoughCredits(activateCost)) {
+        toast.error(`Crédits insuffisants (${activateCost} crédits pour activer)`);
         return;
       }
       try {
-        await deductCredits.mutateAsync({
-          amount: CREDIT_COSTS.chatbot_activate,
-          transactionType: 'chatbot_activate',
-          description: 'Activation du ChatBot personnel',
-        });
+        if (activateCost > 0) {
+          await deductCredits.mutateAsync({
+            amount: activateCost,
+            transactionType: 'chatbot_activate',
+            description: 'Activation du ChatBot personnel',
+          });
+        }
         updateConfig.mutate({ is_active: true });
       } catch {
         toast.error('Erreur lors de l\'activation');

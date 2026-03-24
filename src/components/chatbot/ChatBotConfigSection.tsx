@@ -63,9 +63,10 @@ const ChatBotConfigSection = () => {
       if (cost > 0) {
         await deductCredits.mutateAsync({
           amount: cost,
-        transactionType: infos.length >= 10 ? 'chatbot_info_extra' : 'chatbot_info',
-        description: `Info chatbot (${infos.length + 1}${infos.length >= 10 ? ' - extra' : ''})`,
-      });
+          transactionType: infos.length >= 10 ? 'chatbot_info_extra' : 'chatbot_info',
+          description: `Info chatbot (${infos.length + 1}${infos.length >= 10 ? ' - extra' : ''})`,
+        });
+      }
       updateConfig.mutate({ chatbot_info: [...infos, trimmed] });
       setNewInfo('');
     } catch {

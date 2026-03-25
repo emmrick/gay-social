@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useBlockedUserContext } from '@/components/BlockedUserGuard';
+import SuspensionBanner from '@/components/moderation/SuspensionBanner';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import Hero from '@/components/landing/Hero';
 import HomeView from '@/components/home/HomeView';
@@ -70,6 +72,7 @@ const slideIn = {
 
 const Index = () => {
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
+  const { isRestricted } = useBlockedUserContext();
   
   // Use persisted navigation state
   const {
@@ -270,6 +273,14 @@ const Index = () => {
     enableSwipeBack: currentView === 'private' || currentView === 'chat' || currentView === 'chatbot-config',
   });
 
+  // Force restricted users to profile view
+  useEffect(() => {
+    if (isRestricted && user && currentView !== 'profile' && currentView !== 'help') {
+      setActiveTab('profile');
+      setCurrentView('profile');
+    }
+  }, [isRestricted, user, currentView]);
+
   // Skeleton already shown by parent Suspense, just return null briefly
   if (authLoading) {
     return null;
@@ -285,6 +296,10 @@ const Index = () => {
   };
 
   const handleTabChange = (tab: NavTab) => {
+    // Restricted users can only access profile and help
+    if (isRestricted && tab !== 'profile' && tab !== 'help') {
+      return;
+    }
     if (tab === 'tween') {
       setPreviousTab(activeTab);
       setActiveTab(tab);
@@ -590,22 +605,23 @@ const Index = () => {
         return user ? (
           <div className="flex-1 flex flex-col min-h-0">
             <UnifiedPageHeader
-              onNavigateToCredits={() => handleTabChange('premium')}
+              onNavigateToCredits={isRestricted ? undefined : () => handleTabChange('premium')}
               onNavigateToProfile={() => handleTabChange('profile')}
             />
+            {isRestricted && <SuspensionBanner />}
             <ScrollArea className="flex-1 min-h-0">
               <ProfileView 
                 onSignOut={handleSignOut}
-                onNavigateToAdmin={() => navigate('/admin')}
-                onNavigateToCredits={() => handleTabChange('premium')}
+                onNavigateToAdmin={isRestricted ? undefined : () => navigate('/admin')}
+                onNavigateToCredits={isRestricted ? undefined : () => handleTabChange('premium')}
                 onContactAdmin={() => {
                   setPreviousTab(activeTab);
                   setActiveTab('help');
                   setCurrentView('help');
                 }}
-                onNavigateToChatbot={() => setCurrentView('chatbot-config')}
-                isAdmin={isAdmin}
-                isModerator={isModerator}
+                onNavigateToChatbot={isRestricted ? undefined : () => setCurrentView('chatbot-config')}
+                isAdmin={isRestricted ? false : isAdmin}
+                isModerator={isRestricted ? false : isModerator}
                 openEditProfile={openEditProfile}
                 onEditProfileHandled={() => setOpenEditProfile(false)}
               />

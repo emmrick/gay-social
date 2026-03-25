@@ -1,9 +1,23 @@
-import { ReactNode } from 'react';
+import { ReactNode, createContext, useContext } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlockedStatus } from '@/hooks/useBlockedStatus';
-import BlockedUserScreen from './BlockedUserScreen';
-import SuspendedUserScreen from './moderation/SuspendedUserScreen';
 import { Loader2 } from 'lucide-react';
+
+interface BlockedUserContextType {
+  isRestricted: boolean;
+  isBlocked: boolean;
+  isSuspendedByAI: boolean;
+  blockInfo: any;
+}
+
+const BlockedUserContext = createContext<BlockedUserContextType>({
+  isRestricted: false,
+  isBlocked: false,
+  isSuspendedByAI: false,
+  blockInfo: null,
+});
+
+export const useBlockedUserContext = () => useContext(BlockedUserContext);
 
 interface BlockedUserGuardProps {
   children: ReactNode;
@@ -13,12 +27,10 @@ const BlockedUserGuard = ({ children }: BlockedUserGuardProps) => {
   const { user, isLoading: authLoading } = useAuth();
   const { isBlocked, blockInfo, isLoading: blockLoading, isSuspendedByAI } = useBlockedStatus();
 
-  // Don't check if not logged in
   if (!user) {
     return <>{children}</>;
   }
 
-  // Show loading while checking block status
   if (authLoading || blockLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -27,22 +39,13 @@ const BlockedUserGuard = ({ children }: BlockedUserGuardProps) => {
     );
   }
 
-  // Show suspended screen if user was auto-suspended by AI
-  if (isSuspendedByAI) {
-    return <SuspendedUserScreen />;
-  }
+  const isRestricted = isBlocked || isSuspendedByAI;
 
-  // Show blocked screen if user is blocked (permanent)
-  if (isBlocked) {
-    return (
-      <BlockedUserScreen
-        reason={blockInfo?.reason}
-        blockedAt={blockInfo?.blocked_at}
-      />
-    );
-  }
-
-  return <>{children}</>;
+  return (
+    <BlockedUserContext.Provider value={{ isRestricted, isBlocked, isSuspendedByAI, blockInfo }}>
+      {children}
+    </BlockedUserContext.Provider>
+  );
 };
 
 export default BlockedUserGuard;

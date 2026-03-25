@@ -130,7 +130,15 @@ export const useSwipeActions = () => {
       const { data, error } = await query;
       if (error) throw error;
 
-      const profilesList = (data || []) as SwipeableProfile[];
+      let profilesList = (data || []) as SwipeableProfile[];
+
+      // Filter out suspended/blocked users
+      if (profilesList.length > 0) {
+        const checks = await Promise.all(
+          profilesList.map(p => supabase.rpc('is_user_suspended_or_blocked', { _user_id: p.user_id }))
+        );
+        profilesList = profilesList.filter((_, i) => checks[i].data !== true);
+      }
 
       // Fetch profile photos for all profiles in one batch
       if (profilesList.length > 0) {

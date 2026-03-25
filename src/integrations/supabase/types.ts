@@ -1875,12 +1875,16 @@ export type Database = {
           can_manage_blocked: boolean | null
           can_manage_content: boolean | null
           can_manage_credits: boolean | null
+          can_manage_faq: boolean | null
+          can_manage_flyers: boolean | null
+          can_manage_popups: boolean | null
           can_manage_promo: boolean | null
           can_manage_reports: boolean | null
           can_manage_users: boolean | null
           can_screenshot_sanctions: boolean | null
           can_verify_identity: boolean | null
           can_view_history: boolean | null
+          can_view_logs: boolean | null
           can_view_stats: boolean | null
           created_at: string
           id: string
@@ -1894,12 +1898,16 @@ export type Database = {
           can_manage_blocked?: boolean | null
           can_manage_content?: boolean | null
           can_manage_credits?: boolean | null
+          can_manage_faq?: boolean | null
+          can_manage_flyers?: boolean | null
+          can_manage_popups?: boolean | null
           can_manage_promo?: boolean | null
           can_manage_reports?: boolean | null
           can_manage_users?: boolean | null
           can_screenshot_sanctions?: boolean | null
           can_verify_identity?: boolean | null
           can_view_history?: boolean | null
+          can_view_logs?: boolean | null
           can_view_stats?: boolean | null
           created_at?: string
           id?: string
@@ -1913,12 +1921,16 @@ export type Database = {
           can_manage_blocked?: boolean | null
           can_manage_content?: boolean | null
           can_manage_credits?: boolean | null
+          can_manage_faq?: boolean | null
+          can_manage_flyers?: boolean | null
+          can_manage_popups?: boolean | null
           can_manage_promo?: boolean | null
           can_manage_reports?: boolean | null
           can_manage_users?: boolean | null
           can_screenshot_sanctions?: boolean | null
           can_verify_identity?: boolean | null
           can_view_history?: boolean | null
+          can_view_logs?: boolean | null
           can_view_stats?: boolean | null
           created_at?: string
           id?: string

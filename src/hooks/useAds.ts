@@ -42,23 +42,21 @@ export const useAdFreeStatus = () => {
 };
 
 /** Fetch approved ads filtered by placement */
-export const useAds = (placement?: string, limit = 10) => {
+export const useAds = (_placement?: string, limit = 10) => {
   const { user } = useAuth();
   const { data: isAdFree } = useAdFreeStatus();
   const [rotationIndex, setRotationIndex] = useState(0);
 
   const { data: ads, ...rest } = useQuery({
-    queryKey: ['active-ads', placement, limit],
+    queryKey: ['active-ads', limit],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('ads')
         .select('id, title, description, image_url, link_url, advertiser_name, advertiser_email, placement, impressions_count, clicks_count, budget_cents, spent_cents')
         .eq('status', 'approved')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(limit);
-      if (placement) query = query.eq('placement', placement);
-      const { data, error } = await query;
       if (error) throw error;
       return ((data || []) as Ad[]).filter(ad => (ad.budget_cents || 0) > (ad.spent_cents || 0));
     },

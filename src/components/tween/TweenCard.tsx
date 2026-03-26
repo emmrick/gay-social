@@ -56,7 +56,7 @@ const renderBoldText = (text: string) => {
   });
 };
 
-
+const TweenCard = ({ tween }: TweenCardProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const toggleLike = useToggleTweenLike();

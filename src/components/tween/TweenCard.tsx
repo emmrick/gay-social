@@ -45,8 +45,18 @@ const TweenPoll = ({ tween }: { tween: Tween }) => {
     </div>
   );
 };
+const renderBoldText = (text: string) => {
+  if (!text.includes('**')) return text;
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-bold">{part.slice(2, -2)}</strong>;
+    }
+    return <span key={i}>{part}</span>;
+  });
+};
 
-const TweenCard = ({ tween }: TweenCardProps) => {
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const toggleLike = useToggleTweenLike();

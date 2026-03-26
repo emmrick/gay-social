@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useTweenFeed } from '@/hooks/useTweens';
 import TweenCard from './TweenCard';
 import TweenComposer from './TweenComposer';
+import AdBanner from '@/components/ads/AdBanner';
 import { Loader2 } from 'lucide-react';
 
 const TweenFeed = () => {
@@ -47,8 +48,11 @@ const TweenFeed = () => {
           <p className="text-sm text-muted-foreground mt-1">Soyez le premier à publier !</p>
         </div>
       ) : (
-        tweens.map((tween) => (
-          <TweenCard key={tween.id} tween={tween} />
+        tweens.map((tween, index) => (
+          <div key={tween.id}>
+            <TweenCard tween={tween} />
+            {index === 2 && <AdBanner placement="compact" className="my-2" />}
+          </div>
         ))
       )}
 

@@ -14,13 +14,14 @@ interface AdBannerProps {
 }
 
 const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps) => {
-  const { currentAd, isAdFree, rotationIndex } = useAds(placement);
+  const { currentAd, isAdFree, rotationIndex, getAdByOffset } = useAds(placement);
   const handleClick = useAdClick();
   const { user } = useAuth();
   const [dismissed, setDismissed] = useState(false);
   const impressionTracked = useRef(new Set<string>());
 
-  const ad = currentAd;
+  // Use offset-based ad for multiple banners on same page
+  const ad = index === 0 ? currentAd : getAdByOffset(index);
 
   // Track impression
   useEffect(() => {

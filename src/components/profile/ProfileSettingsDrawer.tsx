@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Bell, Moon, Shield, HelpCircle, FolderLock, 
-  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale, Ban, Lock, Trash2, Download, Megaphone
+  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale, Ban, Lock, Trash2, Download, Megaphone, UserCheck
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';

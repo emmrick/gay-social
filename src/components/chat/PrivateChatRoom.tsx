@@ -230,7 +230,14 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
   const handleSendMessage = async (content: string) => {
     if (content.trim()) {
+      // Check age filter before sending
+      if (contactCheck && !contactCheck.allowed) {
+        setShowAgeFilterDialog(true);
+        return;
+      }
       stopTyping();
+      // Add exception when user initiates contact (they are choosing to message)
+      addException.mutate(otherUserId);
       await sendMessage.mutateAsync({ content, messageType: 'text' });
     }
   };

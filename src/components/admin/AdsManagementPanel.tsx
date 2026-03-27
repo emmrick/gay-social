@@ -449,6 +449,16 @@ const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
                   </div>
                 )}
 
+                <div>
+                  <p className="text-muted-foreground text-xs mb-1">Zone de diffusion</p>
+                  <p className="text-sm font-medium">
+                    {selectedAd.geo_targeting === 'local' ? '🏘️ Local' : selectedAd.geo_targeting === 'regional' ? '🗺️ Régional' : '🇫🇷 National'}
+                    {selectedAd.geo_postal_codes?.length > 0 && (
+                      <span className="text-muted-foreground font-normal ml-1">— {selectedAd.geo_postal_codes.join(', ')}</span>
+                    )}
+                  </p>
+                </div>
+
                 {selectedAd.link_url && (
                   <a href={selectedAd.link_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-primary hover:underline">
                     <ExternalLink className="w-3.5 h-3.5" /> {selectedAd.link_url}

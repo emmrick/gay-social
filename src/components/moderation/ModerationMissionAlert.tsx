@@ -109,6 +109,8 @@ interface MissionData {
   reward_cents: number;
   created_at: string;
   updated_at: string;
+  metadata?: Record<string, unknown>;
+  target_entity_id?: string | null;
 }
 
 type PopupStep = 'propose' | 'accepted' | 'resolved';

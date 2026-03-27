@@ -102,6 +102,17 @@ const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
     },
   });
 
+  // Auto-open specific ad from task navigation
+  useEffect(() => {
+    if (initialAdId && ads && !initialAdLoaded) {
+      const ad = ads.find(a => a.id === initialAdId);
+      if (ad) {
+        setSelectedAd(ad);
+        setInitialAdLoaded(true);
+      }
+    }
+  }, [initialAdId, ads, initialAdLoaded]);
+
   const createAd = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from('ads').insert({

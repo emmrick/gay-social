@@ -45,6 +45,12 @@ const TASK_TYPE_SECTIONS: Record<string, string> = {
   support_chat: 'support',
 };
 
+/** Get entity ID from task metadata for direct navigation */
+export const getTaskEntityId = (task: ModerationTask): string | null => {
+  if (task.metadata?.ad_id) return task.metadata.ad_id as string;
+  return task.target_entity_id;
+};
+
 export const getTaskTypeLabel = (type: string) => TASK_TYPE_LABELS[type] || type;
 export const getTaskTypeSection = (type: string) => TASK_TYPE_SECTIONS[type] || 'reports';
 

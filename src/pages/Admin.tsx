@@ -281,7 +281,7 @@ const Admin = () => {
       case 'verification': return <IdentityVerificationPanel />;
       case 'feature-toggles': return <FeatureTogglesPanel />;
       case 'site-updates': return <SiteUpdatesPanel />;
-      case 'ads': return <AdsManagementPanel />;
+      case 'ads': return <AdsManagementPanel initialAdId={taskEntityId || undefined} />;
       default: return null;
     }
   };

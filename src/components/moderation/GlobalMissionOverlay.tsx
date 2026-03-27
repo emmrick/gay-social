@@ -261,9 +261,10 @@ const GlobalMissionOverlay = () => {
     reserveTask.mutate(nextTask.id, {
       onSuccess: () => {
         const section = getTaskTypeSection(nextTask.task_type);
-        navigate('/admin');
-        // Store the section to navigate to after admin loads
+        const entityId = getTaskEntityId(nextTask);
         sessionStorage.setItem('admin-navigate-section', section);
+        if (entityId) sessionStorage.setItem('admin-navigate-entity-id', entityId);
+        navigate('/admin');
       },
     });
   }, [nextTask, reserveTask, navigate]);

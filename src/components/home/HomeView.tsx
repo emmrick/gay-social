@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Star, SlidersHorizontal, Compass, Home, Eye, Heart } from 'lucide-react';
+import { Star, SlidersHorizontal, Compass, Eye, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';

@@ -280,19 +280,28 @@ const Advertise = () => {
   const onSubmit = async (values: AdvertiseForm) => {
     setLoading(true);
     try {
-      const { error } = await supabase.from('ads').insert({
-        advertiser_name: values.advertiser_name,
-        advertiser_email: values.advertiser_email,
-        title: values.title,
-        description: values.description || null,
-        image_url: adImageUrl || null,
-        link_url: values.link_url || null,
-        placement: values.placement,
-        budget_cents: values.budget_cents,
-        status: 'pending',
-        is_active: false,
-      });
-      if (error) throw error;
+      const postalCodes = values.geo_postal_codes
+        ? values.geo_postal_codes.split(',').map(c => c.trim()).filter(Boolean)
+        : [];
+
+      // Create one ad per selected placement
+      for (const placement of values.placements) {
+        const { error } = await supabase.from('ads').insert({
+          advertiser_name: values.advertiser_name,
+          advertiser_email: values.advertiser_email,
+          title: values.title,
+          description: values.description || null,
+          image_url: adImageUrl || null,
+          link_url: values.link_url || null,
+          placement,
+          budget_cents: values.budget_cents,
+          status: 'pending',
+          is_active: false,
+          geo_targeting: values.geo_targeting,
+          geo_postal_codes: postalCodes,
+        } as any);
+        if (error) throw error;
+      }
       setSubmitted(true);
       setAdImageUrl('');
       toast.success('Demande envoyée avec succès !');

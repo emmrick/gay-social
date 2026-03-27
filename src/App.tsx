@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -182,23 +182,12 @@ const AppContent = () => {
 };
 
 const App = () => {
-  const [appReady, setAppReady] = useState(false);
-  const handleLoadComplete = useCallback(() => setAppReady(true), []);
-
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <BrowserRouter>
-            <TooltipProvider>
-              <AuthProvider>
-                <CreditDialogProvider>
-                  <CreditDeductionProvider>
-                    <AppContent />
-                  </CreditDeductionProvider>
-                </CreditDialogProvider>
-              </AuthProvider>
-            </TooltipProvider>
+            <AppContent />
           </BrowserRouter>
         </ThemeProvider>
       </QueryClientProvider>

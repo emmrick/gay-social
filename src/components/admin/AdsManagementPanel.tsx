@@ -79,7 +79,7 @@ const emptyForm = {
   ends_at: '',
 };
 
-const AdsManagementPanel = () => {
+const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -89,6 +89,7 @@ const AdsManagementPanel = () => {
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [initialAdLoaded, setInitialAdLoaded] = useState(false);
 
   const { data: ads, isLoading } = useQuery({
     queryKey: ['admin-ads', statusFilter],

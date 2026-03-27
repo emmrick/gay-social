@@ -247,9 +247,15 @@ const Advertise = () => {
   };
 
   const handleUpdateAd = async (adId: string, updates: Record<string, any>) => {
+    // When content changes, reset to pending for re-verification
+    const contentChanged = updates.title || updates.description !== undefined || updates.image_url !== undefined;
+    if (contentChanged) {
+      updates.status = 'pending';
+      updates.is_active = false;
+    }
     const { error } = await supabase.from('ads').update(updates).eq('id', adId);
     if (error) { toast.error('Erreur de mise à jour'); return; }
-    toast.success('Annonce mise à jour');
+    toast.success(contentChanged ? 'Annonce modifiée — en attente de vérification' : 'Annonce mise à jour');
     queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
     setEditingAd(null);
   };

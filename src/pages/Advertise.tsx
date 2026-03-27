@@ -446,15 +446,15 @@ const Advertise = () => {
               <div className="grid sm:grid-cols-3 gap-4 text-xs text-muted-foreground">
                 <div className="space-y-1">
                   <p className="font-semibold text-foreground">CPC (Coût par clic)</p>
-                  <p>À partir de 0,02 € par clic. Vous ne payez que lorsqu'un utilisateur clique.</p>
+                  <p>0,01 € par clic. Vous ne payez que lorsqu'un utilisateur clique.</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="font-semibold text-foreground">CPM (Coût pour 1000 impressions)</p>
-                  <p>À partir de 0,10 € pour 1000 affichages de votre annonce.</p>
+                  <p className="font-semibold text-foreground">CPM (Coût pour 100 impressions)</p>
+                  <p>0,01 € pour 100 affichages de votre annonce.</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="font-semibold text-foreground">Budget flexible</p>
-                  <p>Définissez votre budget maximal. La diffusion s'arrête automatiquement une fois atteint.</p>
+                  <p className="font-semibold text-foreground">Budget minimum</p>
+                  <p>5€ minimum pour démarrer votre campagne. Rechargez votre portefeuille pour continuer.</p>
                 </div>
               </div>
             </CardContent>

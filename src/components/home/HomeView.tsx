@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import homeHeroBanner from '@/assets/home-hero-banner.jpg';
 import { Star, SlidersHorizontal, Compass, Eye, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';

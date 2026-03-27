@@ -46,6 +46,7 @@ export const useAds = (_placement?: string, limit = 10) => {
   const { user } = useAuth();
   const { data: isAdFree } = useAdFreeStatus();
   const [rotationIndex, setRotationIndex] = useState(0);
+  const [shuffleSeed, setShuffleSeed] = useState(() => Math.random());
 
   const { data: ads, ...rest } = useQuery({
     queryKey: ['active-ads', limit],
@@ -65,15 +66,45 @@ export const useAds = (_placement?: string, limit = 10) => {
     refetchInterval: 120000,
   });
 
+  // Shuffle ads deterministically based on seed + page path
+  const shuffledAds = useMemo(() => {
+    if (!ads || ads.length <= 1) return ads || [];
+    const pageSeed = window.location.pathname.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const combined = shuffleSeed + pageSeed;
+    // Fisher-Yates with seeded random
+    const arr = [...ads];
+    let seed = combined;
+    const seededRandom = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(seededRandom() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [ads, shuffleSeed]);
+
   useEffect(() => {
-    if (!ads || ads.length <= 1) return;
-    const timer = setInterval(() => setRotationIndex(prev => prev + 1), AD_ROTATION_INTERVAL_MS);
+    if (!shuffledAds || shuffledAds.length <= 1) return;
+    const timer = setInterval(() => {
+      setRotationIndex(prev => prev + 1);
+      // Re-shuffle on each full cycle
+      setShuffleSeed(Math.random());
+    }, AD_ROTATION_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [ads?.length]);
+  }, [shuffledAds?.length]);
 
-  const currentAd = ads && ads.length > 0 ? ads[rotationIndex % ads.length] : null;
+  const currentAd = shuffledAds && shuffledAds.length > 0 ? shuffledAds[rotationIndex % shuffledAds.length] : null;
 
-  return { ads: isAdFree ? [] : (ads || []), currentAd: isAdFree ? null : currentAd, isAdFree, rotationIndex, ...rest };
+  /** Get a specific ad by index offset (for multiple ad placements on same page) */
+  const getAdByOffset = (offset: number) => {
+    if (!shuffledAds || shuffledAds.length === 0) return null;
+    const idx = (rotationIndex + offset) % shuffledAds.length;
+    return shuffledAds[idx];
+  };
+
+  return { ads: isAdFree ? [] : (shuffledAds || []), currentAd: isAdFree ? null : currentAd, isAdFree, rotationIndex, getAdByOffset, ...rest };
 };
 
 /** Track impression (once per ad per session) */

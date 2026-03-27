@@ -38,7 +38,9 @@ import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
 import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
+import AgeFilterBlockedDialog from './AgeFilterBlockedDialog';
 
+import { useCanContactUser, useAddContactException } from '@/hooks/useContactAgeFilter';
 import { usePrivateMessageReactions } from '@/hooks/usePrivateMessageReactions';
 import { cn } from '@/lib/utils';
 
@@ -68,6 +70,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   
   // Track active conversation for notification suppression
   useActiveConversation(otherUserId, null);
+  
+  // Age filter check
+  const { data: contactCheck } = useCanContactUser(otherUserId);
+  const addException = useAddContactException();
+  const [showAgeFilterDialog, setShowAgeFilterDialog] = useState(false);
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
@@ -222,7 +230,14 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
   const handleSendMessage = async (content: string) => {
     if (content.trim()) {
+      // Check age filter before sending
+      if (contactCheck && !contactCheck.allowed) {
+        setShowAgeFilterDialog(true);
+        return;
+      }
       stopTyping();
+      // Add exception when user initiates contact (they are choosing to message)
+      addException.mutate(otherUserId);
       await sendMessage.mutateAsync({ content, messageType: 'text' });
     }
   };
@@ -664,6 +679,18 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           />
         )}
       </div>
+
+      {/* Age filter blocked dialog */}
+      <AgeFilterBlockedDialog
+        open={showAgeFilterDialog}
+        onOpenChange={setShowAgeFilterDialog}
+        minAge={contactCheck?.minAge ?? 18}
+        maxAge={contactCheck?.maxAge ?? 99}
+        onReactToProfile={() => {
+          setShowAgeFilterDialog(false);
+          navigate(`/member/${otherUserId}`);
+        }}
+      />
     </div>
   );
 };

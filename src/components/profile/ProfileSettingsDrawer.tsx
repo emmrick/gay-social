@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Bell, Moon, Shield, HelpCircle, FolderLock, 
-  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale, Ban, Lock, Trash2, Download, Megaphone
+  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale, Ban, Lock, Trash2, Download, Megaphone, UserCheck
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import BlockedUsersSheet from './BlockedUsersSheet';
 import PinManagementSheet from '@/components/security/PinManagementSheet';
 import DeleteAccountDialog from './DeleteAccountDialog';
 import DataExportDialog from './DataExportDialog';
+import ContactAgeFilterSheet from './ContactAgeFilterSheet';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
@@ -45,12 +46,14 @@ const ProfileSettingsDrawer = ({
   const [showPinManagement, setShowPinManagement] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showDataExport, setShowDataExport] = useState(false);
+  const [showAgeFilter, setShowAgeFilter] = useState(false);
 
   const menuItems = [
     { icon: Bell, label: 'Notifications', action: () => { setOpen(false); setSettingsType('notifications'); }, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
     { icon: Moon, label: 'Apparence', action: () => { setOpen(false); setSettingsType('appearance'); }, color: 'text-indigo-500', bgColor: 'bg-indigo-500/10' },
     { icon: Shield, label: 'Confidentialité', action: () => { setOpen(false); setSettingsType('privacy'); }, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
     { icon: Ban, label: 'Utilisateurs bloqués', action: () => { setOpen(false); setShowBlockedUsers(true); }, color: 'text-red-500', bgColor: 'bg-red-500/10' },
+    { icon: UserCheck, label: 'Filtre d\'âge de contact', action: () => { setOpen(false); setShowAgeFilter(true); }, color: 'text-teal-500', bgColor: 'bg-teal-500/10' },
     { icon: HelpCircle, label: 'Aide & Support', action: () => { setOpen(false); setSettingsType('help'); }, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
     { icon: Lock, label: 'Code PIN & Sécurité', action: () => { setOpen(false); setShowPinManagement(true); }, color: 'text-violet-500', bgColor: 'bg-violet-500/10' },
   ];
@@ -68,6 +71,7 @@ const ProfileSettingsDrawer = ({
       <PinManagementSheet open={showPinManagement} onOpenChange={setShowPinManagement} />
       <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
       <DataExportDialog open={showDataExport} onOpenChange={setShowDataExport} />
+      <ContactAgeFilterSheet open={showAgeFilter} onOpenChange={setShowAgeFilter} />
       
       {settingsType && (
         <SettingsDialog 

@@ -742,6 +742,57 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_age_exceptions: {
+        Row: {
+          allowed_user_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          allowed_user_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          allowed_user_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      contact_age_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          max_age: number
+          min_age: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_age?: number
+          min_age?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_age?: number
+          min_age?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_mute_preferences: {
         Row: {
           conversation_id: string

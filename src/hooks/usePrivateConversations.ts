@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useUserUsage } from './useUserUsage';
 import { toast } from 'sonner';
 

@@ -86,13 +86,13 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
       >
         {/* Image */}
         <div className="absolute inset-0">
-          {profile.avatar_url ? (
+          {resolvedAvatar ? (
             <>
               {!imgLoaded && (
                 <div className="absolute inset-0 bg-secondary animate-pulse" />
               )}
               <img
-                src={profile.avatar_url}
+                src={resolvedAvatar}
                 alt={profile.username}
                 loading="lazy"
                 decoding="async"

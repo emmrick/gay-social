@@ -48,6 +48,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const isOnline = shouldShowOnlineIndicator(profile);
   const lastSeen = getLastSeenText(profile);
   const isNew = isNewUser(profile.created_at);
+  const resolvedAvatar = useAvatarUrl(profile.avatar_url);
 
   const handleClick = () => {
     navigate(`/profile/${profile.user_id}`);

@@ -4315,6 +4315,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      is_user_viewing_conversation: {
+        Args: {
+          _chat_room_id?: string
+          _private_user_id?: string
+          _target_user_id: string
+        }
+        Returns: boolean
+      }
       mark_messages_as_read: {
         Args: { _sender_id: string; _user_id: string }
         Returns: number

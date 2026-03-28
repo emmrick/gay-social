@@ -54,26 +54,19 @@ export const useActiveConversation = (
 
 /**
  * Check if a user is currently viewing a specific private conversation.
+ * Uses a SECURITY DEFINER RPC to avoid exposing other users' active conversation state.
  */
 export const isUserViewingPrivateChat = async (
   recipientId: string,
   senderId: string
 ): Promise<boolean> => {
   try {
-    const { data } = await supabase
-      .from('user_active_conversations' as any)
-      .select('active_private_user_id, updated_at')
-      .eq('user_id', recipientId)
-      .maybeSingle();
-
-    if (!data) return false;
-
-    // Check if updated_at is recent (within 2 minutes) to avoid stale data
-    const updatedAt = new Date((data as any).updated_at);
-    const now = new Date();
-    if (now.getTime() - updatedAt.getTime() > 2 * 60 * 1000) return false;
-
-    return (data as any).active_private_user_id === senderId;
+    const { data, error } = await supabase.rpc('is_user_viewing_conversation', {
+      _target_user_id: recipientId,
+      _private_user_id: senderId,
+    });
+    if (error) return false;
+    return data === true;
   } catch {
     return false;
   }
@@ -81,25 +74,19 @@ export const isUserViewingPrivateChat = async (
 
 /**
  * Check if a user is currently viewing a specific group chat room.
+ * Uses a SECURITY DEFINER RPC to avoid exposing other users' active conversation state.
  */
 export const isUserViewingChatRoom = async (
   recipientId: string,
   chatRoomId: string
 ): Promise<boolean> => {
   try {
-    const { data } = await supabase
-      .from('user_active_conversations' as any)
-      .select('active_chat_room_id, updated_at')
-      .eq('user_id', recipientId)
-      .maybeSingle();
-
-    if (!data) return false;
-
-    const updatedAt = new Date((data as any).updated_at);
-    const now = new Date();
-    if (now.getTime() - updatedAt.getTime() > 2 * 60 * 1000) return false;
-
-    return (data as any).active_chat_room_id === chatRoomId;
+    const { data, error } = await supabase.rpc('is_user_viewing_conversation', {
+      _target_user_id: recipientId,
+      _chat_room_id: chatRoomId,
+    });
+    if (error) return false;
+    return data === true;
   } catch {
     return false;
   }

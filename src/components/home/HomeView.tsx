@@ -74,18 +74,6 @@ const HomeView = ({
 
   return (
     <div className="pb-4">
-      {/* Hero banner */}
-      <div className="relative w-full h-32 overflow-hidden">
-        <img 
-          src={homeHeroBanner} 
-          alt="Communauté Gay Social" 
-          className="w-full h-full object-cover"
-          width={1024}
-          height={512}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
-      </div>
-
       <div className="px-4 py-4 space-y-4">
         <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as HomeSection)}>
           <div className="flex items-center gap-2">

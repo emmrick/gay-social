@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import homeHeroBanner from '@/assets/home-hero-banner.jpg';
+
 import { Star, SlidersHorizontal, Compass, Eye, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
@@ -49,7 +49,8 @@ const HomeView = ({
       const { count, error } = await supabase
         .from('profile_reactions' as any)
         .select('id', { count: 'exact', head: true })
-        .eq('profile_user_id', user.id);
+        .eq('profile_user_id', user.id)
+        .eq('is_seen', false);
       if (error) return 0;
       return count || 0;
     },
@@ -74,18 +75,6 @@ const HomeView = ({
 
   return (
     <div className="pb-4">
-      {/* Hero banner */}
-      <div className="relative w-full h-32 overflow-hidden">
-        <img 
-          src={homeHeroBanner} 
-          alt="Communauté Gay Social" 
-          className="w-full h-full object-cover"
-          width={1024}
-          height={512}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
-      </div>
-
       <div className="px-4 py-4 space-y-4">
         <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as HomeSection)}>
           <div className="flex items-center gap-2">

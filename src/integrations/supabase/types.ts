@@ -2610,6 +2610,7 @@ export type Database = {
           created_at: string
           emoji: string
           id: string
+          is_seen: boolean
           profile_user_id: string
           reactor_user_id: string
         }
@@ -2617,6 +2618,7 @@ export type Database = {
           created_at?: string
           emoji: string
           id?: string
+          is_seen?: boolean
           profile_user_id: string
           reactor_user_id: string
         }
@@ -2624,6 +2626,7 @@ export type Database = {
           created_at?: string
           emoji?: string
           id?: string
+          is_seen?: boolean
           profile_user_id?: string
           reactor_user_id?: string
         }

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -11,6 +11,7 @@ interface ReactionItem {
   reactor_user_id: string;
   emoji: string;
   created_at: string;
+  is_seen: boolean;
   reactor_username: string;
   reactor_avatar: string | null;
 }
@@ -21,6 +22,15 @@ interface ReactionsTabProps {
 
 const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const markAsSeen = async (reactionId: string) => {
+    await supabase
+      .from('profile_reactions' as any)
+      .update({ is_seen: true } as any)
+      .eq('id', reactionId);
+    queryClient.invalidateQueries({ queryKey: ['profile-reactions-count'] });
+  };
 
   const { data: reactions, isLoading } = useQuery({
     queryKey: ['profile-reactions-list', user?.id],
@@ -29,7 +39,7 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
 
       const { data, error } = await supabase
         .from('profile_reactions' as any)
-        .select('id, reactor_user_id, emoji, created_at')
+        .select('id, reactor_user_id, emoji, created_at, is_seen')
         .eq('profile_user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(100);
@@ -53,6 +63,7 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
           reactor_user_id: reaction.reactor_user_id,
           emoji: reaction.emoji,
           created_at: reaction.created_at,
+          is_seen: reaction.is_seen,
           reactor_username: profile?.username || 'Anonyme',
           reactor_avatar: profile?.avatar_url || null,
         };
@@ -101,7 +112,10 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
         return (
           <button
             key={reaction.id}
-            onClick={() => onViewProfile?.(reaction.reactor_user_id)}
+            onClick={() => {
+              if (!reaction.is_seen) markAsSeen(reaction.id);
+              onViewProfile?.(reaction.reactor_user_id);
+            }}
             className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 hover:bg-accent/50 transition-colors text-left"
           >
             <div className="w-11 h-11 rounded-full bg-secondary flex items-center justify-center overflow-hidden border-2 border-primary/20 flex-shrink-0">

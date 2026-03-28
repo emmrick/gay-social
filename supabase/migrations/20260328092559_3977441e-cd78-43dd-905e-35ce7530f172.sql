@@ -1,0 +1,1 @@
+ALTER TABLE public.profile_reactions ADD COLUMN IF NOT EXISTS is_seen BOOLEAN NOT NULL DEFAULT false;

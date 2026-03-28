@@ -368,6 +368,77 @@ export type Database = {
           },
         ]
       }
+      advertiser_promo_codes: {
+        Row: {
+          bonus_cents: number
+          bonus_percent: number
+          code: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          times_used: number
+        }
+        Insert: {
+          bonus_cents?: number
+          bonus_percent?: number
+          code: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          times_used?: number
+        }
+        Update: {
+          bonus_cents?: number
+          bonus_percent?: number
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          times_used?: number
+        }
+        Relationships: []
+      }
+      advertiser_promo_redemptions: {
+        Row: {
+          advertiser_email: string
+          bonus_cents_applied: number
+          code_id: string
+          id: string
+          redeemed_at: string
+        }
+        Insert: {
+          advertiser_email: string
+          bonus_cents_applied?: number
+          code_id: string
+          id?: string
+          redeemed_at?: string
+        }
+        Update: {
+          advertiser_email?: string
+          bonus_cents_applied?: number
+          code_id?: string
+          id?: string
+          redeemed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertiser_promo_redemptions_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "advertiser_promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       advertiser_wallets: {
         Row: {
           advertiser_email: string

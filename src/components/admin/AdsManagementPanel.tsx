@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import {
   Megaphone, Plus, Check, X, Pause, Play, Trash2, Eye, MousePointerClick,
-  ExternalLink, Clock, AlertTriangle, Image as ImageIcon, Search, Filter
+  ExternalLink, Clock, AlertTriangle, Image as ImageIcon, Search, Filter,
+  Ticket, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

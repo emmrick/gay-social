@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useUserUsage } from './useUserUsage';
 import { toast } from 'sonner';
 
@@ -97,10 +98,13 @@ export const usePrivateConversations = () => {
 
       const primaryPhotoMap = new Map(primaryPhotos?.map(p => [p.user_id, p.photo_url]) || []);
 
-      const profileMap = new Map(profiles?.map(p => [p.user_id, {
-        ...p,
-        avatar_url: p.avatar_url || primaryPhotoMap.get(p.user_id) || null,
-      }]) || []);
+      const profileEntries = await Promise.all(
+        (profiles || []).map(async (p) => {
+          const resolvedAvatar = await getSignedAvatarUrl(p.avatar_url || primaryPhotoMap.get(p.user_id) || null);
+          return [p.user_id, { ...p, avatar_url: resolvedAvatar }] as const;
+        })
+      );
+      const profileMap = new Map(profileEntries);
 
       // Batch fetch last messages for ALL conversations in one query
       // Get the latest private message for each conversation partner

@@ -1,8 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 
 type Profile = Tables<'profiles'>;
+
+/** Resolve avatar_url to a signed URL for a single profile */
+async function resolveProfileAvatar<T extends { avatar_url?: string | null }>(profile: T): Promise<T> {
+  if (!profile.avatar_url) return profile;
+  const signedUrl = await getSignedAvatarUrl(profile.avatar_url);
+  return { ...profile, avatar_url: signedUrl };
+}
+
+/** Resolve avatar_url for an array of profiles */
+async function resolveProfileAvatars<T extends { avatar_url?: string | null }>(profiles: T[]): Promise<T[]> {
+  return Promise.all(profiles.map(resolveProfileAvatar));
+}
 
 export const useProfilesByRegion = (region: string) => {
   return useQuery({
@@ -22,7 +35,8 @@ export const useProfilesByRegion = (region: string) => {
       const checks = await Promise.all(
         data.map(p => supabase.rpc('is_user_suspended_or_blocked', { _user_id: p.user_id }))
       );
-      return data.filter((_, i) => checks[i].data !== true);
+      const filtered = data.filter((_, i) => checks[i].data !== true);
+      return resolveProfileAvatars(filtered);
     },
     enabled: !!region,
     staleTime: 30_000,
@@ -52,11 +66,11 @@ export const useProfile = (userId: string) => {
           .maybeSingle();
 
         if (primaryPhoto?.photo_url) {
-          return { ...data, avatar_url: primaryPhoto.photo_url };
+          return resolveProfileAvatar({ ...data, avatar_url: primaryPhoto.photo_url });
         }
       }
 
-      return data;
+      return resolveProfileAvatar(data);
     },
     enabled: !!userId,
     staleTime: 30_000,

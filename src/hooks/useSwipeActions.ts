@@ -6,6 +6,7 @@ import { deductCredits, getDynamicCreditCost } from './useCredits';
 import { notifySwipeMatch } from '@/services/pushNotificationService';
 import { toast } from 'sonner';
 import { useMemo } from 'react';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 
 // Credit costs for swipe actions
 export const SWIPE_CREDIT_COSTS = {
@@ -164,6 +165,17 @@ export const useSwipeActions = () => {
             }
           });
         }
+      }
+
+      // Resolve avatar URLs to signed URLs
+      if (profilesList.length > 0) {
+        await Promise.all(
+          profilesList.map(async (p) => {
+            if (p.avatar_url) {
+              p.avatar_url = await getSignedAvatarUrl(p.avatar_url);
+            }
+          })
+        );
       }
 
       return profilesList;

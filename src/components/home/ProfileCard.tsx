@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Heart, Eye, Crown, CheckCircle2, Flame, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { shouldShowOnlineIndicator, getLastSeenText } from '@/hooks/useOnlineStatus';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface ProfileCardProps {
   profile: {
@@ -47,6 +48,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const isOnline = shouldShowOnlineIndicator(profile);
   const lastSeen = getLastSeenText(profile);
   const isNew = isNewUser(profile.created_at);
+  const resolvedAvatar = useAvatarUrl(profile.avatar_url);
 
   const handleClick = () => {
     navigate(`/profile/${profile.user_id}`);
@@ -84,13 +86,13 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
       >
         {/* Image */}
         <div className="absolute inset-0">
-          {profile.avatar_url ? (
+          {resolvedAvatar ? (
             <>
               {!imgLoaded && (
                 <div className="absolute inset-0 bg-secondary animate-pulse" />
               )}
               <img
-                src={profile.avatar_url}
+                src={resolvedAvatar}
                 alt={profile.username}
                 loading="lazy"
                 decoding="async"

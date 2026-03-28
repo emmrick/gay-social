@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { notifyNewFavorite } from '@/services/pushNotificationService';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface FavoriteUser {
   id: string;
@@ -54,11 +55,23 @@ export const useUserFavorites = () => {
 
         if (profilesError) throw profilesError;
 
-        // Merge profiles into favorites
-        return data.map(fav => ({
+        // Merge profiles into favorites and resolve avatar URLs
+        const merged = data.map(fav => ({
           ...fav,
           profile: profiles?.find(p => p.user_id === fav.favorite_user_id),
         }));
+
+        // Resolve avatar URLs
+        const resolved = await Promise.all(
+          merged.map(async (fav) => {
+            if (fav.profile?.avatar_url) {
+              const signedUrl = await getSignedAvatarUrl(fav.profile.avatar_url);
+              return { ...fav, profile: { ...fav.profile, avatar_url: signedUrl } };
+            }
+            return fav;
+          })
+        );
+        return resolved;
       }
 
       return data || [];

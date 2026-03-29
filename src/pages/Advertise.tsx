@@ -922,25 +922,12 @@ const TopupDialog = ({ open, onClose, topupAmount, setTopupAmount, onTopup, topu
 
   const handleTopupWithPromo = async () => {
     if (promoApplied && advertiserEmail) {
-      // Record redemption and apply bonus after payment
-      await supabase.from('advertiser_promo_redemptions' as any).insert({
-        code_id: promoApplied.code_id,
-        advertiser_email: advertiserEmail,
-        bonus_cents_applied: Math.round(bonusAmount * 100),
-      } as any);
-      // Increment times_used via RPC-style: fetch then update
-      const { data: codeData } = await supabase.from('advertiser_promo_codes' as any).select('times_used').eq('id', promoApplied.code_id).single();
-      await supabase.from('advertiser_promo_codes' as any)
-        .update({ times_used: ((codeData as any)?.times_used || 0) + 1 } as any)
-        .eq('id', promoApplied.code_id);
-      // Add bonus to wallet
-      if (bonusAmount > 0) {
-        const bonusCents = Math.round(bonusAmount * 100);
-        const { data: walletData } = await supabase.from('advertiser_wallets' as any).select('balance_cents').eq('advertiser_email', advertiserEmail).single();
-        await supabase.from('advertiser_wallets' as any)
-          .update({ balance_cents: ((walletData as any)?.balance_cents || 0) + bonusCents, updated_at: new Date().toISOString() } as any)
-          .eq('advertiser_email', advertiserEmail);
-      }
+      // Apply promo via secure RPC
+      await supabase.rpc('apply_advertiser_promo', {
+        _code_id: promoApplied.code_id,
+        _advertiser_email: advertiserEmail,
+        _bonus_cents: Math.round(bonusAmount * 100),
+      });
       queryClient.invalidateQueries({ queryKey: ['advertiser-wallet'] });
     }
     onTopup();

@@ -3,7 +3,6 @@ import { Loader2, AlertTriangle, Timer, BanIcon, Sparkles, Zap } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
 import { useDynamicCreditCosts, DEFAULT_COSTS } from '@/hooks/useDynamicCreditCosts';
-import { useCredits } from '@/hooks/useCredits';
 import CreditWalletHeader from './CreditWalletHeader';
 import { toast } from 'sonner';
 import CreditBreakdownCards from './CreditBreakdownCards';

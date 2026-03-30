@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tables } from '@/integrations/supabase/types';
 import { shouldShowOnlineIndicator, getDetailedLastSeenText } from '@/hooks/useOnlineStatus';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 type Profile = Tables<'profiles'>;
 

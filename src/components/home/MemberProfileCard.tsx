@@ -87,6 +87,8 @@ const MemberProfileCard = ({
       ? [profile.avatar_url] 
       : [];
   
+  const currentPhotoUrl = useAvatarUrl(allPhotos[currentPhotoIndex] || null);
+  
   const goToPrevPhoto = () => {
     setCurrentPhotoIndex(prev => prev > 0 ? prev - 1 : allPhotos.length - 1);
   };

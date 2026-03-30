@@ -618,8 +618,8 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           {isOtherTyping && (
             <div className="flex items-end gap-2 mb-2">
               <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border/20">
-                {otherUserProfile?.avatar_url ? (
-                  <img src={otherUserProfile.avatar_url} alt="" className="w-full h-full object-cover" />
+                {resolvedOtherAvatar ? (
+                  <img src={resolvedOtherAvatar} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center text-primary text-xs font-semibold">
                     {otherUserProfile?.username?.charAt(0).toUpperCase()}

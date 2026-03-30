@@ -124,7 +124,7 @@ export const useEphemeralMediaUpload = () => {
             media_type: messageType,
             media_url: filePath,
             view_duration: viewDuration,
-            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h expiry
+            // No expires_at — media stays available until viewed
           })
           .select()
           .single();

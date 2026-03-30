@@ -23,6 +23,7 @@ interface ProfileHeroCardProps {
 const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionLabels, onEdit, settingsDrawer }: ProfileHeroCardProps) => {
   const zodiac = profile.birth_date ? getZodiacSign(profile.birth_date) : null;
   const isBirthday = profile.birth_date ? isBirthdayToday(profile.birth_date) : false;
+  const resolvedAvatar = useAvatarUrl(profile.avatar_url);
 
   return (
     <div className="relative">

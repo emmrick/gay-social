@@ -29,6 +29,8 @@ const ProfileDetailDialog = ({
   onStartChat,
   onReport,
 }: ProfileDetailDialogProps) => {
+  const resolvedAvatar = useAvatarUrl(profile?.avatar_url);
+
   if (!profile) return null;
 
   const handleStartChat = () => {

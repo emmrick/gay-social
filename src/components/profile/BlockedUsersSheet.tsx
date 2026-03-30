@@ -60,16 +60,13 @@ const BlockedUsersSheet = ({ open, onOpenChange }: BlockedUsersSheetProps) => {
                   key={block.id}
                   className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50"
                 >
-                  <Avatar className="w-10 h-10">
-                    {block.profile?.avatar_url ? (
-                      <img
-                        src={block.profile.avatar_url}
-                        alt={block.profile.username}
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    ) : (
-                      <AvatarFallback className="bg-destructive/10 text-destructive">
-                        {block.profile?.username?.charAt(0).toUpperCase() || '?'}
+                  <SecureAvatar
+                    src={block.profile?.avatar_url}
+                    alt={block.profile?.username}
+                    fallback={block.profile?.username?.charAt(0).toUpperCase() || '?'}
+                    className="w-10 h-10"
+                    fallbackClassName="bg-destructive/10 text-destructive"
+                  />
                       </AvatarFallback>
                     )}
                   </Avatar>

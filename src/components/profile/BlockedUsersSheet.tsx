@@ -6,7 +6,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { SecureAvatar } from '@/components/ui/secure-avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useBlockedUsers, useUnblockUserAction } from '@/hooks/useUserBlock';
 import { formatDistanceToNow } from 'date-fns';

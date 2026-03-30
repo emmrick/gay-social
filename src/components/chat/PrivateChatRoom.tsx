@@ -43,6 +43,7 @@ import AgeFilterBlockedDialog from './AgeFilterBlockedDialog';
 import { useCanContactUser, useAddContactException } from '@/hooks/useContactAgeFilter';
 import { usePrivateMessageReactions } from '@/hooks/usePrivateMessageReactions';
 import { cn } from '@/lib/utils';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface PrivateChatRoomProps {
   otherUserId: string;

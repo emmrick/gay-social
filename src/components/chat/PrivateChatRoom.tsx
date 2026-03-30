@@ -298,10 +298,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           >
             <div className="relative flex-shrink-0">
               <div className="w-11 h-11 rounded-full overflow-hidden bg-muted ring-1 ring-border/30">
-                {otherUserProfile?.avatar_url ? (
+                {resolvedOtherAvatar ? (
                   <img
-                    src={`${otherUserProfile.avatar_url}${otherUserProfile.avatar_url.includes('?') ? '&' : '?'}v=${otherUserProfile.updated_at || ''}`}
-                    alt={otherUserProfile.username}
+                    src={resolvedOtherAvatar}
+                    alt={otherUserProfile?.username || ''}
                     className="w-full h-full object-cover"
                   />
                 ) : (

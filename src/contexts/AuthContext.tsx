@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
+import { sendWelcomeEmail } from '@/services/emailService';
 
 type Profile = Tables<'profiles'>;
 
@@ -240,6 +241,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
 
         if (profileError) throw profileError;
+
+        // Send welcome email
+        if (data.user.email) {
+          sendWelcomeEmail(data.user.email, username);
+        }
+
         // Fire Google Ads conversion event
         if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
           (window as any).gtag('event', 'conversion', {

@@ -6,6 +6,7 @@ import {
   notifyVerificationApproved, 
   notifyVerificationRejected 
 } from '@/services/pushNotificationService';
+import { sendVerificationConfirmedEmail, sendVerificationRejectedEmail } from '@/services/emailService';
 
 export interface IdentityVerification {
   id: string;
@@ -292,6 +293,8 @@ export const useAdminVerifications = () => {
 
       // Notify user that verification is approved
       await notifyVerificationApproved(userId);
+      // Send confirmation email
+      await sendVerificationConfirmedEmail(userId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verifications'] });
@@ -345,6 +348,8 @@ export const useAdminVerifications = () => {
       // Notify user that verification was rejected
       if (targetUserId) {
         await notifyVerificationRejected(targetUserId, reason);
+        // Send rejection email with reason
+        await sendVerificationRejectedEmail(targetUserId, reason);
       }
     },
     onSuccess: () => {

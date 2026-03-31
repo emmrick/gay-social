@@ -56,6 +56,7 @@ const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Security = lazy(() => import("./pages/Security"));
 const Community = lazy(() => import("./pages/Community"));
 const TweenPage = lazy(() => import("./pages/Tween"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 
@@ -143,6 +144,7 @@ const AuthenticatedApp = () => {
                     <Route path="/securite" element={<Suspense fallback={<PageFallback />}><Security /></Suspense>} />
                     <Route path="/communaute" element={<Suspense fallback={<PageFallback />}><Community /></Suspense>} />
                     <Route path="/tween" element={<Suspense fallback={<PageFallback />}><TweenPage /></Suspense>} />
+                    <Route path="/unsubscribe" element={<Suspense fallback={<PageFallback />}><Unsubscribe /></Suspense>} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                   </Routes>

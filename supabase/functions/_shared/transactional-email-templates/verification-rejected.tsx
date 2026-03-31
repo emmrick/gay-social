@@ -4,7 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = "GaySocial"
+const SITE_DISPLAY = "Gay Social"
 
 interface VerificationRejectedProps {
   pseudo?: string
@@ -14,11 +14,14 @@ interface VerificationRejectedProps {
 const VerificationRejectedEmail = ({ pseudo, rejectionReason }: VerificationRejectedProps) => (
   <Html lang="fr" dir="ltr">
     <Head />
-    <Preview>Votre vérification d'identité a été refusée — GaySocial</Preview>
+    <Preview>Votre vérification d'identité a été refusée — Gay Social</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={headerSection}>
-          <Heading style={logo}>{SITE_NAME}</Heading>
+          <Heading style={logoStyle}>
+            <span style={logoGay}>Gay</span>{' '}
+            <span style={logoSocial}>Social</span>
+          </Heading>
         </Section>
 
         <Heading style={h1}>Vérification d'identité refusée</Heading>
@@ -61,7 +64,7 @@ const VerificationRejectedEmail = ({ pseudo, rejectionReason }: VerificationReje
         <Hr style={hr} />
 
         <Text style={footer}>
-          Si vous pensez qu'il s'agit d'une erreur, contactez notre support via l'application {SITE_NAME}.
+          Si vous pensez qu'il s'agit d'une erreur, contactez notre support via l'application {SITE_DISPLAY}.
         </Text>
       </Container>
     </Body>
@@ -70,7 +73,7 @@ const VerificationRejectedEmail = ({ pseudo, rejectionReason }: VerificationReje
 
 export const template = {
   component: VerificationRejectedEmail,
-  subject: 'Vérification d\'identité refusée — GaySocial',
+  subject: 'Vérification d\'identité refusée — Gay Social',
   displayName: 'Refus de vérification d\'identité',
   previewData: { pseudo: 'Maxime', rejectionReason: 'Le selfie ne correspond pas à la photo du document d\'identité.' },
 } satisfies TemplateEntry
@@ -78,7 +81,9 @@ export const template = {
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
 const container = { padding: '20px 25px', maxWidth: '560px', margin: '0 auto' }
 const headerSection = { textAlign: 'center' as const, padding: '20px 0 10px' }
-const logo = { fontSize: '24px', fontWeight: '700' as const, color: '#1a6fb5', margin: '0' }
+const logoStyle = { fontSize: '28px', fontWeight: '800' as const, margin: '0' }
+const logoGay = { color: '#e63946' }
+const logoSocial = { color: '#1a6fb5' }
 const h1 = { fontSize: '22px', fontWeight: '700' as const, color: '#dc2626', margin: '24px 0 16px' }
 const text = { fontSize: '15px', color: '#3d4f66', lineHeight: '1.6', margin: '0 0 12px' }
 const listItem = { fontSize: '14px', color: '#55657a', lineHeight: '1.6', margin: '2px 0', paddingLeft: '8px' }

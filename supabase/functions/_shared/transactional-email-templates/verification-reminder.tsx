@@ -4,7 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = "GaySocial"
+const SITE_DISPLAY = "Gay Social"
 
 interface VerificationReminderProps {
   pseudo?: string
@@ -19,12 +19,15 @@ const VerificationReminderEmail = ({ pseudo, daysLeft }: VerificationReminderPro
       <Preview>
         {isUrgent
           ? `⚠️ Plus que ${daysLeft} jour${(daysLeft ?? 0) > 1 ? 's' : ''} pour vérifier votre identité`
-          : 'Vérifiez votre identité pour continuer à utiliser GaySocial'}
+          : 'Vérifiez votre identité pour continuer à utiliser Gay Social'}
       </Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={headerSection}>
-            <Heading style={logo}>{SITE_NAME}</Heading>
+            <Heading style={logoStyle}>
+              <span style={logoGay}>Gay</span>{' '}
+              <span style={logoSocial}>Social</span>
+            </Heading>
           </Section>
 
           <Heading style={h1}>
@@ -38,7 +41,7 @@ const VerificationReminderEmail = ({ pseudo, daysLeft }: VerificationReminderPro
           <Text style={text}>
             {isUrgent
               ? `Il ne vous reste que ${daysLeft} jour${(daysLeft ?? 0) > 1 ? 's' : ''} pour vérifier votre identité. Sans vérification, votre compte sera automatiquement supprimé.`
-              : 'Nous vous rappelons que la vérification de votre identité est obligatoire pour continuer à utiliser GaySocial. Cette étape garantit la sécurité de tous nos membres.'}
+              : `Nous vous rappelons que la vérification de votre identité est obligatoire pour continuer à utiliser ${SITE_DISPLAY}. Cette étape garantit la sécurité de tous nos membres.`}
           </Text>
 
           <Text style={text}>
@@ -64,7 +67,7 @@ const VerificationReminderEmail = ({ pseudo, daysLeft }: VerificationReminderPro
           <Hr style={hr} />
 
           <Text style={footer}>
-            Cet email a été envoyé par {SITE_NAME}. Si vous avez des questions, contactez notre support via l'application.
+            Cet email a été envoyé par {SITE_DISPLAY}. Si vous avez des questions, contactez notre support via l'application.
           </Text>
         </Container>
       </Body>
@@ -77,9 +80,9 @@ export const template = {
   subject: (data: Record<string, any>) => {
     const days = data?.daysLeft
     if (days !== undefined && days <= 7) {
-      return `⚠️ Plus que ${days} jour${days > 1 ? 's' : ''} pour vérifier votre identité — GaySocial`
+      return `⚠️ Plus que ${days} jour${days > 1 ? 's' : ''} pour vérifier votre identité — Gay Social`
     }
-    return 'Rappel : Vérifiez votre identité — GaySocial'
+    return 'Rappel : Vérifiez votre identité — Gay Social'
   },
   displayName: 'Rappel de vérification d\'identité',
   previewData: { pseudo: 'Maxime', daysLeft: 5 },
@@ -88,7 +91,9 @@ export const template = {
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
 const container = { padding: '20px 25px', maxWidth: '560px', margin: '0 auto' }
 const headerSection = { textAlign: 'center' as const, padding: '20px 0 10px' }
-const logo = { fontSize: '24px', fontWeight: '700' as const, color: '#1a6fb5', margin: '0' }
+const logoStyle = { fontSize: '28px', fontWeight: '800' as const, margin: '0' }
+const logoGay = { color: '#e63946' }
+const logoSocial = { color: '#1a6fb5' }
 const h1 = { fontSize: '22px', fontWeight: '700' as const, color: '#1a2940', margin: '24px 0 16px' }
 const text = { fontSize: '15px', color: '#3d4f66', lineHeight: '1.6', margin: '0 0 12px' }
 const listItem = { fontSize: '15px', color: '#3d4f66', lineHeight: '1.6', margin: '4px 0', paddingLeft: '8px' }

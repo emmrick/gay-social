@@ -4,7 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = "GaySocial"
+const SITE_DISPLAY = "Gay Social"
 
 interface VerificationConfirmedProps {
   pseudo?: string
@@ -13,11 +13,14 @@ interface VerificationConfirmedProps {
 const VerificationConfirmedEmail = ({ pseudo }: VerificationConfirmedProps) => (
   <Html lang="fr" dir="ltr">
     <Head />
-    <Preview>✅ Votre identité a été vérifiée avec succès — GaySocial</Preview>
+    <Preview>✅ Votre identité a été vérifiée avec succès — Gay Social</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={headerSection}>
-          <Heading style={logo}>{SITE_NAME}</Heading>
+          <Heading style={logoStyle}>
+            <span style={logoGay}>Gay</span>{' '}
+            <span style={logoSocial}>Social</span>
+          </Heading>
         </Section>
 
         <Heading style={h1}>✅ Identité vérifiée !</Heading>
@@ -27,7 +30,7 @@ const VerificationConfirmedEmail = ({ pseudo }: VerificationConfirmedProps) => (
         </Text>
 
         <Text style={text}>
-          Votre identité a été vérifiée avec succès. Votre compte est maintenant entièrement activé et vous avez accès à toutes les fonctionnalités de GaySocial.
+          Votre identité a été vérifiée avec succès. Votre compte est maintenant entièrement activé et vous avez accès à toutes les fonctionnalités de {SITE_DISPLAY}.
         </Text>
 
         <Section style={benefitsBox}>
@@ -47,7 +50,7 @@ const VerificationConfirmedEmail = ({ pseudo }: VerificationConfirmedProps) => (
         <Hr style={hr} />
 
         <Text style={footer}>
-          Merci de faire partie de la communauté {SITE_NAME} ! 🌈
+          Merci de faire partie de la communauté {SITE_DISPLAY} ! 🌈
         </Text>
       </Container>
     </Body>
@@ -56,7 +59,7 @@ const VerificationConfirmedEmail = ({ pseudo }: VerificationConfirmedProps) => (
 
 export const template = {
   component: VerificationConfirmedEmail,
-  subject: '✅ Votre identité a été vérifiée — GaySocial',
+  subject: '✅ Votre identité a été vérifiée — Gay Social',
   displayName: 'Confirmation de vérification',
   previewData: { pseudo: 'Maxime' },
 } satisfies TemplateEntry
@@ -64,7 +67,9 @@ export const template = {
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
 const container = { padding: '20px 25px', maxWidth: '560px', margin: '0 auto' }
 const headerSection = { textAlign: 'center' as const, padding: '20px 0 10px' }
-const logo = { fontSize: '24px', fontWeight: '700' as const, color: '#1a6fb5', margin: '0' }
+const logoStyle = { fontSize: '28px', fontWeight: '800' as const, margin: '0' }
+const logoGay = { color: '#e63946' }
+const logoSocial = { color: '#1a6fb5' }
 const h1 = { fontSize: '22px', fontWeight: '700' as const, color: '#16a34a', margin: '24px 0 16px' }
 const text = { fontSize: '15px', color: '#3d4f66', lineHeight: '1.6', margin: '0 0 12px' }
 const benefitsBox = { backgroundColor: '#f0fdf4', borderRadius: '8px', padding: '16px', margin: '16px 0' }

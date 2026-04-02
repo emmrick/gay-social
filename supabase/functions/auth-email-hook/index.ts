@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "gay-connect"
+const SITE_NAME = "gaysocial"
 const SENDER_DOMAIN = "notify.gaysocial.fr"
 const ROOT_DOMAIN = "gaysocial.fr"
 const FROM_DOMAIN = "gaysocial.fr" // Domain shown in From address (may be root or sender subdomain)

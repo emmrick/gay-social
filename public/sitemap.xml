@@ -3,155 +3,155 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <!-- Pages principales -->
   <url>
-    <loc>https://gay-connect.fr/</loc>
+    <loc>https://gaysocial.fr/</loc>
     <lastmod>2026-03-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://gay-connect.fr/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://gaysocial.fr/" />
   </url>
   <url>
-    <loc>https://gay-connect.fr/regions</loc>
+    <loc>https://gaysocial.fr/regions</loc>
     <lastmod>2026-03-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://gay-connect.fr/auth</loc>
+    <loc>https://gaysocial.fr/auth</loc>
     <lastmod>2026-03-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://gay-connect.fr/about</loc>
+    <loc>https://gaysocial.fr/about</loc>
     <lastmod>2026-03-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://gay-connect.fr/guide</loc>
+    <loc>https://gaysocial.fr/guide</loc>
     <lastmod>2026-03-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://gay-connect.fr/rules</loc>
+    <loc>https://gaysocial.fr/rules</loc>
     <lastmod>2026-03-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://gay-connect.fr/help-center</loc>
+    <loc>https://gaysocial.fr/help-center</loc>
     <lastmod>2026-03-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://gay-connect.fr/legal</loc>
+    <loc>https://gaysocial.fr/legal</loc>
     <lastmod>2026-03-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <!-- Pages régionales -->
-  <url><loc>https://gay-connect.fr/region/01-ain</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/02-aisne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/03-allier</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/04-alpes-de-haute-provence</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/05-hautes-alpes</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/06-alpes-maritimes</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/07-ardeche</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/08-ardennes</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/09-ariege</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/10-aube</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/11-aude</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/12-aveyron</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/13-bouches-du-rhone</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://gay-connect.fr/region/14-calvados</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/15-cantal</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/16-charente</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/17-charente-maritime</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/18-cher</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/19-correze</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/2A-corse-du-sud</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/2B-haute-corse</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/21-cote-d-or</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/22-cotes-d-armor</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/23-creuse</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/24-dordogne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/25-doubs</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/26-drome</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/27-eure</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/28-eure-et-loir</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/29-finistere</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/30-gard</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/31-haute-garonne</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://gay-connect.fr/region/32-gers</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/33-gironde</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://gay-connect.fr/region/34-herault</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/35-ille-et-vilaine</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/36-indre</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/37-indre-et-loire</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/38-isere</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/39-jura</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/40-landes</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/41-loir-et-cher</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/42-loire</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/43-haute-loire</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/44-loire-atlantique</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/45-loiret</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/46-lot</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/47-lot-et-garonne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/48-lozere</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/49-maine-et-loire</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/50-manche</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/51-marne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/52-haute-marne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/53-mayenne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/54-meurthe-et-moselle</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/55-meuse</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/56-morbihan</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/57-moselle</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/58-nievre</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/59-nord</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://gay-connect.fr/region/60-oise</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/61-orne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/62-pas-de-calais</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/63-puy-de-dome</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/64-pyrenees-atlantiques</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/65-hautes-pyrenees</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/66-pyrenees-orientales</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/67-bas-rhin</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/68-haut-rhin</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/69-rhone</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://gay-connect.fr/region/70-haute-saone</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/71-saone-et-loire</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/72-sarthe</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/73-savoie</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/74-haute-savoie</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/75-paris</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://gay-connect.fr/region/76-seine-maritime</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/77-seine-et-marne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/78-yvelines</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/79-deux-sevres</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/80-somme</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/81-tarn</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/82-tarn-et-garonne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/83-var</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/84-vaucluse</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/85-vendee</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/86-vienne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/87-haute-vienne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/88-vosges</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/89-yonne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/90-territoire-de-belfort</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/91-essonne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/92-hauts-de-seine</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/93-seine-saint-denis</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/94-val-de-marne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/95-val-d-oise</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/971-guadeloupe</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/972-martinique</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/973-guyane</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/974-la-reunion</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://gay-connect.fr/region/976-mayotte</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/01-ain</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/02-aisne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/03-allier</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/04-alpes-de-haute-provence</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/05-hautes-alpes</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/06-alpes-maritimes</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/07-ardeche</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/08-ardennes</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/09-ariege</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/10-aube</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/11-aude</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/12-aveyron</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/13-bouches-du-rhone</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://gaysocial.fr/region/14-calvados</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/15-cantal</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/16-charente</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/17-charente-maritime</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/18-cher</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/19-correze</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/2A-corse-du-sud</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/2B-haute-corse</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/21-cote-d-or</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/22-cotes-d-armor</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/23-creuse</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/24-dordogne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/25-doubs</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/26-drome</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/27-eure</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/28-eure-et-loir</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/29-finistere</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/30-gard</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/31-haute-garonne</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://gaysocial.fr/region/32-gers</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/33-gironde</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://gaysocial.fr/region/34-herault</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/35-ille-et-vilaine</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/36-indre</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/37-indre-et-loire</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/38-isere</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/39-jura</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/40-landes</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/41-loir-et-cher</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/42-loire</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/43-haute-loire</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/44-loire-atlantique</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/45-loiret</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/46-lot</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/47-lot-et-garonne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/48-lozere</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/49-maine-et-loire</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/50-manche</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/51-marne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/52-haute-marne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/53-mayenne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/54-meurthe-et-moselle</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/55-meuse</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/56-morbihan</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/57-moselle</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/58-nievre</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/59-nord</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://gaysocial.fr/region/60-oise</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/61-orne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/62-pas-de-calais</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/63-puy-de-dome</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/64-pyrenees-atlantiques</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/65-hautes-pyrenees</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/66-pyrenees-orientales</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/67-bas-rhin</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/68-haut-rhin</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/69-rhone</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://gaysocial.fr/region/70-haute-saone</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/71-saone-et-loire</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/72-sarthe</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/73-savoie</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/74-haute-savoie</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/75-paris</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://gaysocial.fr/region/76-seine-maritime</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/77-seine-et-marne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/78-yvelines</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/79-deux-sevres</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/80-somme</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/81-tarn</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/82-tarn-et-garonne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/83-var</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/84-vaucluse</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/85-vendee</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/86-vienne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/87-haute-vienne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/88-vosges</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/89-yonne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/90-territoire-de-belfort</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/91-essonne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/92-hauts-de-seine</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/93-seine-saint-denis</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/94-val-de-marne</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/95-val-d-oise</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/971-guadeloupe</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/972-martinique</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/973-guyane</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/974-la-reunion</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://gaysocial.fr/region/976-mayotte</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
 </urlset>

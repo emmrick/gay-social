@@ -42,7 +42,7 @@ const VerificationConfirmedEmail = ({ pseudo }: VerificationConfirmedProps) => (
         </Section>
 
         <Section style={buttonSection}>
-          <Button style={primaryButton} href="https://gay-connect.lovable.app">
+          <Button style={primaryButton} href="https://gaysocial.fr">
             Accéder à mon profil
           </Button>
         </Section>

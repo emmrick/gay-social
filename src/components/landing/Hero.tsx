@@ -149,7 +149,7 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
       <SEOHead
         title="Gay Social - Site de Rencontre Gay, Sexe Gay & Tchat Gay France"
         description="Gay Social : le site gay n°1 pour les rencontres et le sexe entre hommes en France. Tchat gay gratuit, plan cul gay par département, échanges de photos et vidéos. Communauté vérifiée. +18 ans."
-        canonical="https://gay-connect.fr/"
+        canonical="https://gaysocial.fr/"
         keywords="site gay, rencontre gay, sexe gay, plan cul gay, tchat gay, chat gay, plan gay, drague gay, annonce gay, homme cherche homme, hookup gay, sexfriend gay, gay paris, gay lyon, gay marseille, gay toulouse, gay bordeaux, gay nantes, gay lille, rencontre sexe gay, plan cul homme, site plan cul gay, appli gay, application rencontre gay, mec gay, gay actif, gay passif, gay versatile, bear gay, twink, daddy gay, ours gay"
         jsonLd={combinedJsonLd}
       />

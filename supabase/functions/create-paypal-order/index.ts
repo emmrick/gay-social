@@ -57,8 +57,8 @@ Deno.serve(async (req) => {
     // Create PayPal order
     const accessToken = await getPayPalAccessToken()
 
-    const returnUrlFinal = return_url || 'https://gay-connect.lovable.app/paypal-return'
-    const cancelUrl = return_url ? return_url.replace('paypal-return', '') : 'https://gay-connect.lovable.app/'
+    const returnUrlFinal = return_url || 'https://gaysocial.fr/paypal-return'
+    const cancelUrl = return_url ? return_url.replace('paypal-return', '') : 'https://gaysocial.fr/'
 
     const orderRes = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {
       method: 'POST',

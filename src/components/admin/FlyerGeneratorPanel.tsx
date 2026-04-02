@@ -29,7 +29,7 @@ const defaultConfig: FlyerConfig = {
   title: 'GaySocial',
   slogan: 'Connecte-toi. Rencontre. Vis.',
   description: 'La communauté gay francophone #1. Rejoins des milliers de membres près de chez toi !',
-  siteUrl: 'https://gay-connect.fr',
+  siteUrl: 'https://gaysocial.fr',
   promoCode: 'FLYER2025',
   bgColor: '#1a1025',
   accentColor: '#9b59b6',

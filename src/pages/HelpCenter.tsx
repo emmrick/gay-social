@@ -217,7 +217,7 @@ const HelpCenter = () => {
       <SEOHead
         title="Centre d'aide - Gay Social"
         description="Trouvez des réponses à vos questions sur Gay Social. FAQ, règles, et assistance."
-        canonical="https://gay-connect.fr/help-center"
+        canonical="https://gaysocial.fr/help-center"
       />
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">

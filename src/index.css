@@ -504,7 +504,7 @@ html {
   }
 }
 
-/* Rainbow animated text for Gay Connect branding */
+/* Rainbow animated text for Gay Social branding */
 @keyframes rainbow-shift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }

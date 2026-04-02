@@ -97,7 +97,7 @@ const Rules = () => {
       <SEOHead
         title="Règles de conduite - Gay Social"
         description="Règles de conduite de la communauté Gay Social. Respect, bienveillance et sécurité pour tous les membres."
-        canonical="https://gay-connect.fr/rules"
+        canonical="https://gaysocial.fr/rules"
       />
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">

@@ -129,14 +129,14 @@ const Community = () => {
       <SEOHead
         title="Communauté Gay Social - Témoignages & Avis | Rencontre Gay France"
         description="Découvrez la communauté Gay Social : témoignages de membres, statistiques en temps réel, fonctionnalités communautaires. Rejoignez des milliers d'hommes vérifiés partout en France."
-        canonical="https://gay-connect.fr/communaute"
-        keywords="communauté gay france, témoignages gay social, avis gay social, gay connect avis, site gay fiable, gay social membres, rencontre gay avis, communauté homosexuelle france"
+        canonical="https://gaysocial.fr/communaute"
+        keywords="communauté gay france, témoignages gay social, avis gay social, gay social avis, site gay fiable, gay social membres, rencontre gay avis, communauté homosexuelle france"
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'WebPage',
           name: 'Communauté Gay Social - Témoignages & Avis',
           description: 'Témoignages de membres et statistiques de la communauté Gay Social.',
-          url: 'https://gay-connect.fr/communaute',
+          url: 'https://gaysocial.fr/communaute',
         }}
       />
 

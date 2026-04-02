@@ -80,14 +80,14 @@ const Security = () => {
       <SEOHead
         title="Sécurité & Confidentialité - Gay Social | Protection Vie Privée"
         description="Découvrez comment Gay Social protège votre vie privée : vérification d'identité, médias éphémères, anti-screenshot, modération IA, données chiffrées. Le site gay le plus sécurisé de France."
-        canonical="https://gay-connect.fr/securite"
+        canonical="https://gaysocial.fr/securite"
         keywords="sécurité gay social, vie privée gay, anti screenshot gay, vérification identité gay, site gay sécurisé, protection données gay, RGPD gay, médias éphémères gay"
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'WebPage',
           name: 'Sécurité & Confidentialité - Gay Social',
           description: 'Comment Gay Social protège la vie privée et la sécurité de ses membres.',
-          url: 'https://gay-connect.fr/securite',
+          url: 'https://gaysocial.fr/securite',
         }}
       />
 

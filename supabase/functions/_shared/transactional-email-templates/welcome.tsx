@@ -76,7 +76,7 @@ const WelcomeEmail = ({ pseudo }: WelcomeProps) => (
         </Section>
 
         <Section style={buttonSection}>
-          <Button style={primaryButton} href="https://gay-connect.lovable.app">
+          <Button style={primaryButton} href="https://gaysocial.fr">
             🚀 Découvrir Gay Social
           </Button>
         </Section>

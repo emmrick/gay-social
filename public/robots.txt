@@ -19,4 +19,4 @@ Allow: /
 Disallow: /admin
 Disallow: /profile/
 
-Sitemap: https://gay-connect.fr/sitemap.xml
+Sitemap: https://gaysocial.fr/sitemap.xml

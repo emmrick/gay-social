@@ -11,9 +11,9 @@ interface SEOHeadProps {
   keywords?: string;
 }
 
-const BASE_URL = 'https://gay-connect.fr';
+const BASE_URL = 'https://gaysocial.fr';
 const DEFAULT_OG_IMAGE = 'https://lovable.dev/opengraph-image-p98pqg.png';
-const DEFAULT_KEYWORDS = 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, drague gay, annonce gay, homme gay, gay france, rencontre homosexuel, plan sexe gay, hookup gay, sexfriend gay, homme cherche homme, gay paris, gay lyon, gay marseille, gay toulouse, gay bordeaux, gay nantes, gay lille, gay strasbourg, gay montpellier, gay nice, rencontre gay gratuit, tchat gay gratuit, plan cul gay ce soir, plan cul gay gratuit, site homo, site homosexuel, rencontre gay proximité, rencontre gay près de moi, appli gay, application rencontre gay, grindr alternative, site comme grindr, gay connect, gaysocial, plan discret gay, rencontre locale gay, mec cherche mec, bi curieux, bisexuel, lgbt france, communauté lgbt, gay friendly, gay dom tom, gay guadeloupe, gay martinique, gay réunion';
+const DEFAULT_KEYWORDS = 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, drague gay, annonce gay, homme gay, gay france, rencontre homosexuel, plan sexe gay, hookup gay, sexfriend gay, homme cherche homme, gay paris, gay lyon, gay marseille, gay toulouse, gay bordeaux, gay nantes, gay lille, gay strasbourg, gay montpellier, gay nice, rencontre gay gratuit, tchat gay gratuit, plan cul gay ce soir, plan cul gay gratuit, site homo, site homosexuel, rencontre gay proximité, rencontre gay près de moi, appli gay, application rencontre gay, grindr alternative, site comme grindr, gay social, gaysocial, plan discret gay, rencontre locale gay, mec cherche mec, bi curieux, bisexuel, lgbt france, communauté lgbt, gay friendly, gay dom tom, gay guadeloupe, gay martinique, gay réunion';
 
 const SEOHead = ({
   title = 'Gay Social - Site de Rencontre Gay, Sexe Gay & Tchat Gay France',
@@ -126,7 +126,7 @@ export const websiteJsonLd = {
   url: BASE_URL,
   description: 'Site de rencontre gay et sexe entre hommes en France. Tchat gay gratuit, plan cul gay local, échanges de photos et vidéos entre mecs. Communauté gay vérifiée. +18 ans.',
   inLanguage: 'fr-FR',
-  keywords: 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, site de rencontre gay, gay france, communauté gay, annonce gay, homme gay, drague gay, hookup gay, plan sexe gay, homme cherche homme, sexfriend gay, gay paris, gay lyon, gay marseille, gay toulouse, gay bordeaux, gay nantes, gay lille, gay strasbourg, gay montpellier, gay nice, rencontre gay gratuit, tchat gay gratuit, plan cul gay ce soir, appli gay, application rencontre gay, grindr alternative, gay connect, plan discret gay, mec cherche mec, bi curieux, lgbt france, gay dom tom',
+  keywords: 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, site de rencontre gay, gay france, communauté gay, annonce gay, homme gay, drague gay, hookup gay, plan sexe gay, homme cherche homme, sexfriend gay, gay paris, gay lyon, gay marseille, gay toulouse, gay bordeaux, gay nantes, gay lille, gay strasbourg, gay montpellier, gay nice, rencontre gay gratuit, tchat gay gratuit, plan cul gay ce soir, appli gay, application rencontre gay, grindr alternative, gay social, plan discret gay, mec cherche mec, bi curieux, lgbt france, gay dom tom',
   potentialAction: {
     '@type': 'SearchAction',
     target: `${BASE_URL}/auth`,

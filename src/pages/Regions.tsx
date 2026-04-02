@@ -12,7 +12,7 @@ const Regions = () => {
 
   const pageTitle = 'Rencontre Gay par Département - Plan Cul Gay, Sexe Gay & Tchat Local | Gay Social';
   const pageDescription = 'Trouve un plan cul gay ou une rencontre gay près de chez toi. 101 départements français, tchat gay gratuit, sexe gay local, profils vérifiés. Le site gay n°1 en France. +18 ans.';
-  const canonical = 'https://gay-connect.fr/regions';
+  const canonical = 'https://gaysocial.fr/regions';
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -20,7 +20,7 @@ const Regions = () => {
     name: pageTitle,
     description: pageDescription,
     url: canonical,
-    isPartOf: { '@type': 'WebSite', name: 'Gay Social', url: 'https://gay-connect.fr' },
+    isPartOf: { '@type': 'WebSite', name: 'Gay Social', url: 'https://gaysocial.fr' },
     numberOfItems: rooms?.length || 101,
   };
 

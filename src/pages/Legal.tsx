@@ -66,7 +66,7 @@ const Legal = () => {
       <SEOHead
         title="Mentions légales & CGU - Gay Social"
         description="Conditions générales d'utilisation, politique de confidentialité RGPD, et mentions légales de Gay Social. Site réservé aux +18 ans."
-        canonical="https://gay-connect.fr/legal"
+        canonical="https://gaysocial.fr/legal"
       />
       <DataExportDialog open={showExportDialog} onOpenChange={setShowExportDialog} />
       <div className="min-h-screen bg-background">

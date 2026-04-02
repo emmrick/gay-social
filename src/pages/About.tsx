@@ -74,14 +74,14 @@ const About = () => {
       <SEOHead
         title="À propos de Gay Social - Site de Rencontre Gay & Sexe Gay Sécurisé"
         description="Gay Social : le site de rencontre gay et de sexe entre hommes n°1 en France. Espace safe, profils vérifiés, médias éphémères et modération active. Plan cul gay sécurisé."
-        canonical="https://gay-connect.fr/about"
-        keywords="site gay, rencontre gay, sexe gay, communauté gay france, plan cul gay sécurisé, tchat gay, espace safe gay, gay connect avis"
+        canonical="https://gaysocial.fr/about"
+        keywords="site gay, rencontre gay, sexe gay, communauté gay france, plan cul gay sécurisé, tchat gay, espace safe gay, gay social avis"
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'AboutPage',
           name: 'À propos de Gay Social - Rencontre Gay & Sexe Gay',
           description: 'Gay Social : site de rencontre gay et de sexe entre hommes sécurisé en France. Profils vérifiés, médias éphémères, anti-capture d\'écran.',
-          url: 'https://gay-connect.fr/about',
+          url: 'https://gaysocial.fr/about',
         }}
       />
       {/* Header */}

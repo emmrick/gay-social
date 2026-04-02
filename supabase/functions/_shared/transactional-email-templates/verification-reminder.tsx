@@ -53,7 +53,7 @@ const VerificationReminderEmail = ({ pseudo, daysLeft }: VerificationReminderPro
           <Text style={listItem}>🪪 Une photo verso de votre pièce d'identité</Text>
 
           <Section style={buttonSection}>
-            <Button style={isUrgent ? urgentButton : primaryButton} href="https://gay-connect.lovable.app">
+            <Button style={isUrgent ? urgentButton : primaryButton} href="https://gaysocial.fr">
               Vérifier mon identité maintenant
             </Button>
           </Section>

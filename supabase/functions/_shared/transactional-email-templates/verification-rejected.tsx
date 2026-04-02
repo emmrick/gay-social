@@ -56,7 +56,7 @@ const VerificationRejectedEmail = ({ pseudo, rejectionReason }: VerificationReje
         </Text>
 
         <Section style={buttonSection}>
-          <Button style={primaryButton} href="https://gay-connect.lovable.app">
+          <Button style={primaryButton} href="https://gaysocial.fr">
             Soumettre à nouveau
           </Button>
         </Section>

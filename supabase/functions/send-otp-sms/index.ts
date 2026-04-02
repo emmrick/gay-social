@@ -87,7 +87,7 @@ serve(async (req) => {
         });
       }
 
-      const siteUrl = Deno.env.get('SITE_URL') || 'https://gay-connect.fr';
+      const siteUrl = Deno.env.get('SITE_URL') || 'https://gaysocial.fr';
       const interruptLink = `${siteUrl}/?interrupt=${interruptToken}`;
 
       const smsBody = `Gay Social - Code de vérification : ${code}\n\n` +

@@ -78,7 +78,7 @@ const HowItWorks = () => {
       <SEOHead
         title="Comment ça marche - Gay Social | Rencontre Gay France"
         description="Découvrez comment fonctionne Gay Social étape par étape : inscription gratuite, vérification d'identité, chat par département, médias éphémères et rencontres sécurisées entre hommes."
-        canonical="https://gay-connect.fr/comment-ca-marche"
+        canonical="https://gaysocial.fr/comment-ca-marche"
         keywords="comment fonctionne gay social, inscription gay social, rencontre gay france, tchat gay gratuit, site gay comment ça marche, plan cul gay inscription"
         jsonLd={{
           '@context': 'https://schema.org',

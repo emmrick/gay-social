@@ -48,6 +48,8 @@ import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 interface PrivateChatRoomProps {
   otherUserId: string;
   onBack: () => void;
+  autoOpenSnap?: boolean;
+  onSnapOpened?: () => void;
 }
 
 const formatDateLabel = (date: Date): string => {
@@ -56,7 +58,7 @@ const formatDateLabel = (date: Date): string => {
   return format(date, 'd MMMM yyyy', { locale: fr });
 };
 
-const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
+const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: PrivateChatRoomProps) => {
   const { user } = useAuth();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
   const resolvedOtherAvatar = useAvatarUrl(otherUserProfile?.avatar_url);

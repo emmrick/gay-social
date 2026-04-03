@@ -133,6 +133,14 @@ export const useSwipeActions = () => {
 
       let profilesList = (data || []) as SwipeableProfile[];
 
+      // Filter to only verified profiles (identity approved)
+      const { data: verifiedUsers } = await supabase
+        .from('identity_verifications')
+        .select('user_id')
+        .eq('status', 'approved');
+      const verifiedUserIds = new Set((verifiedUsers || []).map(v => v.user_id));
+      profilesList = profilesList.filter(p => verifiedUserIds.has(p.user_id));
+
       // Filter out suspended/blocked users
       if (profilesList.length > 0) {
         const checks = await Promise.all(
@@ -166,6 +174,9 @@ export const useSwipeActions = () => {
           });
         }
       }
+
+      // Filter out profiles with no photo at all (no avatar and no gallery photos)
+      profilesList = profilesList.filter(p => p.avatar_url || (p._photos && p._photos.length > 0));
 
       // Resolve avatar URLs to signed URLs
       if (profilesList.length > 0) {

@@ -129,6 +129,28 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
     if (otherUserId) markAsRead.mutate(otherUserId);
   }, [otherUserId]);
 
+  // Auto-open ephemeral viewer when entering conversation with pending snap
+  useEffect(() => {
+    if (autoOpenSnap && !isLoading && messages.length > 0 && !snapAutoOpenDone.current) {
+      snapAutoOpenDone.current = true;
+      // Find the first unopened ephemeral message from the other user
+      const ephemeralMsg = messages.find(msg => {
+        if (msg.sender_id === user?.id) return false;
+        if (msg.message_type !== 'image' && msg.message_type !== 'video') return false;
+        if (msg.content?.startsWith('http')) return false; // regular media
+        return true;
+      });
+      if (ephemeralMsg) {
+        setSnapViewerMessageId(ephemeralMsg.id);
+      }
+      onSnapOpened?.();
+    }
+  }, [autoOpenSnap, isLoading, messages, user?.id, onSnapOpened]);
+
+  useEffect(() => {
+    snapAutoOpenDone.current = false;
+  }, [otherUserId]);
+
   const prevMsgCount = useRef(0);
   const isNearBottomRef = useRef(true);
   const initialScrollDone = useRef(false);

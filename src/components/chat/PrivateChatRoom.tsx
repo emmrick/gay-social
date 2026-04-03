@@ -39,6 +39,7 @@ import MessageReactions from './MessageReactions';
 import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
 import AgeFilterBlockedDialog from './AgeFilterBlockedDialog';
+import SnapAutoViewer from './SnapAutoViewer';
 
 import { useCanContactUser, useAddContactException } from '@/hooks/useContactAgeFilter';
 import { usePrivateMessageReactions } from '@/hooks/usePrivateMessageReactions';
@@ -48,6 +49,8 @@ import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 interface PrivateChatRoomProps {
   otherUserId: string;
   onBack: () => void;
+  autoOpenSnap?: boolean;
+  onSnapOpened?: () => void;
 }
 
 const formatDateLabel = (date: Date): string => {
@@ -56,7 +59,7 @@ const formatDateLabel = (date: Date): string => {
   return format(date, 'd MMMM yyyy', { locale: fr });
 };
 
-const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
+const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: PrivateChatRoomProps) => {
   const { user } = useAuth();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
   const resolvedOtherAvatar = useAvatarUrl(otherUserProfile?.avatar_url);
@@ -82,6 +85,8 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [snapViewerMessageId, setSnapViewerMessageId] = useState<string | null>(null);
+  const snapAutoOpenDone = useRef(false);
   
   const screenshotNotifiedRef = useRef(false);
 
@@ -123,6 +128,28 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
   useEffect(() => {
     if (otherUserId) markAsRead.mutate(otherUserId);
+  }, [otherUserId]);
+
+  // Auto-open ephemeral viewer when entering conversation with pending snap
+  useEffect(() => {
+    if (autoOpenSnap && !isLoading && messages.length > 0 && !snapAutoOpenDone.current) {
+      snapAutoOpenDone.current = true;
+      // Find the first unopened ephemeral message from the other user
+      const ephemeralMsg = messages.find(msg => {
+        if (msg.sender_id === user?.id) return false;
+        if (msg.message_type !== 'image' && msg.message_type !== 'video') return false;
+        if (msg.content?.startsWith('http')) return false; // regular media
+        return true;
+      });
+      if (ephemeralMsg) {
+        setSnapViewerMessageId(ephemeralMsg.id);
+      }
+      onSnapOpened?.();
+    }
+  }, [autoOpenSnap, isLoading, messages, user?.id, onSnapOpened]);
+
+  useEffect(() => {
+    snapAutoOpenDone.current = false;
   }, [otherUserId]);
 
   const prevMsgCount = useRef(0);
@@ -693,6 +720,15 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           navigate(`/member/${otherUserId}`);
         }}
       />
+
+      {/* Auto-opened snap viewer */}
+      {snapViewerMessageId && (
+        <SnapAutoViewer
+          messageId={snapViewerMessageId}
+          senderName={otherUserProfile?.username || ''}
+          onClose={() => setSnapViewerMessageId(null)}
+        />
+      )}
     </div>
   );
 };

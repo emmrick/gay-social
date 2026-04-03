@@ -6,6 +6,7 @@ import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useConversationStatus } from '@/hooks/useConversationStatus';
 import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
+import { usePendingEphemeralSnaps } from '@/hooks/usePendingEphemeralSnaps';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
@@ -23,12 +24,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MessageCircle, MoreVertical, Archive, Trash2, ArchiveRestore, Mail, MailOpen, Timer } from 'lucide-react';
+import { MessageCircle, MoreVertical, Archive, Trash2, ArchiveRestore, Mail, MailOpen, Timer, Camera, Video } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ConversationAutoDeleteSheet from './ConversationAutoDeleteSheet';
 
 interface PrivateChatListProps {
-  onSelectConversation: (userId: string) => void;
+  onSelectConversation: (userId: string, pendingSnap?: boolean) => void;
   selectedUserId: string | null;
   showArchived?: boolean;
 }
@@ -37,6 +38,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
   const { conversations, archivedConversations, isLoading } = usePrivateConversations();
   const { getUnreadCount, markAsRead, markAsUnread } = useUnreadMessages();
   const { archiveConversation, unarchiveConversation, deleteConversation } = useConversationStatus();
+  const { data: pendingSnaps } = usePendingEphemeralSnaps();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [autoDeleteSheet, setAutoDeleteSheet] = useState<{ conversationId: string; username: string } | null>(null);
@@ -151,13 +153,19 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
           const unreadCount = getUnreadCount(conv.otherUser.user_id);
           const hasUnread = unreadCount > 0;
           const isSelected = selectedUserId === conv.otherUser.user_id;
+          const snap = pendingSnaps?.get(conv.otherUser.user_id);
+          const hasSnap = !!snap;
+          const isSnapPhoto = snap?.mediaType === 'image';
+
+          const snapColorClass = isSnapPhoto ? 'text-teal-500' : 'text-orange-500';
+          const snapRingClass = isSnapPhoto ? 'ring-teal-500/50' : 'ring-orange-500/50';
 
           return (
             <div
               key={conv.id}
               onClick={() => {
                 if (!wasLongPressRef.current) {
-                  onSelectConversation(conv.otherUser.user_id);
+                  onSelectConversation(conv.otherUser.user_id, hasSnap);
                 }
               }}
               onPointerDown={() => handleLongPressStart(conv.id, conv.otherUser.username)}
@@ -167,14 +175,16 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                 "flex items-center gap-3 px-3 py-3.5 cursor-pointer transition-all duration-200 select-none rounded-2xl mx-1 my-0.5",
                 "hover:bg-secondary/70 active:scale-[0.98]",
                 isSelected && "bg-primary/8 ring-1 ring-primary/15",
-                hasUnread && !isSelected && "bg-primary/[0.03]"
+                hasSnap && !isSelected && (isSnapPhoto ? "bg-teal-500/[0.06]" : "bg-orange-500/[0.06]"),
+                hasUnread && !hasSnap && !isSelected && "bg-primary/[0.03]"
               )}
             >
               {/* Avatar */}
               <div className="relative flex-shrink-0">
                 <div className={cn(
                   "w-14 h-14 rounded-full overflow-hidden transition-shadow duration-200",
-                  hasUnread && "ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
+                  hasSnap && `ring-2 ${snapRingClass} ring-offset-2 ring-offset-background`,
+                  hasUnread && !hasSnap && "ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
                 )}>
                   {conv.otherUser.avatar_url ? (
                     <img
@@ -199,14 +209,14 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                 <div className="flex items-center justify-between gap-2 mb-0.5">
                   <span className={cn(
                     "text-[15px] truncate leading-tight",
-                    hasUnread ? "font-bold text-foreground" : "font-medium text-foreground"
+                    hasUnread || hasSnap ? "font-bold text-foreground" : "font-medium text-foreground"
                   )}>
                     {conv.otherUser.username}
                   </span>
                   {conv.lastMessage && (
                     <span className={cn(
                       "text-[11px] flex-shrink-0 tabular-nums",
-                      hasUnread ? "text-primary font-semibold" : "text-muted-foreground"
+                      hasSnap ? `${snapColorClass} font-semibold` : hasUnread ? "text-primary font-semibold" : "text-muted-foreground"
                     )}>
                       {formatDistanceToNow(new Date(conv.lastMessage.created_at), {
                         addSuffix: false,
@@ -216,13 +226,24 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <p className={cn(
-                    "text-[13px] truncate leading-snug",
-                    hasUnread ? "text-foreground/80 font-medium" : "text-muted-foreground"
-                  )}>
-                    {getMessagePreview(conv)}
-                  </p>
-                  {hasUnread && (
+                  {hasSnap ? (
+                    <div className={cn("flex items-center gap-1.5 text-[13px] font-semibold", snapColorClass)}>
+                      {isSnapPhoto ? (
+                        <Camera className="w-4 h-4" />
+                      ) : (
+                        <Video className="w-4 h-4" />
+                      )}
+                      <span>{isSnapPhoto ? 'Nouveau Selfie' : 'Nouvelle Vidéo'}</span>
+                    </div>
+                  ) : (
+                    <p className={cn(
+                      "text-[13px] truncate leading-snug",
+                      hasUnread ? "text-foreground/80 font-medium" : "text-muted-foreground"
+                    )}>
+                      {getMessagePreview(conv)}
+                    </p>
+                  )}
+                  {hasUnread && !hasSnap && (
                     <span className="flex-shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center shadow-sm">
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>

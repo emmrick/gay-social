@@ -95,6 +95,7 @@ const Index = () => {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [openEditProfile, setOpenEditProfile] = useState(false);
   const [messageSubTab, setMessageSubTab] = useState<'conversations' | 'groups' | 'archived'>('conversations');
+  const [openSnapOnEnter, setOpenSnapOnEnter] = useState(false);
   const { data: isAdmin } = useIsAdmin();
   const featureFlags = useFeatureFlags();
   const { data: isModerator } = useQuery({
@@ -360,8 +361,10 @@ const Index = () => {
     }
   };
 
-  const handleSelectConversation = (userId: string) => {
+
+  const handleSelectConversation = (userId: string, hasPendingSnap?: boolean) => {
     setSelectedPrivateUserId(userId);
+    setOpenSnapOnEnter(!!hasPendingSnap);
     markAsRead.mutate(userId);
     setCurrentView('private');
   };
@@ -406,6 +409,8 @@ const Index = () => {
           <PrivateChatRoom
             otherUserId={selectedPrivateUserId}
             onBack={handleBackFromPrivateChat}
+            autoOpenSnap={openSnapOnEnter}
+            onSnapOpened={() => setOpenSnapOnEnter(false)}
           />
         </motion.div>
       </Suspense>

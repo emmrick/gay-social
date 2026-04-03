@@ -361,7 +361,6 @@ const Index = () => {
     }
   };
 
-  const [openSnapOnEnter, setOpenSnapOnEnter] = useState(false);
 
   const handleSelectConversation = (userId: string, hasPendingSnap?: boolean) => {
     setSelectedPrivateUserId(userId);

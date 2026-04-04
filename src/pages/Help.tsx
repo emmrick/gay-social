@@ -141,6 +141,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   const freeTextRef = useRef<HTMLTextAreaElement>(null);
   const agentJoinedRef = useRef(false);
   const hasInitializedRef = useRef(false);
+  const typewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Auto-resize textarea
   useEffect(() => {

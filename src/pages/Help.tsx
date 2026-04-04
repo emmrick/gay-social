@@ -895,7 +895,10 @@ const Help = ({ embedded = false }: HelpProps) => {
                       ? "bg-primary text-primary-foreground rounded-br-md"
                       : "bg-muted text-foreground rounded-bl-md"
                   )}>
-                    <p className="whitespace-pre-line"><BoldText text={msg.text} /></p>
+                    <p className="whitespace-pre-line">
+                      <BoldText text={msg.isTyping ? msg.text.slice(0, msg.revealedLength || 0) : msg.text} />
+                      {msg.isTyping && <span className="inline-block w-0.5 h-4 bg-foreground/70 animate-pulse ml-0.5 align-text-bottom" />}
+                    </p>
                     {msg.type === 'bot' && msg.options && msg.options.length > 0 && (
                       <div className="mt-3 flex flex-col gap-1.5">
                         {msg.options.map((opt) => (

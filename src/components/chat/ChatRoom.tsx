@@ -557,6 +557,18 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           onCreatePoll={handleCreatePoll}
         />
       </div>
+
+      {/* Snap auto-viewer for group ephemeral media */}
+      {showSnapViewer && snapMessageId && (
+        <SnapAutoViewer
+          messageId={snapMessageId}
+          senderName={snapSenderName}
+          onClose={() => {
+            setShowSnapViewer(false);
+            setSnapMessageId(null);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -13,6 +13,8 @@ import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import PollMessage from './PollMessage';
 import EphemeralMessageRow from './EphemeralMessageRow';
+import SnapAutoViewer from './SnapAutoViewer';
+import { usePendingGroupSnaps } from '@/hooks/usePendingGroupSnaps';
 import MembersList from './MembersList';
 import TypingIndicator from './TypingIndicator';
 import MessageReply from './MessageReply';
@@ -56,6 +58,9 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const [showMembers, setShowMembers] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSnapViewer, setShowSnapViewer] = useState(false);
+  const [snapMessageId, setSnapMessageId] = useState<string | null>(null);
+  const [snapSenderName, setSnapSenderName] = useState('');
   
   const hasOverlayOpen = showMembers || showMediaGallery || showSettings;
   
@@ -75,6 +80,21 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const { createPoll, vote, lockPoll, getPollForMessage } = usePolls(roomId);
   const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } = usePinnedMessages(roomId);
   
+  // Pending group snaps - auto-open viewer
+  const { data: pendingGroupSnaps } = usePendingGroupSnaps();
+  const groupSnap = pendingGroupSnaps?.get(roomId);
+  
+  useEffect(() => {
+    if (groupSnap && !showSnapViewer) {
+      // Auto-open snap viewer when entering a group with pending snap
+      setSnapMessageId(groupSnap.messageId);
+      // Try to find sender name from messages
+      const senderMsg = messages.find(m => m.sender_id === groupSnap.senderId);
+      setSnapSenderName(senderMsg?.senderUsername || 'Un membre');
+      setShowSnapViewer(true);
+    }
+  }, [groupSnap?.messageId]); // Only trigger on mount/change
+
   // Mark mentions as read when opening the room
   useEffect(() => {
     if (roomId) {
@@ -537,6 +557,18 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           onCreatePoll={handleCreatePoll}
         />
       </div>
+
+      {/* Snap auto-viewer for group ephemeral media */}
+      {showSnapViewer && snapMessageId && (
+        <SnapAutoViewer
+          messageId={snapMessageId}
+          senderName={snapSenderName}
+          onClose={() => {
+            setShowSnapViewer(false);
+            setSnapMessageId(null);
+          }}
+        />
+      )}
     </div>
   );
 };

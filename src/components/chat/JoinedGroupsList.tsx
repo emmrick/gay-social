@@ -4,7 +4,8 @@ import { useOnlineMemberCounts } from '@/hooks/useOnlineMemberCounts';
 import { useUnreadMentions } from '@/hooks/useUnreadMentions';
 import { useChatRooms } from '@/hooks/useChatRooms';
 import { useAnnouncementChannel } from '@/hooks/useAnnouncementChannel';
-import { Users, ChevronRight, LogOut, MessageSquare, AtSign, Home, Loader2, BellOff, Bell, Megaphone } from 'lucide-react';
+import { usePendingGroupSnaps } from '@/hooks/usePendingGroupSnaps';
+import { Users, ChevronRight, LogOut, MessageSquare, AtSign, Home, Loader2, BellOff, Bell, Megaphone, Camera, Video } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +33,7 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
   const { data: chatRooms } = useChatRooms();
   const { getMentionCount } = useUnreadMentions();
   const { data: announcementChannel } = useAnnouncementChannel();
+  const { data: pendingGroupSnaps } = usePendingGroupSnaps();
   const [leaveConfirm, setLeaveConfirm] = useState<{ regionCode: string; regionName: string; isCustom?: boolean } | null>(null);
 
   // Create a map of region code to chat room id
@@ -106,6 +108,11 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
           const onlineCount = onlineCounts?.[group.regionCode] || 0;
           const roomId = regionToRoomId.get(group.regionCode);
           const mentionCount = roomId ? getMentionCount(roomId) : 0;
+          const groupSnap = roomId ? pendingGroupSnaps?.get(roomId) : undefined;
+          const hasSnap = !!groupSnap;
+          const isSnapPhoto = groupSnap?.mediaType === 'image';
+          const snapColorClass = isSnapPhoto ? 'text-teal-500' : 'text-orange-500';
+          const snapRingClass = isSnapPhoto ? 'ring-2 ring-teal-500/60' : 'ring-2 ring-orange-500/60';
 
           return (
             <div
@@ -115,6 +122,7 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                 "bg-secondary/30 border border-transparent",
                 "hover:bg-secondary hover:border-border",
                 group.isHomeGroup && "border-green-500/30 bg-green-500/5",
+                hasSnap && (isSnapPhoto ? "border-teal-500/30 bg-teal-500/5" : "border-orange-500/30 bg-orange-500/5"),
                 "animate-fade-in"
               )}
               style={{ animationDelay: `${index * 0.05}s` }}
@@ -128,7 +136,8 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                   "w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm",
                   group.isHomeGroup 
                     ? "bg-green-500 text-white"
-                    : "bg-gradient-to-br from-primary to-accent text-white"
+                    : "bg-gradient-to-br from-primary to-accent text-white",
+                  hasSnap && snapRingClass
                 )}>
                   {group.regionCode}
                 </div>
@@ -175,14 +184,25 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                   )}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Users className="w-3.5 h-3.5" />
-                  <span>
-                    {onlineCount > 0 ? (
-                      <span className="text-green-500 font-medium">{onlineCount} en ligne</span>
-                    ) : (
-                      'Aucun membre en ligne'
-                    )}
-                  </span>
+                  {hasSnap ? (
+                    <>
+                      {isSnapPhoto ? <Camera className={cn("w-3.5 h-3.5", snapColorClass)} /> : <Video className={cn("w-3.5 h-3.5", snapColorClass)} />}
+                      <span className={cn("font-medium", snapColorClass)}>
+                        {isSnapPhoto ? 'Nouveau Selfie' : 'Nouvelle Vidéo'}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Users className="w-3.5 h-3.5" />
+                      <span>
+                        {onlineCount > 0 ? (
+                          <span className="text-green-500 font-medium">{onlineCount} en ligne</span>
+                        ) : (
+                          'Aucun membre en ligne'
+                        )}
+                      </span>
+                    </>
+                  )}
                 </div>
               </button>
 
@@ -243,13 +263,21 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
             <Users className="w-4 h-4 text-primary" />
             <h3 className="text-sm font-semibold text-foreground">Groupes personnalisés</h3>
           </div>
-          {customGroups.map((group) => (
+          {customGroups.map((group) => {
+            const customSnap = pendingGroupSnaps?.get(group.id);
+            const hasCustomSnap = !!customSnap;
+            const isCustomSnapPhoto = customSnap?.mediaType === 'image';
+            const customSnapColor = isCustomSnapPhoto ? 'text-teal-500' : 'text-orange-500';
+            const customSnapRing = isCustomSnapPhoto ? 'ring-2 ring-teal-500/60' : 'ring-2 ring-orange-500/60';
+
+            return (
             <div
               key={group.id}
               className={cn(
                 "w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group",
                 "bg-secondary/30 border border-primary/10",
                 "hover:bg-secondary hover:border-border",
+                hasCustomSnap && (isCustomSnapPhoto ? "border-teal-500/30 bg-teal-500/5" : "border-orange-500/30 bg-orange-500/5"),
                 "animate-fade-in"
               )}
             >
@@ -257,7 +285,10 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                 onClick={() => onSelectGroup(group.id)}
                 className="relative flex-shrink-0"
               >
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center font-bold text-sm text-white">
+                <div className={cn(
+                  "w-12 h-12 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center font-bold text-sm text-white",
+                  hasCustomSnap && customSnapRing
+                )}>
                   {group.custom_name.charAt(0).toUpperCase()}
                 </div>
               </button>
@@ -268,8 +299,19 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
               >
                 <h3 className="font-medium text-foreground truncate">{group.custom_name}</h3>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Users className="w-3.5 h-3.5" />
-                  <span>{group.memberCount} membre{(group.memberCount || 0) > 1 ? 's' : ''}</span>
+                  {hasCustomSnap ? (
+                    <>
+                      {isCustomSnapPhoto ? <Camera className={cn("w-3.5 h-3.5", customSnapColor)} /> : <Video className={cn("w-3.5 h-3.5", customSnapColor)} />}
+                      <span className={cn("font-medium", customSnapColor)}>
+                        {isCustomSnapPhoto ? 'Nouveau Selfie' : 'Nouvelle Vidéo'}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Users className="w-3.5 h-3.5" />
+                      <span>{group.memberCount} membre{(group.memberCount || 0) > 1 ? 's' : ''}</span>
+                    </>
+                  )}
                 </div>
               </button>
 
@@ -316,7 +358,9 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                 />
               </div>
             </div>
-          ))}
+            );
+          })}
+
         </div>
       )}
 

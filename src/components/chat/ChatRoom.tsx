@@ -80,6 +80,21 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const { createPoll, vote, lockPoll, getPollForMessage } = usePolls(roomId);
   const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } = usePinnedMessages(roomId);
   
+  // Pending group snaps - auto-open viewer
+  const { data: pendingGroupSnaps } = usePendingGroupSnaps();
+  const groupSnap = pendingGroupSnaps?.get(roomId);
+  
+  useEffect(() => {
+    if (groupSnap && !showSnapViewer) {
+      // Auto-open snap viewer when entering a group with pending snap
+      setSnapMessageId(groupSnap.messageId);
+      // Try to find sender name from messages
+      const senderMsg = messages.find(m => m.sender_id === groupSnap.senderId);
+      setSnapSenderName(senderMsg?.sender_username || 'Un membre');
+      setShowSnapViewer(true);
+    }
+  }, [groupSnap?.messageId]); // Only trigger on mount/change
+
   // Mark mentions as read when opening the room
   useEffect(() => {
     if (roomId) {

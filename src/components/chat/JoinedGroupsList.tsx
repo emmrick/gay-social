@@ -358,7 +358,9 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                 />
               </div>
             </div>
-          ))}
+            );
+          })}
+
         </div>
       )}
 

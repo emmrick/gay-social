@@ -778,20 +778,6 @@ const Help = ({ embedded = false }: HelpProps) => {
                       <BoldText text={msg.isTyping ? msg.text.slice(0, msg.revealedLength || 0) : msg.text} />
                       {msg.isTyping && <span className="inline-block w-0.5 h-4 bg-foreground/70 animate-pulse ml-0.5 align-text-bottom" />}
                     </p>
-                    {msg.type === 'bot' && !msg.isTyping && msg.options && msg.options.length > 0 && (
-                      <div className="mt-3 flex flex-col gap-1.5">
-                        {msg.options.map((opt) => (
-                          <button
-                            key={opt.value}
-                            onClick={() => handleOptionClick(opt.value)}
-                            className="w-full text-left px-3 py-2.5 text-sm font-medium rounded-xl border border-primary/20 bg-background/80 text-foreground hover:bg-primary/10 hover:border-primary/40 transition-colors active:scale-[0.98] flex items-center gap-2"
-                          >
-                            {opt.icon && <span className="text-primary shrink-0">{opt.icon}</span>}
-                            <span className="line-clamp-2">{opt.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </>
               )}

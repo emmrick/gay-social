@@ -2669,6 +2669,8 @@ export type Database = {
           id: string
           is_primary: boolean
           photo_url: string
+          rejection_reason: string | null
+          status: string
           updated_at: string
           user_id: string
         }
@@ -2678,6 +2680,8 @@ export type Database = {
           id?: string
           is_primary?: boolean
           photo_url: string
+          rejection_reason?: string | null
+          status?: string
           updated_at?: string
           user_id: string
         }
@@ -2687,6 +2691,8 @@ export type Database = {
           id?: string
           is_primary?: boolean
           photo_url?: string
+          rejection_reason?: string | null
+          status?: string
           updated_at?: string
           user_id?: string
         }

@@ -225,17 +225,91 @@ const useAlbums = (reportedUserIds: string[]) => {
 };
 
 const ContentModerationPanel = () => {
-  const [activeTab, setActiveTab] = useState('messages');
+  const [activeTab, setActiveTab] = useState('pending-photos');
   const [messageSearch, setMessageSearch] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: string; id: string; label: string } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { data: activeTask } = useActiveTask();
   const { data: reportedUserIds = [], isLoading: reportedUsersLoading, refetch: refetchReportedUsers } = useReportedUsers();
   const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useRecentMessages(messageSearch);
   const { data: photos, isLoading: photosLoading, refetch: refetchPhotos } = useProfilePhotos(reportedUserIds);
   const { data: albums, isLoading: albumsLoading, refetch: refetchAlbums } = useAlbums(reportedUserIds);
+
+  // Pending photo approvals
+  const { data: pendingPhotos = [], isLoading: pendingPhotosLoading, refetch: refetchPendingPhotos } = useQuery({
+    queryKey: ['admin-pending-photos'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profile_photos')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+
+      // Resolve signed URLs + get usernames
+      const userIds = [...new Set((data || []).map(p => p.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url')
+        .in('user_id', userIds);
+      const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+
+      const resolved = await Promise.all(
+        (data || []).map(async (photo: any) => {
+          const signedUrl = await getSignedAvatarUrl(photo.photo_url);
+          return {
+            ...photo,
+            signed_url: signedUrl || photo.photo_url,
+            profile: profileMap.get(photo.user_id) || null,
+          };
+        })
+      );
+      return resolved;
+    },
+    staleTime: 10000,
+    refetchInterval: 15000,
+  });
+
+  // Auto-navigate to pending photos tab when a photo_review task is active
+  useEffect(() => {
+    if (activeTask?.task_type === 'content_moderation' && (activeTask.metadata as any)?.type === 'photo_review') {
+      setActiveTab('pending-photos');
+    }
+  }, [activeTask]);
+
+  const approvePhoto = useMutation({
+    mutationFn: async (photoId: string) => {
+      const { error } = await supabase
+        .from('profile_photos')
+        .update({ status: 'approved' } as any)
+        .eq('id', photoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-photos'] });
+      toast.success('Photo approuvée');
+    },
+    onError: () => toast.error('Erreur'),
+  });
+
+  const rejectPhoto = useMutation({
+    mutationFn: async ({ photoId, reason }: { photoId: string; reason: string }) => {
+      const { error } = await supabase
+        .from('profile_photos')
+        .update({ status: 'rejected', rejection_reason: reason } as any)
+        .eq('id', photoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-photos'] });
+      toast.success('Photo refusée');
+    },
+    onError: () => toast.error('Erreur'),
+  });
 
   const photosLoaderState = reportedUsersLoading || photosLoading;
   const albumsLoaderState = reportedUsersLoading || albumsLoading;

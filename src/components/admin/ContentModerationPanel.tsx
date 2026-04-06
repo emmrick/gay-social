@@ -399,7 +399,16 @@ const ContentModerationPanel = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 w-fit">
+        <TabsList className="grid grid-cols-4 w-fit">
+          <TabsTrigger value="pending-photos" className="gap-2 relative">
+            <ShieldCheck className="w-4 h-4" />
+            Approbation
+            {pendingPhotos.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {pendingPhotos.length}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="messages" className="gap-2">
             <MessageSquare className="w-4 h-4" />
             Messages
@@ -413,6 +422,83 @@ const ContentModerationPanel = () => {
             Albums
           </TabsTrigger>
         </TabsList>
+
+        {/* Pending Photo Approvals Tab */}
+        <TabsContent value="pending-photos" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              Photos en attente d'approbation
+            </p>
+            <Button variant="ghost" size="icon" onClick={() => refetchPendingPhotos()}>
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <ScrollArea className="h-[500px]">
+            {pendingPhotosLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="aspect-square rounded-lg" />
+                ))}
+              </div>
+            ) : pendingPhotos.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Check className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p className="font-medium">Aucune photo en attente</p>
+                <p className="text-sm mt-1">Toutes les photos ont été traitées</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {pendingPhotos.map((photo: any) => (
+                  <div key={photo.id} className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="aspect-square bg-secondary relative">
+                      <img
+                        src={photo.signed_url}
+                        alt=""
+                        className="w-full h-full object-cover cursor-pointer"
+                        onClick={() => setPreviewImage(photo.signed_url)}
+                      />
+                      <Badge className="absolute top-2 left-2 bg-amber-500 text-white text-[10px]">
+                        En attente
+                      </Badge>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <User className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-sm font-medium">{photo.profile?.username || 'Inconnu'}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(photo.created_at), { addSuffix: true, locale: fr })}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1 gap-1"
+                          onClick={() => approvePhoto.mutate(photo.id)}
+                          disabled={approvePhoto.isPending}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          Approuver
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="flex-1 gap-1"
+                          onClick={() => rejectPhoto.mutate({ photoId: photo.id, reason: 'Photo non conforme aux règles' })}
+                          disabled={rejectPhoto.isPending}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          Refuser
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </TabsContent>
 
         {/* Messages Tab */}
         <TabsContent value="messages" className="space-y-4">

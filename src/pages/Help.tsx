@@ -369,7 +369,8 @@ const Help = ({ embedded = false }: HelpProps) => {
     if (!entry) return;
     setNoMatchCount(0);
     pendingSuggestions = [];
-    addBotMessage(`**${entry.question}**\n\n${entry.answer}\n\nCette réponse t'a aidé ? Tu peux me poser une **autre question** ou taper **"agent"** pour contacter un conseiller. 😊`);
+    const linkPart = (entry as any).link ? `\n\n[LINK:${(entry as any).link}]` : '';
+    addBotMessage(`**${entry.question}**\n\n${entry.answer}${linkPart}\n\nCette réponse t'a aidé ? Tu peux me poser une **autre question** ou taper **"agent"** pour contacter un conseiller. 😊\n\n📚 Consulte aussi le **Centre d'aide** pour plus d'articles : [LINK:/aide]`);
   }, [findEntryById, addBotMessage]);
 
   // Initialize chatbot on first load
@@ -385,7 +386,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     const displayName = userProfile?.username || 'cher utilisateur';
     const greeting: ChatMessage = {
       type: 'bot',
-      text: `Bonjour **${displayName}** ! 👋 Je suis l'assistant **Gay Social**.\n\nPose-moi ta question directement, je ferai de mon mieux pour t'aider ! 😊\n\nTu peux aussi taper **"agent"** à tout moment pour parler à un conseiller.`,
+      text: `Bonjour **${displayName}** ! 👋 Je suis l'assistant **Gay Social**.\n\nPose-moi ta question directement, je ferai de mon mieux pour t'aider ! 😊\n\nTu peux aussi taper **"agent"** à tout moment pour parler à un conseiller.\n\n📚 Ou consulte le **Centre d'aide** pour parcourir tous les articles : [LINK:/aide]`,
     };
     setChatMessages([greeting]);
     playNotificationSoundStandalone();

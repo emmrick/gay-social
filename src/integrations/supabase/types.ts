@@ -1371,6 +1371,47 @@ export type Database = {
         }
         Relationships: []
       }
+      faq_feedback: {
+        Row: {
+          article_id: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          static_article_id: string | null
+          updated_at: string
+          user_id: string
+          vote: string
+        }
+        Insert: {
+          article_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          static_article_id?: string | null
+          updated_at?: string
+          user_id: string
+          vote: string
+        }
+        Update: {
+          article_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          static_article_id?: string | null
+          updated_at?: string
+          user_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faq_feedback_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "faq_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorite_regions: {
         Row: {
           created_at: string

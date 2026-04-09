@@ -5,6 +5,7 @@ import CreditBalanceCompact from '@/components/credits/CreditBalanceCompact';
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
 import { User } from 'lucide-react';
 import logoSrc from '@/assets/logo.png';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 
 interface UnifiedPageHeaderProps {
@@ -39,6 +40,8 @@ const UnifiedPageHeader = ({
     staleTime: 1000 * 60 * 5,
   });
 
+  const avatarSigned = useAvatarUrl(profile?.avatar_url);
+
   return (
     <div
       className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
@@ -67,8 +70,8 @@ const UnifiedPageHeader = ({
             onClick={onNavigateToProfile}
             className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors overflow-hidden border-2 border-primary/20"
           >
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Profil" className="w-full h-full object-cover" />
+            {avatarSigned ? (
+              <img src={avatarSigned} alt="Profil" className="w-full h-full object-cover" />
             ) : (
               <User className="w-4 h-4 text-muted-foreground" />
             )}

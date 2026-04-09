@@ -27,6 +27,7 @@ import GlobalMissionOverlay from "@/components/moderation/GlobalMissionOverlay";
 import OnboardingGuideDialog from "@/components/onboarding/OnboardingGuideDialog";
 import AppLockGate from "@/components/security/AppLockGate";
 import DossierAccessPopup from "@/components/moderation/DossierAccessPopup";
+import ProfileSelectorModal from "@/components/couple/ProfileSelectorModal";
 
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 import CookieConsentBanner from "@/components/CookieConsentBanner";

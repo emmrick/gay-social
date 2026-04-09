@@ -112,6 +112,7 @@ const AuthenticatedApp = () => {
 
   
   return (
+    <ActiveProfileProvider>
     <MaintenanceGuard>
     <CreditDialogProvider>
       <CreditDeductionProvider>
@@ -162,6 +163,7 @@ const AuthenticatedApp = () => {
                 <GlobalMissionOverlay />
                 <DossierAccessPopup />
                 <CookieConsentBanner />
+                <ProfileSelectorModal />
               </>
             </TooltipProvider>
           </ProfilePhotoGuard>
@@ -170,6 +172,7 @@ const AuthenticatedApp = () => {
       </CreditDeductionProvider>
     </CreditDialogProvider>
     </MaintenanceGuard>
+    </ActiveProfileProvider>
   );
 };
 

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ShoppingCart, Gift, BarChart3, Coins, Sparkles } from 'lucide-react';
+import { ShoppingCart, Gift, BarChart3, Coins, Sparkles, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
+import { useActiveProfile } from '@/contexts/ActiveProfileContext';
 import { motion } from 'framer-motion';
 import BuyCreditDialog from './BuyCreditDialog';
 import CreditHistorySheet from './CreditHistorySheet';
@@ -13,6 +14,7 @@ interface CreditWalletHeaderProps {
 
 const CreditWalletHeader = ({ onOpenGift }: CreditWalletHeaderProps) => {
   const { totalCredits, availableCredits, isLoading } = useCredits();
+  const { isCouple, partnerProfile } = useActiveProfile();
 
   if (isLoading) {
     return (
@@ -56,6 +58,12 @@ const CreditWalletHeader = ({ onOpenGift }: CreditWalletHeaderProps) => {
           <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
             <Coins className="w-3.5 h-3.5" />
             Solde disponible
+            {isCouple && (
+              <span className="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 rounded-full bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-semibold border border-pink-500/20">
+                <Heart className="w-2.5 h-2.5 fill-current" />
+                Partagé
+              </span>
+            )}
           </p>
         </div>
 

@@ -77,6 +77,7 @@ const SnapCaptureDialog = ({
       setIsInitializing(true);
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -84,8 +85,21 @@ const SnapCaptureDialog = ({
       });
       streamRef.current = stream;
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        const video = videoRef.current;
+        video.srcObject = stream;
+        // Wait for the stream to be ready before playing
+        await new Promise<void>((resolve, reject) => {
+          const onReady = () => {
+            video.removeEventListener('loadedmetadata', onReady);
+            video.play().then(resolve).catch(reject);
+          };
+          // If metadata is already loaded (e.g. stream was fast), play immediately
+          if (video.readyState >= 1) {
+            video.play().then(resolve).catch(reject);
+          } else {
+            video.addEventListener('loadedmetadata', onReady);
+          }
+        });
       }
       setIsInitializing(false);
     } catch (err: unknown) {

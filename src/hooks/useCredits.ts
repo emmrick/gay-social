@@ -257,10 +257,10 @@ export const useCredits = () => {
       transactionType: string; 
       description?: string;
     }) => {
-      if (!user?.id) throw new Error('Not authenticated');
+      if (!creditUserId) throw new Error('Not authenticated');
 
       const { data, error } = await supabase.rpc('deduct_credits', {
-        _user_id: user.id,
+        _user_id: creditUserId,
         _amount: amount,
         _transaction_type: transactionType,
         _description: description || null,
@@ -276,8 +276,8 @@ export const useCredits = () => {
       return { ...result, amount, description };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['credit-transactions', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-credits', creditUserId] });
+      queryClient.invalidateQueries({ queryKey: ['credit-transactions', creditUserId] });
       
       // Show subtle toast notification for credit deduction
       const actionDescription = data.description || 'Action';

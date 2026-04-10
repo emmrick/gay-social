@@ -136,18 +136,24 @@ export const usePrivateConversations = () => {
       );
       const profileMap = new Map(profileEntries);
 
-      // Batch fetch last messages for ALL conversations in one query
-      // Get the latest private message for each conversation partner
-      const lastMessagesPromises = otherUserIds.map(otherUserId =>
-        supabase
+      // Batch fetch last messages - for couple shared, include partner messages too
+      const allMyIds = [...myIds];
+      const lastMessagesPromises = otherUserIds.map(otherUserId => {
+        const orClauses = allMyIds
+          .flatMap(myId => [
+            `and(sender_id.eq.${myId},recipient_id.eq.${otherUserId})`,
+            `and(sender_id.eq.${otherUserId},recipient_id.eq.${myId})`,
+          ])
+          .join(',');
+        return supabase
           .from('messages')
           .select('content, created_at, message_type, sender_id, recipient_id')
           .eq('is_private', true)
-          .or(`and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`)
+          .or(orClauses)
           .order('created_at', { ascending: false })
           .limit(1)
-          .maybeSingle()
-      );
+          .maybeSingle();
+      });
 
       const lastMessagesResults = await Promise.all(lastMessagesPromises);
 
@@ -165,11 +171,11 @@ export const usePrivateConversations = () => {
 
       const conversationsWithData: ConversationWithProfile[] = conversations
         .filter(conv => {
-          const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+          const otherUserId = getOtherUserId(conv);
           return !blockedIds.has(otherUserId);
         })
         .map(conv => {
-          const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+          const otherUserId = getOtherUserId(conv);
           return {
             ...conv,
             otherUser: profileMap.get(otherUserId) || {

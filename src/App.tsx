@@ -35,10 +35,12 @@ import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotificatio
 
 import MaintenanceGuard from "@/components/maintenance/MaintenanceGuard";
 import MaintenanceBanner from "@/components/maintenance/MaintenanceBanner";
-import InitialLoadingScreen from "@/components/loading/InitialLoadingScreen";
 import { toast } from "sonner";
 
-// Lazy load pages for better initial bundle size
+// Layouts
+import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
+
+// Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Admin = lazy(() => import("./pages/Admin"));
@@ -57,8 +59,20 @@ const Advertise = lazy(() => import("./pages/Advertise"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Security = lazy(() => import("./pages/Security"));
 const Community = lazy(() => import("./pages/Community"));
-const TweenPage = lazy(() => import("./pages/Tween"));
+const TweenPublicPage = lazy(() => import("./pages/Tween"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
+
+// Authenticated pages
+const HomePage = lazy(() => import("./pages/HomePage"));
+const MessagesPage = lazy(() => import("./pages/MessagesPage"));
+const PrivateChatPage = lazy(() => import("./pages/PrivateChatPage"));
+const GroupChatPage = lazy(() => import("./pages/GroupChatPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const CreditsPageRoute = lazy(() => import("./pages/CreditsPageRoute"));
+const TweenPageRoute = lazy(() => import("./pages/TweenPageRoute"));
+const SwipePageRoute = lazy(() => import("./pages/SwipePageRoute"));
+const HelpPageRoute = lazy(() => import("./pages/HelpPageRoute"));
+const ChatbotConfigPage = lazy(() => import("./pages/ChatbotConfigPage"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 
@@ -66,25 +80,22 @@ import { setGlobalQueryClient } from "@/hooks/useCredits";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 2, // 2 minutes
-      gcTime: 1000 * 60 * 5, // 5 minutes (replaces cacheTime)
+      staleTime: 1000 * 60 * 2,
+      gcTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
       retry: 1,
     },
   },
 });
 
-// Register global query client for standalone credit functions
 setGlobalQueryClient(queryClient);
 
-// Global unhandled rejection handler to catch async errors that React ErrorBoundary cannot catch
 const useGlobalErrorHandler = () => {
   useEffect(() => {
     const handleRejection = (event: PromiseRejectionEvent) => {
       console.error("[unhandledrejection] Unhandled promise rejection:", event.reason);
       const reason = event.reason;
-      const isNetworkError =
-        reason instanceof TypeError && reason.message?.includes("fetch");
+      const isNetworkError = reason instanceof TypeError && reason.message?.includes("fetch");
       if (!isNetworkError) {
         toast.error("Une erreur inattendue s'est produite");
       }
@@ -105,80 +116,91 @@ const useGlobalErrorHandler = () => {
   }, []);
 };
 
-// Inner component that uses hooks requiring AuthProvider
 const AuthenticatedApp = () => {
   useRealtimeProfileSync();
   useAnnouncementNotifications();
 
-  
   return (
     <ActiveProfileProvider>
-    <MaintenanceGuard>
-    <CreditDialogProvider>
-      <CreditDeductionProvider>
-        <BlockedUserGuard>
-          <VerificationGuard>
-          <ProfilePhotoGuard>
-            <TooltipProvider>
-              <MaintenanceBanner />
-              
-              <Toaster />
-              <Sonner />
-              <>
-                <Suspense fallback={<AppLoadingSkeleton />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/profile/:userId" element={<Suspense fallback={<PageFallback />}><MemberProfile /></Suspense>} />
-                    <Route path="/auth" element={<Suspense fallback={<PageFallback />}><Auth /></Suspense>} />
-                    <Route path="/admin" element={<Suspense fallback={<PageFallback />}><Admin /></Suspense>} />
-                    <Route path="/about" element={<Suspense fallback={<PageFallback />}><About /></Suspense>} />
-                    <Route path="/legal" element={<Suspense fallback={<PageFallback />}><Legal /></Suspense>} />
-                    {/* Public SEO pages - accessible without auth */}
-                    <Route path="/regions" element={<Suspense fallback={<PageFallback />}><Regions /></Suspense>} />
-                    <Route path="/region/:slug" element={<Suspense fallback={<PageFallback />}><RegionPage /></Suspense>} />
-                    <Route path="/aide" element={<Suspense fallback={<PageFallback />}><HelpCenter /></Suspense>} />
-                    <Route path="/aide/:category" element={<Suspense fallback={<PageFallback />}><HelpCenter /></Suspense>} />
-                    <Route path="/aide/chat" element={<Suspense fallback={<PageFallback />}><Help /></Suspense>} />
-                    <Route path="/regles" element={<Suspense fallback={<PageFallback />}><Rules /></Suspense>} />
-                    <Route path="/guide" element={<Suspense fallback={<PageFallback />}><GuidePage /></Suspense>} />
-                    <Route path="/paypal-return" element={<Suspense fallback={<PageFallback />}><PaypalReturn /></Suspense>} />
-                    <Route path="/advertise" element={<Suspense fallback={<PageFallback />}><Advertise /></Suspense>} />
-                    <Route path="/comment-ca-marche" element={<Suspense fallback={<PageFallback />}><HowItWorks /></Suspense>} />
-                    <Route path="/securite" element={<Suspense fallback={<PageFallback />}><Security /></Suspense>} />
-                    <Route path="/communaute" element={<Suspense fallback={<PageFallback />}><Community /></Suspense>} />
-                    <Route path="/tween" element={<Suspense fallback={<PageFallback />}><TweenPage /></Suspense>} />
-                    <Route path="/unsubscribe" element={<Suspense fallback={<PageFallback />}><Unsubscribe /></Suspense>} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
-                  </Routes>
-                </Suspense>
-                <InstallPWAPrompt />
-                <PushNotificationBanner />
-                <LowCreditsAlert />
-                <AgeConfirmationModal />
-                <InvestigationNoticeDialog />
-                <ForcedSupportChat />
-                <PromoPopup />
-                <OnboardingGuideDialog />
-                <GlobalMissionOverlay />
-                <DossierAccessPopup />
-                <CookieConsentBanner />
-                <ProfileSelectorModal />
-              </>
-            </TooltipProvider>
-          </ProfilePhotoGuard>
-          </VerificationGuard>
-        </BlockedUserGuard>
-      </CreditDeductionProvider>
-    </CreditDialogProvider>
-    </MaintenanceGuard>
+      <MaintenanceGuard>
+        <CreditDialogProvider>
+          <CreditDeductionProvider>
+            <BlockedUserGuard>
+              <VerificationGuard>
+                <ProfilePhotoGuard>
+                  <TooltipProvider>
+                    <MaintenanceBanner />
+                    <Toaster />
+                    <Sonner />
+                    <>
+                      <Suspense fallback={<AppLoadingSkeleton />}>
+                        <Routes>
+                          {/* Landing / Auth */}
+                          <Route path="/" element={<Index />} />
+                          <Route path="/auth" element={<Suspense fallback={<PageFallback />}><Auth /></Suspense>} />
+
+                          {/* Authenticated routes with shared layout */}
+                          <Route element={<AuthenticatedLayout />}>
+                            <Route path="/home" element={<HomePage />} />
+                            <Route path="/swipe" element={<SwipePageRoute />} />
+                            <Route path="/messages" element={<MessagesPage />} />
+                            <Route path="/messages/:userId" element={<PrivateChatPage />} />
+                            <Route path="/chat/:regionCode" element={<GroupChatPage />} />
+                            <Route path="/profile" element={<ProfilePage />} />
+                            <Route path="/profile/chatbot" element={<ChatbotConfigPage />} />
+                            <Route path="/credits" element={<CreditsPageRoute />} />
+                            <Route path="/tween-feed" element={<TweenPageRoute />} />
+                            <Route path="/aide/chat" element={<HelpPageRoute />} />
+                          </Route>
+
+                          {/* Public pages */}
+                          <Route path="/profile/:userId" element={<Suspense fallback={<PageFallback />}><MemberProfile /></Suspense>} />
+                          <Route path="/admin" element={<Suspense fallback={<PageFallback />}><Admin /></Suspense>} />
+                          <Route path="/about" element={<Suspense fallback={<PageFallback />}><About /></Suspense>} />
+                          <Route path="/legal" element={<Suspense fallback={<PageFallback />}><Legal /></Suspense>} />
+                          <Route path="/regions" element={<Suspense fallback={<PageFallback />}><Regions /></Suspense>} />
+                          <Route path="/region/:slug" element={<Suspense fallback={<PageFallback />}><RegionPage /></Suspense>} />
+                          <Route path="/aide" element={<Suspense fallback={<PageFallback />}><HelpCenter /></Suspense>} />
+                          <Route path="/aide/:category" element={<Suspense fallback={<PageFallback />}><HelpCenter /></Suspense>} />
+                          <Route path="/regles" element={<Suspense fallback={<PageFallback />}><Rules /></Suspense>} />
+                          <Route path="/guide" element={<Suspense fallback={<PageFallback />}><GuidePage /></Suspense>} />
+                          <Route path="/paypal-return" element={<Suspense fallback={<PageFallback />}><PaypalReturn /></Suspense>} />
+                          <Route path="/advertise" element={<Suspense fallback={<PageFallback />}><Advertise /></Suspense>} />
+                          <Route path="/comment-ca-marche" element={<Suspense fallback={<PageFallback />}><HowItWorks /></Suspense>} />
+                          <Route path="/securite" element={<Suspense fallback={<PageFallback />}><Security /></Suspense>} />
+                          <Route path="/communaute" element={<Suspense fallback={<PageFallback />}><Community /></Suspense>} />
+                          <Route path="/tween" element={<Suspense fallback={<PageFallback />}><TweenPublicPage /></Suspense>} />
+                          <Route path="/unsubscribe" element={<Suspense fallback={<PageFallback />}><Unsubscribe /></Suspense>} />
+                          <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
+                        </Routes>
+                      </Suspense>
+                      <InstallPWAPrompt />
+                      <PushNotificationBanner />
+                      <LowCreditsAlert />
+                      <AgeConfirmationModal />
+                      <InvestigationNoticeDialog />
+                      <ForcedSupportChat />
+                      <PromoPopup />
+                      <OnboardingGuideDialog />
+                      <GlobalMissionOverlay />
+                      <DossierAccessPopup />
+                      <CookieConsentBanner />
+                      <ProfileSelectorModal />
+                    </>
+                  </TooltipProvider>
+                </ProfilePhotoGuard>
+              </VerificationGuard>
+            </BlockedUserGuard>
+          </CreditDeductionProvider>
+        </CreditDialogProvider>
+      </MaintenanceGuard>
     </ActiveProfileProvider>
   );
 };
 
 const AppContent = () => {
   useGlobalErrorHandler();
-  
+
   return (
     <AuthProvider>
       <AppLockGate>

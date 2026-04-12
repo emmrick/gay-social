@@ -1,25 +1,25 @@
 import { memo, useMemo } from 'react';
-import { MessageCircle, User, Home, Crown, Sparkles, HelpCircle, Rss } from 'lucide-react';
+import { MessageCircle, Home, Sparkles, HelpCircle, Rss } from 'lucide-react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 
 interface BottomNavBarProps {
-  activeTab: 'home' | 'swipe' | 'messages' | 'tween' | 'premium' | 'help' | 'profile';
-  onTabChange: (tab: 'home' | 'swipe' | 'messages' | 'tween' | 'premium' | 'help' | 'profile') => void;
   unreadCount?: number;
   isPremium?: boolean;
 }
 
 const allTabs = [
-  { id: 'home' as const, icon: Home, label: 'Accueil', premium: false, featureKey: null },
-  { id: 'tween' as const, icon: Rss, label: 'Tween', premium: false, featureKey: null },
-  { id: 'swipe' as const, icon: Sparkles, label: 'Swipe', premium: false, featureKey: 'swipe_page' },
-  { id: 'messages' as const, icon: MessageCircle, label: 'Messages', premium: false, featureKey: null },
-  { id: 'help' as const, icon: HelpCircle, label: 'Aide', premium: false, featureKey: null },
+  { id: 'home', path: '/home', icon: Home, label: 'Accueil', featureKey: null },
+  { id: 'tween', path: '/tween', icon: Rss, label: 'Tween', featureKey: null },
+  { id: 'swipe', path: '/swipe', icon: Sparkles, label: 'Swipe', featureKey: 'swipe_page' },
+  { id: 'messages', path: '/messages', icon: MessageCircle, label: 'Messages', featureKey: null },
+  { id: 'help', path: '/aide/chat', icon: HelpCircle, label: 'Aide', featureKey: null },
 ] as const;
 
-const BottomNavBar = memo(({ activeTab, onTabChange, unreadCount = 0, isPremium = false }: BottomNavBarProps) => {
+const BottomNavBar = memo(({ unreadCount = 0, isPremium = false }: BottomNavBarProps) => {
   const featureFlags = useFeatureFlags();
+  const location = useLocation();
   const messageBadge = unreadCount > 0 ? unreadCount : undefined;
 
   const tabs = useMemo(() => {
@@ -28,13 +28,6 @@ const BottomNavBar = memo(({ activeTab, onTabChange, unreadCount = 0, isPremium 
       return featureFlags[tab.featureKey] !== false;
     });
   }, [featureFlags]);
-
-  const handleTabClick = (tabId: typeof activeTab) => {
-    if ('vibrate' in navigator) {
-      navigator.vibrate(10);
-    }
-    onTabChange(tabId);
-  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
@@ -46,29 +39,26 @@ const BottomNavBar = memo(({ activeTab, onTabChange, unreadCount = 0, isPremium 
           <div className="flex items-center justify-around h-[68px] px-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+              const isActive = location.pathname === tab.path || 
+                (tab.id === 'messages' && location.pathname.startsWith('/messages')) ||
+                (tab.id === 'help' && location.pathname.startsWith('/aide'));
               const badge = tab.id === 'messages' ? messageBadge : undefined;
               
               return (
-                <button
+                <NavLink
                   key={tab.id}
-                  onClick={() => handleTabClick(tab.id)}
+                  to={tab.path}
+                  onClick={() => { if ('vibrate' in navigator) navigator.vibrate(10); }}
                   className={cn(
-                    "relative flex flex-col items-center justify-center gap-1 flex-1 h-full py-2 transition-colors duration-150 active:scale-95",
+                    "relative flex flex-col items-center justify-center gap-1 flex-1 h-full py-2 transition-colors duration-150 active:scale-95 no-underline",
                     isActive
-                      ? tab.premium ? "text-amber-500" : "text-primary"
-                      : "text-muted-foreground active:text-foreground",
-                    tab.premium && !isActive && "text-amber-500/50"
+                      ? "text-primary"
+                      : "text-muted-foreground active:text-foreground"
                   )}
                 >
-                  {/* Active background pill – pure CSS, no layoutId animation */}
+                  {/* Active background pill */}
                   {isActive && (
-                    <div
-                      className={cn(
-                        "absolute inset-x-2 inset-y-1 rounded-xl transition-all duration-150",
-                        tab.premium ? "bg-amber-500/15" : "bg-primary/15"
-                      )}
-                    />
+                    <div className="absolute inset-x-2 inset-y-1 rounded-xl transition-all duration-150 bg-primary/15" />
                   )}
                   
                   <div className="relative z-10 flex items-center justify-center">
@@ -90,7 +80,7 @@ const BottomNavBar = memo(({ activeTab, onTabChange, unreadCount = 0, isPremium 
                   )}>
                     {tab.label}
                   </span>
-                </button>
+                </NavLink>
               );
             })}
           </div>

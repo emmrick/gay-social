@@ -9,6 +9,7 @@ import { Image, Video, BarChart3, X, Loader2, Send, Bold, Sparkles } from 'lucid
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 const TweenComposer = () => {
   const { user, profile } = useAuth();

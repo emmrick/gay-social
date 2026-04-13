@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToggleTweenLike, useDeleteTween, useVoteTweenPoll, type Tween } from '@/hooks/useTweens';
 import TweenDetailDialog from './TweenDetailDialog';
 import { motion } from 'framer-motion';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface TweenCardProps {
   tween: Tween;
@@ -67,6 +68,7 @@ const TweenCard = ({ tween }: TweenCardProps) => {
 
   const isOwn = user?.id === tween.user_id;
   const profile = tween.profiles;
+  const resolvedAvatar = useAvatarUrl(profile?.avatar_url);
   const timeAgo = formatDistanceToNow(new Date(tween.created_at), { addSuffix: true, locale: fr });
 
   const handleLike = (e: React.MouseEvent) => {
@@ -82,7 +84,7 @@ const TweenCard = ({ tween }: TweenCardProps) => {
             className="w-10 h-10 flex-shrink-0 cursor-pointer ring-2 ring-primary/10 hover:ring-primary/25 transition-all"
             onClick={(e) => { e.stopPropagation(); if (profile?.user_id) navigate(`/member/${profile.user_id}`); }}
           >
-            <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
+            <AvatarImage src={resolvedAvatar || ''} className="object-cover" />
             <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
               {profile?.username?.charAt(0)?.toUpperCase() || '?'}
             </AvatarFallback>

@@ -8,6 +8,7 @@ import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { SecureAvatarImg } from '@/components/ui/secure-avatar';
 
 interface StoryViewerProps {
   group: StoryGroup;
@@ -209,7 +210,7 @@ const StoryViewer = ({ group, onClose, onNextGroup, onAddStory }: StoryViewerPro
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full ring-2 ring-white/30 overflow-hidden bg-muted flex-shrink-0">
                 {group.avatar_url ? (
-                  <img src={group.avatar_url} alt="" className="w-full h-full object-cover" />
+                  <SecureAvatarImg src={group.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-accent">
                     <span className="text-white font-bold text-sm">
@@ -355,7 +356,7 @@ const StoryViewer = ({ group, onClose, onNextGroup, onAddStory }: StoryViewerPro
                   <div key={viewer.viewer_user_id} className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">
                       {viewer.profile?.avatar_url ? (
-                        <img src={viewer.profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                        <SecureAvatarImg src={viewer.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-sm font-bold text-muted-foreground">
                           {viewer.profile?.username?.charAt(0).toUpperCase() || '?'}

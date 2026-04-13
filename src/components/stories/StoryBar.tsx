@@ -6,11 +6,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import CreateStoryDialog from './CreateStoryDialog';
 import StoryViewer from './StoryViewer';
+import { SecureAvatarImg } from '@/components/ui/secure-avatar';
 
 const StoryAvatar = memo(({ url, fallback, className }: { url?: string | null; fallback: string; className?: string }) => (
   <div className={`w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-muted ${className || ''}`}>
     {url ? (
-      <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+      <SecureAvatarImg src={url} alt="" className="w-full h-full object-cover" />
     ) : (
       <span className="text-base font-bold text-muted-foreground">{fallback}</span>
     )}

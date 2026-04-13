@@ -8,6 +8,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface MediaItem {
   id: string;
@@ -61,6 +62,15 @@ const MediaGallerySheet = ({ roomId, regionCode, isOpen, onClose }: MediaGallery
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
+      // Sign avatar URLs
+      const signedAvatars = new Map<string, string | null>();
+      await Promise.all(
+        Array.from(profileMap.entries()).map(async ([userId, profile]) => {
+          const signed = await getSignedAvatarUrl(profile.avatar_url);
+          signedAvatars.set(userId, signed);
+        })
+      );
+
       return regularMedia.map(m => ({
         id: m.id,
         content: m.content!,
@@ -68,7 +78,7 @@ const MediaGallerySheet = ({ roomId, regionCode, isOpen, onClose }: MediaGallery
         created_at: m.created_at,
         sender_id: m.sender_id,
         senderUsername: profileMap.get(m.sender_id)?.username || 'Anonyme',
-        senderAvatar: profileMap.get(m.sender_id)?.avatar_url || null,
+        senderAvatar: signedAvatars.get(m.sender_id) || null,
       }));
     },
     enabled: isOpen,

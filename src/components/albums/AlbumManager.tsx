@@ -28,6 +28,7 @@ import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import AlbumGalleryViewer from './AlbumGalleryViewer';
 import UploadProgressOverlay from './UploadProgressOverlay';
+import { SecureAvatarImg } from '@/components/ui/secure-avatar';
 
 interface UploadProgress {
   fileName: string;
@@ -614,7 +615,7 @@ const ShareAccessRow = ({ share, stopSharing }: { share: any; stopSharing: any }
     <div className="flex items-center gap-3 p-3">
       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
         {profile?.avatar_url ? (
-          <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+          <SecureAvatarImg src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
         ) : (
           <Users className="w-4 h-4 text-primary" />
         )}

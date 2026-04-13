@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTweenComments, useCreateTweenComment, useToggleTweenLike, type Tween, type TweenComment } from '@/hooks/useTweens';
 import { motion } from 'framer-motion';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface TweenDetailDialogProps {
   tween: Tween;
@@ -19,12 +20,13 @@ interface TweenDetailDialogProps {
 
 const CommentItem = ({ comment, tweenId, onReply }: { comment: TweenComment; tweenId: string; onReply: (id: string, username: string) => void }) => {
   const timeAgo = formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: fr });
+  const resolvedAvatar = useAvatarUrl(comment.profiles?.avatar_url);
 
   return (
     <div className="py-3">
       <div className="flex gap-2.5">
         <Avatar className="w-8 h-8 flex-shrink-0 ring-1 ring-primary/10">
-          <AvatarImage src={comment.profiles?.avatar_url || ''} />
+          <AvatarImage src={resolvedAvatar || ''} />
           <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
             {comment.profiles?.username?.charAt(0)?.toUpperCase() || '?'}
           </AvatarFallback>
@@ -76,6 +78,8 @@ const TweenDetailDialog = ({ tween, open, onOpenChange }: TweenDetailDialogProps
 
   const tweenProfile = tween.profiles;
   const timeAgo = formatDistanceToNow(new Date(tween.created_at), { addSuffix: true, locale: fr });
+  const resolvedTweenAvatar = useAvatarUrl(tweenProfile?.avatar_url);
+  const resolvedMyAvatar = useAvatarUrl(profile?.avatar_url);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -84,7 +88,7 @@ const TweenDetailDialog = ({ tween, open, onOpenChange }: TweenDetailDialogProps
         <div className="p-4 border-b border-border/30">
           <div className="flex gap-3">
             <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-primary/10">
-              <AvatarImage src={tweenProfile?.avatar_url || ''} />
+              <AvatarImage src={resolvedTweenAvatar || ''} />
               <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
                 {tweenProfile?.username?.charAt(0)?.toUpperCase() || '?'}
               </AvatarFallback>
@@ -167,7 +171,7 @@ const TweenDetailDialog = ({ tween, open, onOpenChange }: TweenDetailDialogProps
             )}
             <div className="flex items-center gap-2">
               <Avatar className="w-8 h-8 flex-shrink-0 ring-1 ring-primary/10">
-                <AvatarImage src={profile?.avatar_url || ''} />
+                <AvatarImage src={resolvedMyAvatar || ''} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">
                   {profile?.username?.charAt(0)?.toUpperCase() || '?'}
                 </AvatarFallback>

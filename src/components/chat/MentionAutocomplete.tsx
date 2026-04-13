@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SecureAvatar } from '@/components/ui/secure-avatar';
 import { Loader2 } from 'lucide-react';
 
 interface MentionUser {
@@ -14,6 +14,32 @@ interface MentionAutocompleteProps {
   selectedIndex: number;
   onSelect: (user: MentionUser) => void;
 }
+
+const MentionUserItem = ({ user, index, selectedIndex, onSelect }: { user: MentionUser; index: number; selectedIndex: number; onSelect: (user: MentionUser) => void }) => {
+  return (
+    <button
+      key={user.user_id}
+      type="button"
+      onClick={() => onSelect(user)}
+      className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+        index === selectedIndex 
+          ? 'bg-primary/10 text-primary' 
+          : 'hover:bg-muted'
+      }`}
+    >
+      <SecureAvatar
+        src={user.avatar_url}
+        alt={user.username}
+        className="h-8 w-8"
+        fallback={
+          <span className="text-xs font-bold">{user.username.slice(0, 2).toUpperCase()}</span>
+        }
+        fallbackClassName="bg-gradient-to-br from-primary to-accent text-white"
+      />
+      <span className="font-medium text-sm">@{user.username}</span>
+    </button>
+  );
+};
 
 const MentionAutocomplete = ({ 
   suggestions, 
@@ -41,24 +67,7 @@ const MentionAutocomplete = ({
   return (
     <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50 max-h-48 overflow-y-auto">
       {suggestions.map((user, index) => (
-        <button
-          key={user.user_id}
-          type="button"
-          onClick={() => onSelect(user)}
-          className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
-            index === selectedIndex 
-              ? 'bg-primary/10 text-primary' 
-              : 'hover:bg-muted'
-          }`}
-        >
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.avatar_url || undefined} />
-            <AvatarFallback className="text-xs bg-gradient-to-br from-primary to-accent text-white">
-              {user.username.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span className="font-medium text-sm">@{user.username}</span>
-        </button>
+        <MentionUserItem key={user.user_id} user={user} index={index} selectedIndex={selectedIndex} onSelect={onSelect} />
       ))}
     </div>
   );

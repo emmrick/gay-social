@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SecureAvatarImg } from '@/components/ui/secure-avatar';
 import { MessageCircle, Flag, MoreVertical, UserMinus } from 'lucide-react';
 import {
   Tooltip,
@@ -232,7 +233,7 @@ const MemberCard = ({
         <div className="relative">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold overflow-hidden">
             {profile.avatar_url ? (
-              <img
+              <SecureAvatarImg
                 src={profile.avatar_url}
                 alt={profile.username}
                 className="w-full h-full object-cover"

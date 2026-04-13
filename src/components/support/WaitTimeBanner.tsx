@@ -23,7 +23,6 @@ const WaitTimeBanner = ({
 }: WaitTimeBannerProps) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  // Live elapsed time counter
   useEffect(() => {
     if (!waitStartTime) return;
     const update = () => setElapsedSeconds(Math.floor((Date.now() - waitStartTime) / 1000));
@@ -38,7 +37,6 @@ const WaitTimeBanner = ({
     ? `${elapsedMin}min ${elapsedSec.toString().padStart(2, '0')}s`
     : `${elapsedSec}s`;
 
-  // Progress bar: estimated total in seconds vs elapsed
   const estimatedTotalSec = estimatedMinutes ? estimatedMinutes * 60 : null;
   const progressPercent = estimatedTotalSec
     ? Math.min((elapsedSeconds / estimatedTotalSec) * 100, 95)
@@ -62,45 +60,48 @@ const WaitTimeBanner = ({
       animate={{ opacity: 1, y: 0 }}
       className="mb-3 space-y-2"
     >
-      {/* Main wait card */}
       <div className={cn(
-        "rounded-xl border p-3 space-y-2.5",
+        "rounded-2xl border p-3.5 space-y-2.5 backdrop-blur-sm",
         isNoAgent
           ? "bg-destructive/5 border-destructive/20"
           : isHighWait
           ? "bg-amber-500/5 border-amber-500/20"
-          : "bg-primary/5 border-primary/20"
+          : "bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20"
       )}>
         {/* Status line */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Loader2 className={cn(
-              "w-3.5 h-3.5 animate-spin",
-              isNoAgent ? "text-destructive" : "text-primary"
-            )} />
-            <span className="text-xs font-medium text-foreground">
+            <div className={cn(
+              "w-6 h-6 rounded-lg flex items-center justify-center",
+              isNoAgent ? "bg-destructive/10" : "bg-primary/10"
+            )}>
+              <Loader2 className={cn(
+                "w-3.5 h-3.5 animate-spin",
+                isNoAgent ? "text-destructive" : "text-primary"
+              )} />
+            </div>
+            <span className="text-xs font-semibold text-foreground">
               {isNoAgent
                 ? "Aucun conseiller disponible"
                 : `Position dans la file : n°${position}`
               }
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-card/50 px-2 py-1 rounded-lg">
             <Users className="w-3 h-3" />
             <span>{onlineModerators} en ligne</span>
           </div>
         </div>
 
-        {/* Wait time display */}
         {isNoAgent ? (
-          <div className="flex items-center gap-2 text-xs rounded-lg px-3 py-2 bg-destructive/10 text-destructive">
+          <div className="flex items-center gap-2 text-xs rounded-xl px-3 py-2.5 bg-destructive/10 text-destructive">
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
             <span>Aucun conseiller disponible pour le moment. Votre demande reste en file d'attente.</span>
           </div>
         ) : (
           <>
             <div className={cn(
-              "flex items-center justify-between gap-2 text-xs rounded-lg px-3 py-2",
+              "flex items-center justify-between gap-2 text-xs rounded-xl px-3 py-2.5",
               isHighWait ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" : "bg-primary/10 text-primary"
             )}>
               <div className="flex items-center gap-2">
@@ -109,7 +110,7 @@ const WaitTimeBanner = ({
                   Temps d'attente estimé : <strong>~{estimatedMinutes} min</strong>
                 </span>
               </div>
-              <span className="text-[10px] text-muted-foreground font-mono">{elapsedLabel}</span>
+              <span className="text-[10px] text-muted-foreground font-mono tabular-nums">{elapsedLabel}</span>
             </div>
 
             {isHighWait && (
@@ -119,14 +120,12 @@ const WaitTimeBanner = ({
               </div>
             )}
 
-            {/* Progress bar */}
             {progressPercent !== null && (
-              <Progress value={progressPercent} className="h-1.5" />
+              <Progress value={progressPercent} className="h-1.5 rounded-full" />
             )}
           </>
         )}
 
-        {/* Persistence notice */}
         <p className="text-[10px] text-muted-foreground text-center leading-tight">
           Votre place est conservée même si vous quittez cette page.
         </p>

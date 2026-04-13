@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import { MessageCircle, Flag, MoreVertical, UserMinus } from 'lucide-react';
 import {
   Tooltip,

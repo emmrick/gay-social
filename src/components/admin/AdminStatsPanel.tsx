@@ -72,7 +72,7 @@ const useDetailedStats = () => {
       const totalUsers = r1.count || 0;
       const onlineUsers = r2.count || 0;
       const verifiedUsers = r3.count || 0;
-      const newUsersToday = r4.count || 0;
+      const totalCredits = r4.count || 0;
       const totalMessages = r5.count || 0;
       const messagesWeek = r6.count || 0;
       const messagesToday = r7.count || 0;
@@ -143,7 +143,7 @@ const useDetailedStats = () => {
         totalPhotos: totalPhotos || 0,
         totalAlbums: totalAlbums || 0,
         totalConversations: totalConversations || 0,
-        newUsersToday: newUsersToday || 0,
+        totalCredits: totalCredits || 0,
         newUsersWeek: newUsersWeek || 0,
         newUsersMonth: newUsersMonth || 0,
         totalReports: totalReports || 0,

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription, FREE_LIMITS, PREMIUM_LIMITS } from './useSubscription';
+import { FREE_LIMITS } from './useSubscription';
 import { startOfWeek, startOfDay, isAfter } from 'date-fns';
 
 interface UserUsage {

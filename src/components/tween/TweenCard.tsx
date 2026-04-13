@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToggleTweenLike, useDeleteTween, useVoteTweenPoll, type Tween } from '@/hooks/useTweens';
 import TweenDetailDialog from './TweenDetailDialog';
+import { motion } from 'framer-motion';
 
 interface TweenCardProps {
   tween: Tween;
@@ -28,23 +29,24 @@ const TweenPoll = ({ tween }: { tween: Tween }) => {
           <button
             key={i}
             onClick={(e) => { e.stopPropagation(); votePoll.mutate({ tweenId: tween.id, optionIndex: i }); }}
-            className="w-full relative overflow-hidden rounded-lg border border-border p-3 text-left text-sm transition-colors hover:bg-muted/50"
+            className="w-full relative overflow-hidden rounded-xl border border-border/50 p-3 text-left text-sm transition-all hover:border-primary/30 hover:bg-primary/5 group"
           >
             <div
-              className="absolute inset-y-0 left-0 bg-primary/10 transition-all"
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary/15 to-primary/5 transition-all duration-500"
               style={{ width: `${pct}%` }}
             />
             <div className="relative flex justify-between">
               <span className="font-medium">{opt.text}</span>
-              <span className="text-muted-foreground">{pct}%</span>
+              <span className="text-muted-foreground font-semibold">{pct}%</span>
             </div>
           </button>
         );
       })}
-      <p className="text-xs text-muted-foreground">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</p>
+      <p className="text-xs text-muted-foreground font-medium">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</p>
     </div>
   );
 };
+
 const renderBoldText = (text: string) => {
   if (!text.includes('**')) return text;
   const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -74,12 +76,10 @@ const TweenCard = ({ tween }: TweenCardProps) => {
 
   return (
     <>
-      <article
-        className="bg-card border border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow"
-      >
+      <article className="bg-card border border-border/40 rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-primary/15 transition-all duration-300">
         <div className="flex gap-3">
           <Avatar
-            className="w-10 h-10 flex-shrink-0 cursor-pointer"
+            className="w-10 h-10 flex-shrink-0 cursor-pointer ring-2 ring-primary/10 hover:ring-primary/25 transition-all"
             onClick={(e) => { e.stopPropagation(); if (profile?.user_id) navigate(`/member/${profile.user_id}`); }}
           >
             <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
@@ -92,22 +92,22 @@ const TweenCard = ({ tween }: TweenCardProps) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
                 <span
-                  className="font-semibold text-sm truncate cursor-pointer hover:underline"
+                  className="font-bold text-sm truncate cursor-pointer hover:text-primary transition-colors"
                   onClick={(e) => { e.stopPropagation(); if (profile?.user_id) navigate(`/member/${profile.user_id}`); }}
                 >{profile?.username || 'Anonyme'}</span>
-                <span className="text-xs text-muted-foreground flex-shrink-0">· {timeAgo}</span>
+                <span className="text-xs text-muted-foreground/60 flex-shrink-0">· {timeAgo}</span>
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full" onClick={e => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full text-muted-foreground/50 hover:text-foreground" onClick={e => e.stopPropagation()}>
                     <MoreHorizontal className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="rounded-xl">
                   {isOwn && (
                     <DropdownMenuItem
-                      className="text-destructive"
+                      className="text-destructive rounded-lg"
                       onClick={(e) => { e.stopPropagation(); deleteTween.mutate(tween.id); }}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
@@ -115,7 +115,7 @@ const TweenCard = ({ tween }: TweenCardProps) => {
                     </DropdownMenuItem>
                   )}
                   {!isOwn && (
-                    <DropdownMenuItem>
+                    <DropdownMenuItem className="rounded-lg">
                       <Flag className="w-4 h-4 mr-2" />
                       Signaler
                     </DropdownMenuItem>
@@ -125,41 +125,43 @@ const TweenCard = ({ tween }: TweenCardProps) => {
             </div>
 
             {/* Content */}
-            <p className="mt-1 text-sm whitespace-pre-wrap break-words">{renderBoldText(tween.content)}</p>
+            <p className="mt-1.5 text-sm whitespace-pre-wrap break-words leading-relaxed">{renderBoldText(tween.content)}</p>
 
             {/* Media */}
             {tween.media_url && tween.media_type === 'image' && (
-              <img src={tween.media_url} alt="" className="w-full rounded-xl mt-3 max-h-80 object-cover" loading="lazy" />
+              <img src={tween.media_url} alt="" className="w-full rounded-xl mt-3 max-h-80 object-cover border border-border/20" loading="lazy" />
             )}
             {tween.media_url && tween.media_type === 'video' && (
-              <video src={tween.media_url} controls className="w-full rounded-xl mt-3 max-h-80 object-cover" />
+              <video src={tween.media_url} controls className="w-full rounded-xl mt-3 max-h-80 object-cover border border-border/20" />
             )}
 
             {/* Poll */}
             {tween.has_poll && tween.poll_options && <TweenPoll tween={tween} />}
 
             {/* Action buttons */}
-            <div className="flex items-center gap-6 mt-3 -ml-2">
-              <button
+            <div className="flex items-center gap-1 mt-3 -ml-2">
+              <motion.button
+                whileTap={{ scale: 0.85 }}
                 className={cn(
-                  "flex items-center gap-1.5 text-sm transition-colors px-2 py-1 rounded-lg",
+                  "flex items-center gap-1.5 text-sm transition-all px-3 py-1.5 rounded-xl",
                   tween.user_has_liked
-                    ? "text-destructive"
-                    : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    ? "text-primary bg-primary/8"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/5"
                 )}
                 onClick={handleLike}
               >
-                <Heart className={cn("w-[18px] h-[18px]", tween.user_has_liked && "fill-current")} />
-                <span className="font-medium">{tween.likes_count || ''}</span>
-              </button>
+                <Heart className={cn("w-[18px] h-[18px] transition-transform", tween.user_has_liked && "fill-current scale-110")} />
+                <span className="font-semibold text-xs">{tween.likes_count || ''}</span>
+              </motion.button>
 
-              <button
-                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-lg hover:bg-primary/10"
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-all px-3 py-1.5 rounded-xl hover:bg-primary/5"
                 onClick={() => setShowDetail(true)}
               >
                 <MessageCircle className="w-[18px] h-[18px]" />
-                <span className="font-medium">{tween.comments_count || ''}</span>
-              </button>
+                <span className="font-semibold text-xs">{tween.comments_count || ''}</span>
+              </motion.button>
             </div>
           </div>
         </div>

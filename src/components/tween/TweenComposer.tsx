@@ -105,18 +105,18 @@ const TweenComposer = () => {
       <DialogTrigger asChild>
         <motion.button
           whileTap={{ scale: 0.98 }}
-          className="w-full group relative overflow-hidden bg-card border border-border rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300"
+          className="w-full group relative overflow-hidden bg-card border border-border/40 rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="relative flex items-center gap-3">
             <div className="relative">
-              <Avatar className="w-11 h-11 ring-2 ring-primary/20">
+              <Avatar className="w-11 h-11 ring-2 ring-primary/15">
                 <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
                 <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
                   {profile?.username?.charAt(0)?.toUpperCase() || '?'}
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-sm">
                 <Sparkles className="w-2.5 h-2.5 text-primary-foreground" />
               </div>
             </div>
@@ -125,7 +125,7 @@ const TweenComposer = () => {
                 Quoi de neuf, <span className="font-semibold text-foreground">{profile?.username}</span> ?
               </p>
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground/40 group-hover:text-primary/60 transition-colors">
+            <div className="flex items-center gap-2 text-muted-foreground/30 group-hover:text-primary/50 transition-colors">
               <Image className="w-4 h-4" />
               <Video className="w-4 h-4" />
               <BarChart3 className="w-4 h-4" />
@@ -135,20 +135,20 @@ const TweenComposer = () => {
       </DialogTrigger>
 
       {/* Dialog */}
-      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden border-border/50 bg-card">
+      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden border-border/40 bg-card rounded-2xl">
         {/* Header */}
-        <div className="relative px-5 pt-5 pb-4 border-b border-border/40">
+        <div className="relative px-5 pt-5 pb-4 border-b border-border/30">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
           <div className="relative flex items-center gap-3">
-            <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+            <Avatar className="w-12 h-12 ring-2 ring-primary/15">
               <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
               <AvatarFallback className="bg-primary/10 text-primary font-bold">
                 {profile?.username?.charAt(0)?.toUpperCase() || '?'}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-sm text-foreground">{profile?.username || 'Anonyme'}</p>
-              <p className="text-xs text-muted-foreground">Publication publique</p>
+              <p className="font-bold text-sm text-foreground">{profile?.username || 'Anonyme'}</p>
+              <p className="text-xs text-muted-foreground/60">Publication publique</p>
             </div>
           </div>
         </div>
@@ -177,8 +177,8 @@ const TweenComposer = () => {
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="bg-muted/30 rounded-xl p-3 border border-border/30">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold mb-1.5">Aperçu</p>
+                <div className="bg-primary/5 rounded-xl p-3 border border-primary/10">
+                  <p className="text-[10px] uppercase tracking-wider text-primary/50 font-bold mb-1.5">Aperçu</p>
                   <p className="text-sm whitespace-pre-wrap break-words text-foreground">{renderPreview(content)}</p>
                 </div>
               </motion.div>
@@ -219,9 +219,9 @@ const TweenComposer = () => {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="space-y-2.5 p-4 rounded-2xl border border-primary/20 bg-primary/5"
+                className="space-y-2.5 p-4 rounded-2xl border border-primary/15 bg-primary/5"
               >
-                <p className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                <p className="text-xs font-bold text-primary flex items-center gap-1.5">
                   <BarChart3 className="w-3.5 h-3.5" />
                   Sondage
                 </p>
@@ -236,12 +236,12 @@ const TweenComposer = () => {
                       n[i] = e.target.value;
                       setPollOptions(n);
                     }}
-                    className="w-full bg-background border border-border/50 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
+                    className="w-full bg-background border border-border/40 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
                   />
                 ))}
                 <div className="flex gap-2">
                   {pollOptions.length < 4 && (
-                    <Button variant="outline" size="sm" onClick={() => setPollOptions([...pollOptions, ''])} className="text-xs rounded-full">
+                    <Button variant="outline" size="sm" onClick={() => setPollOptions([...pollOptions, ''])} className="text-xs rounded-full border-primary/20 hover:bg-primary/5">
                       + Option
                     </Button>
                   )}
@@ -255,7 +255,7 @@ const TweenComposer = () => {
         </div>
 
         {/* Footer toolbar */}
-        <div className="px-5 py-3 border-t border-border/40 bg-muted/20">
+        <div className="px-5 py-3 border-t border-border/30 bg-muted/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-0.5">
               <input type="file" accept="image/*" ref={fileRef} className="hidden" onChange={(e) => handleMediaSelect(e, 'image')} />
@@ -266,7 +266,7 @@ const TweenComposer = () => {
 
               <ToolbarButton icon={BarChart3} label="Sondage" onClick={() => setShowPoll(!showPoll)} disabled={!!mediaFile} active={showPoll} />
 
-              <div className="w-px h-5 bg-border/50 mx-1" />
+              <div className="w-px h-5 bg-border/40 mx-1" />
 
               <ToolbarButton icon={Bold} label="Gras" onClick={handleBold} />
             </div>
@@ -275,14 +275,14 @@ const TweenComposer = () => {
               {/* Circular progress */}
               <div className="relative w-7 h-7">
                 <svg viewBox="0 0 28 28" className="w-7 h-7 -rotate-90">
-                  <circle cx="14" cy="14" r="11" fill="none" strokeWidth="2.5" className="stroke-border/30" />
+                  <circle cx="14" cy="14" r="11" fill="none" strokeWidth="2.5" className="stroke-border/20" />
                   <circle
                     cx="14" cy="14" r="11" fill="none" strokeWidth="2.5"
                     strokeDasharray={`${charPercent * 0.691} 100`}
                     strokeLinecap="round"
                     className={cn(
                       "transition-all duration-300",
-                      charCount > 280 ? "stroke-destructive" : charCount > 200 ? "stroke-amber-500" : "stroke-primary"
+                      charCount > 280 ? "stroke-destructive" : charCount > 200 ? "stroke-accent" : "stroke-primary"
                     )}
                   />
                 </svg>
@@ -299,7 +299,7 @@ const TweenComposer = () => {
               <Button
                 onClick={handlePublish}
                 disabled={!canPublish}
-                className="rounded-full px-5 h-9 font-semibold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all"
+                className="rounded-full px-5 h-9 font-bold shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/25 transition-all bg-gradient-to-r from-primary to-accent hover:opacity-90"
               >
                 {(createTween.isPending || uploading) ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

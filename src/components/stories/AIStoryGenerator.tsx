@@ -15,7 +15,7 @@ const TEMPLATES = [
   { id: 'chat', label: '💬 Chat régional', description: 'Discute avec ta région' },
   { id: 'stories', label: '📸 Stories', description: 'Partage ta Story' },
   { id: 'security', label: '🛡️ Sécurité', description: 'Profils vérifiés' },
-  { id: 'premium', label: '👑 Premium', description: 'Passe Premium' },
+  { id: 'credits', label: '💰 Crédits', description: 'Gagne des crédits' },
 ];
 
 const AIStoryGenerator = ({ onImageGenerated }: AIStoryGeneratorProps) => {

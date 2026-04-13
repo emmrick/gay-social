@@ -460,7 +460,7 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                   <InfoRow label="Ethnicité" value={profile.ethnicity} />
                   <InfoRow label="Recherche" value={profile.looking_for?.join(', ')} />
                   <InfoRow label="Dernière connexion" value={profile.last_seen ? formatDateTime(profile.last_seen) : null} />
-                  <InfoRow label="Premium" value={profile.is_premium ? 'Oui' : 'Non'} />
+                  
                 </div>
               </div>
             </CardContent>

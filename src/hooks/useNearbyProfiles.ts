@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from './useSubscription';
 import { useMemo } from 'react';
 
 interface NearbyProfile {
@@ -35,7 +34,6 @@ export const useNearbyProfiles = (
   maxDistance: number = 50000
 ) => {
   const { user } = useAuth();
-  const { isPremium } = useSubscription();
 
   // Query 1: Always fetch profiles immediately (no geolocation dependency)
   const baseQuery = useQuery({
@@ -167,7 +165,6 @@ export const useNearbyProfiles = (
       baseQuery.refetch();
       if (latitude != null && longitude != null) geoQuery.refetch();
     },
-    isPremium,
     hasGeoData,
   };
 };

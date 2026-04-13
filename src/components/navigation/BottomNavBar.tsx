@@ -6,7 +6,6 @@ import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 
 interface BottomNavBarProps {
   unreadCount?: number;
-  isPremium?: boolean;
 }
 
 const allTabs = [
@@ -17,7 +16,7 @@ const allTabs = [
   { id: 'help', path: '/aide/chat', icon: HelpCircle, label: 'Aide', featureKey: null },
 ] as const;
 
-const BottomNavBar = memo(({ unreadCount = 0, isPremium = false }: BottomNavBarProps) => {
+const BottomNavBar = memo(({ unreadCount = 0 }: BottomNavBarProps) => {
   const featureFlags = useFeatureFlags();
   const location = useLocation();
   const messageBadge = unreadCount > 0 ? unreadCount : undefined;

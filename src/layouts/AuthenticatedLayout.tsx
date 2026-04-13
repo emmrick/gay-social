@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBlockedUserContext } from '@/components/BlockedUserGuard';
 import { useRealtimeOnlineStatus } from '@/hooks/useRealtimeOnlineStatus';
 import { useNotificationRedirect } from '@/hooks/useNotificationRedirect';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useOnlineMemberCount } from '@/hooks/useTotalMemberCount';
 import { useIsAdmin } from '@/hooks/useAdmin';
@@ -36,7 +35,7 @@ const AuthenticatedLayout = () => {
   const { isRestricted } = useBlockedUserContext();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isPremium } = useSubscription();
+  
   const { getTotalUnreadCount } = useUnreadMessages();
   const { data: onlineCount } = useOnlineMemberCount();
   const { data: isAdmin } = useIsAdmin();
@@ -191,7 +190,6 @@ const AuthenticatedLayout = () => {
       {showBottomNav && (
         <BottomNavBar
           unreadCount={getTotalUnreadCount()}
-          isPremium={isPremium}
         />
       )}
     </div>

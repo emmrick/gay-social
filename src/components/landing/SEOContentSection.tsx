@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-react';
 
 const seoFaqs = [
   { question: 'Comment fonctionne Gay Social ?', answer: 'Gay Social est un site de rencontre gay gratuit qui permet aux hommes de se rencontrer par département. Créez votre profil, rejoignez le chat de votre région et échangez avec des hommes près de chez vous.' },
-  { question: 'Gay Social est-il gratuit ?', answer: "Oui, l'inscription et l'accès au chat de groupe sont gratuits. Des fonctionnalités premium comme le boost de profil sont disponibles avec des crédits." },
+  { question: 'Gay Social est-il gratuit ?', answer: "Oui, l'inscription et l'accès au chat de groupe sont gratuits. Certaines fonctionnalités comme le boost de profil sont disponibles avec des crédits." },
   { question: 'Le site est-il sécurisé ?', answer: 'Oui, nous vérifions l\'identité des membres, détectons les captures d\'écran et modérons activement la plateforme. Vos données restent confidentielles.' },
   { question: 'Comment trouver un plan cul gay près de chez moi ?', answer: 'Rejoignez le chat de votre département pour rencontrer des hommes gay de votre région. Utilisez la fonction de proximité pour voir les membres les plus proches.' },
   { question: 'Peut-on envoyer des photos et vidéos ?', answer: 'Oui, Gay Social permet l\'envoi de photos et vidéos éphémères qui disparaissent après consultation, ainsi que des médias classiques dans les conversations privées.' },

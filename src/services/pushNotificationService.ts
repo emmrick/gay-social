@@ -297,7 +297,7 @@ export const notifyCreditPurchaseApproved = async (
     'credits_approved',
     '💰 Crédits ajoutés !',
     `Votre achat de ${amount} crédits (${priceEuros}€) a été validé. Bon tchat !`,
-    '/?tab=premium',
+    '/?tab=credits',
     { notificationType: 'credit' }
   );
 };
@@ -313,7 +313,7 @@ export const notifyCreditPurchaseRejected = async (
     'credits_rejected',
     '❌ Achat refusé',
     `Votre demande d'achat de crédits a été refusée.${reasonText}`,
-    '/?tab=premium',
+    '/?tab=credits',
     { notificationType: 'credit' }
   );
 };

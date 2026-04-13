@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
-type AppView = 'landing' | 'home' | 'swipe' | 'groups' | 'messages' | 'tween' | 'premium' | 'profile' | 'chat' | 'private' | 'support' | 'help' | 'chatbot-config';
-type NavTab = 'home' | 'swipe' | 'messages' | 'tween' | 'premium' | 'help' | 'profile';
+type AppView = 'landing' | 'home' | 'swipe' | 'groups' | 'messages' | 'tween' | 'credits' | 'profile' | 'chat' | 'private' | 'support' | 'help' | 'chatbot-config';
+type NavTab = 'home' | 'swipe' | 'messages' | 'tween' | 'credits' | 'help' | 'profile';
 
 interface PersistedNavState {
   currentView: AppView;

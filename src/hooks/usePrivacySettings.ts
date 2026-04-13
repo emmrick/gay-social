@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useIsAdmin } from '@/hooks/useAdmin';
 import { toast } from 'sonner';
 
 export interface PrivacySettings {
@@ -11,7 +11,7 @@ export interface PrivacySettings {
 
 export const usePrivacySettings = () => {
   const { user } = useAuth();
-  const { isAdmin } = useSubscription();
+  const { data: isAdmin } = useIsAdmin();
   const [settings, setSettings] = useState<PrivacySettings>({
     hideOnlineStatus: false,
     hideLastSeen: false,

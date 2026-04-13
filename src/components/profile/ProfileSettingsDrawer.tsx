@@ -20,8 +20,6 @@ import CoupleSettings from '@/components/couple/CoupleSettings';
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
 interface ProfileSettingsDrawerProps {
-  isPremium?: boolean; // Kept for backwards compatibility but no longer used
-  subscriptionEnd?: string | null; // Kept for backwards compatibility but no longer used
   isAdmin?: boolean;
   isModerator?: boolean;
   onNavigateToAdmin?: () => void;

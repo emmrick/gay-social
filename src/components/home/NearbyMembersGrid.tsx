@@ -38,7 +38,6 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
     isLoading: profilesLoading,
     error: profilesError,
     refetch,
-    isPremium,
     hasGeoData,
   } = useNearbyProfiles(latitude, longitude);
 

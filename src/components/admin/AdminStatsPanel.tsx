@@ -37,7 +37,7 @@ const useDetailedStats = () => {
         countQuery('profiles'),
         countQuery('profiles', { is_online: true }),
         countQuery('profiles', { is_verified: true }),
-        countQuery('profiles', { is_premium: true }),
+        countQuery('credit_transactions'),
         countQuery('messages'),
         countQuery('messages', undefined, { col: 'created_at', val: weekAgo }),
         countQuery('messages', undefined, { col: 'created_at', val: startOfToday }),
@@ -72,7 +72,7 @@ const useDetailedStats = () => {
       const totalUsers = r1.count || 0;
       const onlineUsers = r2.count || 0;
       const verifiedUsers = r3.count || 0;
-      const premiumUsers = r4.count || 0;
+      const totalCredits = r4.count || 0;
       const totalMessages = r5.count || 0;
       const messagesWeek = r6.count || 0;
       const messagesToday = r7.count || 0;
@@ -136,14 +136,14 @@ const useDetailedStats = () => {
         totalUsers: totalUsers || 0,
         onlineUsers: onlineUsers || 0,
         verifiedUsers: verifiedUsers || 0,
-        premiumUsers: premiumUsers || 0,
+        newUsersToday: newUsersToday || 0,
         totalMessages: totalMessages || 0,
         messagesWeek: messagesWeek || 0,
         messagesToday: messagesToday || 0,
         totalPhotos: totalPhotos || 0,
         totalAlbums: totalAlbums || 0,
         totalConversations: totalConversations || 0,
-        newUsersToday: newUsersToday || 0,
+        totalCredits: totalCredits || 0,
         newUsersWeek: newUsersWeek || 0,
         newUsersMonth: newUsersMonth || 0,
         totalReports: totalReports || 0,
@@ -189,7 +189,7 @@ const AdminStatsPanel = () => {
 
   const onlinePercent = stats.totalUsers > 0 ? Math.round((stats.onlineUsers / stats.totalUsers) * 100) : 0;
   const verifiedPercent = stats.totalUsers > 0 ? Math.round((stats.verifiedUsers / stats.totalUsers) * 100) : 0;
-  const premiumPercent = stats.totalUsers > 0 ? Math.round((stats.premiumUsers / stats.totalUsers) * 100) : 0;
+  
   const avgMsgPerUser = stats.totalUsers > 0 ? Math.round(stats.totalMessages / stats.totalUsers) : 0;
 
   const verificationPie = [
@@ -218,7 +218,7 @@ const AdminStatsPanel = () => {
         <StatCard title="Utilisateurs" value={stats.totalUsers} icon={Users} color="text-primary" bgColor="bg-primary/10" />
         <StatCard title="En ligne" value={stats.onlineUsers} icon={Activity} color="text-green-500" bgColor="bg-green-500/10" subtitle={`${onlinePercent}%`} />
         <StatCard title="Vérifiés" value={stats.verifiedUsers} icon={Shield} color="text-blue-500" bgColor="bg-blue-500/10" subtitle={`${verifiedPercent}%`} />
-        <StatCard title="Premium" value={stats.premiumUsers} icon={Crown} color="text-amber-500" bgColor="bg-amber-500/10" subtitle={`${premiumPercent}%`} />
+        <StatCard title="Nouveaux (jour)" value={stats.newUsersToday} icon={Clock} color="text-amber-500" bgColor="bg-amber-500/10" />
       </div>
 
       {/* Activity KPIs */}

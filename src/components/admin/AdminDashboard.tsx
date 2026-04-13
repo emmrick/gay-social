@@ -48,7 +48,7 @@ const useFullDashboardStats = () => {
         cq('profiles'),
         cq('profiles', { is_online: true }),
         cq('profiles', { is_verified: true }),
-        cq('profiles', { is_premium: true }),
+        cq('credit_transactions'),
         cq('profiles', undefined, { col: 'created_at', val: startOfToday }),
         cq('profiles', undefined, { col: 'created_at', val: weekAgo }),
         cq('profiles', undefined, { col: 'created_at', val: monthAgo }),
@@ -76,7 +76,7 @@ const useFullDashboardStats = () => {
       const totalUsers = r1.count || 0;
       const onlineUsers = r2.count || 0;
       const verifiedUsers = r3.count || 0;
-      const premiumUsers = r4.count || 0;
+      
       const newUsersToday = r5.count || 0;
       const newUsersWeek = r6.count || 0;
       const newUsersMonth = r7.count || 0;
@@ -120,7 +120,7 @@ const useFullDashboardStats = () => {
         totalUsers: totalUsers || 0,
         onlineUsers: onlineUsers || 0,
         verifiedUsers: verifiedUsers || 0,
-        premiumUsers: premiumUsers || 0,
+        
         newUsersToday: newUsersToday || 0,
         newUsersWeek: newUsersWeek || 0,
         newUsersMonth: newUsersMonth || 0,
@@ -165,7 +165,7 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
 
   const onlinePercent = stats.totalUsers > 0 ? Math.round((stats.onlineUsers / stats.totalUsers) * 100) : 0;
   const verifiedPercent = stats.totalUsers > 0 ? Math.round((stats.verifiedUsers / stats.totalUsers) * 100) : 0;
-  const premiumPercent = stats.totalUsers > 0 ? Math.round((stats.premiumUsers / stats.totalUsers) * 100) : 0;
+  
 
   const urgentActions = [
     { id: 'pending-tasks' as AdminSection, label: 'Missions', icon: ListOrdered, count: stats.pendingTasks, color: 'text-orange-500', bg: 'bg-orange-500/10', borderColor: 'border-orange-500/20' },
@@ -230,7 +230,7 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
         <KPICard title="Membres" value={stats.totalUsers} icon={Users} trend={`+${stats.newUsersToday} aujourd'hui`} onClick={() => onNavigate('users')} />
         <KPICard title="En ligne" value={stats.onlineUsers} icon={Activity} trend={`${onlinePercent}% actifs`} pulse />
         <KPICard title="Vérifiés" value={stats.verifiedUsers} icon={Shield} trend={`${verifiedPercent}%`} onClick={() => onNavigate('verification')} />
-        <KPICard title="Premium" value={stats.premiumUsers} icon={Crown} trend={`${premiumPercent}%`} />
+        <KPICard title="Conversations" value={stats.totalConversations} icon={MessageSquare} trend="total" />
       </div>
 
       {/* Secondary KPIs */}

@@ -12,7 +12,7 @@ const TEMPLATES = [
   { id: 'chat', label: '💬 Chat régional', description: 'Discute par région', emoji: '💬' },
   { id: 'stories', label: '📸 Stories', description: 'Partage ta Story', emoji: '📸' },
   { id: 'security', label: '🛡️ Sécurité', description: 'Profils vérifiés', emoji: '🛡️' },
-  { id: 'premium', label: '👑 Premium', description: 'Passe Premium', emoji: '👑' },
+  { id: 'credits', label: '💰 Crédits', description: 'Gagne des crédits', emoji: '💰' },
 ];
 
 const FORMATS = [

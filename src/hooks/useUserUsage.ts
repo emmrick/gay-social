@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription, FREE_LIMITS, PREMIUM_LIMITS } from './useSubscription';
+import { FREE_LIMITS } from './useSubscription';
 import { startOfWeek, startOfDay, isAfter } from 'date-fns';
 
 interface UserUsage {
@@ -21,10 +21,9 @@ interface UserUsage {
 
 export const useUserUsage = () => {
   const { user } = useAuth();
-  const { isPremium } = useSubscription();
   const queryClient = useQueryClient();
 
-  const limits = isPremium ? PREMIUM_LIMITS : FREE_LIMITS;
+  const limits = FREE_LIMITS;
 
   // Fetch or create user usage record
   const query = useQuery({
@@ -111,27 +110,22 @@ export const useUserUsage = () => {
 
   // Check limits
   const canSendEphemeralMedia = (): boolean => {
-    if (isPremium) return true;
     return getEphemeralMediaCount() < limits.ephemeralMediaPerDay;
   };
 
   const canStartConversation = (): boolean => {
-    if (isPremium) return true;
     return getConversationsCount() < limits.conversationsPerWeek;
   };
 
   const canViewNearbyProfiles = (): boolean => {
-    if (isPremium) return true;
     return getNearbyProfilesCount() < limits.nearbyProfiles;
   };
 
   const canAddSavedMessage = (): boolean => {
-    // No premium check - credits are the limiter, but we still have a max of 10
     return (query.data?.saved_messages_count || 0) < 10;
   };
 
   const canCreateAlbum = (): boolean => {
-    if (isPremium) return true;
     return (query.data?.albums_count || 0) < limits.maxAlbums;
   };
 
@@ -285,7 +279,6 @@ export const useUserUsage = () => {
     usage: query.data,
     isLoading: query.isLoading,
     limits,
-    isPremium,
     // Current counts
     ephemeralMediaCount: getEphemeralMediaCount(),
     conversationsCount: getConversationsCount(),

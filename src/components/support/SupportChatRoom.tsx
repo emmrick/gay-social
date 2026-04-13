@@ -865,6 +865,31 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
               ⏸️ Votre conversation est en attente. Répondez pour être mis en relation avec un agent.
             </p>
           )}
+
+          {/* Quick topic blocks for users (not agents) */}
+          {!isAgent && messages.length <= 1 && !inputValue.trim() && (
+            <div className="flex flex-wrap gap-1.5 mb-2 px-1">
+              {[
+                { emoji: '💳', text: 'Problème de crédits' },
+                { emoji: '📷', text: 'Ma photo de profil' },
+                { emoji: '🪪', text: 'Vérification d\'identité' },
+                { emoji: '🚫', text: 'Signaler un utilisateur' },
+                { emoji: '🔐', text: 'Problème de connexion' },
+                { emoji: '🐛', text: 'Bug technique' },
+                { emoji: '💬', text: 'Problème de messagerie' },
+                { emoji: '❓', text: 'Autre question' },
+              ].map((topic) => (
+                <button
+                  key={topic.text}
+                  onClick={() => setInputValue(`${topic.emoji} ${topic.text}`)}
+                  className="px-3 py-1.5 text-xs font-medium rounded-full border border-border bg-card hover:bg-primary/10 hover:border-primary/30 transition-colors active:scale-95"
+                >
+                  {topic.emoji} {topic.text}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-end gap-2">
             {isAgent && !isWaitingClient && (
               <SavedRepliesSheet onSelect={(content) => setInputValue(prev => prev ? prev + '\n' + content : content)} />

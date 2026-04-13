@@ -170,9 +170,8 @@ const GlobalMissionOverlay = () => {
       onSuccess: () => {
         const section = getTaskTypeSection(nextTask.task_type);
         const entityId = getTaskEntityId(nextTask);
-        sessionStorage.setItem('admin-navigate-section', section);
         if (entityId) sessionStorage.setItem('admin-navigate-entity-id', entityId);
-        navigate('/admin');
+        navigate(`/admin?section=${section}`);
       },
     });
   }, [nextTask, reserveTask, navigate]);

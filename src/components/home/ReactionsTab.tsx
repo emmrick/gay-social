@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Heart, Clock, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { motion } from 'framer-motion';
 
 interface ReactionItem {
   id: string;
@@ -74,13 +75,13 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
 
   if (isLoading) {
     return (
-      <div className="space-y-3 px-1">
+      <div className="space-y-2.5 px-1">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50">
-            <Skeleton className="w-11 h-11 rounded-full" />
+          <div key={i} className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-border/30">
+            <Skeleton className="w-11 h-11 rounded-2xl" />
             <div className="flex-1 space-y-1.5">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-3 w-36" />
+              <Skeleton className="h-4 w-28 rounded-lg" />
+              <Skeleton className="h-3 w-36 rounded-lg" />
             </div>
           </div>
         ))}
@@ -91,10 +92,10 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
   if (!reactions || reactions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center px-6">
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-          <Heart className="w-8 h-8 text-primary" />
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/10 flex items-center justify-center mb-4">
+          <Heart className="w-8 h-8 text-primary/40" />
         </div>
-        <h3 className="font-semibold text-foreground mb-1">Aucune réaction</h3>
+        <h3 className="font-bold text-foreground mb-1" style={{ fontFamily: 'Syne, sans-serif' }}>Aucune réaction</h3>
         <p className="text-sm text-muted-foreground max-w-[240px]">
           Les réactions reçues sur votre profil s'afficheront ici.
         </p>
@@ -104,21 +105,33 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
 
   return (
     <div className="space-y-2 px-1">
-      <p className="text-xs text-muted-foreground px-1 mb-3">
-        {reactions.length} réaction{reactions.length > 1 ? 's' : ''} reçue{reactions.length > 1 ? 's' : ''}
-      </p>
-      {reactions.map((reaction) => {
+      <div className="flex items-center gap-2 px-1 mb-3">
+        <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
+          <Heart className="w-3 h-3 text-primary" />
+        </div>
+        <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+          {reactions.length} réaction{reactions.length > 1 ? 's' : ''}
+        </span>
+      </div>
+      {reactions.map((reaction, index) => {
         const date = new Date(reaction.created_at);
         return (
-          <button
+          <motion.button
             key={reaction.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.03 }}
             onClick={() => {
               if (!reaction.is_seen) markAsSeen(reaction.id);
               onViewProfile?.(reaction.reactor_user_id);
             }}
-            className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 hover:bg-accent/50 transition-colors text-left"
+            className={`w-full flex items-center gap-3 p-3.5 rounded-2xl bg-card border transition-all text-left group ${
+              !reaction.is_seen
+                ? 'border-primary/25 bg-primary/5 shadow-sm shadow-primary/5'
+                : 'border-border/30 hover:border-primary/20 hover:shadow-sm'
+            }`}
           >
-            <div className="w-11 h-11 rounded-full bg-secondary flex items-center justify-center overflow-hidden border-2 border-primary/20 flex-shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-muted flex items-center justify-center overflow-hidden border-2 border-primary/10 group-hover:border-primary/25 flex-shrink-0 transition-colors">
               {reaction.reactor_avatar ? (
                 <img src={reaction.reactor_avatar} alt={reaction.reactor_username} className="w-full h-full object-cover" />
               ) : (
@@ -126,18 +139,18 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-foreground truncate">
+              <p className="font-bold text-sm text-foreground truncate">
                 {reaction.reactor_username}
               </p>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 mt-0.5">
                 <Clock className="w-3 h-3" />
                 <span>
                   {format(date, "d MMM yyyy 'à' HH:mm", { locale: fr })}
                 </span>
               </div>
             </div>
-            <span className="text-2xl flex-shrink-0">{reaction.emoji}</span>
-          </button>
+            <span className="text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">{reaction.emoji}</span>
+          </motion.button>
         );
       })}
     </div>

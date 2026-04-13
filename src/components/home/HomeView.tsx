@@ -8,7 +8,6 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { useProfileVisits } from '@/hooks/useProfileVisits';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,7 +37,6 @@ const HomeView = ({
   const [activeSection, setActiveSection] = useState<HomeSection>('accueil');
   const { user } = useAuth();
 
-  // Counts for badges
   const { data: visits } = useProfileVisits();
   const visitsCount = visits?.length || 0;
 
@@ -78,31 +76,43 @@ const HomeView = ({
       <div className="px-4 py-4 space-y-4">
         <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as HomeSection)}>
           <div className="flex items-center gap-2">
-            <TabsList className="flex-1 grid grid-cols-4 h-10">
-              <TabsTrigger value="accueil" className="gap-1 text-xs font-medium">
+            <TabsList className="flex-1 grid grid-cols-4 h-11 p-1 bg-card/80 backdrop-blur-xl border border-border/40 rounded-2xl">
+              <TabsTrigger
+                value="accueil"
+                className="gap-1 text-xs font-bold rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/15 data-[state=active]:to-accent/10 data-[state=active]:border data-[state=active]:border-primary/20 data-[state=active]:shadow-sm data-[state=active]:shadow-primary/10"
+              >
                 <Compass className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Proximité</span>
               </TabsTrigger>
-              <TabsTrigger value="favorites" className="gap-1 text-xs font-medium">
+              <TabsTrigger
+                value="favorites"
+                className="gap-1 text-xs font-bold rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/15 data-[state=active]:to-accent/10 data-[state=active]:border data-[state=active]:border-primary/20 data-[state=active]:shadow-sm data-[state=active]:shadow-primary/10"
+              >
                 <Star className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Favoris</span>
               </TabsTrigger>
-              <TabsTrigger value="visites" className="gap-1 text-xs font-medium relative">
+              <TabsTrigger
+                value="visites"
+                className="gap-1 text-xs font-bold rounded-xl relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/15 data-[state=active]:to-accent/10 data-[state=active]:border data-[state=active]:border-primary/20 data-[state=active]:shadow-sm data-[state=active]:shadow-primary/10"
+              >
                 <Eye className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Visites</span>
                 {visitsCount > 0 && (
-                  <Badge variant="destructive" className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full">
+                  <span className="absolute -top-1.5 -right-1 h-4 min-w-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground font-black shadow-sm">
                     {visitsCount > 99 ? '99+' : visitsCount}
-                  </Badge>
+                  </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="reactions" className="gap-1 text-xs font-medium relative">
+              <TabsTrigger
+                value="reactions"
+                className="gap-1 text-xs font-bold rounded-xl relative data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/15 data-[state=active]:to-accent/10 data-[state=active]:border data-[state=active]:border-primary/20 data-[state=active]:shadow-sm data-[state=active]:shadow-primary/10"
+              >
                 <Heart className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Réactions</span>
                 {reactionsCount > 0 && (
-                  <Badge variant="destructive" className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full">
+                  <span className="absolute -top-1.5 -right-1 h-4 min-w-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground font-black shadow-sm">
                     {reactionsCount > 99 ? '99+' : reactionsCount}
-                  </Badge>
+                  </span>
                 )}
               </TabsTrigger>
             </TabsList>
@@ -112,15 +122,17 @@ const HomeView = ({
                 <Button 
                   variant={isFilterActive ? "default" : "outline"} 
                   size="icon" 
-                  className="h-10 w-10 flex-shrink-0 rounded-xl"
+                  className={`h-11 w-11 flex-shrink-0 rounded-xl border-border/40 ${
+                    isFilterActive ? 'bg-gradient-to-br from-primary to-accent shadow-md shadow-primary/20' : 'hover:border-primary/30'
+                  }`}
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-72" align="end">
+              <PopoverContent className="w-72 rounded-2xl border-border/40" align="end">
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-sm font-semibold">Tranche d'âge</Label>
+                    <Label className="text-sm font-bold">Tranche d'âge</Label>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {ageRange[0]} – {ageRange[1] === 99 ? '99+' : ageRange[1]} ans
                     </p>
@@ -134,10 +146,10 @@ const HomeView = ({
                     className="py-2"
                   />
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" className="flex-1" onClick={resetFilter}>
+                    <Button variant="ghost" size="sm" className="flex-1 rounded-xl" onClick={resetFilter}>
                       Réinitialiser
                     </Button>
-                    <Button size="sm" className="flex-1" onClick={applyFilter}>
+                    <Button size="sm" className="flex-1 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90" onClick={applyFilter}>
                       Appliquer
                     </Button>
                   </div>
@@ -152,7 +164,7 @@ const HomeView = ({
               animate={{ opacity: 1, height: 'auto' }}
               className="mt-2"
             >
-              <span className="text-xs text-muted-foreground bg-secondary px-2.5 py-1 rounded-full border border-border/50">
+              <span className="text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/15 font-semibold">
                 🎯 Âge : {appliedAgeRange[0]} – {appliedAgeRange[1] === 99 ? '99+' : appliedAgeRange[1]} ans
               </span>
             </motion.div>

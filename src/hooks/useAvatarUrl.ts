@@ -48,8 +48,9 @@ export async function getSignedAvatarUrl(avatarUrl: string | null | undefined): 
       .createSignedUrl(path, SIGNED_URL_EXPIRY);
 
     if (error || !data?.signedUrl) {
-      console.error('Failed to sign avatar URL:', error);
-      return null;
+      console.warn('Failed to sign avatar URL:', path, error?.message);
+      // Return the original URL as last resort (may work for public buckets)
+      return avatarUrl;
     }
 
     avatarCache.set(path, {
@@ -58,8 +59,9 @@ export async function getSignedAvatarUrl(avatarUrl: string | null | undefined): 
     });
 
     return data.signedUrl;
-  } catch {
-    return null;
+  } catch (e) {
+    console.warn('Error signing avatar URL:', path, e);
+    return avatarUrl;
   }
 }
 

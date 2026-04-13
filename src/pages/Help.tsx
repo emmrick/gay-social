@@ -376,6 +376,71 @@ const Help = ({ embedded = false }: HelpProps) => {
     addBotMessage(`**${entry.question}**\n\n${entry.answer}${linkPart}\n\nCette réponse t'a aidé ? Tu peux me poser une **autre question** ou taper **"agent"** pour contacter un conseiller. 😊\n\n📚 Consulte aussi le **Centre d'aide** pour plus d'articles : [LINK:/aide]`);
   }, [findEntryById, addBotMessage]);
 
+  // Credit keywords detection
+  const isCreditRequest = useCallback((msg: string) => {
+    const lower = msg.toLowerCase();
+    const creditKeywords = [
+      'crédit', 'credit', 'crédits', 'credits',
+      'donner des crédits', 'avoir des crédits', 'obtenir des crédits',
+      'demande de crédit', 'besoin de crédit', 'plus de crédit',
+      'pas assez de crédit', 'manque de crédit', 'donner crédit',
+      'je veux des crédits', 'j\'ai plus de crédit', 'j\'ai pas de crédit',
+      'recharger', 'recharge', 'solde', 'gratuit',
+    ];
+    return creditKeywords.some(kw => lower.includes(kw));
+  }, []);
+
+  // Handle credit claim from chatbot
+  const handleCreditClaim = useCallback(async () => {
+    if (!user?.id || isClaimingCredits) return;
+    setIsClaimingCredits(true);
+
+    try {
+      // Check if user already claimed within the last 7 days
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const { data: recentClaims, error: checkError } = await supabase
+        .from('chatbot_credit_claims' as any)
+        .select('id, created_at')
+        .eq('user_id', user.id)
+        .gte('created_at', oneWeekAgo.toISOString())
+        .limit(1);
+
+      if (checkError) throw checkError;
+
+      if (recentClaims && recentClaims.length > 0) {
+        // Already claimed this week
+        addBotMessage(
+          `Je suis désolé, vous avez déjà bénéficié de crédits gratuits récemment. 😔\n\nLes crédits bonus via le chatbot sont délivrés **à titre exceptionnel** et sont limités à **une fois par semaine**.\n\nPour toute autre demande de crédits, veuillez **contacter un agent** en tapant **"agent"**.\n\nVous pouvez aussi gagner des crédits via :\n• La connexion quotidienne\n• Le parrainage d'amis\n• La complétion de votre profil\n\n[LINK:/credits]`
+        );
+        setIsClaimingCredits(false);
+        return;
+      }
+
+      // Grant 5 bonus credits
+      const result = await addCreditsToUser(user.id, 5, 'bonus', 'credit_claim', 'Crédits bonus offerts via le chatbot');
+      if (!result.success) throw new Error(result.error);
+
+      // Record the claim
+      await supabase
+        .from('chatbot_credit_claims' as any)
+        .insert({ user_id: user.id, credits_given: 5 } as any);
+
+      addBotMessage(
+        `D'accord, je vous envoie **5 crédits Bonus** ! 🎁✨\n\nLes crédits ont été ajoutés à votre compte. Vous pouvez vérifier votre solde dans la section Crédits.\n\n⚠️ **Attention** : les crédits bonus sont délivrés **à titre exceptionnel** et ne sont pas souvent disponibles. Cette offre est limitée à **une fois par semaine**.\n\n[LINK:/credits]`
+      );
+      toast.success('🎁 5 crédits bonus ajoutés à votre compte !');
+    } catch (err: any) {
+      console.error('Credit claim error:', err);
+      addBotMessage(
+        `Oups, une erreur est survenue lors de l'attribution des crédits. 😕\n\nVeuillez réessayer plus tard ou **contacter un agent** en tapant **"agent"**.`
+      );
+    } finally {
+      setIsClaimingCredits(false);
+    }
+  }, [user?.id, isClaimingCredits, addBotMessage]);
+
   // Initialize chatbot on first load
   useEffect(() => {
     if (hasInitializedRef.current) return;

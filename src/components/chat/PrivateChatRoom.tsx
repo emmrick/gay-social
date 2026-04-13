@@ -393,6 +393,7 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
         <SnapAutoViewer
           messageId={snapViewerMessageId}
           senderName={otherUserProfile?.username || ''}
+          senderAvatar={otherUserProfile?.avatar_url}
           onClose={() => setSnapViewerMessageId(null)}
         />
       )}

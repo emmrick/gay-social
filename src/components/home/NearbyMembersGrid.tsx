@@ -19,7 +19,7 @@ const PROFILES_PER_PAGE = 12;
 
 const ProfileSkeleton = ({ index }: { index: number }) => (
   <div
-    className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-secondary/30"
+    className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-card/50 border border-border/20"
     style={{ animationDelay: `${index * 60}ms` }}
   >
     <Skeleton className="absolute inset-0" />
@@ -46,15 +46,12 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
   const [visibleCount, setVisibleCount] = useState(PROFILES_PER_PAGE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Auto-request location if already granted
   useEffect(() => {
     if (permissionState === 'granted' && !hasLocation && !locationLoading) {
       void requestLocation();
     }
   }, [permissionState, hasLocation, locationLoading, requestLocation]);
 
-  // Build final profiles list
-  // Stabilize current user to avoid re-renders when unrelated profile fields change
   const prevKeyRef = useRef('');
   const [stableUser, setStableUser] = useState<any>(null);
 
@@ -80,17 +77,14 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
 
   const allProfiles = useMemo(() => {
     const result: any[] = [];
-
     if (stableUser) {
       result.push({ ...stableUser, distance_km: null, isCurrentUser: true });
     }
-
     if (profiles) {
       profiles.forEach(p => {
         result.push({ ...p, isCurrentUser: false });
       });
     }
-
     if (ageRange && (ageRange[0] !== 18 || ageRange[1] !== 99)) {
       return result.filter(p => {
         if (p.isCurrentUser) return true;
@@ -98,15 +92,12 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
         return p.age >= ageRange[0] && p.age <= ageRange[1];
       });
     }
-
     return result;
   }, [stableUser, profiles, ageRange]);
 
-  // Infinite scroll via IntersectionObserver
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && visibleCount < allProfiles.length) {
@@ -115,12 +106,10 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
       },
       { rootMargin: '200px' }
     );
-
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [visibleCount, allProfiles.length]);
 
-  // Reset visible count on filter change
   useEffect(() => {
     setVisibleCount(PROFILES_PER_PAGE);
   }, [ageRange]);
@@ -130,21 +119,21 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
   const totalCount = allProfiles.length;
   const onlineCount = allProfiles.filter(p => !p.isCurrentUser && p.is_online).length;
 
-  // Error state
   if (profilesError && allProfiles.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl bg-card border border-border/50 p-8 text-center"
+        className="rounded-2xl bg-card border border-border/30 p-8 text-center"
       >
-        <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+        <div className="w-14 h-14 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
           <RefreshCw className="w-6 h-6 text-destructive" />
         </div>
-        <h3 className="font-semibold text-foreground mb-2">Impossible de charger</h3>
+        <h3 className="font-bold text-foreground mb-2" style={{ fontFamily: 'Syne, sans-serif' }}>Impossible de charger</h3>
         <p className="text-sm text-muted-foreground mb-5">Vérifie ta connexion et réessaie.</p>
         <Button
           variant="outline"
+          className="rounded-xl border-primary/20 hover:bg-primary/5"
           onClick={() => {
             void requestLocation();
             void refetch();
@@ -157,13 +146,12 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
     );
   }
 
-  // Loading state
   if (profilesLoading && (!profiles || profiles.length === 0)) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Compass className="w-4 h-4 text-primary animate-spin" />
-          <span className="text-sm text-muted-foreground">Recherche de profils…</span>
+          <span className="text-sm text-muted-foreground font-medium">Recherche de profils…</span>
         </div>
         <div className="grid grid-cols-3 gap-2">
           {Array.from({ length: 9 }).map((_, i) => (
@@ -180,14 +168,16 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
-            <Users className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">
+            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Users className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <span className="text-sm font-bold text-foreground">
               {totalCount} membre{totalCount > 1 ? 's' : ''}
             </span>
           </div>
           {onlineCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+            <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-500/10 px-2.5 py-1 rounded-full font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               {onlineCount} en ligne
             </span>
           )}
@@ -199,7 +189,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
             void requestLocation();
             void refetch();
           }}
-          className="text-xs h-8 gap-1.5"
+          className="text-xs h-8 gap-1.5 rounded-xl hover:bg-primary/5 hover:text-primary"
           disabled={profilesLoading}
         >
           <RefreshCw className={cn("w-3.5 h-3.5", profilesLoading && "animate-spin")} />
@@ -207,7 +197,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
         </Button>
       </div>
 
-      {/* Encouragement message */}
+      {/* Geo message */}
       {hasGeoData && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
@@ -236,10 +226,9 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
             ))}
           </div>
 
-          {/* Infinite scroll sentinel */}
           {hasMore && (
             <div ref={sentinelRef} className="flex justify-center py-4">
-              <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+              <Loader2 className="w-5 h-5 text-primary animate-spin" />
             </div>
           )}
         </>
@@ -249,10 +238,10 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
           animate={{ opacity: 1 }}
           className="text-center py-16 rounded-2xl bg-card border border-border/30"
         >
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/10 flex items-center justify-center mx-auto mb-4">
             <MapPin className="w-7 h-7 text-primary" />
           </div>
-          <h3 className="font-semibold text-foreground mb-1">Aucun membre trouvé</h3>
+          <h3 className="font-bold text-foreground mb-1" style={{ fontFamily: 'Syne, sans-serif' }}>Aucun membre trouvé</h3>
           <p className="text-sm text-muted-foreground">Élargis tes filtres pour découvrir plus de profils</p>
         </motion.div>
       )}

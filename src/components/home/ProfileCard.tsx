@@ -38,7 +38,7 @@ const formatDistance = (km: number | null) => {
 const isNewUser = (createdAt?: string) => {
   if (!createdAt) return false;
   const diff = Date.now() - new Date(createdAt).getTime();
-  return diff < 7 * 24 * 60 * 60 * 1000; // 7 days
+  return diff < 7 * 24 * 60 * 60 * 1000;
 };
 
 const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCardProps) => {
@@ -62,11 +62,6 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
     setTimeout(() => setLiked(false), 1200);
   };
 
-  const handleView = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onViewProfile(profile.user_id);
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -78,10 +73,10 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
         onClick={handleClick}
         className={cn(
           "relative w-full aspect-[3/4] rounded-2xl overflow-hidden",
-          "bg-secondary/50 border transition-all duration-200",
+          "bg-card/50 border transition-all duration-200",
           profile.isCurrentUser
-            ? "border-primary/50 ring-2 ring-primary/20 shadow-lg"
-            : "border-border/20 hover:border-primary/30 hover:shadow-md active:scale-[0.98]"
+            ? "border-primary/40 ring-2 ring-primary/20 shadow-lg shadow-primary/10"
+            : "border-border/20 hover:border-primary/25 hover:shadow-md active:scale-[0.98]"
         )}
       >
         {/* Image */}
@@ -89,7 +84,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
           {resolvedAvatar ? (
             <>
               {!imgLoaded && (
-                <div className="absolute inset-0 bg-secondary animate-pulse" />
+                <div className="absolute inset-0 bg-muted animate-pulse" />
               )}
               <img
                 src={resolvedAvatar}
@@ -104,8 +99,8 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
               />
             </>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-              <span className="text-4xl font-bold text-primary/60">
+            <div className="w-full h-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
+              <span className="text-4xl font-black text-primary/40" style={{ fontFamily: 'Syne, sans-serif' }}>
                 {profile.username.charAt(0).toUpperCase()}
               </span>
             </div>
@@ -113,14 +108,14 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
         </div>
 
         {/* Gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent h-16" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-transparent h-16" />
 
-        {/* Top badges row */}
+        {/* Top badges */}
         <div className="absolute top-2 left-2 right-2 flex items-start justify-between z-10">
           <div className="flex flex-col gap-1">
             {profile.isCurrentUser && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold shadow-sm">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground text-[10px] font-bold shadow-sm">
                 <Crown className="w-3 h-3" />
                 Toi
               </span>
@@ -132,14 +127,13 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
               </span>
             )}
             {isNew && !profile.isCurrentUser && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-500/80 backdrop-blur-md text-white text-[10px] font-medium">
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-accent/80 backdrop-blur-md text-primary-foreground text-[10px] font-bold">
                 <Sparkles className="w-2.5 h-2.5" />
                 Nouveau
               </span>
             )}
           </div>
 
-          {/* Online indicator */}
           {!profile.isCurrentUser && (
             <div className="flex items-center">
               {isOnline ? (
@@ -148,13 +142,13 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border border-white/30 shadow-sm" />
                 </span>
               ) : !profile.hide_online_status ? (
-                <span className="w-3 h-3 rounded-full bg-muted-foreground/40 border border-white/20" />
+                <span className="w-3 h-3 rounded-full bg-muted-foreground/30 border border-white/20" />
               ) : null}
             </div>
           )}
         </div>
 
-        {/* Like animation overlay */}
+        {/* Like animation */}
         {liked && (
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
@@ -163,30 +157,30 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
             transition={{ duration: 0.4 }}
             className="absolute inset-0 flex items-center justify-center z-20 bg-primary/10"
           >
-            <Heart className="w-16 h-16 text-red-500 fill-red-500 drop-shadow-lg" />
+            <Heart className="w-16 h-16 text-primary fill-primary drop-shadow-lg" />
           </motion.div>
         )}
 
         {/* Bottom info */}
         <div className="absolute bottom-0 left-0 right-0 p-2.5 z-10">
           <div className="flex items-center gap-1.5">
-            <span className="text-white font-semibold text-sm truncate">
+            <span className="text-white font-bold text-sm truncate">
               {profile.username}
             </span>
             {profile.age && (
-              <span className="text-white/80 text-xs font-medium">{profile.age}</span>
+              <span className="text-white/70 text-xs font-medium">{profile.age}</span>
             )}
             {profile.is_verified && (
-              <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
             )}
           </div>
 
           {profile.isCurrentUser ? (
-            <p className="text-primary-foreground/70 text-[10px] mt-0.5">Voir ton profil</p>
+            <p className="text-primary-foreground/60 text-[10px] mt-0.5 font-medium">Voir ton profil</p>
           ) : (
             <div className="flex items-center gap-1 text-[10px] text-white/50 mt-0.5">
               {isOnline ? (
-                <span className="text-green-400 font-medium">En ligne</span>
+                <span className="text-green-400 font-semibold">En ligne</span>
               ) : (
                 <span>{lastSeen}</span>
               )}
@@ -196,7 +190,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
 
         {/* Hover overlay */}
         {!profile.isCurrentUser && (
-          <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+          <div className="absolute inset-0 bg-primary/8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
         )}
       </button>
     </motion.div>

@@ -13,6 +13,7 @@ import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 const TweenComposer = () => {
   const { user, profile } = useAuth();
+  const resolvedAvatar = useAvatarUrl(profile?.avatar_url);
   const createTween = useCreateTween();
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState('');
@@ -112,7 +113,7 @@ const TweenComposer = () => {
           <div className="relative flex items-center gap-3">
             <div className="relative">
               <Avatar className="w-11 h-11 ring-2 ring-primary/15">
-                <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
+                <AvatarImage src={resolvedAvatar || ''} className="object-cover" />
                 <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
                   {profile?.username?.charAt(0)?.toUpperCase() || '?'}
                 </AvatarFallback>
@@ -142,7 +143,7 @@ const TweenComposer = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
           <div className="relative flex items-center gap-3">
             <Avatar className="w-12 h-12 ring-2 ring-primary/15">
-              <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
+              <AvatarImage src={resolvedAvatar || ''} className="object-cover" />
               <AvatarFallback className="bg-primary/10 text-primary font-bold">
                 {profile?.username?.charAt(0)?.toUpperCase() || '?'}
               </AvatarFallback>

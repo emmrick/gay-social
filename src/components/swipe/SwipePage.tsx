@@ -495,7 +495,7 @@ const LikedProfileCard = ({
         className="relative shrink-0"
       >
         <Avatar className="w-14 h-14 rounded-2xl border-2 border-primary/15 group-hover:border-primary/30 transition-colors">
-          <AvatarImage src={profile.avatar_url || undefined} className="object-cover" />
+          <AvatarImage src={resolvedAvatar || undefined} className="object-cover" />
           <AvatarFallback className="rounded-2xl bg-primary/10 text-primary font-black text-lg">
             {profile.username.charAt(0).toUpperCase()}
           </AvatarFallback>

@@ -13,11 +13,12 @@ const avatarCache = new Map<string, { url: string; expiresAt: number }>();
 function extractAvatarPath(avatarUrl: string): string | null {
   if (!avatarUrl) return null;
 
-  // Already a signed URL — use as-is
-  if (avatarUrl.includes('/storage/v1/object/sign/')) return null;
-
   // Strip query params before extracting path
   const cleanUrl = avatarUrl.split('?')[0];
+
+  // Signed URL — extract path so we can re-sign it (tokens expire)
+  const signedMatch = cleanUrl.match(/\/storage\/v1\/object\/sign\/avatars\/(.+)/);
+  if (signedMatch) return signedMatch[1];
 
   // Full public URL: extract path after bucket name
   const publicMatch = cleanUrl.match(/\/storage\/v1\/object\/public\/avatars\/(.+)/);

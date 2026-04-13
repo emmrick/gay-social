@@ -37,7 +37,7 @@ const useDetailedStats = () => {
         countQuery('profiles'),
         countQuery('profiles', { is_online: true }),
         countQuery('profiles', { is_verified: true }),
-        countQuery('profiles', undefined, { col: 'created_at', val: startOfToday }),
+        countQuery('credit_transactions'),
         countQuery('messages'),
         countQuery('messages', undefined, { col: 'created_at', val: weekAgo }),
         countQuery('messages', undefined, { col: 'created_at', val: startOfToday }),

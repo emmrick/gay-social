@@ -114,7 +114,9 @@ export const useProfilePhotos = (userId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile-photos', user?.id] });
-      toast.success('Photo ajoutée !');
+      toast.success('Photo ajoutée ! Elle sera visible publiquement après validation par notre équipe.', {
+        duration: 5000,
+      });
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Erreur lors de l\'upload');

@@ -77,6 +77,7 @@ const EphemeralMediaViewer = ({
   totalItems,
   currentItemIndex,
 }: EphemeralMediaViewerProps) => {
+  const resolvedAvatar = useAvatarUrl(senderAvatar);
   const isUnlimited = duration === 0;
   const [isViewing, setIsViewing] = useState(autoStart);
   const [timeLeft, setTimeLeft] = useState(isUnlimited ? -1 : duration);
@@ -352,9 +353,13 @@ const EphemeralMediaViewer = ({
                 </motion.div>
 
                 <div className="flex items-center justify-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-muted flex items-center justify-center text-foreground font-bold text-lg">
-                    {senderName.charAt(0).toUpperCase()}
-                  </div>
+                  {resolvedAvatar ? (
+                    <img src={resolvedAvatar} alt={senderName} className="w-10 h-10 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-muted flex items-center justify-center text-foreground font-bold text-lg">
+                      {senderName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <span className="font-medium text-foreground">{senderName}</span>
                 </div>
 
@@ -470,9 +475,13 @@ const EphemeralMediaViewer = ({
               <div className="absolute top-4 left-0 right-0 pt-4 pb-4 px-4 z-10">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold shadow-lg">
-                      {senderName.charAt(0).toUpperCase()}
-                    </div>
+                    {resolvedAvatar ? (
+                      <img src={resolvedAvatar} alt={senderName} className="w-10 h-10 rounded-full object-cover shadow-lg" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold shadow-lg">
+                        {senderName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <div>
                       <span className="font-semibold text-white text-sm block">{senderName}</span>
                       <span className="text-white/50 text-xs">

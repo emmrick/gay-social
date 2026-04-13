@@ -178,7 +178,7 @@ const MemberProfile = () => {
         const { error } = await supabase.from('private_conversations').insert({ user1_id: user.id, user2_id: userId });
         if (error) throw error;
       }
-      navigate('/', { state: { openPrivateChat: userId } });
+      navigate(`/messages/${userId}`);
     } catch (error) {
       console.error('Error starting chat:', error);
       toastHook({ title: 'Erreur', description: 'Impossible de démarrer la conversation', variant: 'destructive' });

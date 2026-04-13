@@ -885,16 +885,41 @@ const Help = ({ embedded = false }: HelpProps) => {
                       <Bot className="w-3.5 h-3.5 text-primary" />
                     </div>
                   )}
-                  <div className={cn(
-                    "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
-                    msg.type === 'user'
-                      ? "bg-primary text-primary-foreground rounded-br-md shadow-primary/10"
-                      : "bg-card/80 backdrop-blur-sm border border-border/50 text-foreground rounded-bl-md"
-                  )}>
-                    <p className="whitespace-pre-line">
-                      <BoldText text={msg.isTyping ? msg.text.slice(0, msg.revealedLength || 0) : msg.text} />
-                      {msg.isTyping && <span className="inline-block w-0.5 h-4 bg-foreground/70 animate-pulse ml-0.5 align-text-bottom" />}
-                    </p>
+                  <div className="max-w-[80%]">
+                    <div className={cn(
+                      "rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
+                      msg.type === 'user'
+                        ? "bg-primary text-primary-foreground rounded-br-md shadow-primary/10"
+                        : "bg-card/80 backdrop-blur-sm border border-border/50 text-foreground rounded-bl-md"
+                    )}>
+                      <p className="whitespace-pre-line">
+                        <BoldText text={msg.isTyping ? msg.text.slice(0, msg.revealedLength || 0) : msg.text} />
+                        {msg.isTyping && <span className="inline-block w-0.5 h-4 bg-foreground/70 animate-pulse ml-0.5 align-text-bottom" />}
+                      </p>
+                    </div>
+                    {/* Credit claim button */}
+                    {msg.action === 'credit_claim' && !msg.isTyping && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="mt-2"
+                      >
+                        <Button
+                          onClick={handleCreditClaim}
+                          disabled={isClaimingCredits}
+                          className="w-full gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md"
+                          size="sm"
+                        >
+                          {isClaimingCredits ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Gift className="w-4 h-4" />
+                          )}
+                          {isClaimingCredits ? 'Attribution en cours...' : '🎁 Réclamer 5 crédits bonus'}
+                        </Button>
+                      </motion.div>
+                    )}
                   </div>
                 </>
               )}

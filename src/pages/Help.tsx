@@ -830,10 +830,10 @@ const Help = ({ embedded = false }: HelpProps) => {
               animate={{ opacity: 1, y: 0 }}
               className="flex items-end gap-2 justify-start"
             >
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-0.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center shrink-0 mb-0.5">
                 <Bot className="w-3.5 h-3.5 text-primary" />
               </div>
-              <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+              <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl rounded-bl-md px-4 py-3">
                 <div className="flex gap-1.5 items-center">
                   <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '0ms' }} />
                   <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '150ms' }} />

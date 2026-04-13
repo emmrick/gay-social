@@ -26,12 +26,9 @@ import {
   startMissionRefuseCooldown,
 } from '@/hooks/useModerationTaskQueue';
 import { useQueryClient } from '@tanstack/react-query';
+import { playMissionSound, playAcceptSound } from '@/utils/missionAudio';
 
 const OFFER_TTL_SECONDS = 60;
-
-// ── Audio (same as TaskQueuePopup) ──
-let missionAudioCtx: AudioContext | null = null;
-let audioUnlocked = false;
 
 const unlockAudio = () => {
   if (audioUnlocked) return;

@@ -26,16 +26,16 @@ const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionL
   const resolvedAvatar = useAvatarUrl(profile.avatar_url);
 
   return (
-    <div className="relative">
-      {/* Background gradient header with mesh */}
-      <div className="h-40 bg-gradient-to-br from-primary via-accent/80 to-primary/60 relative overflow-hidden">
+    <div className="relative pb-4">
+      {/* Background gradient header with rounded bottom */}
+      <div className="h-48 bg-gradient-to-br from-primary via-accent/80 to-primary/60 relative overflow-hidden rounded-b-[2rem]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_80%,hsl(var(--primary)/0.5),transparent_60%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_85%_20%,hsl(var(--accent)/0.4),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--background)/0.3),transparent_70%)]" />
         
         {/* Floating geometric shapes */}
         <div className="absolute top-6 right-12 w-20 h-20 rounded-full border border-white/10 animate-pulse" />
-        <div className="absolute bottom-4 left-8 w-12 h-12 rounded-lg border border-white/10 rotate-45" />
+        <div className="absolute bottom-8 left-8 w-12 h-12 rounded-lg border border-white/10 rotate-45" />
 
         {/* Settings button */}
         <div className="absolute top-3 right-3 z-20">
@@ -54,18 +54,19 @@ const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionL
         )}
       </div>
 
-      {/* Profile card overlapping the gradient */}
-      <div className="px-4 -mt-20 relative z-10">
+      {/* Profile card — floating overlay between gradient and content */}
+      <div className="px-4 -mt-24 relative z-10">
         <motion.div
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="bg-card/80 backdrop-blur-xl rounded-3xl border border-border/40 shadow-[0_8px_32px_hsl(var(--primary)/0.08)] p-5 pb-4"
+          transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+          className="bg-card rounded-3xl border border-border/50 shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15),0_4px_16px_-4px_hsl(0_0%_0%/0.08)] p-5 pb-4"
         >
           <div className="flex gap-4 items-start">
-            {/* Avatar with gradient border */}
-            <div className="relative flex-shrink-0 -mt-14">
-              <div className="p-[3px] rounded-2xl bg-gradient-to-br from-primary via-accent to-primary shadow-[0_4px_20px_hsl(var(--primary)/0.3)]">
-                <Avatar className="w-[88px] h-[88px] rounded-xl border-[3px] border-card">
+            {/* Avatar — pops above the card */}
+            <div className="relative flex-shrink-0 -mt-16">
+              <div className="p-[3px] rounded-2xl bg-gradient-to-br from-primary via-accent to-primary shadow-[0_6px_24px_hsl(var(--primary)/0.35)]">
+                <Avatar className="w-[92px] h-[92px] rounded-xl border-[3px] border-card">
                   <AvatarImage src={resolvedAvatar || undefined} className="object-cover rounded-xl" />
                   <AvatarFallback className="text-3xl bg-gradient-to-br from-primary to-accent text-primary-foreground font-display font-bold rounded-xl">
                     {profile.username.charAt(0).toUpperCase()}
@@ -144,7 +145,7 @@ const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionL
 
           {/* Bio */}
           {profile.bio && (
-            <p className="text-sm text-muted-foreground mt-3.5 leading-relaxed bg-secondary/40 backdrop-blur-sm rounded-xl px-3.5 py-2.5 border border-border/30">
+            <p className="text-sm text-muted-foreground mt-3.5 leading-relaxed bg-secondary/40 rounded-xl px-3.5 py-2.5 border border-border/30">
               {profile.bio}
             </p>
           )}

@@ -4498,6 +4498,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_manage_credits: { Args: { _user_id: string }; Returns: boolean }
       check_stale_tasks_send_sms: { Args: never; Returns: undefined }
       check_sufficient_credits: {
         Args: { _amount: number; _user_id: string }

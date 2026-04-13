@@ -24,6 +24,17 @@ const MatchPopup = memo(({ isOpen, onClose, onSendMessage, myAvatar, matchAvatar
           className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
           onClick={onClose}
         >
+          {/* Radial glow background */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 0.4, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(circle at 50% 40%, hsl(var(--primary) / 0.3) 0%, transparent 60%)',
+            }}
+          />
+
           <motion.div
             initial={{ scale: 0.5, opacity: 0, y: 40 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -48,8 +59,8 @@ const MatchPopup = memo(({ isOpen, onClose, onSendMessage, myAvatar, matchAvatar
                 transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
                 className="mb-6"
               >
-                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-[0_0_60px_rgba(244,63,94,0.4)]">
-                  <Heart className="w-10 h-10 text-white" fill="white" />
+                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-[0_0_60px_hsl(var(--primary)/0.4)]">
+                  <Heart className="w-10 h-10 text-primary-foreground" fill="currentColor" />
                 </div>
               </motion.div>
 
@@ -59,6 +70,7 @@ const MatchPopup = memo(({ isOpen, onClose, onSendMessage, myAvatar, matchAvatar
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
                 className="text-3xl font-black text-white mb-2 tracking-tight"
+                style={{ fontFamily: 'Syne, sans-serif' }}
               >
                 C'est un Match !
               </motion.h2>
@@ -78,7 +90,7 @@ const MatchPopup = memo(({ isOpen, onClose, onSendMessage, myAvatar, matchAvatar
                 transition={{ delay: 0.3 }}
                 className="flex items-center justify-center gap-4 mb-8"
               >
-                <Avatar className="w-20 h-20 border-4 border-pink-500/50 shadow-lg">
+                <Avatar className="w-20 h-20 border-4 border-primary/50 shadow-lg shadow-primary/20">
                   <AvatarImage src={myAvatar || undefined} className="object-cover" />
                   <AvatarFallback className="bg-primary/20 text-primary text-xl font-bold">Moi</AvatarFallback>
                 </Avatar>
@@ -86,9 +98,9 @@ const MatchPopup = memo(({ isOpen, onClose, onSendMessage, myAvatar, matchAvatar
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
-                  <Heart className="w-8 h-8 text-pink-500" fill="currentColor" />
+                  <Heart className="w-8 h-8 text-primary" fill="currentColor" />
                 </motion.div>
-                <Avatar className="w-20 h-20 border-4 border-pink-500/50 shadow-lg">
+                <Avatar className="w-20 h-20 border-4 border-primary/50 shadow-lg shadow-primary/20">
                   <AvatarImage src={matchAvatar || undefined} className="object-cover" />
                   <AvatarFallback className="bg-primary/20 text-primary text-xl font-bold">
                     {matchUsername.charAt(0).toUpperCase()}
@@ -105,7 +117,7 @@ const MatchPopup = memo(({ isOpen, onClose, onSendMessage, myAvatar, matchAvatar
               >
                 <Button
                   onClick={onSendMessage}
-                  className="w-full h-12 rounded-2xl text-sm font-bold gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-lg shadow-pink-500/25"
+                  className="w-full h-12 rounded-2xl text-sm font-bold gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/25"
                 >
                   <MessageCircle className="w-4 h-4" />
                   Envoyer un message

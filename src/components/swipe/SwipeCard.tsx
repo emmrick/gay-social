@@ -161,7 +161,7 @@ const SwipeCard = memo(({ profile, onSwipe, isTop, stackIndex, onViewProfile }: 
       }
     >
       <div 
-        className="relative w-full max-w-[420px] h-full rounded-[28px] overflow-hidden shadow-[0_8px_40px_-8px_rgba(0,0,0,0.35)]"
+        className="relative w-full max-w-[420px] h-full rounded-[28px] overflow-hidden shadow-[0_8px_40px_-8px_rgba(0,0,0,0.35)] border border-border/10"
         onClick={handlePhotoTap}
       >
         {/* Photos */}
@@ -182,28 +182,32 @@ const SwipeCard = memo(({ profile, onSwipe, isTop, stackIndex, onViewProfile }: 
               ))}
             </>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/30 via-accent/20 to-secondary flex items-center justify-center">
-              <span className="text-[120px] font-black text-primary/15 select-none">
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/15 to-secondary flex items-center justify-center">
+              <span className="text-[120px] font-black text-primary/15 select-none" style={{ fontFamily: 'Syne, sans-serif' }}>
                 {profile.username.charAt(0).toUpperCase()}
               </span>
             </div>
           )}
           
           {/* Cinematic gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 via-50% to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 via-50% to-black/5" />
         </div>
 
-        {/* Photo progress dots */}
+        {/* Photo progress bar */}
         {photos.length > 1 && (
           <div className="absolute top-3 left-3 right-3 z-30 flex gap-1">
             {photos.map((_, i) => (
               <div
                 key={i}
-                className={cn(
-                  "flex-1 h-[3px] rounded-full transition-all duration-300",
-                  i === currentPhotoIndex ? "bg-white" : "bg-white/30"
-                )}
-              />
+                className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20"
+              >
+                <motion.div
+                  className="h-full rounded-full bg-white"
+                  initial={false}
+                  animate={{ width: i === currentPhotoIndex ? '100%' : i < currentPhotoIndex ? '100%' : '0%' }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
             ))}
           </div>
         )}
@@ -211,15 +215,15 @@ const SwipeCard = memo(({ profile, onSwipe, isTop, stackIndex, onViewProfile }: 
         {/* Top badges */}
         <div className="absolute top-8 left-4 right-4 z-20 flex items-center gap-2">
           {profile.is_verified && (
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/25 backdrop-blur-xl border border-primary/30">
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/20 backdrop-blur-xl border border-primary/30">
               <ShieldCheck className="w-3 h-3 text-primary" />
               <span className="text-[10px] font-bold text-primary uppercase tracking-wide">Vérifié</span>
             </div>
           )}
           {profile._isBoosted && (
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/25 backdrop-blur-xl border border-amber-400/30">
-              <Rocket className="w-3 h-3 text-amber-400" />
-              <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wide">Boost</span>
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/20 backdrop-blur-xl border border-accent/30">
+              <Rocket className="w-3 h-3 text-accent" />
+              <span className="text-[10px] font-bold text-accent uppercase tracking-wide">Boost</span>
             </div>
           )}
           <div className="ml-auto">
@@ -251,39 +255,39 @@ const SwipeCard = memo(({ profile, onSwipe, isTop, stackIndex, onViewProfile }: 
 
         {/* Swipe indicators */}
         <motion.div
-          className="absolute top-24 left-6 z-30 px-5 py-2.5 rounded-2xl bg-destructive/30 backdrop-blur-xl border-2 border-destructive/50 -rotate-12"
+          className="absolute top-24 left-6 z-30 px-5 py-2.5 rounded-2xl bg-destructive/25 backdrop-blur-xl border-2 border-destructive/40 -rotate-12"
           style={{ opacity: nopeOpacity, scale: nopeScale }}
         >
           <div className="flex items-center gap-2">
             <X className="w-6 h-6 text-destructive" strokeWidth={3} />
-            <span className="text-destructive font-black text-xl tracking-[0.2em]">NOPE</span>
+            <span className="text-destructive font-black text-xl tracking-[0.2em]" style={{ fontFamily: 'Syne, sans-serif' }}>NOPE</span>
           </div>
         </motion.div>
 
         <motion.div
-          className="absolute top-24 right-6 z-30 px-5 py-2.5 rounded-2xl bg-green-500/30 backdrop-blur-xl border-2 border-green-400/50 rotate-12"
+          className="absolute top-24 right-6 z-30 px-5 py-2.5 rounded-2xl bg-primary/25 backdrop-blur-xl border-2 border-primary/40 rotate-12"
           style={{ opacity: likeOpacity, scale: likeScale }}
         >
           <div className="flex items-center gap-2">
-            <Heart className="w-6 h-6 text-green-400" fill="currentColor" />
-            <span className="text-green-300 font-black text-xl tracking-[0.2em]">LIKE</span>
+            <Heart className="w-6 h-6 text-primary" fill="currentColor" />
+            <span className="text-primary font-black text-xl tracking-[0.2em]" style={{ fontFamily: 'Syne, sans-serif' }}>LIKE</span>
           </div>
         </motion.div>
 
         <motion.div
-          className="absolute top-1/3 left-1/2 -translate-x-1/2 z-30 px-5 py-2.5 rounded-2xl bg-purple-500/30 backdrop-blur-xl border-2 border-purple-400/50"
+          className="absolute top-1/3 left-1/2 -translate-x-1/2 z-30 px-5 py-2.5 rounded-2xl bg-muted/25 backdrop-blur-xl border-2 border-muted-foreground/30"
           style={{ opacity: hideOpacity, scale: hideScale }}
         >
           <div className="flex items-center gap-2">
-            <EyeOff className="w-6 h-6 text-purple-400" />
-            <span className="text-purple-300 font-black text-xl tracking-[0.2em]">MASQUER</span>
+            <EyeOff className="w-6 h-6 text-muted-foreground" />
+            <span className="text-muted-foreground font-black text-xl tracking-[0.2em]" style={{ fontFamily: 'Syne, sans-serif' }}>MASQUER</span>
           </div>
         </motion.div>
 
         {/* Bottom profile info */}
         <div className="absolute bottom-0 left-0 right-0 z-10 p-5 pb-6">
           <div className="flex items-baseline gap-2.5 mb-1.5">
-            <h2 className="text-2xl font-black text-white leading-none tracking-tight">
+            <h2 className="text-2xl font-black text-white leading-none tracking-tight" style={{ fontFamily: 'Syne, sans-serif' }}>
               {profile.username}
             </h2>
             {profile.age && (
@@ -301,7 +305,7 @@ const SwipeCard = memo(({ profile, onSwipe, isTop, stackIndex, onViewProfile }: 
               {infoPills.map((pill, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 backdrop-blur-xl text-white/85 text-xs font-medium border border-white/5"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 backdrop-blur-xl text-white/85 text-xs font-medium border border-white/10"
                 >
                   {pill.icon && <span className="opacity-60">{pill.icon}</span>}
                   {pill.label}
@@ -319,7 +323,7 @@ const SwipeCard = memo(({ profile, onSwipe, isTop, stackIndex, onViewProfile }: 
               {profile.looking_for.slice(0, 3).map((item) => (
                 <span
                   key={item}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-white/80 text-[11px] font-semibold border border-primary/20 backdrop-blur-xl"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/20 text-white/80 text-[11px] font-semibold border border-primary/25 backdrop-blur-xl"
                 >
                   <Flame className="w-2.5 h-2.5 text-primary" />
                   {LOOKING_FOR_LABELS[item] || item}

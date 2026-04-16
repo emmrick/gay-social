@@ -1036,6 +1036,14 @@ const ActionsSection = ({ userId, blockedStatus, queryClient, verification, tick
           </p>
         </CardContent>
       </Card>
+
+      {/* Send Email Dialog */}
+      <SendEmailDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        userId={userId}
+        username={profile?.username}
+      />
     </div>
   );
 };

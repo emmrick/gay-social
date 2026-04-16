@@ -61,6 +61,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import UserProfileDialog from './UserProfileDialog';
 import ClientDossierPanel from './ClientDossierPanel';
+import SendEmailDialog from './SendEmailDialog';
 import {
   useSuspendUser,
   useBlockUser,
@@ -670,6 +671,7 @@ const UserCard = ({
   onOpenDossier: (userId: string) => void;
 }) => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const { data: isBlocked } = useIsUserBlocked(user.user_id);
   const { data: verificationStatus } = useUserVerificationStatus(user.user_id);
   const manualVerification = useManualVerification();
@@ -813,6 +815,10 @@ const UserCard = ({
                 <DropdownMenuItem onClick={() => setProfileDialogOpen(true)}>
                   <Eye className="w-4 h-4 mr-2" />
                   Voir le profil
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setEmailDialogOpen(true)}>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Envoyer un email
                 </DropdownMenuItem>
                 
                 {/* Verification actions */}

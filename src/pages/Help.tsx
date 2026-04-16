@@ -1118,6 +1118,9 @@ const Help = ({ embedded = false }: HelpProps) => {
                     tween: <Sparkles className="w-3.5 h-3.5" />,
                     group: <Users className="w-3.5 h-3.5" />,
                     ephemeral: <Zap className="w-3.5 h-3.5" />,
+                    settings: <Settings className="w-3.5 h-3.5" />,
+                    couple: <Heart className="w-3.5 h-3.5" />,
+                    rocket: <Sparkles className="w-3.5 h-3.5" />,
                   };
                   return (
                     <motion.button

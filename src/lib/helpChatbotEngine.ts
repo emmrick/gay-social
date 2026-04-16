@@ -426,6 +426,138 @@ export const STATIC_KNOWLEDGE: StaticKnowledge[] = [
     keywords: ['aide', 'help', 'faq', 'centre aide', 'information', 'documentation'],
     link: '/aide',
   },
+
+  // ═══════════════════════════════════════════════════════
+  // NOTIFICATIONS
+  // ═══════════════════════════════════════════════════════
+  {
+    id: 'static-notifications',
+    category: 'Notifications',
+    question: 'Comment gérer les notifications ?',
+    answer: "Les **notifications** vous tiennent informé de l'activité sur votre compte :\n\n🔔 **Types de notifications** :\n• **Messages privés** reçus\n• **Mentions** dans les groupes\n• **Réactions** sur votre profil\n• **Visites** de profil\n• **Matches** Swipe\n• **Partages d'albums**\n• **Crédits** reçus / promo\n• **Vérification** d'identité (résultat)\n• **Annonces** officielles\n\n⚙️ **Configurer** :\n1. Allez dans **Profil → Paramètres → Notifications**\n2. Activez/désactivez chaque type indépendamment\n3. Choisissez un **son personnalisé**\n4. Activez/désactivez le son global\n\n📱 Sur mobile, autorisez les **notifications push** pour ne rien manquer.",
+    keywords: ['notification', 'notifications', 'alerte', 'son', 'push', 'silencieux', 'desactiver', 'activer notification', 'sonnerie'],
+    link: '/profile',
+  },
+  {
+    id: 'static-notifications-mute',
+    category: 'Notifications',
+    question: 'Comment mettre une conversation ou un groupe en sourdine ?',
+    answer: "Pour **mettre en sourdine** :\n\n💬 **Conversation privée** :\n• Ouvrez la conversation\n• Cliquez sur le **menu ⋮**\n• Sélectionnez **Mettre en sourdine**\n\n👥 **Groupe / Salon** :\n• Ouvrez le groupe\n• Menu ⋮ → **Mettre en sourdine**\n• Vous restez membre, mais ne recevez plus de notifications\n\n🔕 Vous pouvez **réactiver** les notifications à tout moment depuis le même menu.",
+    keywords: ['sourdine', 'silencieux', 'muet', 'mute', 'silence', 'desactiver notification', 'pas notification'],
+    link: '/messages',
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // PARAMÈTRES & PROFIL
+  // ═══════════════════════════════════════════════════════
+  {
+    id: 'static-edit-profile',
+    category: 'Compte & Profil',
+    question: 'Comment modifier mon profil ?',
+    answer: "Pour **modifier votre profil** :\n\n1. Allez sur la page **Profil**\n2. Cliquez sur **Modifier le profil**\n3. Vous pouvez changer :\n   • **Pseudo** / nom affiché\n   • **Bio** (description personnelle)\n   • **Âge**, **taille**, **poids**, **morphologie**\n   • **Préférences** (rôle, recherche, etc.)\n   • **Région** (département)\n   • **Photo de profil** (soumise à approbation)\n\n💾 N'oubliez pas de **sauvegarder** vos modifications.\n\n⏳ Les nouvelles photos sont **vérifiées** par la modération avant publication.",
+    keywords: ['modifier', 'editer', 'changer', 'profil', 'bio', 'pseudo', 'description', 'age', 'taille', 'preferences', 'mettre a jour'],
+    link: '/profile',
+  },
+  {
+    id: 'static-settings',
+    category: 'Compte & Profil',
+    question: 'Où sont les paramètres de mon compte ?',
+    answer: "Les **paramètres** se trouvent dans votre profil :\n\n1. Allez sur **Profil**\n2. Cliquez sur l'icône **⚙️ Paramètres**\n\n📑 **Sections disponibles** :\n• **Compte** — Email, mot de passe, langue\n• **Notifications** — Push, sons, types\n• **Sécurité** — Code PIN, biométrie, sessions\n• **Confidentialité** — Filtres d'âge des contacts, blocages\n• **ChatBot personnel** — Configuration du bot\n• **Compte couple** — Inviter un partenaire\n• **Données personnelles** — Export RGPD, suppression\n\n💡 La navigation est fluide avec un bouton **Retour** en haut.",
+    keywords: ['parametres', 'reglages', 'options', 'settings', 'configuration', 'preferences compte'],
+    link: '/profile',
+  },
+  {
+    id: 'static-password-change',
+    category: 'Compte & Profil',
+    question: 'Comment changer mon mot de passe ?',
+    answer: "Pour **changer votre mot de passe** :\n\n1. **Profil → Paramètres → Compte**\n2. Cliquez sur **Modifier le mot de passe**\n3. Saisissez votre **mot de passe actuel**\n4. Entrez le **nouveau mot de passe** (min. 8 caractères)\n5. **Confirmez** et validez\n\n🔐 **Conseils sécurité** :\n• Utilisez au moins **8 caractères**\n• Mélangez majuscules, chiffres et symboles\n• Ne réutilisez **jamais** un mot de passe existant\n• Activez le **PIN** ou la **biométrie** en complément",
+    keywords: ['mot de passe', 'password', 'changer', 'modifier', 'oublie', 'reinitialiser', 'nouveau mdp'],
+    link: '/profile',
+  },
+  {
+    id: 'static-blocked-users',
+    category: 'Sécurité',
+    question: "Comment gérer les utilisateurs bloqués ?",
+    answer: "Pour **bloquer ou débloquer** un utilisateur :\n\n🚫 **Bloquer** :\n• Allez sur le profil concerné\n• Menu ⋮ → **Bloquer**\n• L'utilisateur ne peut plus vous contacter ni voir votre profil\n\n✅ **Débloquer** :\n• Profil → **Paramètres → Confidentialité → Utilisateurs bloqués**\n• Cliquez sur **Débloquer** à côté du pseudo\n\nℹ️ Les **administrateurs et modérateurs** ne peuvent pas être bloqués.",
+    keywords: ['bloquer', 'bloque', 'debloquer', 'blocage', 'liste noire', 'banni', 'ignorer'],
+    link: '/profile',
+  },
+  {
+    id: 'static-contact-age-filter',
+    category: 'Sécurité',
+    question: "Comment filtrer les contacts par âge ?",
+    answer: "Vous pouvez **restreindre les messages** aux personnes d'une tranche d'âge :\n\n1. **Profil → Paramètres → Confidentialité**\n2. **Filtre d'âge des contacts**\n3. Définissez l'**âge minimum** et **maximum** (18-99)\n4. Activez le filtre\n\n🛡️ Les messages des utilisateurs hors tranche seront **bloqués automatiquement**.\n\n💡 Vous pouvez ajouter des **exceptions** pour autoriser certains profils malgré le filtre.",
+    keywords: ['filtre age', 'age contact', 'restriction', 'limiter age', 'tranche age', 'jeune', 'vieux'],
+    link: '/profile',
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // PROBLÈMES TECHNIQUES
+  // ═══════════════════════════════════════════════════════
+  {
+    id: 'static-tech-issue',
+    category: 'Aide technique',
+    question: "J'ai un bug ou un problème technique, que faire ?",
+    answer: "En cas de **problème technique** :\n\n🔄 **Premiers réflexes** :\n1. **Rafraîchissez** la page (F5 ou tirez vers le bas sur mobile)\n2. **Videz le cache** du navigateur\n3. Vérifiez votre **connexion internet**\n4. **Déconnectez-vous** et reconnectez-vous\n5. Essayez un autre navigateur (Chrome, Safari, Firefox)\n\n📱 **Sur mobile** :\n• Fermez complètement l'application\n• Vérifiez les mises à jour disponibles\n• Redémarrez votre téléphone\n\n👤 Si le problème persiste, **contactez un agent** en tapant « agent » dans le chat.",
+    keywords: ['bug', 'probleme', 'erreur', 'plante', 'marche pas', 'fonctionne pas', 'lent', 'lenteur', 'technique', 'panne'],
+  },
+  {
+    id: 'static-login-issue',
+    category: 'Aide technique',
+    question: "Je n'arrive pas à me connecter, que faire ?",
+    answer: "Si vous ne parvenez pas à **vous connecter** :\n\n🔐 **Vérifications** :\n• Vérifiez votre **email** et **mot de passe**\n• Assurez-vous que l'email est **confirmé** (vérifiez vos spams)\n• Cliquez sur **Mot de passe oublié** pour réinitialiser\n\n⏳ Si votre compte a été **suspendu** ou **banni**, vous serez informé du motif lors de la connexion.\n\n🚫 Si l'app est en **mode maintenance**, seuls les administrateurs peuvent se connecter.\n\n👤 Pour toute autre situation, contactez un **agent**.",
+    keywords: ['connexion', 'connecter', 'login', 'login', 'mot de passe oublie', 'pas connecter', 'email', 'reset', 'reinitialiser'],
+  },
+  {
+    id: 'static-maintenance',
+    category: 'Aide technique',
+    question: "Pourquoi l'application est-elle en maintenance ?",
+    answer: "Le **mode maintenance** est activé temporairement par l'équipe pour :\n\n🛠️ **Raisons** :\n• Mise à jour majeure du site\n• Correction d'un bug critique\n• Migration ou amélioration des serveurs\n\n⏱️ La durée est généralement **courte** (quelques minutes à 1 heure max).\n\n📢 Un **message** s'affiche avec une **estimation** de la durée. Revenez plus tard ou consultez le **canal d'annonces** pour les nouvelles.",
+    keywords: ['maintenance', 'fermeture', 'indisponible', 'down', 'arret', 'maintenance mode', 'plus accessible'],
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // COMPTE COUPLE & PARRAINAGE
+  // ═══════════════════════════════════════════════════════
+  {
+    id: 'static-couple-account',
+    category: 'Fonctionnalités',
+    question: 'Comment fonctionne le compte couple ?',
+    answer: "Le **compte couple** permet à deux personnes de partager **un seul compte** :\n\n💑 **Principe** :\n• Un seul **email/login** partagé\n• Profils individuels conservés (chacun garde son identité)\n• Possibilité de **partager les conversations** ou non\n• Historique d'activité de chaque membre\n\n🔧 **Activer** :\n1. **Profil → Paramètres → Compte couple**\n2. Cliquez sur **Inviter mon partenaire**\n3. Partagez le **code d'invitation** ou envoyez par email\n4. Votre partenaire accepte → le compte est lié\n\n💡 Vous pouvez **dissocier** le couple à tout moment.",
+    keywords: ['couple', 'partenaire', 'compte couple', 'binome', 'partager compte', 'duo', 'conjoint'],
+    link: '/profile',
+  },
+  {
+    id: 'static-referral',
+    category: 'Crédits & Paiements',
+    question: 'Comment fonctionne le parrainage ?',
+    answer: "Le **parrainage** vous permet de gagner des crédits gratuitement :\n\n🎁 **Récompenses** :\n• **30 crédits** pour le parrain\n• **30 crédits** pour le filleul\n\n📨 **Comment parrainer** :\n1. Allez dans **Profil → Parrainage**\n2. Copiez votre **lien de parrainage** unique\n3. Partagez-le par WhatsApp, SMS, email...\n4. Quand le filleul **s'inscrit et active son compte**, vous recevez tous les deux la récompense\n\n📊 Suivez vos **statistiques** de parrainage : nombre de filleuls, crédits gagnés, etc.",
+    keywords: ['parrainage', 'parrain', 'filleul', 'inviter', 'recommander', 'lien', 'partage', 'gagner credits'],
+    link: '/profile',
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // BOOST DE PROFIL
+  // ═══════════════════════════════════════════════════════
+  {
+    id: 'static-boost',
+    category: 'Fonctionnalités',
+    question: "Comment booster mon profil ?",
+    answer: "Le **Boost de profil** augmente votre visibilité sur la page Swipe pendant **24 heures** :\n\n🚀 **Activer** :\n1. Allez sur votre **Profil**\n2. Cliquez sur **Booster mon profil**\n3. Confirmez (coût en crédits)\n\n⭐ **Avantages** :\n• Profil affiché en **priorité** dans la pile de Swipe\n• **Badge Boost** visible sur votre carte\n• Plus de **vues** et de **likes**\n• Statistiques en temps réel\n\n⏱️ Effet **immédiat**, pendant **24h**.",
+    keywords: ['boost', 'booster', 'visibilite', 'mise en avant', 'priorite', 'top', 'visible', 'augmenter vues'],
+    link: '/profile',
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // CONTACTER UN AGENT
+  // ═══════════════════════════════════════════════════════
+  {
+    id: 'static-contact-agent',
+    category: 'Général',
+    question: 'Comment contacter un agent humain ?',
+    answer: "Si le chatbot ne répond pas à votre question, contactez un **agent humain** :\n\n👤 **Tapez simplement** : « **agent** », « **humain** », « **conseiller** » ou « **support** » dans le chat\n\n📋 **Procédure** :\n• Le chatbot vous met en **file d'attente**\n• Un **délai estimé** vous est communiqué\n• Un agent vous répond dès que possible\n• L'historique de votre conversation est **conservé**\n\n⏱️ Les agents sont disponibles **7j/7**, avec une réactivité accrue aux **heures de pointe** (19h-23h).",
+    keywords: ['agent', 'humain', 'conseiller', 'support', 'contacter', 'parler quelquun', 'aide humaine', 'service client', 'sav'],
+  },
 ];
 
 // ─── Normalisation ───────────────────────────────────────────────────

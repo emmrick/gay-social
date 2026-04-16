@@ -23,7 +23,7 @@ export interface ChatbotTopic {
   /** Sidebar/grid label */
   label: string;
   /** Lucide icon name (rendered in Help.tsx) */
-  icon: 'home' | 'message' | 'heart' | 'credit' | 'verify' | 'image' | 'lock' | 'bug' | 'profile' | 'bell' | 'tween' | 'group' | 'ephemeral';
+  icon: 'home' | 'message' | 'heart' | 'credit' | 'verify' | 'image' | 'lock' | 'bug' | 'profile' | 'bell' | 'tween' | 'group' | 'ephemeral' | 'settings' | 'couple' | 'rocket';
   /** Primary entry shown as the headline answer when topic is opened */
   primaryEntryId: string;
   /** Curated clickable follow-ups */
@@ -52,6 +52,8 @@ export const CHATBOT_TOPICS: ChatbotTopic[] = [
       { emoji: '⚡', label: 'Médias éphémères', entryId: 'static-ephemeral' },
       { emoji: '👥', label: 'Groupes de discussion', entryId: 'static-groups' },
       { emoji: '📦', label: 'Archiver une conversation', entryId: 'static-archives' },
+      { emoji: '🔕', label: 'Mettre en sourdine', entryId: 'static-notifications-mute' },
+      { emoji: '🚫', label: 'Bloquer un utilisateur', entryId: 'static-blocked-users' },
     ],
   },
   {
@@ -62,6 +64,7 @@ export const CHATBOT_TOPICS: ChatbotTopic[] = [
     subActions: [
       { emoji: '🎉', label: "Qu'est-ce qu'un match ?", entryId: 'static-swipe-match' },
       { emoji: '💳', label: 'Coût des actions', entryId: 'static-credits-system' },
+      { emoji: '🚀', label: 'Booster mon profil', entryId: 'static-boost' },
     ],
   },
   {
@@ -71,6 +74,7 @@ export const CHATBOT_TOPICS: ChatbotTopic[] = [
     primaryEntryId: 'static-credits-system',
     subActions: [
       { emoji: '🎁', label: 'Crédits gratuits', entryId: 'static-free-credits' },
+      { emoji: '🤝', label: 'Parrainage (+30 crédits)', entryId: 'static-referral' },
       { emoji: '🏷️', label: 'Tarifs dynamiques', entryId: 'static-dynamic-pricing' },
       { emoji: '🔥', label: 'Promo recharge passive', entryId: 'static-passive-promo' },
       { emoji: '🚫', label: 'Naviguer sans pub', entryId: 'static-ad-free' },
@@ -84,6 +88,7 @@ export const CHATBOT_TOPICS: ChatbotTopic[] = [
     subActions: [
       { emoji: '📸', label: 'Photo de profil obligatoire', entryId: 'static-profile-photo' },
       { emoji: '🛡️', label: 'Mes données sont-elles protégées ?', entryId: 'static-privacy' },
+      { emoji: '🎁', label: 'Bonus crédits à la validation', entryId: 'static-free-credits' },
     ],
   },
   {
@@ -104,6 +109,9 @@ export const CHATBOT_TOPICS: ChatbotTopic[] = [
     primaryEntryId: 'static-privacy',
     subActions: [
       { emoji: '🔑', label: 'Code PIN / Empreinte', entryId: 'static-pin-lock' },
+      { emoji: '🔐', label: 'Changer mon mot de passe', entryId: 'static-password-change' },
+      { emoji: '🚫', label: 'Utilisateurs bloqués', entryId: 'static-blocked-users' },
+      { emoji: '🎯', label: 'Filtre d\'âge des contacts', entryId: 'static-contact-age-filter' },
       { emoji: '🛡️', label: 'Protection anti-capture', entryId: 'static-screenshot-protection' },
       { emoji: '🖼️', label: 'Photos protégées', entryId: 'static-avatar-security' },
       { emoji: '💰', label: 'Crédits sécurisés', entryId: 'static-credit-security' },
@@ -116,11 +124,24 @@ export const CHATBOT_TOPICS: ChatbotTopic[] = [
     icon: 'profile',
     primaryEntryId: 'static-profile-page',
     subActions: [
+      { emoji: '✏️', label: 'Modifier mon profil', entryId: 'static-edit-profile' },
+      { emoji: '⚙️', label: 'Paramètres du compte', entryId: 'static-settings' },
       { emoji: '📸', label: 'Photo de profil', entryId: 'static-profile-photo' },
       { emoji: '🖼️', label: 'Albums photos', entryId: 'static-albums' },
       { emoji: '🤖', label: 'ChatBot personnel', entryId: 'static-chatbot-personal' },
+      { emoji: '🚀', label: 'Booster mon profil', entryId: 'static-boost' },
       { emoji: '🗑️', label: 'Supprimer mon compte', entryId: 'static-delete-account' },
       { emoji: '📥', label: 'Exporter mes données', entryId: 'static-data-export' },
+    ],
+  },
+  {
+    id: 'notifications',
+    label: 'Notifications',
+    icon: 'bell',
+    primaryEntryId: 'static-notifications',
+    subActions: [
+      { emoji: '🔕', label: 'Mettre en sourdine', entryId: 'static-notifications-mute' },
+      { emoji: '⚙️', label: 'Paramètres du compte', entryId: 'static-settings' },
     ],
   },
   {
@@ -141,6 +162,7 @@ export const CHATBOT_TOPICS: ChatbotTopic[] = [
     subActions: [
       { emoji: '💬', label: 'Page Messages', entryId: 'static-messages-page' },
       { emoji: '⚡', label: 'Médias éphémères', entryId: 'static-ephemeral' },
+      { emoji: '🔕', label: 'Mettre en sourdine', entryId: 'static-notifications-mute' },
       { emoji: '💳', label: 'Coût des messages', entryId: 'static-credits-system' },
     ],
   },
@@ -162,6 +184,29 @@ export const CHATBOT_TOPICS: ChatbotTopic[] = [
     subActions: [
       { emoji: '🚨', label: 'Signaler un profil', entryId: 'static-report' },
       { emoji: '📜', label: 'Règles de la communauté', entryId: 'static-rules' },
+      { emoji: '🚫', label: 'Bloquer un utilisateur', entryId: 'static-blocked-users' },
+    ],
+  },
+  {
+    id: 'couple',
+    label: 'Compte couple',
+    icon: 'couple',
+    primaryEntryId: 'static-couple-account',
+    subActions: [
+      { emoji: '⚙️', label: 'Paramètres du compte', entryId: 'static-settings' },
+      { emoji: '🤝', label: 'Parrainer un ami', entryId: 'static-referral' },
+    ],
+  },
+  {
+    id: 'tech',
+    label: 'Aide technique',
+    icon: 'bug',
+    primaryEntryId: 'static-tech-issue',
+    subActions: [
+      { emoji: '🔐', label: 'Problème de connexion', entryId: 'static-login-issue' },
+      { emoji: '🛠️', label: 'Mode maintenance', entryId: 'static-maintenance' },
+      { emoji: '🔑', label: 'Changer mot de passe', entryId: 'static-password-change' },
+      { emoji: '👤', label: 'Contacter un agent', entryId: 'static-contact-agent' },
     ],
   },
   {
@@ -172,6 +217,7 @@ export const CHATBOT_TOPICS: ChatbotTopic[] = [
     subActions: [
       { emoji: '✨', label: 'Toutes les fonctionnalités', entryId: 'static-features' },
       { emoji: 'ℹ️', label: "Qu'est-ce que Gay Social ?", entryId: 'static-what-is-gc' },
+      { emoji: '👤', label: 'Contacter un agent', entryId: 'static-contact-agent' },
     ],
   },
 ];
@@ -197,9 +243,12 @@ export const MAIN_TOPIC_IDS = [
 
 /** Secondary chips shown under the main grid */
 export const QUICK_TOPIC_IDS = [
+  'notifications',
   'tween',
   'groups',
   'ephemeral',
   'moderation',
+  'couple',
+  'tech',
   'help-center',
 ];

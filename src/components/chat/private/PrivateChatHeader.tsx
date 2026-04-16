@@ -9,7 +9,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import MuteButton from '../MuteButton';
-import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
+import { useLivePresence } from '@/hooks/useLivePresence';
+import LiveOnlineDot from '@/components/presence/LiveOnlineDot';
 import { cn } from '@/lib/utils';
 
 interface PrivateChatHeaderProps {
@@ -42,6 +43,7 @@ const PrivateChatHeader = ({
   onShowReportDialog,
 }: PrivateChatHeaderProps) => {
   const navigate = useNavigate();
+  const presence = useLivePresence(otherUserProfile);
 
   return (
     <header
@@ -79,9 +81,9 @@ const PrivateChatHeader = ({
                 </div>
               )}
             </div>
-            {isUserTrulyOnline(otherUserProfile) && (
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-card shadow-sm" />
-            )}
+            <span className="absolute -bottom-0.5 -right-0.5">
+              <LiveOnlineDot profile={otherUserProfile} size="sm" borderClassName="border-card" />
+            </span>
           </div>
           <div className="min-w-0">
             <h2 className="font-semibold text-[15px] text-foreground truncate leading-tight font-body">
@@ -90,7 +92,7 @@ const PrivateChatHeader = ({
             <p className="text-[12px] mt-0.5">
               {isOtherTyping ? (
                 <span className="text-primary font-medium animate-pulse">écrit…</span>
-              ) : isUserTrulyOnline(otherUserProfile) ? (
+              ) : presence.isOnline ? (
                 <span className="text-green-500 font-medium">En ligne</span>
               ) : (
                 <span className="text-muted-foreground">Hors ligne</span>

@@ -8,7 +8,7 @@ import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
-import { getDetailedLastSeenText, isUserTrulyOnline } from '@/hooks/useOnlineStatus';
+import { useLivePresence } from '@/hooks/useLivePresence';
 import { useRealtimeUserOnlineStatus } from '@/hooks/useRealtimeOnlineStatus';
 import ProfilePhotoCarousel from '@/components/chat/ProfilePhotoCarousel';
 import ReportUserDialog from '@/components/chat/ReportUserDialog';
@@ -164,8 +164,9 @@ const MemberProfile = () => {
     return { id: album.id, name: album.name, is_private: album.is_private, coverUrl: cover?.media_url, mediaCount: count };
   }) : [];
 
-  const getLastSeenText = () => getDetailedLastSeenText(profile);
-  const isTrulyOnline = isUserTrulyOnline(profile);
+  const presence = useLivePresence(profile);
+  const getLastSeenText = () => presence.detailedLastSeenText;
+  const isTrulyOnline = presence.isOnline;
 
   const handleStartChat = async () => {
     if (!user || !userId) return;

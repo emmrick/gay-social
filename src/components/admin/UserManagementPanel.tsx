@@ -74,7 +74,7 @@ import {
 import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModeratorEarnings';
 import { useLogModerationAction } from '@/hooks/useModerationActions';
 import { useAuth } from '@/contexts/AuthContext';
-import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
+import LiveOnlineDot from '@/components/presence/LiveOnlineDot';
 
 interface UserProfile {
   id: string;
@@ -767,9 +767,9 @@ const UserCard = ({
               {user.username?.charAt(0).toUpperCase() || '?'}
             </AvatarFallback>
           </Avatar>
-          {isUserTrulyOnline(user) && (
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
-          )}
+          <span className="absolute bottom-0 right-0">
+            <LiveOnlineDot profile={{ ...user, user_id: user.user_id }} size="sm" borderClassName="border-background" />
+          </span>
         </div>
 
         <div className="flex-1 min-w-0">

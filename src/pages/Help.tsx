@@ -462,7 +462,7 @@ const Help = ({ embedded = false }: HelpProps) => {
       .map(id => getTopicById(id))
       .filter((t): t is ChatbotTopic => !!t)
       .map(t => ({ label: t.label, value: `topic:${t.id}`, variant: 'subtle' }));
-    mainActions.push({ label: '👤 Contacter un agent', value: 'agent', variant: 'outline' });
+    mainActions.push({ label: '👤 Contacter un agent', value: 'agent', variant: 'subtle' });
 
     addBotMessage(
       `📋 **Menu principal**\n\nChoisis un sujet ci-dessous pour une réponse rapide, ou pose-moi directement ta question 😊`,
@@ -1136,7 +1136,7 @@ const Help = ({ embedded = false }: HelpProps) => {
                         showTopicMenu(topic.id);
                       }}
                       disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
-                      className="flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm text-foreground hover:bg-primary/10 hover:border-primary/30 transition-all active:scale-95 disabled:opacity-50 text-left"
+                      className="flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-xl border border-primary/25 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/40 transition-all active:scale-95 disabled:opacity-50 text-left"
                     >
                       <span className="text-primary shrink-0">{iconMap[topic.icon] ?? <HelpCircle className="w-3.5 h-3.5" />}</span>
                       <span className="truncate">{topic.label}</span>

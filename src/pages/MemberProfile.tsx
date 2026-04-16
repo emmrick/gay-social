@@ -8,7 +8,7 @@ import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
-import { getDetailedLastSeenText, isUserTrulyOnline } from '@/hooks/useOnlineStatus';
+import { useLivePresence } from '@/hooks/useLivePresence';
 import { useRealtimeUserOnlineStatus } from '@/hooks/useRealtimeOnlineStatus';
 import ProfilePhotoCarousel from '@/components/chat/ProfilePhotoCarousel';
 import ReportUserDialog from '@/components/chat/ReportUserDialog';

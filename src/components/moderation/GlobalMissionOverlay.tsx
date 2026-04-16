@@ -27,6 +27,8 @@ import {
 } from '@/hooks/useModerationTaskQueue';
 import { useQueryClient } from '@tanstack/react-query';
 import { playMissionSound, playAcceptSound } from '@/utils/missionAudio';
+import { buildAdminPath } from '@/config/adminRoutes';
+import type { AdminSection } from '@/components/admin/AdminSidebar';
 
 const OFFER_TTL_SECONDS = 60;
 
@@ -168,10 +170,10 @@ const GlobalMissionOverlay = () => {
     playAcceptSound();
     reserveTask.mutate(nextTask.id, {
       onSuccess: () => {
-        const section = getTaskTypeSection(nextTask.task_type);
+        const section = getTaskTypeSection(nextTask.task_type) as AdminSection;
         const entityId = getTaskEntityId(nextTask);
         if (entityId) sessionStorage.setItem('admin-navigate-entity-id', entityId);
-        navigate(`/admin?section=${section}`);
+        navigate(buildAdminPath(section));
       },
     });
   }, [nextTask, reserveTask, navigate]);
@@ -193,10 +195,10 @@ const GlobalMissionOverlay = () => {
 
   const handleGoToTask = useCallback(() => {
     if (!activeTask) return;
-    const section = getTaskTypeSection(activeTask.task_type);
+    const section = getTaskTypeSection(activeTask.task_type) as AdminSection;
     const entityId = getTaskEntityId(activeTask);
     if (entityId) sessionStorage.setItem('admin-navigate-entity-id', entityId);
-    navigate(`/admin?section=${section}`);
+    navigate(buildAdminPath(section));
   }, [activeTask, navigate]);
 
   const handleCompleteActive = useCallback(() => {

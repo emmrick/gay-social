@@ -46,7 +46,41 @@ import AuthenticatedLayout from "@/layouts/AuthenticatedLayout";
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
-const Admin = lazy(() => import("./pages/Admin"));
+
+// Admin pages (lazy par section)
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboardPage = lazy(() => import("./pages/admin/sections/DashboardPage"));
+const AdminMembersPage = lazy(() => import("./pages/admin/sections/MembersPage"));
+const AdminMissionsPage = lazy(() => import("./pages/admin/sections/MissionsPage"));
+const AdminSupportPage = lazy(() => import("./pages/admin/sections/SupportPage"));
+const AdminRatingsPage = lazy(() => import("./pages/admin/sections/RatingsPage"));
+const AdminVerificationPage = lazy(() => import("./pages/admin/sections/VerificationPage"));
+const AdminReportsPage = lazy(() => import("./pages/admin/sections/ReportsPage"));
+const AdminContentModerationPage = lazy(() => import("./pages/admin/sections/ContentModerationPage"));
+const AdminAIModerationPage = lazy(() => import("./pages/admin/sections/AIModerationPage"));
+const AdminScreenshotSanctionsPage = lazy(() => import("./pages/admin/sections/ScreenshotSanctionsPage"));
+const AdminStatsPage = lazy(() => import("./pages/admin/sections/StatsPage"));
+const AdminModeratorsPage = lazy(() => import("./pages/admin/sections/ModeratorsPage"));
+const AdminWalletPage = lazy(() => import("./pages/admin/sections/WalletPage"));
+const AdminCreditsSurveillancePage = lazy(() => import("./pages/admin/sections/CreditsSurveillancePage"));
+const AdminCreditPurchasesPage = lazy(() => import("./pages/admin/sections/CreditPurchasesPage"));
+const AdminRatesPage = lazy(() => import("./pages/admin/sections/RatesPage"));
+const AdminWithdrawalsPage = lazy(() => import("./pages/admin/sections/WithdrawalsPage"));
+const AdminGlobalEarningsPage = lazy(() => import("./pages/admin/sections/GlobalEarningsPage"));
+const AdminBroadcastPage = lazy(() => import("./pages/admin/sections/BroadcastPage"));
+const AdminPopupsPage = lazy(() => import("./pages/admin/sections/PopupsPage"));
+const AdminFAQPage = lazy(() => import("./pages/admin/sections/FAQPage"));
+const AdminFlyersPage = lazy(() => import("./pages/admin/sections/FlyersPage"));
+const AdminPromoPage = lazy(() => import("./pages/admin/sections/PromoPage"));
+const AdminAdsPage = lazy(() => import("./pages/admin/sections/AdsPage"));
+const AdminPromoImagesPage = lazy(() => import("./pages/admin/sections/PromoImagesPage"));
+const AdminSiteUpdatesPage = lazy(() => import("./pages/admin/sections/SiteUpdatesPage"));
+const AdminCreditCostsPage = lazy(() => import("./pages/admin/sections/CreditCostsPage"));
+const AdminSwipeStatsPage = lazy(() => import("./pages/admin/sections/SwipeStatsPage"));
+const AdminMaintenancePage = lazy(() => import("./pages/admin/sections/MaintenancePage"));
+const AdminFeatureTogglesPage = lazy(() => import("./pages/admin/sections/FeatureTogglesPage"));
+const AdminErrorLogsPage = lazy(() => import("./pages/admin/sections/ErrorLogsPage"));
+const AdminSecurityPage = lazy(() => import("./pages/admin/sections/SecurityPage"));
 const About = lazy(() => import("./pages/About"));
 const Legal = lazy(() => import("./pages/Legal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -158,7 +192,40 @@ const AuthenticatedApp = () => {
 
                           {/* Public pages */}
                           <Route path="/profile/:userId" element={<Suspense fallback={<PageFallback />}><MemberProfile /></Suspense>} />
-                          <Route path="/admin" element={<Suspense fallback={<PageFallback />}><Admin /></Suspense>} />
+                          <Route path="/admin" element={<Suspense fallback={<PageFallback />}><AdminLayout /></Suspense>}>
+                            <Route index element={<AdminDashboardPage />} />
+                            <Route path="missions" element={<AdminMissionsPage />} />
+                            <Route path="support" element={<AdminSupportPage />} />
+                            <Route path="avis" element={<AdminRatingsPage />} />
+                            <Route path="identite" element={<AdminVerificationPage />} />
+                            <Route path="signalements" element={<AdminReportsPage />} />
+                            <Route path="contenu" element={<AdminContentModerationPage />} />
+                            <Route path="ia" element={<AdminAIModerationPage />} />
+                            <Route path="captures" element={<AdminScreenshotSanctionsPage />} />
+                            <Route path="membres" element={<AdminMembersPage />} />
+                            <Route path="stats" element={<AdminStatsPage />} />
+                            <Route path="equipe" element={<AdminModeratorsPage />} />
+                            <Route path="portefeuille" element={<AdminWalletPage />} />
+                            <Route path="surveillance" element={<AdminCreditsSurveillancePage />} />
+                            <Route path="achats" element={<AdminCreditPurchasesPage />} />
+                            <Route path="tarifs" element={<AdminRatesPage />} />
+                            <Route path="retraits" element={<AdminWithdrawalsPage />} />
+                            <Route path="gains" element={<AdminGlobalEarningsPage />} />
+                            <Route path="push" element={<AdminBroadcastPage />} />
+                            <Route path="popups" element={<AdminPopupsPage />} />
+                            <Route path="aide" element={<AdminFAQPage />} />
+                            <Route path="flyers" element={<AdminFlyersPage />} />
+                            <Route path="promos" element={<AdminPromoPage />} />
+                            <Route path="annonces" element={<AdminAdsPage />} />
+                            <Route path="visuels" element={<AdminPromoImagesPage />} />
+                            <Route path="updates" element={<AdminSiteUpdatesPage />} />
+                            <Route path="credits" element={<AdminCreditCostsPage />} />
+                            <Route path="swipe" element={<AdminSwipeStatsPage />} />
+                            <Route path="maintenance" element={<AdminMaintenancePage />} />
+                            <Route path="toggles" element={<AdminFeatureTogglesPage />} />
+                            <Route path="erreurs" element={<AdminErrorLogsPage />} />
+                            <Route path="securite" element={<AdminSecurityPage />} />
+                          </Route>
                           <Route path="/about" element={<Suspense fallback={<PageFallback />}><About /></Suspense>} />
                           <Route path="/legal" element={<Suspense fallback={<PageFallback />}><Legal /></Suspense>} />
                           <Route path="/regions" element={<Suspense fallback={<PageFallback />}><Regions /></Suspense>} />

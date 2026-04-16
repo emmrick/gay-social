@@ -30,6 +30,7 @@ const ProfileDetailDialog = ({
   onReport,
 }: ProfileDetailDialogProps) => {
   const resolvedAvatar = useAvatarUrl(profile?.avatar_url);
+  const live = useLivePresence(profile);
 
   if (!profile) return null;
 
@@ -59,7 +60,7 @@ const ProfileDetailDialog = ({
                 <User className="w-10 h-10" />
             )}
             </div>
-            {shouldShowOnlineIndicator(profile) && (
+            {live.showIndicator && (
               <span className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 rounded-full border-3 border-background" />
             )}
           </div>
@@ -69,8 +70,8 @@ const ProfileDetailDialog = ({
             <h2 className="text-xl font-display font-bold text-foreground">
               {profile.username}
             </h2>
-            <p className={`text-sm ${shouldShowOnlineIndicator(profile) ? 'text-green-500' : 'text-muted-foreground'}`}>
-              {getDetailedLastSeenText(profile)}
+            <p className={`text-sm ${live.showIndicator ? 'text-green-500' : 'text-muted-foreground'}`}>
+              {live.detailedLastSeenText}
             </p>
           </div>
 

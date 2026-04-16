@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Star, Heart } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
-import { isUserTrulyOnline, getLastSeenText as getOnlineStatusText } from '@/hooks/useOnlineStatus';
+import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
+import { useLivePresence } from '@/hooks/useLivePresence';
 import { cn } from '@/lib/utils';
 import { SecureAvatarImg } from '@/components/ui/secure-avatar';
 
@@ -11,13 +12,73 @@ interface FavoritesGridProps {
   onStartChat: (userId: string) => void;
 }
 
+const FavoriteCard = ({ profile, onClick }: { profile: any; onClick: () => void }) => {
+  const live = useLivePresence(profile);
+  const online = live.isOnline;
+
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'relative aspect-[3/4] rounded-2xl overflow-hidden group',
+        'bg-gradient-to-br from-card to-secondary/50',
+        'border-2 transition-all duration-200',
+        online
+          ? 'border-green-500/40 shadow-lg shadow-green-500/10'
+          : 'border-border/20 hover:border-primary/25 active:scale-[0.98]'
+      )}
+    >
+      <div className="absolute inset-0">
+        {profile.avatar_url ? (
+          <SecureAvatarImg src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
+            <span className="text-3xl font-black text-primary/40" style={{ fontFamily: 'Syne, sans-serif' }}>
+              {profile.username.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+
+      <div className="absolute top-2 left-2">
+        <div className="w-6 h-6 rounded-lg bg-accent/20 backdrop-blur-sm flex items-center justify-center border border-accent/30">
+          <Star className="w-3 h-3 text-accent fill-accent" />
+        </div>
+      </div>
+
+      <div className="absolute top-2 right-2">
+        {online ? (
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-50" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500 border border-white/30" />
+          </span>
+        ) : (
+          <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30 block" />
+        )}
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 p-2">
+        <div className="flex items-baseline gap-1">
+          <span className="text-white font-bold text-sm truncate">{profile.username}</span>
+          {profile.age && <span className="text-white/60 text-xs">{profile.age}</span>}
+        </div>
+        <div className="text-[10px] text-white/50 font-medium">
+          {online ? 'En ligne' : live.lastSeenText || 'Hors ligne'}
+        </div>
+      </div>
+    </button>
+  );
+};
+
 const FavoritesGrid = ({ onStartChat }: FavoritesGridProps) => {
   const navigate = useNavigate();
   const { favorites, isLoading } = useUserFavorites();
 
   const sortedFavorites = useMemo(() => {
     return favorites
-      .filter(f => f.profile)
+      .filter((f) => f.profile)
       .sort((a, b) => {
         const aOnline = isUserTrulyOnline(a.profile);
         const bOnline = isUserTrulyOnline(b.profile);
@@ -59,71 +120,12 @@ const FavoritesGrid = ({ onStartChat }: FavoritesGridProps) => {
     <div className="grid grid-cols-3 gap-2">
       {sortedFavorites.map((fav) => {
         const profile = fav.profile!;
-        const online = isUserTrulyOnline(profile);
-
         return (
-          <button
+          <FavoriteCard
             key={fav.id}
+            profile={profile}
             onClick={() => navigate(`/profile/${profile.user_id}`)}
-            className={cn(
-              "relative aspect-[3/4] rounded-2xl overflow-hidden group",
-              "bg-gradient-to-br from-card to-secondary/50",
-              "border-2 transition-all duration-200",
-              online
-                ? "border-green-500/40 shadow-lg shadow-green-500/10"
-                : "border-border/20 hover:border-primary/25 active:scale-[0.98]"
-            )}
-          >
-            {/* Photo */}
-            <div className="absolute inset-0">
-              {profile.avatar_url ? (
-                <SecureAvatarImg src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" loading="lazy" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
-                  <span className="text-3xl font-black text-primary/40" style={{ fontFamily: 'Syne, sans-serif' }}>
-                    {profile.username.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
-
-            {/* Star */}
-            <div className="absolute top-2 left-2">
-              <div className="w-6 h-6 rounded-lg bg-accent/20 backdrop-blur-sm flex items-center justify-center border border-accent/30">
-                <Star className="w-3 h-3 text-accent fill-accent" />
-              </div>
-            </div>
-
-            {/* Online */}
-            <div className="absolute top-2 right-2">
-              {online ? (
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-50" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500 border border-white/30" />
-                </span>
-              ) : (
-                <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30 block" />
-              )}
-            </div>
-
-            {/* Info */}
-            <div className="absolute bottom-0 left-0 right-0 p-2">
-              <div className="flex items-baseline gap-1">
-                <span className="text-white font-bold text-sm truncate">
-                  {profile.username}
-                </span>
-                {(profile as any).age && (
-                  <span className="text-white/60 text-xs">{(profile as any).age}</span>
-                )}
-              </div>
-              <div className="text-[10px] text-white/50 font-medium">
-                {online ? 'En ligne' : getOnlineStatusText(profile) || 'Hors ligne'}
-              </div>
-            </div>
-          </button>
+          />
         );
       })}
     </div>

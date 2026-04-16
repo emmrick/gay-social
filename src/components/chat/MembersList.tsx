@@ -30,11 +30,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import ReportUserDialog from './ReportUserDialog';
 import ProfileDetailDialog from '@/components/profile/ProfileDetailDialog';
-import { 
-  isUserTrulyOnline, 
-  shouldShowOnlineIndicator, 
-  getLastSeenText 
-} from '@/hooks/useOnlineStatus';
+import LiveOnlineDot from '@/components/presence/LiveOnlineDot';
+import { useLivePresence } from '@/hooks/useLivePresence';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomGroups } from '@/hooks/useCustomGroups';
@@ -218,6 +215,7 @@ const MemberCard = ({
 }) => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const live = useLivePresence(profile);
 
   const handleCardClick = () => {
     setShowProfileDialog(true);
@@ -242,30 +240,32 @@ const MemberCard = ({
               profile.username.charAt(0).toUpperCase()
             )}
           </div>
-          {shouldShowOnlineIndicator(profile) ? (
-            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-card" />
-          ) : (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-muted-foreground/50 rounded-full border-2 border-card cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  {getLastSeenText(profile) || 'Hors ligne'}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          <span className="absolute bottom-0 right-0">
+            {live.showIndicator ? (
+              <LiveOnlineDot profile={profile} size="lg" borderClassName="border-card" />
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <LiveOnlineDot profile={profile} size="lg" showOffline borderClassName="border-card" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    {live.lastSeenText || 'Hors ligne'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </span>
         </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-foreground truncate">{profile.username}</h3>
           <p className="text-sm text-muted-foreground">
-            {isUserTrulyOnline(profile) && !profile.hide_online_status ? (
+            {live.isOnline && !profile.hide_online_status ? (
               <span className="text-green-500">En ligne</span>
             ) : (
-              getLastSeenText(profile) || 'Hors ligne'
+              live.lastSeenText || 'Hors ligne'
             )}
           </p>
         </div>

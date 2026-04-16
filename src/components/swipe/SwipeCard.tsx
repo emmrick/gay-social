@@ -1,7 +1,7 @@
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useState, useCallback, useEffect, useRef, memo } from 'react';
 import { MapPin, ShieldCheck, Ruler, Scale, Heart, X, EyeOff, Flame, Rocket } from 'lucide-react';
-import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
+import { useLivePresence } from '@/hooks/useLivePresence';
 import { cn } from '@/lib/utils';
 
 interface SwipeCardProps {
@@ -134,7 +134,7 @@ const SwipeCard = memo(({ profile, onSwipe, isTop, stackIndex, onViewProfile }: 
   const stackScale = 1 - stackIndex * 0.04;
   const stackY = stackIndex * 8;
 
-  const isTrulyOnline = isUserTrulyOnline(profile);
+  const isTrulyOnline = useLivePresence(profile).isOnline;
   
   const infoPills: { icon?: React.ReactNode; label: string }[] = [];
   if (profile.height) infoPills.push({ icon: <Ruler className="w-3 h-3" />, label: `${profile.height} cm` });

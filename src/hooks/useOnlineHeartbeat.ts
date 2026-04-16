@@ -15,7 +15,9 @@ export const useOnlineHeartbeat = (user: User | null) => {
 
     updateOnlineStatus();
 
-    const heartbeatInterval = setInterval(updateOnlineStatus, 2 * 60 * 1000);
+    // Heartbeat every 60s — keeps "online" fresh and the realtime UPDATE
+    // event flowing to all subscribers (presenceStore + queries).
+    const heartbeatInterval = setInterval(updateOnlineStatus, 60 * 1000);
 
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {

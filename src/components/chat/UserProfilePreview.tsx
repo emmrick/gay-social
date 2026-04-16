@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageCircle, MapPin, Clock, Flag, User, Ban } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { shouldShowOnlineIndicator, getDetailedLastSeenText } from '@/hooks/useOnlineStatus';
+import { useLivePresence } from '@/hooks/useLivePresence';
 import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
 import ProfilePhotoCarousel from './ProfilePhotoCarousel';
@@ -86,6 +86,7 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
   };
 
   const isOwnProfile = user?.id === userId;
+  const live = useLivePresence(profile);
 
   return (
     <>
@@ -133,10 +134,10 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
               <div className="text-center pt-2">
                 <h3 className="text-xl font-semibold">{profile.username}</h3>
                 <Badge 
-                  variant={shouldShowOnlineIndicator(profile) ? "default" : "secondary"}
+                  variant={live.showIndicator ? "default" : "secondary"}
                   className="mt-2"
                 >
-                  {shouldShowOnlineIndicator(profile) ? '🟢 En ligne' : '⚫ Hors ligne'}
+                  {live.showIndicator ? '🟢 En ligne' : '⚫ Hors ligne'}
                 </Badge>
               </div>
 
@@ -153,11 +154,11 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
                   <MapPin className="w-4 h-4" />
                   <span>{profile.region}</span>
                 </div>
-                {!shouldShowOnlineIndicator(profile) && !profile.hide_last_seen && profile.last_seen && (
+                {!live.showIndicator && !profile.hide_last_seen && profile.last_seen && (
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     <span>
-                      {getDetailedLastSeenText(profile)}
+                      {live.detailedLastSeenText}
                     </span>
                   </div>
                 )}

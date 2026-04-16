@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Heart, Eye, Crown, CheckCircle2, Flame, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { shouldShowOnlineIndicator, getLastSeenText } from '@/hooks/useOnlineStatus';
+import { useLivePresence } from '@/hooks/useLivePresence';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
+import { formatDistance } from '@/lib/formatDistance';
 
 interface ProfileCardProps {
   profile: {
@@ -28,13 +29,6 @@ interface ProfileCardProps {
   onLike?: (userId: string) => void;
 }
 
-const formatDistance = (km: number | null) => {
-  if (km === null) return null;
-  if (km < 1) return `${Math.round(km * 1000)}m`;
-  if (km < 10) return `${km.toFixed(1)}km`;
-  return `${Math.round(km)}km`;
-};
-
 const isNewUser = (createdAt?: string) => {
   if (!createdAt) return false;
   const diff = Date.now() - new Date(createdAt).getTime();
@@ -45,8 +39,9 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
-  const isOnline = shouldShowOnlineIndicator(profile);
-  const lastSeen = getLastSeenText(profile);
+  const live = useLivePresence(profile);
+  const isOnline = live.showIndicator;
+  const lastSeen = live.lastSeenText;
   const isNew = isNewUser(profile.created_at);
   const resolvedAvatar = useAvatarUrl(profile.avatar_url);
 

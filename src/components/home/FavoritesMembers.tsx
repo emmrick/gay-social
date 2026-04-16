@@ -5,13 +5,72 @@ import { Star, MapPin, MessageCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
-import { isUserTrulyOnline, getLastSeenText as getOnlineStatusText } from '@/hooks/useOnlineStatus';
+import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
+import { useLivePresence } from '@/hooks/useLivePresence';
 import { cn } from '@/lib/utils';
 import { SecureAvatarImg } from '@/components/ui/secure-avatar';
 
 interface FavoritesMembersProps {
   onStartChat: (userId: string) => void;
 }
+
+const FavoriteItem = ({
+  profile,
+  index,
+  onOpen,
+  onStartChat,
+}: {
+  profile: any;
+  index: number;
+  onOpen: () => void;
+  onStartChat: () => void;
+}) => {
+  const live = useLivePresence(profile);
+  const online = live.isOnline;
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: index * 0.05 }}
+      className="flex-shrink-0 w-20"
+    >
+      <button onClick={onOpen} className="relative w-full">
+        <div className={cn(
+          'relative w-20 h-24 rounded-xl overflow-hidden border-2 transition-all duration-200',
+          online ? 'border-green-500 shadow-lg shadow-green-500/20' : 'border-border/30'
+        )}>
+          {profile.avatar_url ? (
+            <SecureAvatarImg src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
+              <span className="text-2xl font-bold text-primary-foreground/80">
+                {profile.username.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+          <div className="absolute top-1.5 right-1.5">
+            {online ? (
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500 block shadow-lg shadow-green-500/50" />
+            ) : (
+              <span className="w-2.5 h-2.5 rounded-full bg-gray-400 block" />
+            )}
+          </div>
+          <div className="absolute top-1.5 left-1.5">
+            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+          </div>
+          <div className="absolute bottom-1 left-1 right-1">
+            <p className="text-white text-xs font-medium truncate text-center">{profile.username}</p>
+          </div>
+        </div>
+      </button>
+      <Button variant="ghost" size="sm" className="w-full h-7 mt-1 text-xs" onClick={onStartChat}>
+        <MessageCircle className="w-3 h-3 mr-1" />
+        MP
+      </Button>
+    </motion.div>
+  );
+};
 
 const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
   const navigate = useNavigate();
@@ -51,11 +110,7 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
     return null; // Don't show section if no favorites
   }
 
-  const getLastSeenText = (profile: any) => {
-    if (isUserTrulyOnline(profile)) return 'En ligne';
-    const text = getOnlineStatusText(profile);
-    return text || 'Hors ligne';
-  };
+  // (live presence is handled per-item in FavoriteItem)
 
   return (
     <div className="space-y-3">
@@ -66,77 +121,15 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        {sortedFavorites.map((fav, index) => {
-          const profile = fav.profile!;
-          return (
-            <motion.div
-              key={fav.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              className="flex-shrink-0 w-20"
-            >
-              <button
-                onClick={() => navigate(`/profile/${profile.user_id}`)}
-                className="relative w-full"
-              >
-                <div className={cn(
-                  "relative w-20 h-24 rounded-xl overflow-hidden",
-                  "border-2 transition-all duration-200",
-                  isUserTrulyOnline(profile) 
-                    ? "border-green-500 shadow-lg shadow-green-500/20" 
-                    : "border-border/30"
-                )}>
-                  {/* Avatar/Photo */}
-                  {profile.avatar_url ? (
-                    <SecureAvatarImg src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-primary-foreground/80">
-                        {profile.username.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Overlay gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-
-                  {/* Online indicator */}
-                  <div className="absolute top-1.5 right-1.5">
-                    {isUserTrulyOnline(profile) ? (
-                      <span className="w-2.5 h-2.5 rounded-full bg-green-500 block shadow-lg shadow-green-500/50" />
-                    ) : (
-                      <span className="w-2.5 h-2.5 rounded-full bg-gray-400 block" />
-                    )}
-                  </div>
-
-                  {/* Star badge */}
-                  <div className="absolute top-1.5 left-1.5">
-                    <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                  </div>
-
-                  {/* Name */}
-                  <div className="absolute bottom-1 left-1 right-1">
-                    <p className="text-white text-xs font-medium truncate text-center">
-                      {profile.username}
-                    </p>
-                  </div>
-                </div>
-              </button>
-
-              {/* Quick message button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full h-7 mt-1 text-xs"
-                onClick={() => onStartChat(profile.user_id)}
-              >
-                <MessageCircle className="w-3 h-3 mr-1" />
-                MP
-              </Button>
-            </motion.div>
-          );
-        })}
+        {sortedFavorites.map((fav, index) => (
+          <FavoriteItem
+            key={fav.id}
+            profile={fav.profile!}
+            index={index}
+            onOpen={() => navigate(`/profile/${fav.profile!.user_id}`)}
+            onStartChat={() => onStartChat(fav.profile!.user_id)}
+          />
+        ))}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Calendar, Edit2, Verified, Cake } from 'lucide-react';
-import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
+import { useLivePresence } from '@/hooks/useLivePresence';
 import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';

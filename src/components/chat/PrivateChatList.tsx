@@ -6,7 +6,7 @@ import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useConversationStatus } from '@/hooks/useConversationStatus';
-import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
+import LiveOnlineDot from '@/components/presence/LiveOnlineDot';
 import { usePendingEphemeralSnaps } from '@/hooks/usePendingEphemeralSnaps';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
@@ -324,9 +324,12 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                         </div>
                       )}
                     </div>
-                    {shouldShowOnlineIndicator(conv.otherUser) && (
-                      <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-[2.5px] border-background shadow-sm" />
-                    )}
+                    <LiveOnlineDot
+                      profile={conv.otherUser}
+                      size="lg"
+                      borderClassName="border-background"
+                      className="absolute bottom-0.5 right-0.5"
+                    />
                   </div>
 
                   {/* Content */}

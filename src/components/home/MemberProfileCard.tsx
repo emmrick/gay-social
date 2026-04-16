@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { Skeleton } from '@/components/ui/skeleton';
-import { shouldShowOnlineIndicator, getDetailedLastSeenText } from '@/hooks/useOnlineStatus';
+import { useLivePresence } from '@/hooks/useLivePresence';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface MemberProfileCardProps {
@@ -97,11 +97,9 @@ const MemberProfileCard = ({
     setCurrentPhotoIndex(prev => prev < allPhotos.length - 1 ? prev + 1 : 0);
   };
 
-  const getLastSeenText = () => {
-    return getDetailedLastSeenText(profile);
-  };
-  
-  const isOnline = shouldShowOnlineIndicator(profile);
+  const live = useLivePresence(profile);
+  const getLastSeenText = () => live.detailedLastSeenText;
+  const isOnline = live.showIndicator;
 
   const modal = (
     <AnimatePresence>

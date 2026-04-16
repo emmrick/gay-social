@@ -1055,6 +1055,35 @@ const Help = ({ embedded = false }: HelpProps) => {
                         </Button>
                       </motion.div>
                     )}
+
+                    {/* Inline quick actions (related topics, back, menu, agent) */}
+                    {msg.quickActions && msg.quickActions.length > 0 && !msg.isTyping && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.3 }}
+                        className="mt-2.5 flex flex-wrap gap-1.5"
+                      >
+                        {msg.quickActions.map((qa, qi) => {
+                          const isSubtle = qa.variant === 'subtle' || !qa.variant;
+                          return (
+                            <button
+                              key={`${qa.value}-${qi}`}
+                              onClick={() => handleQuickAction(qa.value)}
+                              disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
+                              className={cn(
+                                "px-3 py-1.5 text-[11px] font-medium rounded-full transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-left",
+                                isSubtle
+                                  ? "border border-primary/25 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/40"
+                                  : "border border-border/60 bg-card/60 backdrop-blur-sm text-foreground hover:bg-primary/10 hover:border-primary/30"
+                              )}
+                            >
+                              {qa.label}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
                   </div>
                 </>
               )}

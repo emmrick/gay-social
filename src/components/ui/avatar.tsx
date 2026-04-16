@@ -2,6 +2,7 @@ import * as React from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 import { cn } from "@/lib/utils";
+import { useAvatarUrl } from "@/hooks/useAvatarUrl";
 
 const Avatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
@@ -15,12 +16,28 @@ const Avatar = React.forwardRef<
 ));
 Avatar.displayName = AvatarPrimitive.Root.displayName;
 
+/**
+ * AvatarImage automatically resolves Supabase Storage avatar URLs
+ * (private bucket "avatars") to signed URLs. External URLs and already-signed
+ * URLs are passed through unchanged.
+ */
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image ref={ref} className={cn("aspect-square h-full w-full", className)} {...props} />
-));
+>(({ className, src, ...props }, ref) => {
+  const rawSrc = typeof src === "string" ? src : "";
+  const resolved = useAvatarUrl(rawSrc || null);
+  // Don't render until we have a usable src so Radix can fall back cleanly.
+  if (!resolved) return null;
+  return (
+    <AvatarPrimitive.Image
+      ref={ref}
+      src={resolved}
+      className={cn("aspect-square h-full w-full", className)}
+      {...props}
+    />
+  );
+});
 AvatarImage.displayName = AvatarPrimitive.Image.displayName;
 
 const AvatarFallback = React.forwardRef<

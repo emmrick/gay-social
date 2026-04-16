@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SecureAvatar } from '@/components/ui/secure-avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -761,14 +762,14 @@ const UserCard = ({
     >
       <div className="flex items-center gap-4">
         <div className="relative">
-          <Avatar className="w-12 h-12">
-            <AvatarImage src={user.avatar_url || ''} />
-            <AvatarFallback>
-              {user.username?.charAt(0).toUpperCase() || '?'}
-            </AvatarFallback>
-          </Avatar>
+          <SecureAvatar
+            src={user.avatar_url}
+            alt={user.username}
+            className="w-12 h-12"
+            fallback={user.username?.charAt(0).toUpperCase() || '?'}
+          />
           <span className="absolute bottom-0 right-0">
-            <LiveOnlineDot profile={{ ...user, user_id: user.user_id }} size="sm" borderClassName="border-background" />
+            <LiveOnlineDot profile={{ ...user, user_id: user.user_id }} size="sm" showOffline borderClassName="border-background" />
           </span>
         </div>
 

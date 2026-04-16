@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useJoinedGroups } from '@/hooks/useJoinedGroups';
+import { useCustomGroups } from '@/hooks/useCustomGroups';
 import { useMessagesFilters } from '@/hooks/useMessagesFilters';
 import UnifiedPageHeader from '@/components/layout/UnifiedPageHeader';
 import { ScrollArea } from '@/components/ui/scroll-area';

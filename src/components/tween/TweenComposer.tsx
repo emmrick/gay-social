@@ -49,11 +49,20 @@ const TweenComposer = () => {
     }
   };
 
+  const MAX_VIDEO_SIZE = 1024 * 1024 * 1024; // 1 Go
+  const MAX_IMAGE_SIZE = 500 * 1024 * 1024; // 500 Mo
+
   const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (type === 'video' && file.size > 100 * 1024 * 1024) {
-      toast.error('Vidéo trop volumineuse (max 100 Mo)');
+    if (type === 'video' && file.size > MAX_VIDEO_SIZE) {
+      toast.error('Vidéo trop volumineuse (max 1 Go)');
+      e.target.value = '';
+      return;
+    }
+    if (type === 'image' && file.size > MAX_IMAGE_SIZE) {
+      toast.error('Photo trop volumineuse (max 500 Mo)');
+      e.target.value = '';
       return;
     }
     setMediaFile(file);
@@ -71,13 +80,36 @@ const TweenComposer = () => {
 
     if (mediaFile && mediaType) {
       setUploading(true);
-      const ext = mediaFile.name.split('.').pop();
-      const path = `tweens/${user.id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('media').upload(path, mediaFile);
-      if (uploadError) { toast.error("Erreur d'upload"); setUploading(false); return; }
-      const { data: urlData } = supabase.storage.from('media').getPublicUrl(path);
-      mediaUrl = urlData.publicUrl;
-      setUploading(false);
+      try {
+        const ext = (mediaFile.name.split('.').pop() || 'bin').toLowerCase();
+        const path = `tweens/${user.id}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(path, mediaFile, {
+            cacheControl: '31536000',
+            contentType: mediaFile.type || undefined,
+            upsert: false,
+          });
+        if (uploadError) {
+          console.error('Tween upload error:', uploadError);
+          toast.error(uploadError.message || "Erreur d'upload");
+          setUploading(false);
+          return;
+        }
+        // Bucket is private — generate a long-lived signed URL (1 year) for public feed display
+        const { data: signed, error: signError } = await supabase.storage
+          .from('media')
+          .createSignedUrl(path, 60 * 60 * 24 * 365);
+        if (signError || !signed?.signedUrl) {
+          console.error('Tween sign error:', signError);
+          toast.error('Erreur de génération du lien média');
+          setUploading(false);
+          return;
+        }
+        mediaUrl = signed.signedUrl;
+      } finally {
+        setUploading(false);
+      }
     }
 
     const validPollOptions = showPoll ? pollOptions.filter(o => o.trim()) : undefined;

@@ -1100,68 +1100,66 @@ const Help = ({ embedded = false }: HelpProps) => {
             >
               <p className="text-[11px] text-muted-foreground font-medium mb-2">💡 Sujets populaires :</p>
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  { icon: <Home className="w-3.5 h-3.5" />, label: "Page d'accueil", query: "Comment fonctionne la page d'accueil ?" },
-                  { icon: <MessageCircle className="w-3.5 h-3.5" />, label: "Messagerie", query: "Comment fonctionne la page Messages ?" },
-                  { icon: <Heart className="w-3.5 h-3.5" />, label: "Swipe & Match", query: "Comment fonctionne le système de Swipe ?" },
-                  { icon: <CreditCard className="w-3.5 h-3.5" />, label: "Crédits", query: "Comment fonctionnent les crédits ?" },
-                  { icon: <UserCheck className="w-3.5 h-3.5" />, label: "Vérification", query: "Comment vérifier mon identité ?" },
-                  { icon: <Image className="w-3.5 h-3.5" />, label: "Albums photos", query: "Comment fonctionnent les albums photos ?" },
-                  { icon: <Lock className="w-3.5 h-3.5" />, label: "Sécurité", query: "Comment protéger mon compte ?" },
-                  { icon: <Bug className="w-3.5 h-3.5" />, label: "Problème technique", query: "J'ai un problème technique" },
-                ].map((topic, i) => (
-                  <motion.button
-                    key={topic.label}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4 + i * 0.05 }}
-                    onClick={() => {
-                      setFreeText('');
-                      setChatMessages(prev => [...prev, { type: 'user', text: topic.query }]);
-                      const results = searchKnowledgeBase(topic.query, allFaqArticles);
-                      if (results.length > 0) {
-                        showAnswer(results[0].id);
-                      } else {
-                        addBotMessage("Je n'ai pas trouvé de réponse. Tape **\"agent\"** pour contacter un conseiller. 😊");
-                      }
-                    }}
-                    disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
-                    className="flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm text-foreground hover:bg-primary/10 hover:border-primary/30 transition-all active:scale-95 disabled:opacity-50 text-left"
-                  >
-                    <span className="text-primary shrink-0">{topic.icon}</span>
-                    <span className="truncate">{topic.label}</span>
-                  </motion.button>
-                ))}
+                {MAIN_TOPIC_IDS.map((tid, i) => {
+                  const topic = getTopicById(tid);
+                  if (!topic) return null;
+                  const iconMap: Record<string, JSX.Element> = {
+                    home: <Home className="w-3.5 h-3.5" />,
+                    message: <MessageCircle className="w-3.5 h-3.5" />,
+                    heart: <Heart className="w-3.5 h-3.5" />,
+                    credit: <CreditCard className="w-3.5 h-3.5" />,
+                    verify: <UserCheck className="w-3.5 h-3.5" />,
+                    image: <Image className="w-3.5 h-3.5" />,
+                    lock: <Lock className="w-3.5 h-3.5" />,
+                    bug: <Bug className="w-3.5 h-3.5" />,
+                    profile: <UserCheck className="w-3.5 h-3.5" />,
+                    bell: <Bell className="w-3.5 h-3.5" />,
+                    tween: <Sparkles className="w-3.5 h-3.5" />,
+                    group: <Users className="w-3.5 h-3.5" />,
+                    ephemeral: <Zap className="w-3.5 h-3.5" />,
+                  };
+                  return (
+                    <motion.button
+                      key={topic.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.4 + i * 0.05 }}
+                      onClick={() => {
+                        setFreeText('');
+                        setChatMessages(prev => [...prev, { type: 'user', text: topic.label }]);
+                        showTopicMenu(topic.id);
+                      }}
+                      disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
+                      className="flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm text-foreground hover:bg-primary/10 hover:border-primary/30 transition-all active:scale-95 disabled:opacity-50 text-left"
+                    >
+                      <span className="text-primary shrink-0">{iconMap[topic.icon] ?? <HelpCircle className="w-3.5 h-3.5" />}</span>
+                      <span className="truncate">{topic.label}</span>
+                    </motion.button>
+                  );
+                })}
               </div>
 
               <div className="flex flex-wrap gap-1.5 mt-3">
-                {[
-                  "Comment modifier mon profil ?",
-                  "Médias éphémères",
-                  "Groupes de discussion",
-                  "Page Tween",
-                  "Notifications",
-                ].map((q, i) => (
-                  <motion.button
-                    key={q}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.8 + i * 0.05 }}
-                    onClick={() => {
-                      setChatMessages(prev => [...prev, { type: 'user', text: q }]);
-                      const results = searchKnowledgeBase(q, allFaqArticles);
-                      if (results.length > 0) {
-                        showAnswer(results[0].id);
-                      } else {
-                        addBotMessage("Je n'ai pas trouvé de réponse. Tape **\"agent\"** pour contacter un conseiller. 😊");
-                      }
-                    }}
-                    disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
-                    className="px-3 py-1.5 text-[11px] font-medium rounded-full border border-primary/25 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/40 transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    {q}
-                  </motion.button>
-                ))}
+                {QUICK_TOPIC_IDS.map((tid, i) => {
+                  const topic = getTopicById(tid);
+                  if (!topic) return null;
+                  return (
+                    <motion.button
+                      key={topic.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.8 + i * 0.05 }}
+                      onClick={() => {
+                        setChatMessages(prev => [...prev, { type: 'user', text: topic.label }]);
+                        showTopicMenu(topic.id);
+                      }}
+                      disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
+                      className="px-3 py-1.5 text-[11px] font-medium rounded-full border border-primary/25 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/40 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      {topic.label}
+                    </motion.button>
+                  );
+                })}
               </div>
             </motion.div>
           )}

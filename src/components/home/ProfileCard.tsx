@@ -115,10 +115,14 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
                 Toi
               </span>
             )}
-            {!profile.isCurrentUser && profile.distance_km !== null && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md text-white text-[10px] font-medium">
-                <MapPin className="w-2.5 h-2.5" />
-                {formatDistance(profile.distance_km)}
+            {!profile.isCurrentUser && (profile.distance_km !== null || profile.region) && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md text-white text-[10px] font-medium max-w-[140px]">
+                <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
+                <span className="truncate">
+                  {formatDistance(profile.distance_km)}
+                  {profile.distance_km !== null && profile.region && ' · '}
+                  {profile.region}
+                </span>
               </span>
             )}
             {isNew && !profile.isCurrentUser && (

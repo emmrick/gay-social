@@ -24,6 +24,7 @@ const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionL
   const zodiac = profile.birth_date ? getZodiacSign(profile.birth_date) : null;
   const isBirthday = profile.birth_date ? isBirthdayToday(profile.birth_date) : false;
   const resolvedAvatar = useAvatarUrl(profile.avatar_url);
+  const presence = useLivePresence(profile);
 
   return (
     <div className="relative pb-4">
@@ -73,7 +74,7 @@ const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionL
                   </AvatarFallback>
                 </Avatar>
               </div>
-              {shouldShowOnlineIndicator(profile) && (
+              {presence.showIndicator && (
                 <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-[3px] border-card shadow-[0_0_8px_hsl(142_76%_36%/0.4)]" />
               )}
             </div>

@@ -56,6 +56,7 @@ import SiteUpdatesPanel from '@/components/admin/SiteUpdatesPanel';
 import AdsManagementPanel from '@/components/admin/AdsManagementPanel';
 import AdFreePlansPanel from '@/components/admin/AdFreePlansPanel';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
+import { useAdminRealtimeBridge } from '@/hooks/admin/useAdminRealtimeBridge';
 
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
@@ -70,6 +71,8 @@ const Admin = () => {
   const { data: stats } = useReportStats();
   const { data: pendingVerificationsCount = 0 } = usePendingVerifications();
   const isMobile = useIsMobile();
+  // Centralized realtime sync for admin store (users / reports / tasks)
+  useAdminRealtimeBridge(!!isAdmin);
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState<AdminSection>(() => {
     // 1. Check URL ?section= param (from GlobalMissionOverlay navigate)

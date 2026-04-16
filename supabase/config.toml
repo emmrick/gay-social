@@ -5,6 +5,8 @@ project_id = "vxrsqftlaguiwprcqlbw"
     verify_jwt = false
   [functions.auth-email-hook]
     verify_jwt = false
+  [functions.backfill-welcome-emails]
+    verify_jwt = false
   [functions.capture-paypal-order]
     verify_jwt = false
   [functions.cleanup-old-storage]

@@ -3,7 +3,6 @@ import { ArrowLeft, ArrowRight, Users, MapPin, Heart, MessageCircle, Camera, Shi
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SEOHead from '@/components/seo/SEOHead';
-import { useTotalMemberCount, useOnlineMemberCount } from '@/hooks/useTotalMemberCount';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -19,41 +18,41 @@ const FadeIn = ({ children, delay = 0, className = '' }: { children: React.React
   </motion.div>
 );
 
+interface CommunityStats {
+  total_members: number;
+  online_members: number;
+  verified_members: number;
+  total_rooms: number;
+}
+
 const Community = () => {
   const navigate = useNavigate();
-  const { data: memberCount } = useTotalMemberCount();
-  const { data: onlineCount } = useOnlineMemberCount();
 
-  // Get verified count
-  const { data: verifiedCount } = useQuery({
-    queryKey: ['verified-count-community'],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from('identity_verifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'approved');
-      return count || 0;
+  // Public RPC — works for visitors AND authenticated users
+  const { data: communityStats } = useQuery({
+    queryKey: ['community-public-stats'],
+    queryFn: async (): Promise<CommunityStats> => {
+      const { data, error } = await supabase.rpc('get_community_public_stats');
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      return {
+        total_members: Number(row?.total_members ?? 0),
+        online_members: Number(row?.online_members ?? 0),
+        verified_members: Number(row?.verified_members ?? 0),
+        total_rooms: Number(row?.total_rooms ?? 0),
+      };
     },
     staleTime: 60000,
+    refetchInterval: 120000,
   });
 
-  // Get chat rooms count
-  const { data: roomsCount } = useQuery({
-    queryKey: ['rooms-count-community'],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from('chat_rooms')
-        .select('*', { count: 'exact', head: true });
-      return count || 0;
-    },
-    staleTime: 60000,
-  });
+  const fmt = (n?: number) => (n != null ? n.toLocaleString('fr-FR') : '…');
 
   const stats = [
-    { value: memberCount?.toLocaleString('fr-FR') || '...', label: 'Membres inscrits', icon: <Users className="w-5 h-5" /> },
-    { value: onlineCount?.toString() || '...', label: 'En ligne maintenant', icon: <TrendingUp className="w-5 h-5" /> },
-    { value: verifiedCount?.toLocaleString('fr-FR') || '...', label: 'Profils vérifiés', icon: <Shield className="w-5 h-5" /> },
-    { value: roomsCount?.toString() || '101+', label: 'Salons de discussion', icon: <MessageCircle className="w-5 h-5" /> },
+    { value: fmt(communityStats?.total_members), label: 'Membres inscrits', icon: <Users className="w-5 h-5" /> },
+    { value: fmt(communityStats?.online_members), label: 'En ligne maintenant', icon: <TrendingUp className="w-5 h-5" /> },
+    { value: fmt(communityStats?.verified_members), label: 'Profils vérifiés', icon: <Shield className="w-5 h-5" /> },
+    { value: fmt(communityStats?.total_rooms), label: 'Salons de discussion', icon: <MessageCircle className="w-5 h-5" /> },
   ];
 
   const testimonials = [

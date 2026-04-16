@@ -26,8 +26,24 @@ import {
   normalize,
   type ScoredResult,
 } from '@/lib/helpChatbotEngine';
+import {
+  CHATBOT_TOPICS,
+  MAIN_TOPIC_IDS,
+  QUICK_TOPIC_IDS,
+  getTopicById,
+  type ChatbotTopic,
+  type TopicSubAction,
+} from '@/lib/helpChatbotTopics';
 
 type ChatPhase = 'chatbot' | 'waiting_agent' | 'agent' | 'rating';
+
+/** Inline button shown under a bot message */
+interface QuickAction {
+  label: string;
+  /** Internal action id parsed by handleQuickAction */
+  value: string;
+  variant?: 'default' | 'outline' | 'ghost' | 'subtle';
+}
 
 interface ChatMessage {
   type: 'bot' | 'user' | 'system';
@@ -35,6 +51,8 @@ interface ChatMessage {
   isTyping?: boolean;
   revealedLength?: number;
   action?: 'credit_claim';
+  /** Inline clickable buttons rendered after the bubble */
+  quickActions?: QuickAction[];
 }
 
 // Pending results for numbered suggestions

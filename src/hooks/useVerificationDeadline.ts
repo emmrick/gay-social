@@ -22,7 +22,8 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
   const { verification, isLoading } = useIdentityVerification();
 
   return useMemo(() => {
-    // Default state while loading
+    // État par défaut pendant le chargement — accès BLOQUÉ par sécurité
+    // (le guard affichera un loader, l'utilisateur ne verra pas l'app)
     if (isLoading || !profile) {
       return {
         isDeadlinePassed: false,
@@ -32,7 +33,7 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
         isVerificationComplete: false,
         isVerificationPending: false,
         isVerificationRejected: false,
-        canAccessApp: true,
+        canAccessApp: false,
         deadlineDate: null,
         isReVerification: false,
         isLoading: true,

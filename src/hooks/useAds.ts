@@ -20,25 +20,47 @@ interface Ad {
 
 const AD_ROTATION_INTERVAL_MS = 30000;
 
-/** Check if user has an active ad-free subscription */
-export const useAdFreeStatus = () => {
+/** Full ad-free subscription details (expiry, plan, remaining time) */
+export const useAdFreeSubscription = () => {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ['ad-free-status', user?.id],
+    queryKey: ['ad-free-subscription', user?.id],
     queryFn: async () => {
-      if (!user?.id) return false;
+      if (!user?.id) return { isActive: false as const };
       const { data } = await supabase
         .from('ad_free_subscriptions')
-        .select('id')
+        .select('id, expires_at, starts_at, payment_plan, credits_paid')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .gt('expires_at', new Date().toISOString())
+        .order('expires_at', { ascending: false })
         .maybeSingle();
-      return !!data;
+      if (!data) return { isActive: false as const };
+      const expiresAt = new Date(data.expires_at);
+      const msRemaining = Math.max(0, expiresAt.getTime() - Date.now());
+      const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24));
+      const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      return {
+        isActive: true as const,
+        expiresAt,
+        startsAt: new Date(data.starts_at),
+        paymentPlan: data.payment_plan,
+        creditsPaid: data.credits_paid,
+        daysRemaining,
+        hoursRemaining,
+        msRemaining,
+      };
     },
     enabled: !!user?.id,
     staleTime: 60000,
+    refetchInterval: 60 * 60 * 1000,
   });
+};
+
+/** Boolean shorthand: true if user currently has an active ad-free subscription */
+export const useAdFreeStatus = () => {
+  const { data, isLoading } = useAdFreeSubscription();
+  return { data: !!data?.isActive, isLoading };
 };
 
 /** Fetch approved ads filtered by placement */

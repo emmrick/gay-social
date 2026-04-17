@@ -82,7 +82,9 @@ const TweenComposer = () => {
       setUploading(true);
       try {
         const ext = (mediaFile.name.split('.').pop() || 'bin').toLowerCase();
-        const path = `tweens/${user.id}/${Date.now()}.${ext}`;
+        // Path must start with auth.uid() to satisfy storage RLS policy
+        // ("Authenticated users can upload media" expects first folder == auth.uid())
+        const path = `${user.id}/tweens/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from('media')
           .upload(path, mediaFile, {

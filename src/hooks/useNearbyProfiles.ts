@@ -52,18 +52,8 @@ export const useNearbyProfiles = (
 
       if (error) throw error;
 
-      // Filter to only profiles with a photo, then fix stale status
-      let profiles = (data || [])
-        .filter(p => !!p.avatar_url)
-        .map(p => fixStaleOnlineStatus({ ...p, distance_km: null }));
+      let profiles = (data || []).map(p => fixStaleOnlineStatus({ ...p, distance_km: null }));
 
-      // Filter out suspended/blocked users
-      const checks = await Promise.all(
-        profiles.map(p => supabase.rpc('is_user_suspended_or_blocked', { _user_id: p.user_id }))
-      );
-      profiles = profiles.filter((_, i) => checks[i].data !== true);
-
-      // Fetch primary photos for profiles missing avatar_url
       const missingAvatarIds = profiles.filter(p => !p.avatar_url).map(p => p.user_id);
       if (missingAvatarIds.length > 0) {
         const { data: photos } = await supabase
@@ -80,15 +70,22 @@ export const useNearbyProfiles = (
               photoMap.set(photo.user_id, photo.photo_url);
             }
           }
-          return profiles.map(p => 
-            !p.avatar_url && photoMap.has(p.user_id) 
-              ? { ...p, avatar_url: photoMap.get(p.user_id)! } 
+
+          profiles = profiles.map(p =>
+            !p.avatar_url && photoMap.has(p.user_id)
+              ? { ...p, avatar_url: photoMap.get(p.user_id)! }
               : p
           );
         }
       }
 
-      return profiles;
+      profiles = profiles.filter(p => !!p.avatar_url);
+
+      const checks = await Promise.all(
+        profiles.map(p => supabase.rpc('is_user_suspended_or_blocked', { _user_id: p.user_id }))
+      );
+
+      return profiles.filter((_, i) => checks[i].data !== true);
     },
     enabled: !!user,
     staleTime: 30000,
@@ -151,14 +148,18 @@ export const useNearbyProfiles = (
   const hasGeoData = geoQuery.isSuccess && (geoQuery.data?.length ?? 0) > 0;
   const profiles = mergedProfiles;
   const isLoading = baseQuery.isLoading;
+  const isFetching = baseQuery.isFetching || geoQuery.isFetching;
 
   return {
     data: profiles,
     isLoading,
+    isFetching,
     error: baseQuery.error || geoQuery.error,
-    refetch: () => {
-      baseQuery.refetch();
-      if (latitude != null && longitude != null) geoQuery.refetch();
+    refetch: async () => {
+      await Promise.all([
+        baseQuery.refetch(),
+        latitude != null && longitude != null ? geoQuery.refetch() : Promise.resolve(),
+      ]);
     },
     hasGeoData,
   };

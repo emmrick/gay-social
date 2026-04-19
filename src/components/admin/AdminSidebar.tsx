@@ -117,6 +117,7 @@ const groupOrder: NavGroup[] = ['tasks', 'moderation', 'users', 'finances', 'com
 const AdminSidebar = ({ 
   activeSection, onSectionChange, pendingReports = 0, blockedCount = 0,
   pendingPurchases = 0, pendingVerifications = 0, isAdmin = false, modPermissions,
+  bottomSlot,
 }: AdminSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
 

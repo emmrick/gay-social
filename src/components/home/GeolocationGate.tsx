@@ -130,6 +130,32 @@ const GeolocationGate = ({ permissionState, loading, error, onRequest }: Geoloca
             <span className="leading-relaxed text-left">{error}</span>
           </div>
         )}
+        {/* Barre de progression du chargement GPS */}
+        <AnimatePresence>
+          {(loading || progress >= 100) && !hasError && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.25 }}
+              className="w-full max-w-md overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-1.5 text-[11px]">
+                <span className="flex items-center gap-1.5 text-muted-foreground font-medium">
+                  <Satellite className="w-3 h-3 text-primary animate-pulse" />
+                  {stage}
+                </span>
+                <span className="font-mono tabular-nums text-primary font-semibold">
+                  {Math.round(progress)}%
+                </span>
+              </div>
+              <Progress
+                value={progress}
+                className="h-1.5 bg-primary/10"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* CTA */}
         <Button

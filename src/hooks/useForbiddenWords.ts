@@ -58,6 +58,50 @@ export const detectForbiddenWord = (message: string): string | null => {
   return null;
 };
 
+// External network / off-platform contact detection
+const EXTERNAL_NETWORK_PATTERNS = [
+  // Social networks & messaging
+  'whatsapp', 'whats app', 'wsp', 'wapp',
+  'telegram', 'tg',
+  'snapchat', 'snap', 'snapchat moi', 'mon snap', 'ton snap', 'add me snap', 'ajoute moi snap',
+  'instagram', 'insta', 'mon insta', 'ton insta', 'dm insta',
+  'facebook', 'fb', 'messenger',
+  'discord', 'mon discord', 'ton discord',
+  'tiktok',
+  'twitter', ' x ',
+  'signal app',
+  'skype',
+  'kik',
+  'grindr', 'scruff', 'planetromeo', 'romeo', 'hornet', 'bumble', 'tinder', 'wapa', 'recon',
+  // Direct invites
+  'mon numero', 'mon numéro', 'ton numero', 'ton numéro', 'donne moi ton numero', 'donne ton numero',
+  'numero de tel', 'numéro de tel', 'numero de telephone', 'numéro de téléphone',
+  'mon tel', 'ton tel', 'appelle moi au',
+  'mon mail', 'ton mail', 'mon email', 'ton email', 'gmail.com', 'hotmail', 'outlook.com', 'yahoo.com',
+  // Common French phrasings
+  'on continue sur', 'on parle sur', 'on discute sur', 'rejoins moi sur',
+  'ajoute moi sur', 'add me on', 'contact moi sur', 'contacte moi sur',
+  'ailleurs que sur', 'ailleurs qu ici', 'autre part que ici',
+];
+
+const normalizedExternalPatterns = EXTERNAL_NETWORK_PATTERNS.map(normalizeText);
+
+export const detectExternalNetwork = (message: string): string | null => {
+  const normalized = ` ${normalizeText(message)} `;
+  for (let i = 0; i < normalizedExternalPatterns.length; i++) {
+    const p = normalizedExternalPatterns[i];
+    if (!p) continue;
+    if (normalized.includes(` ${p} `) || normalized.includes(p)) {
+      return EXTERNAL_NETWORK_PATTERNS[i];
+    }
+  }
+  return null;
+};
+
+// Cooldown so we don't spam the warning in the same conversation
+const externalWarningCooldown: Map<string, number> = new Map();
+const EXTERNAL_WARNING_COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
+
 // Store recent messages per conversation for context
 const recentMessagesCache: Map<string, Array<{ sender: string; content: string }>> = new Map();
 

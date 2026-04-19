@@ -3210,6 +3210,36 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_milestones: {
+        Row: {
+          badge_emoji: string
+          bonus_credits: number
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          threshold: number
+        }
+        Insert: {
+          badge_emoji?: string
+          bonus_credits?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          threshold: number
+        }
+        Update: {
+          badge_emoji?: string
+          bonus_credits?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          threshold?: number
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           consecutive_payments: number
@@ -4312,6 +4342,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_referral_milestones: {
+        Row: {
+          bonus_credited: number
+          id: string
+          milestone_id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          bonus_credited?: number
+          id?: string
+          milestone_id: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          bonus_credited?: number
+          id?: string
+          milestone_id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_referral_milestones_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "referral_milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -4579,6 +4641,16 @@ export type Database = {
       check_sufficient_credits: {
         Args: { _amount: number; _user_id: string }
         Returns: boolean
+      }
+      claim_referral_milestones: {
+        Args: { _user_id: string }
+        Returns: {
+          badge_emoji: string
+          bonus_credits: number
+          label: string
+          milestone_id: string
+          threshold: number
+        }[]
       }
       cleanup_expired_suspensions: { Args: never; Returns: number }
       complete_moderation_task: {

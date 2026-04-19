@@ -602,3 +602,60 @@ html {
     box-shadow: none;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   InMobi Choice CMP — bouton "Confidentialité" persistant
+   Transformé en petite icône ronde (roue dentée) en bas à droite,
+   au-dessus de la barre de menu mobile pour éviter tout conflit.
+   ───────────────────────────────────────────────────────────── */
+.qc-cmp2-persistent-link {
+  position: fixed !important;
+  right: 12px !important;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+  left: auto !important;
+  top: auto !important;
+
+  width: 38px !important;
+  height: 38px !important;
+  padding: 0 !important;
+  border-radius: 9999px !important;
+  background-color: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 4px 12px hsl(var(--foreground) / 0.12) !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+  z-index: 40 !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.qc-cmp2-persistent-link:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 16px hsl(var(--foreground) / 0.18) !important;
+}
+
+/* Icône roue dentée (SVG inline, teintée avec --primary) */
+.qc-cmp2-persistent-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: hsl(var(--primary));
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z'/></svg>") no-repeat center / 18px 18px;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z'/></svg>") no-repeat center / 18px 18px;
+}
+
+/* Desktop : remonte un peu plus haut, pas de bottom nav */
+@media (min-width: 768px) {
+  .qc-cmp2-persistent-link {
+    bottom: 16px !important;
+    right: 16px !important;
+    width: 42px !important;
+    height: 42px !important;
+  }
+  .qc-cmp2-persistent-link::before {
+    -webkit-mask-size: 20px 20px;
+            mask-size: 20px 20px;
+  }
+}

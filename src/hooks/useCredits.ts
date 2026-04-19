@@ -454,6 +454,8 @@ export const useCredits = () => {
     purchasedCredits: query.data?.purchased_credits || 0,
     totalCredits: query.data?.total_credits || 0,
     maxDailyCredits: query.data?.max_daily_credits || 5,
+    // Monthly reference balance for the progress bar (resets monthly, grows if exceeded)
+    monthlyReferenceBalance,
     // Lock states
     lockPassive: query.data?.lock_passive || false,
     lockBonus: query.data?.lock_bonus || false,

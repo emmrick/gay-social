@@ -21,11 +21,14 @@ export const usePendingEphemeralSnaps = () => {
       if (!user) return new Map();
 
       // Get all unviewed ephemeral media where the message is a private message sent TO me
+      // Only consider snaps received in the last 7 days — older ones are auto-purged
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from('ephemeral_media')
         .select('message_id, media_type, id')
         .eq('is_viewed', false)
-        .neq('view_duration', 0); // Exclude unlimited
+        .neq('view_duration', 0) // Exclude unlimited
+        .gte('created_at', sevenDaysAgo);
 
       if (error) throw error;
       if (!data || data.length === 0) return new Map();

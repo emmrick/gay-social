@@ -3,7 +3,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+
+// Redirige les anciennes URL /member/:userId vers /profile/:userId
+const LegacyMemberRedirect = () => {
+  const { userId } = useParams();
+  return <Navigate to={`/profile/${userId}`} replace />;
+};
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ActiveProfileProvider } from "@/contexts/ActiveProfileContext";
 import { CreditDialogProvider } from "@/contexts/CreditDialogContext";
@@ -246,7 +252,7 @@ const AuthenticatedApp = () => {
                           <Route path="/mentions-legales" element={<Navigate to="/legal" replace />} />
                           <Route path="/politique-confidentialite" element={<Navigate to="/legal" replace />} />
                           <Route path="/cgu" element={<Navigate to="/regles" replace />} />
-                          <Route path="/member/:userId" element={<Navigate to="/profile/:userId" replace />} />
+                          <Route path="/member/:userId" element={<LegacyMemberRedirect />} />
 
                           <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                         </Routes>

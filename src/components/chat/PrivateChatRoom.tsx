@@ -46,6 +46,7 @@ const formatDateLabel = (date: Date): string => {
 
 const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: PrivateChatRoomProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
   const resolvedOtherAvatar = useAvatarUrl(otherUserProfile?.avatar_url);
   const navigate = useNavigate();

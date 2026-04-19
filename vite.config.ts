@@ -1,8 +1,28 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
+
+// Plugin: génère public/version.json à chaque build (utilisé par UpdateDetector)
+const versionJsonPlugin = (): Plugin => {
+  const version = Date.now().toString();
+  return {
+    name: "version-json",
+    buildStart() {
+      const dir = path.resolve(__dirname, "public");
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(
+        path.join(dir, "version.json"),
+        JSON.stringify({ version, builtAt: new Date().toISOString() }, null, 2)
+      );
+    },
+    config() {
+      return { define: { __APP_VERSION__: JSON.stringify(version) } };
+    },
+  };
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({

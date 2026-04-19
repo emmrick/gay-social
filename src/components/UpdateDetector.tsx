@@ -5,75 +5,120 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 
 const CHECK_INTERVAL = 30_000; // 30s
+const VERSION_URL = '/version.json';
+const STORAGE_KEY = 'gc_app_version';
+
+// Version injectée au build par le plugin Vite (vite.config.ts)
+const BUILD_VERSION =
+  typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
+
+interface VersionPayload {
+  version: string;
+  builtAt?: string;
+}
+
+const fetchRemoteVersion = async (): Promise<string | null> => {
+  try {
+    const res = await fetch(`${VERSION_URL}?t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' },
+    });
+    if (!res.ok) return null;
+    const data: VersionPayload = await res.json();
+    return data?.version ?? null;
+  } catch {
+    return null;
+  }
+};
+
+// Vide tous les caches (Cache API + Service Worker) avant le hard reload.
+const clearAllCaches = async () => {
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch {}
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+  } catch {}
+};
 
 const UpdateDetector = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [phase, setPhase] = useState<'idle' | 'loading' | 'ready'>('idle');
-  const initialHash = useRef<string | null>(null);
+  const [phase, setPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [retryCount, setRetryCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const localVersionRef = useRef<string>(BUILD_VERSION);
 
-  const getPageHash = useCallback(async (): Promise<string | null> => {
-    try {
-      const res = await fetch(window.location.origin + '/?_cache_bust=' + Date.now(), {
-        method: 'HEAD',
-        cache: 'no-store',
-      });
-      return res.headers.get('etag') || res.headers.get('last-modified') || null;
-    } catch {
-      return null;
+  // Initialise la version locale (priorité au localStorage si présent)
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) {
+      localStorage.setItem(STORAGE_KEY, BUILD_VERSION);
+      localVersionRef.current = BUILD_VERSION;
+    } else {
+      localVersionRef.current = stored;
     }
   }, []);
 
+  // Polling de la version distante
   useEffect(() => {
     let mounted = true;
 
-    const init = async () => {
-      const hash = await getPageHash();
-      if (mounted) initialHash.current = hash;
-    };
-    init();
-
-    intervalRef.current = setInterval(async () => {
-      if (!initialHash.current) return;
-      const newHash = await getPageHash();
-      if (newHash && newHash !== initialHash.current && mounted) {
+    const check = async () => {
+      const remote = await fetchRemoteVersion();
+      if (!mounted || !remote) return;
+      // Ignore les comparaisons triviales (initial vs dev)
+      if (remote === 'initial' || localVersionRef.current === 'dev') return;
+      if (remote !== localVersionRef.current) {
         setUpdateAvailable(true);
-        clearInterval(intervalRef.current);
+        if (intervalRef.current) clearInterval(intervalRef.current);
       }
-    }, CHECK_INTERVAL);
+    };
+
+    // Premier check après 5s pour laisser l'app se charger
+    const initialTimeout = setTimeout(check, 5000);
+    intervalRef.current = setInterval(check, CHECK_INTERVAL);
 
     return () => {
       mounted = false;
-      clearInterval(intervalRef.current);
+      clearTimeout(initialTimeout);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [getPageHash]);
+  }, []);
 
-  // Lock body scroll when modal is open
+  // Lock body scroll + bloque la touche Escape quand le modal est ouvert
   useEffect(() => {
-    if (updateAvailable) {
-      const original = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = original;
-      };
-    }
+    if (!updateAvailable) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const blockEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') e.preventDefault();
+    };
+    document.addEventListener('keydown', blockEsc, true);
+    return () => {
+      document.body.style.overflow = original;
+      document.removeEventListener('keydown', blockEsc, true);
+    };
   }, [updateAvailable]);
 
-  const handleUpdate = useCallback(() => {
+  const performUpdate = useCallback(async () => {
     setIsUpdating(true);
     setPhase('loading');
     setProgress(0);
 
     const stages = [
-      { target: 15, duration: 400 },
-      { target: 35, duration: 600 },
-      { target: 55, duration: 800 },
-      { target: 72, duration: 1000 },
-      { target: 88, duration: 700 },
-      { target: 96, duration: 500 },
-      { target: 100, duration: 300 },
+      { target: 15, duration: 300 },
+      { target: 35, duration: 400 },
+      { target: 55, duration: 500 },
+      { target: 75, duration: 500 },
+      { target: 90, duration: 400 },
     ];
 
     let delay = 0;
@@ -82,11 +127,37 @@ const UpdateDetector = () => {
       setTimeout(() => setProgress(stage.target), delay);
     });
 
-    setTimeout(() => {
+    try {
+      // Vide tous les caches en parallèle de l'animation
+      await clearAllCaches();
+
+      // Met à jour la version stockée pour éviter une boucle de détection
+      const remote = await fetchRemoteVersion();
+      if (remote && remote !== 'initial') {
+        localStorage.setItem(STORAGE_KEY, remote);
+      }
+
+      setProgress(100);
       setPhase('ready');
-      setTimeout(() => window.location.reload(), 800);
-    }, delay + 400);
+
+      // Hard reload avec cache-busting
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('_v', Date.now().toString());
+        window.location.replace(url.toString());
+      }, 700);
+    } catch {
+      setPhase('error');
+    }
   }, []);
+
+  const handleRetry = useCallback(() => {
+    setRetryCount((c) => c + 1);
+    setIsUpdating(false);
+    setPhase('idle');
+    setProgress(0);
+    setTimeout(() => performUpdate(), 200);
+  }, [performUpdate]);
 
   return (
     <AnimatePresence>
@@ -95,8 +166,16 @@ const UpdateDetector = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
-          onClick={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/85 backdrop-blur-md"
+          onClick={(e) => {
+            // Bloque toute fermeture par clic extérieur
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="update-title"
+          aria-describedby="update-desc"
         >
           <motion.div
             initial={{ scale: 0.9, y: 20, opacity: 0 }}
@@ -107,7 +186,6 @@ const UpdateDetector = () => {
           >
             {!isUpdating ? (
               <div className="p-6">
-                {/* Hero icon */}
                 <div className="flex justify-center mb-4">
                   <motion.div
                     animate={{ y: [0, -6, 0] }}
@@ -118,28 +196,30 @@ const UpdateDetector = () => {
                   </motion.div>
                 </div>
 
-                <h2 className="text-center text-lg font-display font-bold mb-2">
-                  Nouvelle mise à jour disponible !
+                <h2
+                  id="update-title"
+                  className="text-center text-lg font-display font-bold mb-2"
+                >
+                  Nouvelle version disponible
                 </h2>
-                <p className="text-center text-sm text-muted-foreground mb-4 leading-relaxed">
-                  Une nouvelle version du site est prête avec des améliorations et corrections importantes.
+                <p
+                  id="update-desc"
+                  className="text-center text-sm text-muted-foreground mb-4 leading-relaxed"
+                >
+                  Une mise à jour du site est disponible. Pour continuer, veuillez
+                  mettre à jour la page afin d'accéder à la dernière version.
                 </p>
-
-                <div className="bg-secondary/50 rounded-xl p-3 mb-4">
-                  <p className="text-xs text-foreground/80 leading-relaxed">
-                    👉 Clique sur <strong>« Mettre à jour »</strong> puis patiente quelques secondes le temps du chargement.
-                  </p>
-                </div>
 
                 <div className="flex items-start gap-2 text-[11px] text-amber-600 dark:text-amber-500 bg-amber-500/10 rounded-xl px-3 py-2.5 mb-4">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <span className="leading-relaxed">
-                    Cette mise à jour est <strong>obligatoire</strong> pour éviter les bugs et conflits. Elle est requise pour continuer à utiliser le site.
+                    Cette mise à jour est <strong>obligatoire</strong> pour éviter les
+                    bugs liés au cache.
                   </span>
                 </div>
 
                 <Button
-                  onClick={handleUpdate}
+                  onClick={performUpdate}
                   size="lg"
                   className="w-full gap-2 h-12 text-base font-semibold shadow-lg shadow-primary/20"
                 >
@@ -155,41 +235,71 @@ const UpdateDetector = () => {
               <div className="p-6">
                 <div className="flex flex-col items-center gap-3 mb-5">
                   <motion.div
-                    animate={{ rotate: phase === 'loading' ? 360 : 0 }}
-                    transition={{ repeat: phase === 'loading' ? Infinity : 0, duration: 1, ease: 'linear' }}
+                    animate={{
+                      rotate: phase === 'loading' ? 360 : 0,
+                    }}
+                    transition={{
+                      repeat: phase === 'loading' ? Infinity : 0,
+                      duration: 1,
+                      ease: 'linear',
+                    }}
                     className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center"
                   >
                     {phase === 'ready' ? (
                       <Sparkles className="w-7 h-7 text-primary" />
+                    ) : phase === 'error' ? (
+                      <AlertTriangle className="w-7 h-7 text-destructive" />
                     ) : (
                       <RefreshCw className="w-7 h-7 text-primary" />
                     )}
                   </motion.div>
                   <div className="text-center">
                     <p className="text-base font-display font-bold">
-                      {phase === 'ready' ? 'Mise à jour terminée !' : 'Mise à jour en cours…'}
+                      {phase === 'ready'
+                        ? 'Mise à jour terminée !'
+                        : phase === 'error'
+                        ? 'Échec de la mise à jour'
+                        : 'Mise à jour en cours…'}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {phase === 'ready'
                         ? 'Rechargement automatique du site'
+                        : phase === 'error'
+                        ? 'Une erreur est survenue. Réessayez.'
                         : 'Patiente quelques secondes, ne ferme pas la page'}
                     </p>
                   </div>
                 </div>
 
-                <div className="relative mb-2">
-                  <Progress value={progress} className="h-3 bg-secondary/50" />
-                  {phase === 'loading' && progress < 100 && (
-                    <motion.div
-                      className="absolute top-0 left-0 h-full w-16 rounded-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                      animate={{ x: ['-64px', '320px'] }}
-                      transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                    />
-                  )}
-                </div>
-                <p className="text-right text-xs font-display font-bold text-primary tabular-nums">
-                  {progress}%
-                </p>
+                {phase !== 'error' && (
+                  <>
+                    <div className="relative mb-2">
+                      <Progress value={progress} className="h-3 bg-secondary/50" />
+                      {phase === 'loading' && progress < 100 && (
+                        <motion.div
+                          className="absolute top-0 left-0 h-full w-16 rounded-full bg-gradient-to-r from-transparent via-primary-foreground/30 to-transparent"
+                          animate={{ x: ['-64px', '320px'] }}
+                          transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                        />
+                      )}
+                    </div>
+                    <p className="text-right text-xs font-display font-bold text-primary tabular-nums">
+                      {progress}%
+                    </p>
+                  </>
+                )}
+
+                {phase === 'error' && (
+                  <Button
+                    onClick={handleRetry}
+                    size="lg"
+                    variant="default"
+                    className="w-full gap-2 h-12 text-base font-semibold mt-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Réessayer {retryCount > 0 && `(${retryCount})`}
+                  </Button>
+                )}
               </div>
             )}
           </motion.div>

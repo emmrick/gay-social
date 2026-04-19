@@ -13,7 +13,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import DataExportDialog from '@/components/profile/DataExportDialog';
 import SEOHead from '@/components/seo/SEOHead';
-import { useInMobiCmp } from '@/hooks/useInMobiCmp';
+
 
 // Define searchable sections
 const LEGAL_SECTIONS = [

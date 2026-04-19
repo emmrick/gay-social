@@ -31,47 +31,13 @@ const fetchRemoteVersion = async (): Promise<string | null> => {
   }
 };
 
-// Vide tous les caches (Cache API + Service Worker) avant le hard reload.
-// onProgress reçoit une valeur 0..1 représentant l'avancement réel des suppressions.
-const clearAllCaches = async (onProgress?: (ratio: number) => void) => {
-  // 1) Cache API
-  try {
-    if ('caches' in window) {
-      const keys = await caches.keys();
-      const total = keys.length || 1;
-      let done = 0;
-      await Promise.all(
-        keys.map(async (k) => {
-          await caches.delete(k);
-          done += 1;
-          onProgress?.(Math.min(0.7, (done / total) * 0.7));
-        }),
-      );
-    } else {
-      onProgress?.(0.7);
-    }
-  } catch {
-    onProgress?.(0.7);
-  }
-
-  // 2) Service workers
-  try {
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      const total = regs.length || 1;
-      let done = 0;
-      await Promise.all(
-        regs.map(async (r) => {
-          await r.unregister();
-          done += 1;
-          onProgress?.(0.7 + Math.min(0.25, (done / total) * 0.25));
-        }),
-      );
-    } else {
-      onProgress?.(0.95);
-    }
-  } catch {
-    onProgress?.(0.95);
+// Simule une progression visuelle simple sans toucher aux caches/SW/storage.
+// On veut UNIQUEMENT recharger la page pour récupérer la nouvelle version.
+const simulateProgress = async (onProgress: (ratio: number) => void) => {
+  const steps = [0.2, 0.45, 0.7, 0.9];
+  for (const r of steps) {
+    await new Promise((res) => setTimeout(res, 180));
+    onProgress(r);
   }
 };
 

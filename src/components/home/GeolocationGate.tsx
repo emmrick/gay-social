@@ -1,6 +1,8 @@
-import { motion } from 'framer-motion';
-import { MapPin, Loader2, ShieldCheck, AlertTriangle, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, Loader2, ShieldCheck, AlertTriangle, RefreshCw, Satellite } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 
 interface GeolocationGateProps {
   /** État de la permission navigateur ('granted' | 'prompt' | 'denied' | null) */

@@ -194,6 +194,33 @@ export const useForbiddenWords = (conversationId?: string) => {
   const checkMessage = useCallback(async (message: string): Promise<{ blocked: boolean; word?: string; warningCount?: number; sanctioned?: boolean }> => {
     if (!user?.id) return { blocked: false };
 
+  const checkMessage = useCallback(async (message: string): Promise<{ blocked: boolean; word?: string; warningCount?: number; sanctioned?: boolean }> => {
+    if (!user?.id) return { blocked: false };
+
+    // === Non-blocking: warn about external-network mentions in private chats ===
+    if (conversationId) {
+      const externalHit = detectExternalNetwork(message);
+      if (externalHit) {
+        const last = externalWarningCooldown.get(conversationId) || 0;
+        if (Date.now() - last > EXTERNAL_WARNING_COOLDOWN_MS) {
+          externalWarningCooldown.set(conversationId, Date.now());
+          // Fire and forget — does not block the user's message
+          supabase
+            .from('messages')
+            .insert({
+              sender_id: user.id,
+              recipient_id: conversationId,
+              content: `⚠️ **Message automatique de sécurité**\n\nPour rester en sécurité, nous vous recommandons de privilégier les conversations sur **Gay Social**.\n\nEn dehors de notre site, nous ne sommes plus en mesure de vous protéger ni d'agir en cas de soucis ou de signalement.\n\nMerci pour votre vigilance 🙏`,
+              message_type: 'system_external_warning',
+              is_private: true,
+            } as any)
+            .then(({ error }) => {
+              if (error) console.error('[ExternalNetworkWarning] insert error:', error);
+            });
+        }
+      }
+    }
+
     // Step 1: Quick keyword detection
     const detectedWord = detectForbiddenWord(message);
     if (!detectedWord) return { blocked: false };

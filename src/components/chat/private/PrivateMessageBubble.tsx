@@ -60,6 +60,29 @@ const PrivateMessageBubble = ({
     } catch { /* ignore */ }
   }
 
+  if (isSystemExternalWarning) {
+    return (
+      <div className="flex justify-center my-3">
+        <div className="max-w-[90%] bg-yellow-500/10 border border-yellow-500/40 rounded-xl px-4 py-3 text-center">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+            <span className="text-xs font-bold text-yellow-700 dark:text-yellow-300">Sécurité — message automatique</span>
+          </div>
+          <p className="text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap">
+            {message.content?.split(/(\*\*[^*]+\*\*)/g).map((seg: string, j: number) =>
+              seg.startsWith('**') && seg.endsWith('**')
+                ? <strong key={j} className="font-semibold text-yellow-700 dark:text-yellow-300">{seg.slice(2, -2)}</strong>
+                : <span key={j}>{seg}</span>
+            )}
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-2">
+            {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (isSystemScreenshot) {
     return (
       <div className="flex justify-center my-3">

@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyProfiles } from '@/hooks/useNearbyProfiles';
-import { useProfilesByRegion } from '@/hooks/useProfiles';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import ProfileCard from './ProfileCard';
+import GeolocationGate from './GeolocationGate';
+import RadiusSelector, { type RadiusValue } from './RadiusSelector';
 
 interface NearbyMembersGridProps {
   onViewProfile: (userId: string) => void;
@@ -17,6 +18,8 @@ interface NearbyMembersGridProps {
 }
 
 const PROFILES_PER_PAGE = 12;
+const DEFAULT_RADIUS: RadiusValue = 10;
+const RADIUS_STORAGE_KEY = 'gc_nearby_radius_km';
 
 const ProfileSkeleton = ({ index }: { index: number }) => (
   <div
@@ -33,7 +36,35 @@ const ProfileSkeleton = ({ index }: { index: number }) => (
 
 const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembersGridProps) => {
   const { profile: currentUserProfile } = useAuth();
-  const { latitude, longitude, loading: locationLoading, requestLocation, permissionState } = useGeolocation();
+  const {
+    latitude,
+    longitude,
+    loading: locationLoading,
+    error: locationError,
+    requestLocation,
+    permissionState,
+  } = useGeolocation();
+
+  // Sélecteur de rayon (persisté en localStorage)
+  const [radius, setRadius] = useState<RadiusValue>(() => {
+    if (typeof window === 'undefined') return DEFAULT_RADIUS;
+    const stored = window.localStorage.getItem(RADIUS_STORAGE_KEY);
+    if (!stored) return DEFAULT_RADIUS;
+    const parsed = Number(stored) as RadiusValue;
+    return ([5, 10, 25, 50, 100, 0] as number[]).includes(parsed) ? parsed : DEFAULT_RADIUS;
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(RADIUS_STORAGE_KEY, String(radius));
+    } catch {
+      /* ignore quota errors */
+    }
+  }, [radius]);
+
+  // 0 = illimité → on envoie une grande valeur au RPC
+  const maxDistanceKm = radius === 0 ? 100000 : radius;
+
   const {
     data: nearbyProfiles,
     isLoading: nearbyLoading,
@@ -41,26 +72,22 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
     error: nearbyError,
     refetch: refetchNearby,
     hasGeoData,
-  } = useNearbyProfiles(latitude, longitude);
-  const {
-    data: regionProfiles,
-    isLoading: regionLoading,
-    refetch: refetchRegion,
-  } = useProfilesByRegion(currentUserProfile?.region || '');
+  } = useNearbyProfiles(latitude, longitude, maxDistanceKm);
 
   const hasLocation = latitude != null && longitude != null;
   const [visibleCount, setVisibleCount] = useState(PROFILES_PER_PAGE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
+  // Auto-request si la permission est déjà accordée (pas de prompt en double)
   useEffect(() => {
     if (permissionState === 'granted' && !hasLocation && !locationLoading) {
       void requestLocation();
     }
   }, [permissionState, hasLocation, locationLoading, requestLocation]);
 
+  // Profil de l'utilisateur courant (carte "Toi")
   const prevKeyRef = useRef('');
   const [stableUser, setStableUser] = useState<any>(null);
-
   useEffect(() => {
     if (!currentUserProfile) return;
     const key = `${currentUserProfile.user_id}|${currentUserProfile.avatar_url}|${currentUserProfile.username}`;
@@ -81,54 +108,55 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
     }
   }, [currentUserProfile]);
 
-  const fallbackRegionProfiles = useMemo(
-    () => (regionProfiles || []).filter(p => p.user_id !== currentUserProfile?.user_id),
-    [regionProfiles, currentUserProfile?.user_id]
-  );
-
-  const displayProfiles = useMemo(() => {
-    if (nearbyProfiles && nearbyProfiles.length > 0) return nearbyProfiles;
-    return fallbackRegionProfiles;
-  }, [nearbyProfiles, fallbackRegionProfiles]);
+  // Tri : profils avec distance d'abord (croissant), puis profils sans GPS en bas
+  const sortedProfiles = useMemo(() => {
+    const list = [...(nearbyProfiles ?? [])];
+    list.sort((a, b) => {
+      const aHas = a.distance_km !== null && a.distance_km !== undefined;
+      const bHas = b.distance_km !== null && b.distance_km !== undefined;
+      if (aHas && !bHas) return -1;
+      if (!aHas && bHas) return 1;
+      if (aHas && bHas) return (a.distance_km as number) - (b.distance_km as number);
+      return 0;
+    });
+    return list;
+  }, [nearbyProfiles]);
 
   const allProfiles = useMemo(() => {
     const result: any[] = [];
     if (stableUser) {
       result.push({ ...stableUser, distance_km: null, isCurrentUser: true });
     }
-    displayProfiles.forEach(p => {
+    sortedProfiles.forEach((p) => {
       result.push({ ...p, isCurrentUser: false });
     });
     if (ageRange && (ageRange[0] !== 18 || ageRange[1] !== 99)) {
-      return result.filter(p => {
+      return result.filter((p) => {
         if (p.isCurrentUser) return true;
         if (!p.age) return false;
         return p.age >= ageRange[0] && p.age <= ageRange[1];
       });
     }
     return result;
-  }, [stableUser, displayProfiles, ageRange]);
+  }, [stableUser, sortedProfiles, ageRange]);
 
-  const externalProfilesCount = allProfiles.filter(p => !p.isCurrentUser).length;
-  const isRefreshing = nearbyFetching || (externalProfilesCount === 0 && regionLoading);
+  const externalProfilesCount = allProfiles.filter((p) => !p.isCurrentUser).length;
+  const isRefreshing = nearbyFetching;
 
   const handleRefresh = useCallback(async () => {
     setVisibleCount(PROFILES_PER_PAGE);
-    try {
-      await requestLocation();
-    } catch {
-      // ignore geolocation refusal, fallback régional restera utilisé
-    }
-    await Promise.all([refetchNearby(), refetchRegion()]);
-  }, [requestLocation, refetchNearby, refetchRegion]);
+    await requestLocation();
+    await refetchNearby();
+  }, [requestLocation, refetchNearby]);
 
+  // Infinite scroll
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && visibleCount < allProfiles.length) {
-          setVisibleCount(prev => Math.min(prev + PROFILES_PER_PAGE, allProfiles.length));
+          setVisibleCount((prev) => Math.min(prev + PROFILES_PER_PAGE, allProfiles.length));
         }
       },
       { rootMargin: '200px' }
@@ -139,14 +167,24 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
 
   useEffect(() => {
     setVisibleCount(PROFILES_PER_PAGE);
-  }, [ageRange]);
+  }, [ageRange, radius]);
 
-  const visibleProfiles = allProfiles.slice(0, visibleCount);
-  const hasMore = visibleCount < allProfiles.length;
-  const totalCount = allProfiles.length;
-  const onlineCount = allProfiles.filter(p => !p.isCurrentUser && p.is_online).length;
+  // ───────────────────────────────────────────────────────────────────
+  // ÉCRAN BLOQUANT : pas de localisation = pas de profils
+  // ───────────────────────────────────────────────────────────────────
+  if (!hasLocation) {
+    return (
+      <GeolocationGate
+        permissionState={permissionState}
+        loading={locationLoading}
+        error={locationError}
+        onRequest={() => void requestLocation()}
+      />
+    );
+  }
 
-  if (nearbyError && externalProfilesCount === 0 && fallbackRegionProfiles.length === 0) {
+  // Erreur réseau (avec localisation OK mais requête en échec)
+  if (nearbyError && externalProfilesCount === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -156,7 +194,9 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
         <div className="w-14 h-14 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
           <RefreshCw className="w-6 h-6 text-destructive" />
         </div>
-        <h3 className="font-bold text-foreground mb-2" style={{ fontFamily: 'Syne, sans-serif' }}>Impossible de charger</h3>
+        <h3 className="font-bold text-foreground mb-2" style={{ fontFamily: 'Syne, sans-serif' }}>
+          Impossible de charger
+        </h3>
         <p className="text-sm text-muted-foreground mb-5">Vérifie ta connexion et réessaie.</p>
         <Button
           variant="outline"
@@ -170,7 +210,8 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
     );
   }
 
-  if ((nearbyLoading || (externalProfilesCount === 0 && regionLoading)) && externalProfilesCount === 0) {
+  // Chargement initial
+  if (nearbyLoading && externalProfilesCount === 0) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
@@ -186,8 +227,14 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
     );
   }
 
+  const visibleProfiles = allProfiles.slice(0, visibleCount);
+  const hasMore = visibleCount < allProfiles.length;
+  const totalCount = allProfiles.length;
+  const onlineCount = allProfiles.filter((p) => !p.isCurrentUser && p.is_online).length;
+
   return (
     <div className="space-y-4">
+      {/* En-tête : compteurs + actualiser */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
@@ -211,13 +258,18 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
           onClick={() => void handleRefresh()}
           className="text-xs h-8 gap-1.5 rounded-xl hover:bg-primary/5 hover:text-primary"
           disabled={isRefreshing}
+          aria-label="Actualiser ma position et recharger les profils"
         >
           <RefreshCw className={cn('w-3.5 h-3.5', isRefreshing && 'animate-spin')} />
           Actualiser
         </Button>
       </div>
 
-      {hasGeoData && nearbyProfiles && nearbyProfiles.length > 0 && (
+      {/* Sélecteur de rayon */}
+      <RadiusSelector value={radius} onChange={setRadius} disabled={isRefreshing} />
+
+      {/* Bandeau confirmation géoloc */}
+      {hasGeoData && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
@@ -225,7 +277,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
         >
           <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
           <p className="text-xs text-muted-foreground">
-            Profils triés par proximité — découvre qui est autour de toi !
+            Profils triés par proximité — {radius === 0 ? 'aucune limite de distance' : `dans un rayon de ${radius} km`}
           </p>
         </motion.div>
       )}
@@ -259,8 +311,25 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
           <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/10 flex items-center justify-center mx-auto mb-4">
             <MapPin className="w-7 h-7 text-primary" />
           </div>
-          <h3 className="font-bold text-foreground mb-1" style={{ fontFamily: 'Syne, sans-serif' }}>Aucun membre trouvé</h3>
-          <p className="text-sm text-muted-foreground">Élargis tes filtres pour découvrir plus de profils</p>
+          <h3 className="font-bold text-foreground mb-1" style={{ fontFamily: 'Syne, sans-serif' }}>
+            Aucun membre trouvé
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {radius !== 0
+              ? 'Élargis le rayon de recherche pour découvrir plus de profils'
+              : 'Aucun profil disponible pour le moment'}
+          </p>
+          {radius !== 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setRadius(0)}
+              className="mt-4 rounded-xl border-primary/20 hover:bg-primary/5"
+            >
+              <Compass className="w-3.5 h-3.5 mr-2" />
+              Recherche illimitée
+            </Button>
+          )}
         </motion.div>
       )}
     </div>

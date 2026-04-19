@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -45,6 +46,7 @@ const formatDateLabel = (date: Date): string => {
 
 const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: PrivateChatRoomProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
   const resolvedOtherAvatar = useAvatarUrl(otherUserProfile?.avatar_url);
   const navigate = useNavigate();
@@ -219,14 +221,38 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
 
   const handleSendGift = async (amount: number) => {
     if (!user || !otherUserId) return;
-    const { data: msg } = await supabase.from('messages').insert({
-      sender_id: user.id,
-      recipient_id: otherUserId,
-      content: JSON.stringify({ type: 'credit_gift', amount }),
-      message_type: 'credit_gift',
-      is_private: true,
-    }).select().single();
-    await sendGift.mutateAsync({ recipientId: otherUserId, amount, messageId: msg?.id });
+    try {
+      // 1. Try to transfer credits FIRST (validates balance, anti-spam, etc.)
+      const result = await sendGift.mutateAsync({ recipientId: otherUserId, amount });
+
+      // 2. Only if transfer succeeded, post the visible message in chat
+      const { data: msg, error: msgError } = await supabase.from('messages').insert({
+        sender_id: user.id,
+        recipient_id: otherUserId,
+        content: JSON.stringify({ type: 'credit_gift', amount }),
+        message_type: 'credit_gift',
+        is_private: true,
+      }).select().single();
+
+      if (msgError) {
+        console.error('[Gift] Failed to insert chat message:', msgError);
+        return;
+      }
+
+      // 3. Optimistic update so the gift bubble appears instantly
+      if (msg) {
+        queryClient.setQueryData<any[]>(
+          ['private-messages', user.id, otherUserId],
+          (old) => {
+            if (old?.some((m) => m.id === msg.id)) return old;
+            return [...(old || []), { ...msg, senderUsername: 'Moi', senderAvatar: null }];
+          }
+        );
+        queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
+      }
+    } catch (e) {
+      console.error('[Gift] send_credit_gift failed:', e);
+    }
   };
 
   const handleUnblock = async () => {

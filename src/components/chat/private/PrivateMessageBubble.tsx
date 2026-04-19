@@ -43,6 +43,7 @@ const PrivateMessageBubble = ({
   const isCreditRequest = message.message_type === 'credit_request';
   const isCreditGift = message.message_type === 'credit_gift';
   const isSystemScreenshot = message.message_type === 'system_screenshot';
+  const isSystemExternalWarning = message.message_type === 'system_external_warning';
 
   let albumShareData: any = null;
   if (isAlbumShare && message.content) {

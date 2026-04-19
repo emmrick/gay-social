@@ -31,47 +31,13 @@ const fetchRemoteVersion = async (): Promise<string | null> => {
   }
 };
 
-// Vide tous les caches (Cache API + Service Worker) avant le hard reload.
-// onProgress reçoit une valeur 0..1 représentant l'avancement réel des suppressions.
-const clearAllCaches = async (onProgress?: (ratio: number) => void) => {
-  // 1) Cache API
-  try {
-    if ('caches' in window) {
-      const keys = await caches.keys();
-      const total = keys.length || 1;
-      let done = 0;
-      await Promise.all(
-        keys.map(async (k) => {
-          await caches.delete(k);
-          done += 1;
-          onProgress?.(Math.min(0.7, (done / total) * 0.7));
-        }),
-      );
-    } else {
-      onProgress?.(0.7);
-    }
-  } catch {
-    onProgress?.(0.7);
-  }
-
-  // 2) Service workers
-  try {
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      const total = regs.length || 1;
-      let done = 0;
-      await Promise.all(
-        regs.map(async (r) => {
-          await r.unregister();
-          done += 1;
-          onProgress?.(0.7 + Math.min(0.25, (done / total) * 0.25));
-        }),
-      );
-    } else {
-      onProgress?.(0.95);
-    }
-  } catch {
-    onProgress?.(0.95);
+// Simule une progression visuelle simple sans toucher aux caches/SW/storage.
+// On veut UNIQUEMENT recharger la page pour récupérer la nouvelle version.
+const simulateProgress = async (onProgress: (ratio: number) => void) => {
+  const steps = [0.2, 0.45, 0.7, 0.9];
+  for (const r of steps) {
+    await new Promise((res) => setTimeout(res, 180));
+    onProgress(r);
   }
 };
 
@@ -142,33 +108,29 @@ const UpdateDetector = () => {
     setProgress(0);
 
     try {
-      // ── Étape 1/3 : récupération de la nouvelle version (0 → 15%) ──
-      setProgress(5);
+      // ── Étape 1/2 : récupération de la nouvelle version (0 → 20%) ──
+      setProgress(10);
       const remote = await fetchRemoteVersion();
-      setProgress(15);
+      setProgress(20);
 
-      // ── Étape 2/3 : nettoyage caches + service workers (15 → 90%) ──
-      // La progression réelle vient de clearAllCaches via onProgress (0..1)
-      await clearAllCaches((ratio) => {
-        // Mappe 0..1 sur la plage 15 → 90
-        const mapped = 15 + Math.round(ratio * 75);
+      // ── Étape 2/2 : petite progression visuelle (20 → 95%) ──
+      // Aucun cache, service worker ou localStorage n'est touché.
+      await simulateProgress((ratio) => {
+        const mapped = 20 + Math.round(ratio * 75);
         setProgress((prev) => (mapped > prev ? mapped : prev));
       });
-      setProgress(90);
 
-      // ── Étape 3/3 : persistance de la version (90 → 100%) ──
+      // Mémorise uniquement la version pour ne pas redéclencher le pop-up.
       if (remote && remote !== 'initial') {
         localStorage.setItem(STORAGE_KEY, remote);
       }
       setProgress(100);
       setPhase('ready');
 
-      // Hard reload avec cache-busting
+      // Simple rechargement pour récupérer le nouveau bundle servi par le CDN.
       setTimeout(() => {
-        const url = new URL(window.location.href);
-        url.searchParams.set('_v', Date.now().toString());
-        window.location.replace(url.toString());
-      }, 600);
+        window.location.reload();
+      }, 500);
     } catch {
       setPhase('error');
     }

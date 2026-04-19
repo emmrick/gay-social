@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Bell, Moon, Shield, HelpCircle,
-  ChevronRight, ChevronLeft, Coins, LogOut, FileText, Scale, Ban, Lock, Trash2, Download, Megaphone, UserCheck, Heart
+  ChevronRight, Coins, LogOut, FileText, Scale, Ban, Lock, Trash2, Download, Megaphone, UserCheck, Heart, Sparkles
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,21 @@ interface ProfileSettingsDrawerProps {
   onSignOut: () => void;
 }
 
+interface MenuItem {
+  icon: any;
+  label: string;
+  description?: string;
+  type?: SettingsType;
+  action?: () => void;
+  color: string;
+  bgColor: string;
+}
+
+interface MenuSection {
+  title: string;
+  items: MenuItem[];
+}
+
 const ProfileSettingsDrawer = ({
   isAdmin, isModerator, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, onSignOut
 }: ProfileSettingsDrawerProps) => {
@@ -43,54 +58,59 @@ const ProfileSettingsDrawer = ({
   const [showAgeFilter, setShowAgeFilter] = useState(false);
   const [showCoupleSettings, setShowCoupleSettings] = useState(false);
 
-  // Handle hardware back button for in-drawer navigation
+  // Hardware back button handling
   useEffect(() => {
     if (!open || !activeSection) return;
-
     const handlePopState = (e: PopStateEvent) => {
       e.preventDefault();
       setActiveSection(null);
     };
-
-    // Push a state so the back button goes back to main menu
     window.history.pushState({ settingsSection: activeSection }, '');
     window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [open, activeSection]);
 
   const handleClose = useCallback((isOpen: boolean) => {
-    if (!isOpen) {
-      setActiveSection(null);
-    }
+    if (!isOpen) setActiveSection(null);
     setOpen(isOpen);
   }, []);
 
   const handleBack = useCallback(() => {
     setActiveSection(null);
-    // Remove the state we pushed
-    if (window.history.state?.settingsSection) {
-      window.history.back();
-    }
+    if (window.history.state?.settingsSection) window.history.back();
   }, []);
 
-  const menuItems = [
-    { icon: Bell, label: 'Notifications', type: 'notifications' as SettingsType, color: 'text-blue-500', bgColor: 'bg-blue-500/15' },
-    { icon: Moon, label: 'Apparence', type: 'appearance' as SettingsType, color: 'text-indigo-500', bgColor: 'bg-indigo-500/15' },
-    { icon: Shield, label: 'Confidentialité', type: 'privacy' as SettingsType, color: 'text-emerald-500', bgColor: 'bg-emerald-500/15' },
-    { icon: Ban, label: 'Utilisateurs bloqués', action: () => { setOpen(false); setShowBlockedUsers(true); }, color: 'text-red-500', bgColor: 'bg-red-500/15' },
-    { icon: UserCheck, label: 'Filtre d\'âge de contact', action: () => { setOpen(false); setShowAgeFilter(true); }, color: 'text-teal-500', bgColor: 'bg-teal-500/15' },
-    { icon: HelpCircle, label: 'Aide & Support', type: 'help' as SettingsType, color: 'text-orange-500', bgColor: 'bg-orange-500/15' },
-    { icon: Lock, label: 'Code PIN & Sécurité', action: () => { setOpen(false); setShowPinManagement(true); }, color: 'text-violet-500', bgColor: 'bg-violet-500/15' },
-    { icon: Heart, label: 'Compte Couple', action: () => { setOpen(false); setShowCoupleSettings(true); }, color: 'text-pink-500', bgColor: 'bg-pink-500/15' },
+  // Grouped sections
+  const sections: MenuSection[] = [
+    {
+      title: 'Préférences',
+      items: [
+        { icon: Bell, label: 'Notifications', description: 'Alertes et sons', type: 'notifications', color: 'text-blue-500', bgColor: 'bg-blue-500/12' },
+        { icon: Moon, label: 'Apparence', description: 'Thème et affichage', type: 'appearance', color: 'text-indigo-500', bgColor: 'bg-indigo-500/12' },
+        { icon: Shield, label: 'Confidentialité', description: 'Visibilité du profil', type: 'privacy', color: 'text-emerald-500', bgColor: 'bg-emerald-500/12' },
+      ],
+    },
+    {
+      title: 'Sécurité & Contacts',
+      items: [
+        { icon: Lock, label: 'Code PIN', description: 'Verrouillage de l\'app', action: () => { setOpen(false); setShowPinManagement(true); }, color: 'text-violet-500', bgColor: 'bg-violet-500/12' },
+        { icon: Ban, label: 'Bloqués', description: 'Utilisateurs bloqués', action: () => { setOpen(false); setShowBlockedUsers(true); }, color: 'text-red-500', bgColor: 'bg-red-500/12' },
+        { icon: UserCheck, label: 'Filtre d\'âge', description: 'Tranche autorisée', action: () => { setOpen(false); setShowAgeFilter(true); }, color: 'text-teal-500', bgColor: 'bg-teal-500/12' },
+        { icon: Heart, label: 'Compte couple', description: 'Partager mon compte', action: () => { setOpen(false); setShowCoupleSettings(true); }, color: 'text-pink-500', bgColor: 'bg-pink-500/12' },
+      ],
+    },
+    {
+      title: 'Aide',
+      items: [
+        { icon: HelpCircle, label: 'Aide & Support', description: 'FAQ et contact', type: 'help', color: 'text-orange-500', bgColor: 'bg-orange-500/12' },
+      ],
+    },
   ];
 
   const legalItems = [
-    { icon: Scale, label: 'Mentions légales', section: 'legal', color: 'text-slate-500', bgColor: 'bg-slate-500/15' },
-    { icon: FileText, label: 'CGU & CGV', section: 'cgu', color: 'text-cyan-500', bgColor: 'bg-cyan-500/15' },
-    { icon: Shield, label: 'RGPD & Confidentialité', section: 'privacy', color: 'text-green-500', bgColor: 'bg-green-500/15' },
+    { icon: Scale, label: 'Mentions légales', section: 'legal' },
+    { icon: FileText, label: 'CGU & CGV', section: 'cgu' },
+    { icon: Shield, label: 'RGPD', section: 'privacy' },
   ];
 
   return (
@@ -133,21 +153,21 @@ const ProfileSettingsDrawer = ({
         </SheetTrigger>
         <SheetContent 
           side="bottom" 
-          className="h-[88vh] rounded-t-[1.5rem] px-0 bg-card backdrop-blur-2xl border-border/20 flex flex-col"
+          className="h-[88vh] rounded-t-[1.75rem] px-0 bg-gradient-to-b from-card via-card to-background backdrop-blur-2xl border-border/20 flex flex-col"
         >
           {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-            <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
+          <div className="flex justify-center pt-2.5 pb-1 flex-shrink-0">
+            <div className="w-10 h-1 rounded-full bg-muted-foreground/25" />
           </div>
 
           <AnimatePresence mode="wait">
             {activeSection ? (
               <motion.div
                 key={activeSection}
-                initial={{ opacity: 0, x: 60 }}
+                initial={{ opacity: 0, x: 40 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -60 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                 className="flex flex-col flex-1 min-h-0"
               >
                 <SettingsInlineContent 
@@ -160,158 +180,182 @@ const ProfileSettingsDrawer = ({
             ) : (
               <motion.div
                 key="main-menu"
-                initial={{ opacity: 0, x: -60 }}
+                initial={{ opacity: 0, x: -40 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 60 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
+                exit={{ opacity: 0, x: 40 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                 className="flex flex-col flex-1 min-h-0"
               >
-                {/* Fixed Header */}
-                <SheetHeader className="px-5 pb-4 flex-shrink-0 border-b border-border/10">
-                  <SheetTitle className="text-xl font-display font-bold flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Settings className="h-5 w-5 text-primary" />
+                {/* Premium Header with gradient */}
+                <SheetHeader className="px-5 pb-4 pt-2 flex-shrink-0">
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-4 border border-primary/10">
+                    <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-primary/10 blur-2xl" />
+                    <div className="relative flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/30">
+                        <Settings className="h-6 w-6 text-primary-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <SheetTitle className="text-lg font-display font-bold text-foreground leading-tight">
+                          Paramètres
+                        </SheetTitle>
+                        <p className="text-xs text-muted-foreground mt-0.5">Personnalisez votre expérience</p>
+                      </div>
                     </div>
-                    Paramètres & Options
-                  </SheetTitle>
+                  </div>
                 </SheetHeader>
 
                 {/* Scrollable Content */}
-                <div className="overflow-y-auto flex-1 overscroll-contain px-4 pt-4 pb-8">
-                  {/* Menu Items */}
-                  <div className="space-y-2">
-                    {menuItems.map((item, index) => (
-                      <motion.button
-                        key={index}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        onClick={() => {
-                          if (item.type) {
-                            setActiveSection(item.type);
-                          } else if (item.action) {
-                            item.action();
-                          }
-                        }}
-                        className="w-full flex items-center gap-3 min-h-[52px] px-3 py-2.5 rounded-2xl bg-muted/60 hover:bg-muted/80 active:bg-muted transition-all active:scale-[0.98] border border-border/30"
-                      >
-                        <div className={`w-10 h-10 rounded-xl ${item.bgColor} flex items-center justify-center flex-shrink-0`}>
-                          <item.icon className={`w-5 h-5 ${item.color}`} />
-                        </div>
-                        <span className="flex-1 text-left font-medium text-[15px] leading-tight text-foreground">{item.label}</span>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
-                      </motion.button>
-                    ))}
-                  </div>
-
-                  {/* Legal Section */}
-                  <div className="mt-6 mb-2 px-1">
-                    <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                      <Scale className="w-3.5 h-3.5" />
-                      Règlement & Légal
-                    </h3>
-                  </div>
-                  <div className="space-y-1.5">
-                    {legalItems.map((item, index) => (
-                      <button
-                        key={index}
-                        onClick={() => { setOpen(false); navigate(`/legal#${item.section}`); }}
-                        className="w-full flex items-center gap-3 min-h-[48px] px-3 py-2.5 rounded-xl bg-muted/50 hover:bg-muted/70 active:bg-muted transition-all active:scale-[0.98] border border-border/20"
-                      >
-                        <div className={`w-9 h-9 rounded-lg ${item.bgColor} flex items-center justify-center flex-shrink-0`}>
-                          <item.icon className={`w-4 h-4 ${item.color}`} />
-                        </div>
-                        <span className="flex-1 text-left font-medium text-sm text-foreground">{item.label}</span>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Advertise */}
-                  <div className="mt-6">
-                    <button
-                      onClick={() => { setOpen(false); navigate('/advertise'); }}
-                      className="w-full flex items-center gap-3 min-h-[56px] px-3 py-3 rounded-2xl bg-primary/8 hover:bg-primary/12 active:bg-primary/16 transition-all active:scale-[0.98] border border-primary/15"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-                        <Megaphone className="w-5 h-5 text-primary" />
+                <div className="overflow-y-auto flex-1 overscroll-contain px-4 pb-8 space-y-5">
+                  {/* Grouped sections */}
+                  {sections.map((section, sIdx) => (
+                    <div key={section.title}>
+                      <h3 className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-[0.12em] px-2 mb-2">
+                        {section.title}
+                      </h3>
+                      <div className="rounded-2xl bg-muted/40 border border-border/30 overflow-hidden divide-y divide-border/20">
+                        {section.items.map((item, idx) => (
+                          <motion.button
+                            key={item.label}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: (sIdx * 0.05) + (idx * 0.025) }}
+                            onClick={() => {
+                              if (item.type) setActiveSection(item.type);
+                              else if (item.action) item.action();
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-3 hover:bg-muted/60 active:bg-muted transition-all active:scale-[0.99]"
+                          >
+                            <div className={`w-10 h-10 rounded-xl ${item.bgColor} flex items-center justify-center flex-shrink-0`}>
+                              <item.icon className={`w-[18px] h-[18px] ${item.color}`} />
+                            </div>
+                            <div className="flex-1 text-left min-w-0">
+                              <p className="font-semibold text-[14.5px] leading-tight text-foreground truncate">{item.label}</p>
+                              {item.description && (
+                                <p className="text-[11.5px] text-muted-foreground mt-0.5 truncate">{item.description}</p>
+                              )}
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
+                          </motion.button>
+                        ))}
                       </div>
-                      <div className="flex-1 text-left">
-                        <span className="font-medium text-[15px] leading-tight block text-foreground">Faire de la publicité</span>
-                        <p className="text-[12px] text-muted-foreground mt-0.5">Promouvoir votre activité</p>
+                    </div>
+                  ))}
+
+                  {/* Highlighted: Advertise */}
+                  <button
+                    onClick={() => { setOpen(false); navigate('/advertise'); }}
+                    className="w-full relative overflow-hidden flex items-center gap-3 px-3.5 py-3.5 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent hover:from-primary/15 active:from-primary/20 transition-all active:scale-[0.99] border border-primary/20"
+                  >
+                    <div className="absolute right-0 top-0 w-20 h-20 rounded-full bg-primary/10 blur-2xl" />
+                    <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center flex-shrink-0 shadow-md shadow-primary/30">
+                      <Megaphone className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <div className="relative flex-1 text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-[14.5px] leading-tight text-foreground">Faire de la publicité</span>
+                        <Sparkles className="w-3 h-3 text-primary" />
                       </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
-                    </button>
-                  </div>
+                      <p className="text-[11.5px] text-muted-foreground mt-0.5">Promouvoir votre activité</p>
+                    </div>
+                    <ChevronRight className="relative w-4 h-4 text-primary/60 flex-shrink-0" />
+                  </button>
 
                   {/* Admin / Moderator */}
                   {(isAdmin || isModerator) && onNavigateToAdmin && (
-                    <div className="mt-4">
-                      <button
-                        onClick={() => { setOpen(false); onNavigateToAdmin(); }}
-                        className={`w-full flex items-center gap-3 min-h-[56px] px-3 py-3 rounded-2xl transition-all active:scale-[0.98] border ${
-                          isAdmin 
-                            ? 'bg-amber-500/10 hover:bg-amber-500/18 active:bg-amber-500/25 border-amber-500/20' 
-                            : 'bg-blue-500/10 hover:bg-blue-500/18 active:bg-blue-500/25 border-blue-500/20'
-                        }`}
-                      >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                          isAdmin ? 'bg-amber-500/18' : 'bg-blue-500/18'
-                        }`}>
-                          <Shield className={`w-5 h-5 ${isAdmin ? 'text-amber-500' : 'text-blue-500'}`} />
-                        </div>
-                        <span className={`flex-1 text-left font-semibold text-[15px] ${
+                    <button
+                      onClick={() => { setOpen(false); onNavigateToAdmin(); }}
+                      className={`w-full flex items-center gap-3 px-3.5 py-3.5 rounded-2xl transition-all active:scale-[0.99] border ${
+                        isAdmin 
+                          ? 'bg-gradient-to-r from-amber-500/12 to-amber-500/5 hover:from-amber-500/18 border-amber-500/25' 
+                          : 'bg-gradient-to-r from-blue-500/12 to-blue-500/5 hover:from-blue-500/18 border-blue-500/25'
+                      }`}
+                    >
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md ${
+                        isAdmin ? 'bg-amber-500/20 shadow-amber-500/20' : 'bg-blue-500/20 shadow-blue-500/20'
+                      }`}>
+                        <Shield className={`w-5 h-5 ${isAdmin ? 'text-amber-500' : 'text-blue-500'}`} />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <span className={`font-bold text-[14.5px] leading-tight block ${
                           isAdmin ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'
                         }`}>
                           {isAdmin ? 'Administration' : 'Modération'}
                         </span>
-                        <ChevronRight className={`w-4 h-4 flex-shrink-0 ${isAdmin ? 'text-amber-500/50' : 'text-blue-500/50'}`} />
-                      </button>
-                    </div>
+                        <p className="text-[11.5px] text-muted-foreground mt-0.5">Accès au panneau</p>
+                      </div>
+                      <ChevronRight className={`w-4 h-4 flex-shrink-0 ${isAdmin ? 'text-amber-500/50' : 'text-blue-500/50'}`} />
+                    </button>
                   )}
 
-                  {/* Data Management */}
-                  <div className="mt-6 mb-2 px-1">
-                    <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                      <Shield className="w-3.5 h-3.5" />
+                  {/* Legal section - compact pills */}
+                  <div>
+                    <h3 className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-[0.12em] px-2 mb-2 flex items-center gap-1.5">
+                      <Scale className="w-3 h-3" />
+                      Règlement & Légal
+                    </h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      {legalItems.map((item) => (
+                        <button
+                          key={item.section}
+                          onClick={() => { setOpen(false); navigate(`/legal#${item.section}`); }}
+                          className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl bg-muted/40 hover:bg-muted/60 active:bg-muted transition-all active:scale-[0.97] border border-border/20"
+                        >
+                          <item.icon className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-[11px] font-medium text-foreground text-center leading-tight">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Data Management (RGPD) */}
+                  <div>
+                    <h3 className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-[0.12em] px-2 mb-2 flex items-center gap-1.5">
+                      <Shield className="w-3 h-3" />
                       Mes données (RGPD)
                     </h3>
-                  </div>
-                  <div className="space-y-1.5">
-                    <button
-                      onClick={() => { setOpen(false); setShowDataExport(true); }}
-                      className="w-full flex items-center gap-3 min-h-[48px] px-3 py-2.5 rounded-xl bg-muted/50 hover:bg-muted/70 active:bg-muted transition-all active:scale-[0.98] border border-border/20"
-                    >
-                      <div className="w-9 h-9 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
-                        <Download className="w-4 h-4 text-blue-500" />
-                      </div>
-                      <span className="flex-1 text-left font-medium text-sm text-foreground">Télécharger mes données</span>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
-                    </button>
-                    <button
-                      onClick={() => { setOpen(false); setShowDeleteAccount(true); }}
-                      className="w-full flex items-center gap-3 min-h-[48px] px-3 py-2.5 rounded-xl bg-destructive/8 hover:bg-destructive/12 active:bg-destructive/18 transition-all active:scale-[0.98] border border-destructive/15"
-                    >
-                      <div className="w-9 h-9 rounded-lg bg-destructive/15 flex items-center justify-center flex-shrink-0">
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </div>
-                      <span className="flex-1 text-left font-medium text-sm text-destructive">Supprimer mon compte</span>
-                      <ChevronRight className="w-4 h-4 text-destructive/40 flex-shrink-0" />
-                    </button>
+                    <div className="rounded-2xl bg-muted/40 border border-border/30 overflow-hidden divide-y divide-border/20">
+                      <button
+                        onClick={() => { setOpen(false); setShowDataExport(true); }}
+                        className="w-full flex items-center gap-3 px-3 py-3 hover:bg-muted/60 active:bg-muted transition-all active:scale-[0.99]"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/12 flex items-center justify-center flex-shrink-0">
+                          <Download className="w-[18px] h-[18px] text-blue-500" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="font-semibold text-[14.5px] text-foreground">Télécharger mes données</p>
+                          <p className="text-[11.5px] text-muted-foreground mt-0.5">Archive ZIP complète</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
+                      </button>
+                      <button
+                        onClick={() => { setOpen(false); setShowDeleteAccount(true); }}
+                        className="w-full flex items-center gap-3 px-3 py-3 hover:bg-destructive/8 active:bg-destructive/12 transition-all active:scale-[0.99]"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-destructive/12 flex items-center justify-center flex-shrink-0">
+                          <Trash2 className="w-[18px] h-[18px] text-destructive" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="font-semibold text-[14.5px] text-destructive">Supprimer mon compte</p>
+                          <p className="text-[11.5px] text-muted-foreground mt-0.5">Action irréversible</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-destructive/40 flex-shrink-0" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Sign out */}
-                  <div className="mt-6">
-                    <button
-                      onClick={() => { setOpen(false); onSignOut(); }}
-                      className="w-full flex items-center gap-3 min-h-[56px] px-3 py-3 rounded-2xl bg-destructive/10 hover:bg-destructive/18 active:bg-destructive/25 transition-all active:scale-[0.98] border border-destructive/15"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-destructive/18 flex items-center justify-center flex-shrink-0">
-                        <LogOut className="w-5 h-5 text-destructive" />
-                      </div>
-                      <span className="flex-1 text-left font-semibold text-[15px] text-destructive">Se déconnecter</span>
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => { setOpen(false); onSignOut(); }}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-3.5 rounded-2xl bg-destructive/10 hover:bg-destructive/15 active:bg-destructive/20 transition-all active:scale-[0.99] border border-destructive/20"
+                  >
+                    <LogOut className="w-4 h-4 text-destructive" />
+                    <span className="font-semibold text-[14.5px] text-destructive">Se déconnecter</span>
+                  </button>
+
+                  {/* Footer */}
+                  <p className="text-center text-[10px] text-muted-foreground/50 pt-2">
+                    Gay Social · v1.0
+                  </p>
                 </div>
               </motion.div>
             )}

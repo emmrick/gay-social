@@ -288,15 +288,15 @@ const AdminLayout = () => {
 
       <main className="flex-1 overflow-auto">
         <div className="sticky top-0 z-40 bg-card/70 backdrop-blur-xl border-b border-border/30 shadow-sm">
-          <div className="flex items-center justify-between px-6 h-14">
-            <h1 className="text-sm font-display font-semibold text-muted-foreground">
+          <div className="flex items-center justify-between px-4 md:px-6 h-14">
+            <h1 className="text-sm font-display font-semibold text-muted-foreground truncate">
               {titleForSection(activeSection)}
             </h1>
-            <AdminCommandBar onNavigate={handleSectionChange} className="w-64" />
+            <AdminCommandBar onNavigate={handleSectionChange} className="w-48 md:w-64" />
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto p-6 space-y-6">
+        <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
           <Outlet context={outletContext} />
         </div>
       </main>

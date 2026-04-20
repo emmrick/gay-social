@@ -151,7 +151,7 @@ const MemberProfileCard = ({
                     className={cn(
                       "w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center transition-all",
                       favorited
-                        ? "bg-yellow-400 text-black shadow-lg shadow-yellow-400/40 scale-105"
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/40 scale-105"
                         : "bg-black/40 text-white hover:bg-black/60"
                     )}
                     aria-label={favorited ? "Retirer des favoris" : "Ajouter aux favoris"}
@@ -192,7 +192,7 @@ const MemberProfileCard = ({
 
                 {/* Online pill */}
                 {isOnline && (
-                  <div className="absolute bottom-32 left-5 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[11px] font-semibold uppercase tracking-wider shadow-lg z-10">
+                  <div className="absolute bottom-32 left-5 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success text-success-foreground text-[11px] font-semibold uppercase tracking-wider shadow-lg z-10">
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                     En ligne
                   </div>

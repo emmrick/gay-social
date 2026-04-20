@@ -470,4 +470,14 @@ const HealthMetric = ({ label, value, suffix, color }: { label: string; value: n
   );
 };
 
+const HeroPill = ({ label, value, dotClass, pulse }: { label: string; value: number | string; dotClass: string; pulse?: boolean }) => (
+  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card/80 backdrop-blur border border-border/50 shadow-sm">
+    <span className={cn('w-2 h-2 rounded-full', dotClass, pulse && 'animate-pulse')} />
+    <div className="flex flex-col leading-tight">
+      <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold">{label}</span>
+      <span className="text-sm font-display font-bold">{typeof value === 'number' ? value.toLocaleString() : value}</span>
+    </div>
+  </div>
+);
+
 export default AdminDashboard;

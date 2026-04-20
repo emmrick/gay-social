@@ -25,9 +25,10 @@ import HelpChatBubble from '@/components/help/HelpChatBubble';
 import HelpQuickChips, { type HelpChip } from '@/components/help/HelpQuickChips';
 import HelpBreadcrumb from '@/components/help/HelpBreadcrumb';
 import {
-  HELP_FLOW, HELP_ROOT_ID, findNodeById, findPathToNode, findParentNode,
+  HELP_FLOW, HELP_ROOT_ID, HELP_OPEN_TOUR_ID, findNodeById, findPathToNode, findParentNode,
 } from '@/lib/help/helpFlow';
 import type { HelpBreadcrumbStep, HelpNode } from '@/lib/help/helpFlow.types';
+import { openOnboardingTour } from '@/hooks/useOnboarding';
 
 type ChatPhase = 'chatbot' | 'waiting_agent' | 'agent' | 'rating';
 

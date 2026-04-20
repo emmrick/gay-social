@@ -7,7 +7,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
@@ -124,7 +124,7 @@ const AdminSidebar = ({
   const [collapsed, setCollapsed] = useState<boolean>(false);
 
   // Collapse automatique en mode tablette pour préserver l'espace de contenu
-  React.useEffect(() => {
+  useEffect(() => {
     if (isTablet) setCollapsed(true);
   }, [isTablet]);
 

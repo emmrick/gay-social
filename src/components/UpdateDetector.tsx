@@ -186,7 +186,8 @@ const UpdateDetector = () => {
       });
 
       if (remote && remote !== 'initial') {
-        localStorage.setItem('gc_app_version_target', remote);
+        localStorage.setItem(TARGET_KEY, remote);
+        localStorage.setItem(TARGET_TS_KEY, String(Date.now()));
       }
       setProgress(100);
       setPhase('ready');

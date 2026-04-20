@@ -29,11 +29,18 @@ const BottomNavBar = memo(({ unreadCount = 0 }: BottomNavBarProps) => {
   }, [featureFlags]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-      {/* Gradient fade */}
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none" />
-      
-      <nav className="relative pointer-events-auto px-3 pb-2" style={{ paddingLeft: 'max(0.75rem, env(safe-area-inset-left, 0px))', paddingRight: 'max(0.75rem, env(safe-area-inset-right, 0px))' }}>
+    <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+      {/* Gradient fade — soft transition above the floating pill, transparent behind */}
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/80 via-background/40 to-transparent pointer-events-none" />
+
+      <nav
+        className="relative pointer-events-auto px-3 pb-2"
+        style={{
+          paddingLeft: 'max(0.75rem, env(safe-area-inset-left, 0px))',
+          paddingRight: 'max(0.75rem, env(safe-area-inset-right, 0px))',
+          paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))',
+        }}
+      >
         <div className="mx-auto max-w-md bg-card/95 border border-border/50 rounded-2xl shadow-2xl shadow-black/20 dark:shadow-black/40">
           <div className="flex items-center justify-around h-[68px] px-1">
             {tabs.map((tab) => {

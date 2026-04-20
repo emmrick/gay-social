@@ -71,7 +71,7 @@ const SwipeStatsPanel = () => {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <AdminListSkeleton rows={3} />
+        <AdminListSkeleton count={3} />
       </div>
     );
   }

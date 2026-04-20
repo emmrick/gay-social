@@ -210,17 +210,26 @@ const PrivateMessageBubble = ({
           ) : (
             <div
               className={cn(
-                "px-4 py-2 pb-5 text-[14.5px] leading-[1.45] whitespace-pre-wrap break-words rounded-[20px] relative",
+                "px-[14px] py-[8px] pb-[18px] text-[15px] leading-[1.4] whitespace-pre-wrap break-words rounded-[22px] relative transition-transform",
+                "active:scale-[0.99]",
                 isOwn
-                  ? "bg-primary text-primary-foreground rounded-br-[6px] shadow-[0_1px_3px_hsl(215_85%_45%/0.15)]"
-                  : "bg-secondary text-foreground rounded-bl-[6px] shadow-[0_1px_2px_hsl(220_30%_20%/0.06)]",
+                  ? cn(
+                      "text-primary-foreground rounded-br-[7px]",
+                      "bg-gradient-to-br from-primary via-primary to-primary/90",
+                      "shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.35),0_1px_2px_hsl(var(--primary)/0.2)]",
+                    )
+                  : cn(
+                      "text-foreground rounded-bl-[7px]",
+                      "bg-secondary/95 backdrop-blur-sm",
+                      "shadow-[0_1px_3px_hsl(220_30%_20%/0.06),0_0_0_0.5px_hsl(var(--border)/0.6)]",
+                    ),
               )}
               style={{ wordBreak: 'break-word' }}
             >
               {message.content}
               <span className={cn(
-                "absolute bottom-1 right-3 text-[10px] leading-none",
-                isOwn ? "text-primary-foreground/60" : "text-muted-foreground"
+                "absolute bottom-1 right-3 text-[10px] leading-none font-medium tabular-nums",
+                isOwn ? "text-primary-foreground/65" : "text-muted-foreground/70"
               )}>
                 {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
               </span>

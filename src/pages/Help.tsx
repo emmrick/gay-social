@@ -246,7 +246,16 @@ const Help = ({ embedded = false }: HelpProps) => {
     const typingDelay = Math.min(Math.ceil(wordCount / 12) * 350, 900);
     setIsBotTyping(true);
     setTimeout(() => {
-      setMessages((prev) => [...prev, { type: 'bot', text, isTyping: true, revealedLength: 0, chips, nodeId }]);
+      setMessages((prev) => {
+        // Anti-doublon : si le dernier message bot est identique (texte + nodeId),
+        // on ne ré-ajoute pas. Évite les doubles dus au double-mount (StrictMode)
+        // ou aux re-déclenchements rapides du même node.
+        const last = prev[prev.length - 1];
+        if (last && last.type === 'bot' && last.text === text && last.nodeId === nodeId) {
+          return prev;
+        }
+        return [...prev, { type: 'bot', text, isTyping: true, revealedLength: 0, chips, nodeId }];
+      });
       setIsBotTyping(false);
     }, typingDelay);
   }, []);

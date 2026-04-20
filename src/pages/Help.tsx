@@ -243,18 +243,43 @@ const Help = ({ embedded = false }: HelpProps) => {
     }, typingDelay);
   }, []);
 
-  /** Construit les chips à partir des enfants d'un node + boutons retour/agent */
+  /**
+   * Construit les chips affichées sous une bulle bot.
+   * Priorité : sous-rubriques → suggestions liées (FAQ croisée) → navigation arrière.
+   * L'escalade « Parler à un agent » n'est PAS proposée ici (bouton dédié en bas).
+   */
   const buildChipsForNode = useCallback((node: HelpNode): HelpChip[] => {
     const chips: HelpChip[] = [];
-    if (node.children) {
+
+    // 1) Sous-rubriques (catégorie) ou suggestions liées (feuille)
+    if (node.children && node.children.length > 0) {
       for (const child of node.children) {
         chips.push({ id: child.id, label: child.label, emoji: child.emoji, variant: 'subtle' });
       }
+    } else if (node.related && node.related.length > 0) {
+      // Feuille : on propose les FAQ croisées comme prochaines questions
+      for (const relId of node.related) {
+        const relNode = findNodeById(relId);
+        if (relNode) {
+          chips.push({ id: relNode.id, label: relNode.label, emoji: relNode.emoji, variant: 'subtle' });
+        }
+      }
     }
+
+    // 2) Navigation arrière (parent direct + menu principal)
     if (node.id !== HELP_ROOT_ID) {
+      const parent = findParentNode(node.id);
+      if (parent && parent.id !== HELP_ROOT_ID) {
+        chips.push({
+          id: parent.id,
+          label: `Retour : ${parent.label}`,
+          emoji: '↩️',
+          variant: 'outline',
+        });
+      }
       chips.push({ id: HELP_ROOT_ID, label: 'Menu principal', emoji: '🏠', variant: 'outline' });
     }
-    chips.push({ id: '__agent', label: 'Parler à un agent', emoji: '👤', variant: 'outline' });
+
     return chips;
   }, []);
 

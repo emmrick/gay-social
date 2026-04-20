@@ -215,7 +215,9 @@ const AdminLayout = () => {
             <div className="px-3 py-3">
               <TaskQueuePopup onNavigateToSection={handleSectionChange} />
             </div>
-            <Outlet context={outletContext} />
+            <AdminPageTransition>
+              <Outlet context={outletContext} />
+            </AdminPageTransition>
           </main>
           <AdminBottomTabs
             activeSection="dashboard"
@@ -249,7 +251,9 @@ const AdminLayout = () => {
         />
         <main className="flex-1 overflow-auto">
           <div className="p-3 pb-6">
-            <Outlet context={outletContext} />
+            <AdminPageTransition>
+              <Outlet context={outletContext} />
+            </AdminPageTransition>
           </div>
         </main>
         <AdminBottomTabs
@@ -298,7 +302,9 @@ const AdminLayout = () => {
         </div>
 
         <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-          <Outlet context={outletContext} />
+          <AdminPageTransition>
+            <Outlet context={outletContext} />
+          </AdminPageTransition>
         </div>
       </main>
 

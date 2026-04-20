@@ -299,15 +299,19 @@ const Help = ({ embedded = false }: HelpProps) => {
       let intro = '';
       if (node.id === HELP_ROOT_ID) {
         const displayName = userProfile?.username || 'cher utilisateur';
-        intro = `📋 **Menu principal**\n\nBonjour **${displayName}** ! Choisis une rubrique ci-dessous pour obtenir une réponse instantanée. Si tu ne trouves pas, tu peux **parler à un agent** à tout moment 👇`;
+        intro = `📋 **Menu principal**\n\nBonjour **${displayName}** ! Choisis une rubrique ci-dessous pour obtenir une réponse instantanée.\n\n💡 La plupart des questions trouvent leur réponse ici en quelques clics — explore les rubriques avant de contacter un agent.`;
       } else if (node.children && node.children.length > 0) {
         // Catégorie : afficher les sous-rubriques
         intro = node.answer
           ? `${node.answer}\n\n📂 **${node.label}** — choisis une question :`
           : `📂 **${node.emoji ?? ''} ${node.label}**\n\nChoisis la question qui t'intéresse 👇`;
       } else {
-        // Feuille : afficher uniquement la réponse
-        intro = node.answer || `Désolé, aucune réponse disponible pour cette rubrique.`;
+        // Feuille : afficher uniquement la réponse + footer suggestions/retour
+        const base = node.answer || `Désolé, aucune réponse disponible pour cette rubrique.`;
+        const hasRelated = (node.related?.length ?? 0) > 0;
+        intro = hasRelated
+          ? `${base}\n\n💡 **Questions liées** :`
+          : `${base}\n\n↩️ Reviens en arrière ou choisis une autre rubrique :`;
       }
 
       const chips = buildChipsForNode(node);

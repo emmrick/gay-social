@@ -93,6 +93,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   });
 
   const scrollEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const agentJoinedRef = useRef(false);
   const hasInitializedRef = useRef(false);
   const typewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);

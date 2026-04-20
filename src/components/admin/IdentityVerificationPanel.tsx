@@ -300,14 +300,6 @@ const IdentityVerificationPanel = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   const renderDocImage = (url: string | null, label: string) => (
     <div className="space-y-1.5">
       <p className="text-xs sm:text-sm font-medium text-center">{label}</p>

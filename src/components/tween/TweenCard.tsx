@@ -69,11 +69,14 @@ const TweenCard = ({ tween }: TweenCardProps) => {
   const navigate = useNavigate();
   const toggleLike = useToggleTweenLike();
   const deleteTween = useDeleteTween();
+  const { data: favoriteIds } = useTweenFavoriteIds();
+  const toggleFavorite = useToggleTweenFavorite();
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showReport, setShowReport] = useState(false);
 
   const isOwn = user?.id === tween.user_id;
+  const isFavorited = favoriteIds?.has(tween.id) ?? false;
   const profile = tween.profiles;
   const resolvedAvatar = useAvatarUrl(profile?.avatar_url);
   const timeAgo = formatDistanceToNow(new Date(tween.created_at), { addSuffix: true, locale: fr });
@@ -81,6 +84,11 @@ const TweenCard = ({ tween }: TweenCardProps) => {
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleLike.mutate({ tweenId: tween.id, isLiked: !!tween.user_has_liked });
+  };
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleFavorite.mutate({ tweenId: tween.id, isFavorited });
   };
 
   return (

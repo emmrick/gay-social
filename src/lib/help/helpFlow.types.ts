@@ -17,6 +17,11 @@ export interface HelpNode {
   answer?: string;
   /** Sous-rubriques accessibles depuis ce node */
   children?: HelpNode[];
+  /**
+   * IDs d'autres nodes proposés en suggestions sous la réponse
+   * (FAQ croisée pour réduire les escalades agent).
+   */
+  related?: string[];
 }
 
 export type HelpBreadcrumbStep = { id: string; label: string };

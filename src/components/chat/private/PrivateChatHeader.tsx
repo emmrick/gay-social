@@ -1,5 +1,10 @@
+/**
+ * PrivateChatHeader — refonte Phase A "Premium iMessage".
+ * Glassmorphism plus marqué, avatar avec halo, typo affinée.
+ * Logique métier inchangée : props et handlers identiques.
+ */
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -10,7 +15,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import MuteButton from '../MuteButton';
 import { useLivePresence } from '@/hooks/useLivePresence';
-import LiveOnlineDot from '@/components/presence/LiveOnlineDot';
 import { cn } from '@/lib/utils';
 
 interface PrivateChatHeaderProps {
@@ -47,10 +51,21 @@ const PrivateChatHeader = ({
 
   return (
     <header
-      className="flex-shrink-0 flex items-center gap-2.5 px-2 py-2.5 bg-card/95 backdrop-blur-lg border-b border-border/60 z-20 shadow-[0_1px_3px_hsl(220_30%_20%/0.04)]"
+      className={cn(
+        'relative flex-shrink-0 flex items-center gap-2 px-2 py-2.5 z-20',
+        'bg-background/70 backdrop-blur-2xl backdrop-saturate-150',
+        'border-b border-border/40',
+        'before:absolute before:inset-x-0 before:bottom-0 before:h-px',
+        'before:bg-gradient-to-r before:from-transparent before:via-border/60 before:to-transparent',
+      )}
       style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top, 0px))' }}
     >
-      <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0 h-10 w-10 rounded-full hover:bg-secondary">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onBack}
+        className="flex-shrink-0 h-10 w-10 rounded-full hover:bg-muted/60 active:scale-95 transition-transform"
+      >
         <ArrowLeft className="w-5 h-5" />
       </Button>
 
@@ -65,10 +80,20 @@ const PrivateChatHeader = ({
       ) : (
         <button
           onClick={() => navigate(`/profile/${otherUserId}`)}
-          className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity active:scale-[0.98]"
+          className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl px-1.5 py-1 -mx-1.5 hover:bg-muted/40 active:scale-[0.99] transition-all"
         >
           <div className="relative flex-shrink-0">
-            <div className="w-11 h-11 rounded-full overflow-hidden bg-muted ring-1 ring-border/30">
+            {/* Halo de présence */}
+            {presence.isOnline && (
+              <div className="absolute inset-0 -m-0.5 rounded-full bg-emerald-500/30 animate-pulse" />
+            )}
+            <div
+              className={cn(
+                'relative w-11 h-11 rounded-full overflow-hidden',
+                'ring-2 ring-background',
+                presence.isOnline ? 'shadow-[0_0_0_2px_hsl(142_71%_45%/0.5)]' : 'shadow-[0_0_0_1px_hsl(var(--border))]',
+              )}
+            >
               {resolvedAvatar ? (
                 <img
                   src={resolvedAvatar}
@@ -76,40 +101,57 @@ const PrivateChatHeader = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center text-primary font-bold text-base">
+                <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/15 to-accent/20 flex items-center justify-center text-primary font-bold text-base">
                   {otherUserProfile?.username?.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5">
-              <LiveOnlineDot profile={otherUserProfile} size="sm" borderClassName="border-card" />
-            </span>
           </div>
-          <div className="min-w-0">
-            <h2 className="font-semibold text-[15px] text-foreground truncate leading-tight font-body">
+          <div className="min-w-0 flex-1 text-left">
+            <h2 className="font-display font-semibold text-[15.5px] text-foreground truncate leading-tight tracking-tight">
               {otherUserProfile?.username}
             </h2>
-            <p className="text-[12px] mt-0.5">
+            <div className="flex items-center gap-1.5 mt-0.5">
               {isOtherTyping ? (
-                <span className="text-primary font-medium animate-pulse">écrit…</span>
+                <>
+                  <span className="flex gap-0.5">
+                    <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '120ms' }} />
+                    <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '240ms' }} />
+                  </span>
+                  <span className="text-[11.5px] text-primary font-medium italic">en train d'écrire</span>
+                </>
               ) : presence.isOnline ? (
-                <span className="text-green-500 font-medium">En ligne</span>
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_hsl(142_71%_45%/0.6)]" />
+                  <span className="text-[11.5px] text-emerald-500 font-medium">Actif maintenant</span>
+                </>
               ) : (
-                <span className="text-muted-foreground">Hors ligne</span>
+                <span className="text-[11.5px] text-muted-foreground/80">Hors ligne</span>
               )}
-            </p>
+            </div>
           </div>
+          {isStaffUser && (
+            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold flex-shrink-0">
+              <Sparkles className="w-2.5 h-2.5" />
+              Staff
+            </span>
+          )}
         </button>
       )}
 
       <MuteButton conversationId={otherUserId} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0 rounded-full hover:bg-secondary">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 flex-shrink-0 rounded-full hover:bg-muted/60 active:scale-95 transition-transform"
+          >
             <MoreVertical className="w-5 h-5" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuContent align="end" className="w-56 rounded-2xl shadow-2xl">
           {isStaffUser ? (
             <DropdownMenuItem disabled className="text-muted-foreground">
               <Ban className="w-4 h-4 mr-2.5" />

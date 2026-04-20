@@ -7,7 +7,7 @@
  * - Responsive : passe en cards stackées sur mobile (mobileCard render)
  */
 import * as React from 'react';
-import { ChevronUp, ChevronDown, ChevronsUpDown, type LucideIcon } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Inbox, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -132,7 +132,7 @@ export function AdminTable<T>({
   if (sorted.length === 0) {
     return (
       <EmptyState
-        icon={emptyIcon ?? (require('lucide-react').Inbox as LucideIcon)}
+        icon={emptyIcon ?? Inbox}
         title={emptyTitle}
         description={emptyDescription}
         action={emptyAction}

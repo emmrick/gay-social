@@ -121,13 +121,13 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
   const onlinePercent = stats.totalUsers > 0 ? Math.round((stats.onlineUsers / stats.totalUsers) * 100) : 0;
   const verifiedPercent = stats.totalUsers > 0 ? Math.round((stats.verifiedUsers / stats.totalUsers) * 100) : 0;
 
-  const urgentActions: Array<{ id: AdminSection; label: string; icon: any; count: number; accent: 'orange' | 'red' | 'blue' | 'emerald' | 'violet' }> = [
-    { id: 'pending-tasks', label: 'Missions', icon: ListOrdered, count: stats.pendingTasks, accent: 'orange' },
-    { id: 'reports', label: 'Signalements', icon: AlertTriangle, count: pendingReports, accent: 'red' },
-    { id: 'verification', label: 'Vérifications', icon: IdCard, count: pendingVerifications, accent: 'blue' },
-    { id: 'credit-purchases', label: 'Achats', icon: ShoppingCart, count: pendingPurchases, accent: 'emerald' },
-    { id: 'support', label: 'Support', icon: Headphones, count: stats.openTickets, accent: 'violet' },
-  ].filter((a) => a.count > 0);
+  const urgentActions = ([
+    { id: 'pending-tasks' as AdminSection, label: 'Missions', icon: ListOrdered, count: stats.pendingTasks, accent: 'orange' as const },
+    { id: 'reports' as AdminSection, label: 'Signalements', icon: AlertTriangle, count: pendingReports, accent: 'red' as const },
+    { id: 'verification' as AdminSection, label: 'Vérifications', icon: IdCard, count: pendingVerifications, accent: 'blue' as const },
+    { id: 'credit-purchases' as AdminSection, label: 'Achats', icon: ShoppingCart, count: pendingPurchases, accent: 'emerald' as const },
+    { id: 'support' as AdminSection, label: 'Support', icon: Headphones, count: stats.openTickets, accent: 'violet' as const },
+  ]).filter((a) => a.count > 0);
 
   const taskTypeLabel = (type: string) => {
     const map: Record<string, { label: string; icon: string }> = {

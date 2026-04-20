@@ -299,11 +299,14 @@ const AdminLayout = () => {
 
       <main className="flex-1 overflow-auto">
         <div className="sticky top-0 z-40 bg-card/70 backdrop-blur-xl border-b border-border/30 shadow-sm">
-          <div className="flex items-center justify-between px-4 md:px-6 h-14">
-            <h1 className="text-sm font-display font-semibold text-muted-foreground truncate">
-              {titleForSection(activeSection)}
-            </h1>
-            <AdminCommandBar onNavigate={handleSectionChange} className="w-48 md:w-64" />
+          <div className="flex items-center justify-between gap-3 px-4 md:px-6 h-14">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <AdminBreadcrumbs section={activeSection} />
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <AdminLiveIndicator className="hidden lg:inline-flex" />
+              <AdminCommandBar onNavigate={handleSectionChange} className="w-48 md:w-64" />
+            </div>
           </div>
         </div>
 

@@ -165,10 +165,10 @@ const AuthenticatedLayout = () => {
       <main
         className={cn(
           "flex-1 flex flex-col overflow-hidden",
-          showBottomNav && "pb-24"
+          showBottomNav && "pb-20"
         )}
         style={{
-          paddingBottom: showBottomNav ? 'calc(96px + env(safe-area-inset-bottom, 0px))' : undefined,
+          paddingBottom: showBottomNav ? 'calc(82px + env(safe-area-inset-bottom, 0px))' : undefined,
         }}
       >
         <Suspense fallback={<LazyFallback />}>

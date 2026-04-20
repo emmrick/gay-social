@@ -6,3 +6,6 @@ export { EmptyState } from './EmptyState';
 export { AdminFilterBar, AdminFilterChip } from './AdminFilterBar';
 export { AdminListSkeleton } from './AdminListSkeleton';
 export { AdminTabsBar, type AdminTab } from './AdminTabsBar';
+export { AdminTable, type AdminColumn } from './AdminTable';
+export { AdminPagination } from './AdminPagination';
+export { AdminBulkActionsBar } from './AdminBulkActionsBar';

@@ -9,6 +9,7 @@
  * Uses Supabase Realtime. Cleans up channels on unmount.
  */
 import { useEffect } from 'react';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminStore } from '@/stores/admin/useAdminStore';
 import { useTasksStore } from '@/stores/admin/useTasksStore';
@@ -62,6 +63,20 @@ export const useAdminRealtimeBridge = (enabled: boolean) => {
           const oldRow = payload.old as any;
           if (evt === 'INSERT' && newRow?.status === 'pending') {
             store().bumpStat('reportsPending', 1);
+            // Toast discret + lien direct vers la file de signalements
+            // On évite de spammer si l'admin est déjà sur /admin/reports
+            if (!window.location.pathname.startsWith('/admin/reports')) {
+              toast.message('🚨 Nouveau signalement', {
+                description: 'Un signalement vient d\'être déposé.',
+                action: {
+                  label: 'Voir',
+                  onClick: () => {
+                    window.location.href = '/admin/reports';
+                  },
+                },
+                duration: 6000,
+              });
+            }
           } else if (evt === 'UPDATE') {
             if (oldRow?.status === 'pending' && newRow?.status !== 'pending') {
               store().bumpStat('reportsPending', -1);

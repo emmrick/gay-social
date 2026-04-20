@@ -16,6 +16,7 @@ export interface Tween {
   comments_count: number;
   created_at: string;
   edited_at?: string | null;
+  profiles?: {
     username: string;
     avatar_url: string | null;
     user_id: string;

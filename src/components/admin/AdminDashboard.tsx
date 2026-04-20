@@ -2,11 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { startOfDay, subDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Users, Activity, Shield, MessageSquare, UserPlus,
   AlertTriangle, IdCard, ShoppingCart, Headphones, ListOrdered,
   TrendingUp, Eye, Globe, ArrowRight, Zap, Image, Clock,
-  BarChart3, Hash, Wallet
+  BarChart3, Hash, Wallet, Sparkles,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -98,6 +99,7 @@ const useFullDashboardStats = () => {
 const COLORS = ['hsl(var(--primary))', 'hsl(220, 70%, 55%)', 'hsl(280, 60%, 55%)', 'hsl(340, 65%, 55%)', 'hsl(160, 60%, 45%)', 'hsl(30, 70%, 55%)'];
 
 const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pendingPurchases, isAdmin }: AdminDashboardProps) => {
+  const { profile } = useAuth();
   const { data: stats, isLoading } = useFullDashboardStats();
 
   if (isLoading) {
@@ -137,8 +139,51 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
     return map[type] || { label: type, icon: '📋' };
   };
 
+  const totalPending = pendingReports + pendingVerifications + pendingPurchases + stats.pendingTasks + stats.openTickets;
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 6) return 'Bonne nuit';
+    if (h < 12) return 'Bonjour';
+    if (h < 18) return 'Bon après-midi';
+    return 'Bonsoir';
+  })();
+  const displayName = profile?.username || (isAdmin ? 'Admin' : 'Modérateur');
+
   return (
     <div className="space-y-6">
+      {/* Hero — salutation + snapshot temps réel */}
+      <section className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-primary/[0.06] via-card to-card p-5 md:p-6">
+        <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.08),transparent_70%)] pointer-events-none" />
+
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-primary/80">
+                {isAdmin ? 'Console Admin' : 'Console Modération'}
+              </span>
+            </div>
+            <h1 className="text-xl md:text-2xl font-display font-bold tracking-tight">
+              {greeting}, <span className="text-primary">{displayName}</span>
+            </h1>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              {totalPending > 0
+                ? `Vous avez ${totalPending} élément${totalPending > 1 ? 's' : ''} à traiter aujourd'hui.`
+                : 'Tout est à jour. Excellent travail 🎉'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+            <HeroPill label="En ligne" value={stats.onlineUsers} dotClass="bg-emerald-500" pulse />
+            <HeroPill label="Aujourd'hui" value={`+${stats.newUsersToday}`} dotClass="bg-blue-500" />
+            {totalPending > 0 && (
+              <HeroPill label="À traiter" value={totalPending} dotClass="bg-orange-500" />
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Urgent Actions */}
       {urgentActions.length > 0 && (
         <div className="space-y-3">
@@ -424,5 +469,15 @@ const HealthMetric = ({ label, value, suffix, color }: { label: string; value: n
     </div>
   );
 };
+
+const HeroPill = ({ label, value, dotClass, pulse }: { label: string; value: number | string; dotClass: string; pulse?: boolean }) => (
+  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card/80 backdrop-blur border border-border/50 shadow-sm">
+    <span className={cn('w-2 h-2 rounded-full', dotClass, pulse && 'animate-pulse')} />
+    <div className="flex flex-col leading-tight">
+      <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold">{label}</span>
+      <span className="text-sm font-display font-bold">{typeof value === 'number' ? value.toLocaleString() : value}</span>
+    </div>
+  </div>
+);
 
 export default AdminDashboard;

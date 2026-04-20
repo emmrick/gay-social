@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Lock, Eye, EyeOff, Loader2, User, Calendar, Heart } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, User, Calendar, Heart, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { signupSchema, SignupFormData } from '@/lib/validations/auth';
 import AccountTypeSelector from './AccountTypeSelector';
 import RegionSelect from './RegionSelect';
 import ReferralCodeInput from './ReferralCodeInput';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 interface SignupFormProps {
   onSubmit: (data: SignupFormData) => Promise<void>;
@@ -34,6 +36,7 @@ const SignupForm = ({ onSubmit, isLoading, defaultReferralCode = '', showCoupleI
       username2: '',
       age2: undefined as any,
       referralCode: defaultReferralCode,
+      acceptTerms: false as any,
     },
   });
 
@@ -233,6 +236,53 @@ const SignupForm = ({ onSubmit, isLoading, defaultReferralCode = '', showCoupleI
             render={({ field }) => (
               <FormItem>
                 <ReferralCodeInput value={field.value ?? ''} onChange={field.onChange} />
+              </FormItem>
+            )}
+          />
+
+          {/* Conditions obligatoires */}
+          <FormField
+            control={form.control}
+            name="acceptTerms"
+            render={({ field }) => (
+              <FormItem>
+                <div className="rounded-xl border border-border/60 bg-secondary/30 p-3">
+                  <div className="flex items-start gap-3">
+                    <FormControl>
+                      <Checkbox
+                        id="acceptTerms"
+                        checked={!!field.value}
+                        onCheckedChange={(v) => field.onChange(v === true)}
+                        className="mt-0.5"
+                      />
+                    </FormControl>
+                    <div className="flex-1 min-w-0">
+                      <label
+                        htmlFor="acceptTerms"
+                        className="text-xs leading-relaxed text-foreground/90 cursor-pointer block"
+                      >
+                        <span className="inline-flex items-center gap-1 font-semibold">
+                          <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                          Je certifie avoir au moins 18 ans
+                        </span>{' '}
+                        et j'accepte les{' '}
+                        <Link to="/legal" target="_blank" className="text-primary font-semibold underline underline-offset-2">
+                          Conditions Générales d'Utilisation
+                        </Link>
+                        , les{' '}
+                        <Link to="/regles" target="_blank" className="text-primary font-semibold underline underline-offset-2">
+                          Règles de conduite
+                        </Link>
+                        , la{' '}
+                        <Link to="/legal" target="_blank" className="text-primary font-semibold underline underline-offset-2">
+                          Politique de confidentialité
+                        </Link>{' '}
+                        et l'utilisation des cookies.
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <FormMessage />
               </FormItem>
             )}
           />

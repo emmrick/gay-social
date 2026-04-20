@@ -15,6 +15,9 @@ export const signupSchema = z.object({
   username2: z.string().trim().optional(),
   age2: z.coerce.number().int().optional(),
   referralCode: z.string().optional(),
+  acceptTerms: z.literal<boolean>(true, {
+    errorMap: () => ({ message: 'Vous devez accepter les conditions pour continuer' }),
+  }),
 }).refine((data) => {
   if (data.accountType === 'couple') {
     return !!data.username2 && data.username2.length >= 2;

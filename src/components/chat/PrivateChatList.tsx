@@ -145,8 +145,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
   return (
     <>
       {/* Search & Filters bar */}
-      <div className="px-3 pt-2 pb-1 space-y-2">
-        {/* Search toggle + filter chips */}
+      <div className="px-3 pt-3 pb-2 sticky top-0 z-10 bg-background/85 backdrop-blur-2xl backdrop-saturate-150">
         <div className="flex items-center gap-2">
           <AnimatePresence mode="wait">
             {showSearch ? (
@@ -158,17 +157,17 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                 transition={{ duration: 0.2 }}
                 className="flex-1 relative"
               >
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70 pointer-events-none" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Rechercher..."
-                  className="pl-9 pr-8 h-9 rounded-xl bg-secondary border-none text-sm"
+                  placeholder="Rechercher une conversation…"
+                  className="pl-10 pr-10 h-10 rounded-2xl bg-muted/50 border border-border/40 text-[14px] placeholder:italic placeholder:text-muted-foreground/55 focus-visible:bg-muted/70 focus-visible:border-primary/40 focus-visible:ring-0"
                   autoFocus
                 />
                 <button
                   onClick={() => { setShowSearch(false); setSearchQuery(''); }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted active:scale-90 transition-transform"
                 >
                   <X className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
@@ -184,10 +183,10 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                 <button
                   onClick={() => setFilter('all')}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200",
+                    'px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all duration-200 active:scale-95',
                     filter === 'all'
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      ? 'bg-foreground text-background shadow-sm'
+                      : 'bg-muted/40 text-muted-foreground hover:bg-muted/70',
                   )}
                 >
                   Tous
@@ -195,20 +194,22 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                 <button
                   onClick={() => setFilter('unread')}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 flex items-center gap-1",
+                    'px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all duration-200 flex items-center gap-1.5 active:scale-95',
                     filter === 'unread'
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      ? 'bg-foreground text-background shadow-sm'
+                      : 'bg-muted/40 text-muted-foreground hover:bg-muted/70',
                   )}
                 >
                   Non lus
                   {totalUnread > 0 && (
-                    <span className={cn(
-                      "min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center",
-                      filter === 'unread'
-                        ? "bg-primary-foreground/20 text-primary-foreground"
-                        : "bg-primary/15 text-primary"
-                    )}>
+                    <span
+                      className={cn(
+                        'min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center tabular-nums',
+                        filter === 'unread'
+                          ? 'bg-background/20 text-background'
+                          : 'bg-primary/15 text-primary',
+                      )}
+                    >
                       {totalUnread > 99 ? '99+' : totalUnread}
                     </span>
                   )}
@@ -220,9 +221,10 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
           {!showSearch && (
             <button
               onClick={() => setShowSearch(true)}
-              className="p-2 rounded-full hover:bg-secondary transition-colors text-muted-foreground"
+              aria-label="Rechercher"
+              className="w-9 h-9 rounded-full hover:bg-muted/60 transition-colors text-muted-foreground flex items-center justify-center active:scale-90"
             >
-              <Search className="w-4.5 h-4.5" />
+              <Search className="w-4 h-4" />
             </button>
           )}
         </div>

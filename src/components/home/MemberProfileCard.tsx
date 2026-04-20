@@ -192,7 +192,7 @@ const MemberProfileCard = ({
 
                 {/* Online pill */}
                 {isOnline && (
-                  <div className="absolute bottom-32 left-5 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success text-success-foreground text-[11px] font-semibold uppercase tracking-wider shadow-lg z-10">
+                  <div className="absolute bottom-32 left-5 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[hsl(142_76%_36%)] text-white text-[11px] font-semibold uppercase tracking-wider shadow-lg z-10">
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                     En ligne
                   </div>

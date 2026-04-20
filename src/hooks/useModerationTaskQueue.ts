@@ -32,6 +32,7 @@ const TASK_TYPE_LABELS: Record<string, string> = {
   withdrawal_management: '🏦 Demande de retrait',
   promo_validation: '🎟️ Validation code promo',
   support_chat: '🆘 Support utilisateur',
+  tween_review: '🐦 Examen de Tween signalé',
 };
 
 const TASK_TYPE_SECTIONS: Record<string, string> = {
@@ -44,6 +45,7 @@ const TASK_TYPE_SECTIONS: Record<string, string> = {
   withdrawal_management: 'credits',
   promo_validation: 'promo',
   support_chat: 'support',
+  tween_review: 'reports',
 };
 
 /** Get entity ID from task metadata for direct navigation */

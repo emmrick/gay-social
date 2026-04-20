@@ -15,6 +15,7 @@ export interface Tween {
   likes_count: number;
   comments_count: number;
   created_at: string;
+  edited_at?: string | null;
   profiles?: {
     username: string;
     avatar_url: string | null;
@@ -292,6 +293,65 @@ export function useDeleteTween() {
       queryClient.invalidateQueries({ queryKey: ['tweens-feed'] });
       queryClient.invalidateQueries({ queryKey: ['tweens-user'] });
       toast.success('Tween supprimé');
+    },
+  });
+}
+
+export function useUpdateTween() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ tweenId, content }: { tweenId: string; content: string }) => {
+      const { error } = await supabase
+        .from('tweens')
+        .update({ content, edited_at: new Date().toISOString() })
+        .eq('id', tweenId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tweens-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['tweens-user'] });
+      toast.success('Tween mis à jour');
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Modification impossible');
+    },
+  });
+}
+
+export function useReportTween() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      tweenId,
+      tweenOwnerId,
+      reason,
+      description,
+    }: {
+      tweenId: string;
+      tweenOwnerId: string;
+      reason: 'harassment' | 'inappropriate_content' | 'spam' | 'fake_profile' | 'underage' | 'other';
+      description?: string;
+    }) => {
+      if (!user) throw new Error('Non connecté');
+      const { error } = await supabase.from('reports').insert({
+        reporter_id: user.id,
+        reported_user_id: tweenOwnerId,
+        report_type: 'tween',
+        tween_id: tweenId,
+        reason,
+        description: description || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tweens-feed'] });
+      toast.success('Signalement envoyé', { description: 'Notre équipe va examiner ce contenu.' });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Signalement impossible');
     },
   });
 }

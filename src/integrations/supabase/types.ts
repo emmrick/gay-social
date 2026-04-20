@@ -3310,6 +3310,7 @@ export type Database = {
           resolved_at: string | null
           resolved_by: string | null
           status: Database["public"]["Enums"]["report_status"]
+          tween_id: string | null
           updated_at: string
         }
         Insert: {
@@ -3325,6 +3326,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           status?: Database["public"]["Enums"]["report_status"]
+          tween_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -3340,6 +3342,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           status?: Database["public"]["Enums"]["report_status"]
+          tween_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -3348,6 +3351,13 @@ export type Database = {
             columns: ["message_id"]
             isOneToOne: false
             referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_tween_id_fkey"
+            columns: ["tween_id"]
+            isOneToOne: false
+            referencedRelation: "tweens"
             referencedColumns: ["id"]
           },
         ]
@@ -3933,6 +3943,7 @@ export type Database = {
           comments_count: number | null
           content: string
           created_at: string
+          edited_at: string | null
           has_poll: boolean | null
           id: string
           is_deleted: boolean | null
@@ -3948,6 +3959,7 @@ export type Database = {
           comments_count?: number | null
           content: string
           created_at?: string
+          edited_at?: string | null
           has_poll?: boolean | null
           id?: string
           is_deleted?: boolean | null
@@ -3963,6 +3975,7 @@ export type Database = {
           comments_count?: number | null
           content?: string
           created_at?: string
+          edited_at?: string | null
           has_poll?: boolean | null
           id?: string
           is_deleted?: boolean | null

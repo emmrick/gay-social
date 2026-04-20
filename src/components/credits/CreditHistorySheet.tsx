@@ -88,7 +88,7 @@ const TransactionItem = ({ transaction, index }: TransactionItemProps) => {
         "font-bold tabular-nums text-sm",
         isPositive ? "text-emerald-500" : "text-red-500"
       )}>
-        {isPositive ? '+' : ''}{transaction.amount.toFixed(2)}
+        {isPositive ? '+' : ''}{transaction.amount.toFixed(1)}
       </span>
     </motion.div>
   );

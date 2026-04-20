@@ -92,7 +92,7 @@ export const CreditDeductionProvider = ({ children }: CreditDeductionProviderPro
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="font-semibold text-sm text-red-500 tabular-nums">
-                  -{Number(deduction.amount).toFixed(2)}
+                  -{Number(deduction.amount).toFixed(1)}
                 </span>
                 {deduction.label && (
                   <span className="text-xs text-muted-foreground max-w-40 truncate">
@@ -126,7 +126,7 @@ export const CreditDeductionBadge = ({ amount, show, onComplete }: CreditDeducti
           transition={{ duration: 0.3 }}
           className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg tabular-nums"
         >
-          -{Number(amount).toFixed(2)}
+          -{Number(amount).toFixed(1)}
         </motion.div>
       )}
     </AnimatePresence>

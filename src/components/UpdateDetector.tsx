@@ -7,6 +7,11 @@ import { Button } from '@/components/ui/button';
 const CHECK_INTERVAL = 30_000; // 30s
 const VERSION_URL = '/version.json';
 const STORAGE_KEY = 'gc_app_version';
+const TARGET_KEY = 'gc_app_version_target';
+const TARGET_TS_KEY = 'gc_app_version_target_at';
+// Si le bundle livré n'atteint jamais la cible (CDN bloqué, etc.), on
+// abandonne la cible au bout de ce délai pour laisser repartir la détection.
+const TARGET_GRACE_MS = 10 * 60 * 1000; // 10 minutes
 
 // Version injectée au build par le plugin Vite (vite.config.ts)
 const BUILD_VERSION =
@@ -49,15 +54,23 @@ const UpdateDetector = () => {
   const [retryCount, setRetryCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
   // Source de vérité : la version réellement embarquée dans le bundle JS chargé.
-  // On NE lit PAS le localStorage : sinon, après un reload servi par le cache du
-  // Service Worker, `stored` peut être en avance sur le bundle réellement servi
-  // et masquer indéfiniment les nouvelles mises à jour.
   const localVersionRef = useRef<string>(BUILD_VERSION);
 
-  // Synchronise le localStorage avec le BUILD_VERSION effectif (pour debug uniquement).
+  // Synchronise le localStorage avec le BUILD_VERSION effectif (debug).
+  // Si le bundle réellement chargé a atteint la version cible précédente,
+  // on nettoie le marqueur cible — la mise à jour est terminée.
   useEffect(() => {
     if (BUILD_VERSION !== 'dev') {
       localStorage.setItem(STORAGE_KEY, BUILD_VERSION);
+      try {
+        const target = localStorage.getItem(TARGET_KEY);
+        if (target && target === BUILD_VERSION) {
+          localStorage.removeItem(TARGET_KEY);
+          localStorage.removeItem(TARGET_TS_KEY);
+        }
+      } catch {
+        /* ignore */
+      }
     }
   }, []);
 
@@ -70,10 +83,39 @@ const UpdateDetector = () => {
       if (!mounted || !remote) return;
       // Ignore les comparaisons triviales (initial vs dev)
       if (remote === 'initial' || localVersionRef.current === 'dev') return;
-      if (remote !== localVersionRef.current) {
-        setUpdateAvailable(true);
-        if (intervalRef.current) clearInterval(intervalRef.current);
+      // Déjà à jour
+      if (remote === localVersionRef.current) return;
+
+      // Cas critique : si on a déjà demandé une mise à jour vers `target`
+      // et que le bundle livré n'a pas encore rattrapé (cache SW/CDN),
+      // on N'AFFICHE PAS le pop-up — sinon il revient en boucle après chaque reload.
+      try {
+        const target = localStorage.getItem(TARGET_KEY);
+        const targetAtStr = localStorage.getItem(TARGET_TS_KEY);
+        const targetAt = targetAtStr ? parseInt(targetAtStr, 10) : 0;
+        const withinGrace = targetAt && Date.now() - targetAt < TARGET_GRACE_MS;
+
+        if (target && withinGrace) {
+          // Si remote !== target, c'est qu'une nouvelle version est sortie
+          // entre temps : on met à jour silencieusement la cible et on attend.
+          if (remote !== target) {
+            localStorage.setItem(TARGET_KEY, remote);
+            localStorage.setItem(TARGET_TS_KEY, String(Date.now()));
+          }
+          return; // on patiente que le bundle livré rattrape
+        }
+
+        // Hors période de grâce : on nettoie l'éventuelle cible obsolète
+        if (target) {
+          localStorage.removeItem(TARGET_KEY);
+          localStorage.removeItem(TARGET_TS_KEY);
+        }
+      } catch {
+        /* ignore */
       }
+
+      setUpdateAvailable(true);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
 
     // Premier check après 5s pour laisser l'app se charger

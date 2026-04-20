@@ -2,7 +2,6 @@ import { lazy, Suspense, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 
 const PrivateChatRoom = lazy(() => import('@/components/chat/PrivateChatRoom'));
 
@@ -13,13 +12,9 @@ const PrivateChatPage = () => {
   const state = location.state as { openSnap?: boolean } | null;
   const [snapOpened, setSnapOpened] = useState(false);
 
+  // NB: pas de useMobileNavigation ici — c'est PrivateChatRoom (enfant) qui le gère.
+  // Doublonner créerait deux sentinelles d'historique et casserait le bouton retour.
   const handleBack = () => navigate('/messages', { replace: true });
-
-  useMobileNavigation({
-    onBack: handleBack,
-    enabled: true,
-    enableSwipeBack: true,
-  });
 
   if (!userId) return null;
 

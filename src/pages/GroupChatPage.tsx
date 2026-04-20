@@ -6,7 +6,6 @@ import { useChatRoom } from '@/hooks/useChatRooms';
 import { useAnnouncementChannel } from '@/hooks/useAnnouncementChannel';
 import { useRegionMemberCount } from '@/hooks/useRegionMemberCounts';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
-import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 
 const ChatRoom = lazy(() => import('@/components/chat/ChatRoom'));
 const AnnouncementChannel = lazy(() => import('@/components/chat/AnnouncementChannel'));
@@ -21,6 +20,7 @@ const GroupChatPage = () => {
   const { data: announcementChannel } = useAnnouncementChannel();
   const { total: memberCount } = useRegionMemberCount(regionCode || '');
 
+  // NB: pas de useMobileNavigation ici — ChatRoom / AnnouncementChannel le gèrent déjà.
   const handleBack = () => navigate('/messages', { replace: true });
 
   const handleStartPrivateChat = async (userId: string) => {
@@ -31,12 +31,6 @@ const GroupChatPage = () => {
       console.error('Error starting private chat:', error);
     }
   };
-
-  useMobileNavigation({
-    onBack: handleBack,
-    enabled: true,
-    enableSwipeBack: true,
-  });
 
   if (!regionCode) return null;
 

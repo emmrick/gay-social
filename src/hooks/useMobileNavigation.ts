@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface UseMobileNavigationOptions {
   onBack?: () => void;
@@ -7,42 +7,61 @@ interface UseMobileNavigationOptions {
 }
 
 /**
- * Mobile navigation hook:
- * - Intercepts hardware/browser back button via popstate
- * - Optional swipe-from-left-edge gesture
- * - Prevents the app from closing by always keeping a history entry
+ * Mobile navigation hook robuste :
+ * - Pousse UNE sentinelle d'historique unique par instance (clé randomisée).
+ * - Au popstate, si on quitte notre sentinelle, on appelle onBack() UNE seule fois.
+ * - Au démontage, si la sentinelle est toujours en haut de la pile, on la consomme
+ *   silencieusement via history.back() pour ne pas polluer l'historique.
+ * - Empêche les doubles déclenchements via un flag de garde.
  */
 export const useMobileNavigation = ({ 
   onBack, 
   enabled = true, 
   enableSwipeBack = true 
 }: UseMobileNavigationOptions) => {
-  const hasSetup = useRef(false);
+  const sentinelKeyRef = useRef<string | null>(null);
+  const triggeredRef = useRef(false);
 
   useEffect(() => {
     if (!enabled || !onBack) return;
 
-    // Push a sentinel state so pressing back triggers popstate instead of leaving.
-    // On NE re-pousse PAS de sentinelle après chaque popstate : sinon l'historique
-    // se remplit de sentinelles fantômes qui bloquent toute sortie ultérieure
-    // (admin, autres pages…) et provoquent des "redirections" inattendues.
-    if (!hasSetup.current) {
-      window.history.pushState({ appGuard: true }, '', window.location.href);
-      hasSetup.current = true;
-    }
+    // Génère une clé unique pour cette instance
+    const key = `nav_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    sentinelKeyRef.current = key;
+    triggeredRef.current = false;
+
+    // Pousse la sentinelle
+    window.history.pushState({ navSentinel: key }, '', window.location.href);
 
     const handlePopState = (e: PopStateEvent) => {
-      onBack();
+      // Si notre sentinelle vient d'être consommée (l'état actuel ne la contient plus)
+      const currentState = e.state;
+      const isOurSentinelGone = !currentState || currentState.navSentinel !== key;
+      
+      if (isOurSentinelGone && !triggeredRef.current) {
+        triggeredRef.current = true;
+        onBack();
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
+
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      hasSetup.current = false;
+      
+      // Si notre sentinelle est toujours active (démontage sans pop), on la retire
+      if (
+        !triggeredRef.current &&
+        window.history.state?.navSentinel === key
+      ) {
+        // Retire silencieusement la sentinelle de la pile
+        window.history.back();
+      }
+      sentinelKeyRef.current = null;
     };
   }, [onBack, enabled]);
 
-  // Swipe gesture detection (left edge → right)
+  // Swipe gesture détection (bord gauche → droite)
   useEffect(() => {
     if (!enabled || !onBack || !enableSwipeBack) return;
 
@@ -73,7 +92,8 @@ export const useMobileNavigation = ({
         deltaX > minSwipeDistance &&
         deltaY < maxVerticalMovement
       ) {
-        onBack();
+        // Déclenche le retour natif (qui consommera notre sentinelle)
+        window.history.back();
       }
       
       touchStartX = 0;

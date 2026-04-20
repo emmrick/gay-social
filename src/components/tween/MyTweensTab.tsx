@@ -30,8 +30,8 @@ const MyTweensTab = () => {
         className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-primary/10 via-accent/5 to-background p-5 backdrop-blur-sm"
       >
         <div className="flex items-center gap-4">
-          <Avatar className="w-16 h-16 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
-            <AvatarImage src={avatarUrl || undefined} alt={profile?.username || 'Moi'} />
+          <Avatar className="w-16 h-16 shrink-0 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+            <AvatarImage src={avatarUrl || undefined} alt={profile?.username || 'Moi'} className="object-cover" />
             <AvatarFallback className="bg-primary/15 text-primary font-bold text-lg">
               {(profile?.username || '?').charAt(0).toUpperCase()}
             </AvatarFallback>

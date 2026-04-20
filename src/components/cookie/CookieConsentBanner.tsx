@@ -9,7 +9,17 @@ const CookieConsentBanner = () => {
   const [analyticsChecked, setAnalyticsChecked] = useState(false);
   const [advertisingChecked, setAdvertisingChecked] = useState(false);
 
+  // Vérifie si la confirmation d'âge est validée. Tant que l'utilisateur n'a pas
+  // accepté la modale d'âge (AlertDialog Radix, z-50), on n'affiche PAS le banner
+  // cookies (z-[9999]) qui sinon passerait par dessus et bloquerait le bouton
+  // "J'ai 18 ans ou plus — Entrer".
+  const ageConfirmed = (() => {
+    try { return !!window.localStorage.getItem('age_confirmed'); }
+    catch { return false; }
+  })();
+
   if (hasConsented && !isSettingsOpen) return null;
+  if (!ageConfirmed && !isSettingsOpen) return null;
 
   return (
     <AnimatePresence>
@@ -19,7 +29,7 @@ const CookieConsentBanner = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-x-0 bottom-0 z-[9999] p-3 pb-safe"
+          className="fixed inset-x-0 bottom-0 z-40 p-3 pb-safe"
         >
           <div className="max-w-lg mx-auto rounded-2xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden">
             {/* Header */}

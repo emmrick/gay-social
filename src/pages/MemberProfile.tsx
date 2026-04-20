@@ -232,110 +232,135 @@ const MemberProfile = () => {
     );
   }
 
+  const zodiac = extendedProfile?.birth_date ? getZodiacSign(extendedProfile.birth_date) : null;
+  const isBday = extendedProfile?.birth_date && extendedProfile?.show_birthday && isBirthdayToday(extendedProfile.birth_date);
+
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Floating header */}
-      <div className="fixed top-0 left-0 right-0 z-20 pt-[env(safe-area-inset-top)]">
-        <div className="flex items-center justify-between p-4">
-          <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
-            <Button variant="secondary" size="icon"
-              className="rounded-full bg-card/70 backdrop-blur-xl shadow-lg border border-border/30 hover:bg-card"
-              onClick={handleBack}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </motion.div>
-          <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center gap-2">
-            {profile.is_verified && (
-              <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-500 backdrop-blur-xl border border-emerald-500/20">
-                <Shield className="w-3 h-3 mr-1" />
-                Vérifié
-              </Badge>
-            )}
-          </motion.div>
+    <div className="min-h-[100dvh] bg-background pb-32">
+      {/* ===== HERO IMMERSIF ===== */}
+      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative">
+        {/* Carrousel pleine largeur */}
+        <div className="relative">
+          <ProfilePhotoCarousel
+            photos={allPhotos}
+            username={profile.username}
+            className="aspect-[3/4] sm:aspect-[4/5] max-h-[78vh]"
+            albumSlides={albumSlides}
+            onAlbumClick={() => {
+              document.getElementById('albums-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          />
+
+          {/* Gradients éditoriaux */}
+          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/55 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/85 to-transparent pointer-events-none" />
+
+          {/* Top bar flottante */}
+          <div className="absolute top-0 inset-x-0 pt-[env(safe-area-inset-top)] z-20">
+            <div className="flex items-center justify-between p-4">
+              <motion.button
+                initial={{ x: -16, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
+                onClick={handleBack}
+                className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl flex items-center justify-center text-white hover:bg-black/60 transition-colors border border-white/10"
+                aria-label="Retour"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </motion.button>
+
+              <motion.div initial={{ x: 16, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center gap-2">
+                {profile.is_verified && (
+                  <Badge className="bg-emerald-500/90 text-white backdrop-blur-md border-0 shadow-lg">
+                    <Shield className="w-3 h-3 mr-1" />
+                    Vérifié
+                  </Badge>
+                )}
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Online pill */}
+          {isTrulyOnline && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              className="absolute top-20 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[hsl(142_76%_36%)] text-white text-[11px] font-bold uppercase tracking-wider shadow-xl z-10"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              En ligne
+            </motion.div>
+          )}
         </div>
-      </div>
 
-      {/* Photo Carousel */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative">
-        <ProfilePhotoCarousel 
-          photos={allPhotos} username={profile.username}
-          className="aspect-[3/4] max-h-[70vh]"
-          albumSlides={albumSlides}
-          onAlbumClick={() => {
-            document.getElementById('albums-section')?.scrollIntoView({ behavior: 'smooth' });
-          }}
-        />
-        <div className="absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-background via-background/85 to-transparent pointer-events-none" />
-        
-        {isTrulyOnline && (
-          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-            className="absolute top-20 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/85 backdrop-blur-sm text-white text-xs font-medium shadow-lg border border-emerald-400/20">
-            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-            En ligne
-          </motion.div>
-        )}
-
-        {extendedProfile?.sexual_position && POSITION_LABELS[extendedProfile.sexual_position] && extendedProfile.sexual_position !== 'no_answer' && (
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
-            className="absolute bottom-28 left-4">
-            <Badge className="bg-primary/85 backdrop-blur-sm text-primary-foreground border-0 text-sm px-3 py-1.5 shadow-lg">
+        {/* ===== HEADLINE ÉDITORIALE — chevauche le bas du hero ===== */}
+        <motion.div
+          initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
+          className="relative -mt-24 px-5 z-10"
+        >
+          {/* Position badge au-dessus du nom */}
+          {extendedProfile?.sexual_position && POSITION_LABELS[extendedProfile.sexual_position] && extendedProfile.sexual_position !== 'no_answer' && (
+            <Badge className="mb-3 bg-primary text-primary-foreground border-0 shadow-xl shadow-primary/40 px-3 py-1.5 text-xs font-bold">
               {POSITION_LABELS[extendedProfile.sexual_position]}
               {extendedProfile.position_detail && POSITION_DETAIL_LABELS[extendedProfile.position_detail] && (
-                <span className="ml-1 opacity-80">({POSITION_DETAIL_LABELS[extendedProfile.position_detail]})</span>
+                <span className="ml-1.5 opacity-80 font-medium">· {POSITION_DETAIL_LABELS[extendedProfile.position_detail]}</span>
               )}
             </Badge>
-          </motion.div>
-        )}
+          )}
 
-        {/* Name overlay */}
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
-          className="absolute bottom-4 left-4 right-4">
-          <div className="flex items-baseline gap-2 mb-1">
-            <h2 className="font-display text-3xl font-bold text-foreground drop-shadow-lg">{profile.username}</h2>
+          <h1 className="font-display text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-[0.95] break-words">
+            {profile.username}
             {extendedProfile?.age && (
-              <span className="text-2xl font-medium text-foreground/80">{extendedProfile.age}</span>
+              <span className="ml-3 text-3xl font-bold text-muted-foreground align-middle">{extendedProfile.age}</span>
             )}
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="w-3.5 h-3.5 text-primary/60" />
-            <span>{profile.region}</span>
-            {extendedProfile?.birth_date && (() => {
-              const zodiac = getZodiacSign(extendedProfile.birth_date);
-              return zodiac ? (
-                <>
-                  <span className="text-muted-foreground/50">•</span>
-                  <span title={zodiac.label}>{zodiac.emoji} {zodiac.label}</span>
-                </>
-              ) : null;
-            })()}
+          </h1>
+
+          {/* Méta-infos en ligne magazine */}
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1 font-medium text-foreground/80">
+              <MapPin className="w-3.5 h-3.5 text-primary" />
+              {profile.region}
+            </span>
+            {zodiac && (
+              <>
+                <Dot />
+                <span title={zodiac.label} className="font-medium">{zodiac.emoji} {zodiac.label}</span>
+              </>
+            )}
             {extendedProfile?.birth_date && extendedProfile?.show_birthday && (
               <>
-                <span className="text-muted-foreground/50">•</span>
-                <Cake className="w-3.5 h-3.5 text-pink-500/60" />
-                <span>{formatBirthday(extendedProfile.birth_date)}</span>
+                <Dot />
+                <span className="inline-flex items-center gap-1 font-medium">
+                  <Cake className="w-3.5 h-3.5 text-pink-500" />
+                  {formatBirthday(extendedProfile.birth_date)}
+                </span>
               </>
             )}
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
-            <span className={isTrulyOnline ? 'text-emerald-500' : ''}>{getLastSeenText()}</span>
-          </div>
-        </motion.div>
-      </motion.div>
 
-      {/* Content */}
-      <div className="px-4 pt-4 space-y-4">
-        {/* Birthday */}
-        {extendedProfile?.birth_date && extendedProfile?.show_birthday && isBirthdayToday(extendedProfile.birth_date) && (
-          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500/15 via-rose-500/15 to-amber-500/15 border border-pink-500/20 backdrop-blur-sm p-4 text-center">
-            <div className="absolute inset-0 flex items-center justify-around opacity-20 text-4xl pointer-events-none">
+          {/* Statut présence */}
+          <p className={cn(
+            "mt-1.5 text-xs font-semibold uppercase tracking-wider",
+            isTrulyOnline ? "text-[hsl(142_76%_36%)]" : "text-muted-foreground/70"
+          )}>
+            {getLastSeenText()}
+          </p>
+        </motion.div>
+      </motion.section>
+
+      {/* ===== CONTENU SCROLLABLE ===== */}
+      <div className="px-5 pt-8 space-y-8 max-w-2xl mx-auto">
+        {/* Anniversaire */}
+        {isBday && (
+          <motion.div
+            initial={{ scale: 0.94, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-500/15 via-rose-500/10 to-amber-500/15 border border-pink-500/25 p-5 text-center"
+          >
+            <div className="absolute inset-0 flex items-center justify-around opacity-15 text-5xl pointer-events-none">
               <span className="animate-bounce" style={{ animationDelay: '0s' }}>🎂</span>
               <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>🎉</span>
               <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>🎈</span>
               <span className="animate-bounce" style={{ animationDelay: '0.6s' }}>🎁</span>
             </div>
             <div className="relative">
-              <p className="text-lg font-display font-bold">🎂 C'est son anniversaire ! 🎉</p>
+              <p className="font-display text-xl font-black">🎂 C'est son anniversaire !</p>
               <p className="text-sm text-muted-foreground mt-1">Souhaite-lui un joyeux anniversaire</p>
               <div className="mt-3 flex justify-center">
                 <BirthdayGiftButton recipientId={userId!} recipientUsername={profile.username} />
@@ -344,142 +369,168 @@ const MemberProfile = () => {
           </motion.div>
         )}
 
-        {/* Reactions */}
-        {userId && (
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
-            <ProfileReactions profileUserId={userId} />
-          </motion.div>
+        {/* Bio — citation magazine */}
+        {profile.bio && (
+          <motion.section
+            initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15 }}
+          >
+            <blockquote className="relative pl-5 border-l-2 border-primary">
+              <p className="font-display text-xl sm:text-2xl leading-snug text-foreground italic">
+                « {profile.bio} »
+              </p>
+            </blockquote>
+          </motion.section>
         )}
 
-        {/* Quick info pills */}
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}
-          className="flex flex-wrap gap-2">
-          {extendedProfile?.height && (
-            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border/30 text-sm font-medium">
-              <Ruler className="w-4 h-4 text-primary/70" />
-              <span>{extendedProfile.height} cm</span>
-            </div>
-          )}
-          {extendedProfile?.weight && (
-            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border/30 text-sm font-medium">
-              <Weight className="w-4 h-4 text-primary/70" />
-              <span>{extendedProfile.weight} kg</span>
-            </div>
-          )}
-          {extendedProfile?.body_type && BODY_TYPE_LABELS[extendedProfile.body_type] && (
-            <div className="px-3 py-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border/30 text-sm font-medium">
-              {BODY_TYPE_LABELS[extendedProfile.body_type]}
-            </div>
-          )}
-          {extendedProfile?.endowment && extendedProfile.endowment !== 'no_answer' && ENDOWMENT_LABELS[extendedProfile.endowment] && (
-            <div className="px-3 py-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border/30 text-sm font-medium">
-              🍆 {ENDOWMENT_LABELS[extendedProfile.endowment]}
-            </div>
-          )}
-          {extendedProfile?.ethnicity && ETHNICITY_LABELS[extendedProfile.ethnicity] && (
-            <div className="px-3 py-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border/30 text-sm font-medium">
-              {ETHNICITY_LABELS[extendedProfile.ethnicity]}
-            </div>
-          )}
-          {extendedProfile?.relationship_status && RELATIONSHIP_LABELS[extendedProfile.relationship_status] && (
-            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border/30 text-sm font-medium">
-              <Heart className="w-4 h-4 text-pink-500/70" />
-              <span>{RELATIONSHIP_LABELS[extendedProfile.relationship_status]}</span>
-            </div>
-          )}
-          {extendedProfile?.hiv_status && extendedProfile.hiv_status !== 'no_answer' && HIV_STATUS_LABELS[extendedProfile.hiv_status] && (
-            <div className="px-3 py-2 rounded-xl bg-card/70 backdrop-blur-sm border border-border/30 text-sm font-medium">
-              {HIV_STATUS_LABELS[extendedProfile.hiv_status]}
-            </div>
-          )}
-        </motion.div>
+        {/* Réactions */}
+        {userId && (
+          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
+            <SectionLabel icon={<Sparkles className="w-3 h-3" />}>Réagir</SectionLabel>
+            <ProfileReactions profileUserId={userId} />
+          </motion.section>
+        )}
 
-        {/* Tribes */}
+        {/* Physique — grid éditoriale */}
+        {(extendedProfile?.height || extendedProfile?.weight || extendedProfile?.body_type || extendedProfile?.endowment) && (
+          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
+            <SectionLabel>Physique</SectionLabel>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {extendedProfile?.height && (
+                <StatBlock icon={<Ruler className="w-3.5 h-3.5" />} label="Taille" value={`${extendedProfile.height} cm`} />
+              )}
+              {extendedProfile?.weight && (
+                <StatBlock icon={<Weight className="w-3.5 h-3.5" />} label="Poids" value={`${extendedProfile.weight} kg`} />
+              )}
+              {extendedProfile?.body_type && BODY_TYPE_LABELS[extendedProfile.body_type] && (
+                <StatBlock icon={<User className="w-3.5 h-3.5" />} label="Corps" value={BODY_TYPE_LABELS[extendedProfile.body_type]} />
+              )}
+              {extendedProfile?.endowment && extendedProfile.endowment !== 'no_answer' && ENDOWMENT_LABELS[extendedProfile.endowment] && (
+                <StatBlock icon={<span className="text-xs">🍆</span>} label="Membre" value={ENDOWMENT_LABELS[extendedProfile.endowment]} />
+              )}
+            </div>
+          </motion.section>
+        )}
+
+        {/* Identité */}
+        {(extendedProfile?.ethnicity || extendedProfile?.relationship_status || (extendedProfile?.hiv_status && extendedProfile.hiv_status !== 'no_answer')) && (
+          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
+            <SectionLabel>Identité</SectionLabel>
+            <div className="flex flex-wrap gap-2">
+              {extendedProfile?.ethnicity && ETHNICITY_LABELS[extendedProfile.ethnicity] && (
+                <Pill>{ETHNICITY_LABELS[extendedProfile.ethnicity]}</Pill>
+              )}
+              {extendedProfile?.relationship_status && RELATIONSHIP_LABELS[extendedProfile.relationship_status] && (
+                <Pill icon={<Heart className="w-3.5 h-3.5 text-pink-500" />}>
+                  {RELATIONSHIP_LABELS[extendedProfile.relationship_status]}
+                </Pill>
+              )}
+              {extendedProfile?.hiv_status && extendedProfile.hiv_status !== 'no_answer' && HIV_STATUS_LABELS[extendedProfile.hiv_status] && (
+                <Pill>{HIV_STATUS_LABELS[extendedProfile.hiv_status]}</Pill>
+              )}
+            </div>
+          </motion.section>
+        )}
+
+        {/* Tribus */}
         {extendedProfile?.tribes && extendedProfile.tribes.length > 0 && (
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
-            <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-accent/60" />
-              Tribus
-            </p>
+          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35 }}>
+            <SectionLabel icon={<Sparkles className="w-3 h-3" />}>Tribus</SectionLabel>
             <div className="flex flex-wrap gap-2">
               {extendedProfile.tribes.map((tribe: string) => (
-                <Badge key={tribe} variant="outline" className="text-sm py-1.5 px-3 bg-card/50 backdrop-blur-sm border-border/30">
+                <Badge key={tribe} variant="outline" className="text-sm py-1.5 px-3 font-medium border-border/50 bg-card/50">
                   {TRIBE_LABELS[tribe] || tribe}
                 </Badge>
               ))}
             </div>
-          </motion.div>
+          </motion.section>
         )}
 
-        {/* Looking for */}
+        {/* Recherche */}
         {extendedProfile?.looking_for && extendedProfile.looking_for.length > 0 && (
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35 }}>
-            <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider flex items-center gap-1.5">
-              <Heart className="w-3 h-3 text-pink-500/60" />
-              Recherche
-            </p>
+          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
+            <SectionLabel icon={<Heart className="w-3 h-3" />}>Recherche</SectionLabel>
             <div className="flex flex-wrap gap-2">
               {extendedProfile.looking_for.map((item: string) => (
-                <Badge key={item} className="bg-primary/90 text-primary-foreground border-0 text-sm py-1.5 px-3 shadow-sm">
+                <Badge key={item} className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 text-sm py-1.5 px-3 shadow-md font-semibold">
                   {LOOKING_FOR_LABELS[item] || item}
                 </Badge>
               ))}
             </div>
-          </motion.div>
+          </motion.section>
         )}
 
-        {/* Bio */}
-        {profile.bio && (
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
-            <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wider flex items-center gap-1.5">
-              <Info className="w-3 h-3" />
-              À propos
-            </p>
-            <div className="p-4 rounded-2xl bg-card/70 backdrop-blur-sm border border-border/30">
-              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{profile.bio}</p>
-            </div>
-          </motion.div>
+        {/* Albums */}
+        {userId && (
+          <motion.section
+            id="albums-section"
+            initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }}
+          >
+            <MemberProfileAlbumsSection profileUserId={userId} profileUsername={profile.username} onStartChat={handleStartChat} />
+          </motion.section>
         )}
 
         {/* Tweens */}
-        {userId && <MemberTweenSection userId={userId} username={profile.username} />}
+        {userId && (
+          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}>
+            <MemberTweenSection userId={userId} username={profile.username} />
+          </motion.section>
+        )}
 
-        {/* Member since */}
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}
-          className="flex items-center gap-2 text-sm text-muted-foreground pt-4">
-          <Calendar className="w-4 h-4 text-muted-foreground/60" />
-          <span>Membre depuis {new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
+        {/* Footer édito : Membre depuis */}
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
+          className="pt-2 pb-4 text-center"
+        >
+          <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/70 uppercase tracking-[0.2em] font-bold">
+            <Calendar className="w-3 h-3" />
+            <span>Membre depuis {new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
+          </div>
         </motion.div>
       </div>
 
-      {/* Fixed bottom actions - glassmorphism */}
-      <motion.div initial={{ y: 100 }} animate={{ y: 0 }}
+      {/* ===== STICKY FOOTER ACTIONS ===== */}
+      <motion.div
+        initial={{ y: 100 }} animate={{ y: 0 }}
         transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-card/70 backdrop-blur-xl border-t border-border/30 shadow-[0_-4px_24px_hsl(var(--primary)/0.05)]">
-        <div className="flex gap-2 max-w-lg mx-auto">
-          <Button variant="outline" size="icon"
-            className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 rounded-xl h-12 w-12 border-border/40"
-            onClick={() => setShowReportDialog(true)}>
+        className="fixed bottom-0 left-0 right-0 z-30 px-4 py-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] bg-card/85 backdrop-blur-2xl border-t border-border/50 shadow-[0_-8px_32px_hsl(var(--primary)/0.08)]"
+      >
+        <div className="flex gap-2 max-w-2xl mx-auto">
+          <Button
+            variant="outline" size="icon"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 rounded-full h-12 w-12 border-border/40"
+            onClick={() => setShowReportDialog(true)}
+            aria-label="Signaler"
+          >
             <Flag className="w-5 h-5" />
           </Button>
-          <Button variant="outline" size="icon"
+          <Button
+            variant="outline" size="icon"
             className={cn(
-              "flex-shrink-0 transition-all rounded-xl h-12 w-12 border-border/40",
-              isFavorite(userId || '') && "bg-amber-500/15 border-amber-500/40 text-amber-500 hover:bg-amber-500/25 scale-110"
+              "flex-shrink-0 transition-all rounded-full h-12 w-12 border-border/40",
+              isFavorite(userId || '') && "bg-amber-500/15 border-amber-500/50 text-amber-500 hover:bg-amber-500/25"
             )}
-            onClick={() => userId && toggleFavorite(userId)} disabled={isToggling}>
-            {isToggling ? <Loader2 className="w-5 h-5 animate-spin" /> : <Star className={cn("w-5 h-5", isFavorite(userId || '') && "fill-current")} />}
+            onClick={() => userId && toggleFavorite(userId)}
+            disabled={isToggling}
+            aria-label="Favori"
+          >
+            {isToggling
+              ? <Loader2 className="w-5 h-5 animate-spin" />
+              : <Star className={cn("w-5 h-5", isFavorite(userId || '') && "fill-current")} />}
           </Button>
           {hasChatBot && (
-            <Button variant="outline" size="icon"
-              className="flex-shrink-0 rounded-xl h-12 w-12 text-blue-500 border-blue-500/25 hover:bg-blue-500/10"
-              onClick={() => setShowChatBot(true)}>
+            <Button
+              variant="outline" size="icon"
+              className="flex-shrink-0 rounded-full h-12 w-12 text-blue-500 border-blue-500/30 hover:bg-blue-500/10"
+              onClick={() => setShowChatBot(true)}
+              aria-label="Chatbot"
+            >
               <Bot className="w-5 h-5" />
             </Button>
           )}
           <Button
-            className="flex-1 h-12 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-base font-display font-semibold rounded-xl shadow-[0_4px_16px_hsl(var(--primary)/0.3)]"
-            onClick={handleStartChat}>
+            className="flex-1 h-12 bg-gradient-to-r from-primary to-accent hover:opacity-95 text-base font-display font-bold rounded-full shadow-lg shadow-primary/30"
+            onClick={handleStartChat}
+          >
             <MessageCircle className="w-5 h-5 mr-2" />
             Message
           </Button>
@@ -491,5 +542,34 @@ const MemberProfile = () => {
     </div>
   );
 };
+
+/* ---------- Sous-composants éditoriaux ---------- */
+
+const SectionLabel = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
+  <div className="flex items-center gap-1.5 mb-3 text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">
+    {icon}
+    <span>{children}</span>
+    <span className="flex-1 h-px bg-border/60 ml-1" />
+  </div>
+);
+
+const StatBlock = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
+  <div className="rounded-2xl bg-secondary/50 border border-border/40 p-3 text-center">
+    <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+      {icon}
+      <span className="text-[10px] uppercase tracking-wider font-bold">{label}</span>
+    </div>
+    <p className="font-display text-base font-black text-foreground leading-tight">{value}</p>
+  </div>
+);
+
+const Pill = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
+  <div className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-card border border-border/50 text-sm font-medium">
+    {icon}
+    <span>{children}</span>
+  </div>
+);
+
+const Dot = () => <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />;
 
 export default MemberProfile;

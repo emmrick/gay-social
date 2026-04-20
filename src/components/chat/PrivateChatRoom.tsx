@@ -497,6 +497,16 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
           onClose={() => setSnapViewerMessageId(null)}
         />
       )}
+
+      <PrivateMessageActionsSheet
+        open={!!actionMessage}
+        onOpenChange={(o) => { if (!o) setActionMessage(null); }}
+        message={actionMessage}
+        isPinned={actionMessage ? isMessagePinned(actionMessage.id) : false}
+        onPin={() => actionMessage && pinMessage.mutate(actionMessage.id)}
+        onUnpin={() => actionMessage && unpinMessage.mutate(actionMessage.id)}
+        onReact={(emoji) => actionMessage && handleToggleReaction(actionMessage.id, emoji)}
+      />
     </div>
   );
 };

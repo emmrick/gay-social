@@ -34,7 +34,7 @@ import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoti
 import ForcedSupportChat from "@/components/moderation/ForcedSupportChat";
 import PromoPopup from "@/components/popups/PromoPopup";
 import GlobalMissionOverlay from "@/components/moderation/GlobalMissionOverlay";
-import OnboardingGuideDialog from "@/components/onboarding/OnboardingGuideDialog";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import AppLockGate from "@/components/security/AppLockGate";
 import DossierAccessPopup from "@/components/moderation/DossierAccessPopup";
 import ProfileSelectorModal from "@/components/couple/ProfileSelectorModal";
@@ -268,7 +268,7 @@ const AuthenticatedApp = () => {
                       <InvestigationNoticeDialog />
                       <ForcedSupportChat />
                       <PromoPopup />
-                      <OnboardingGuideDialog />
+                      <OnboardingTour />
                       <GlobalMissionOverlay />
                       <DossierAccessPopup />
                       <ProfileSelectorModal />

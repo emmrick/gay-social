@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Heart, MessageCircle, Trash2, MoreHorizontal, Flag } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, MoreHorizontal, Flag, Pencil } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -10,6 +10,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToggleTweenLike, useDeleteTween, useVoteTweenPoll, type Tween } from '@/hooks/useTweens';
 import TweenDetailDialog from './TweenDetailDialog';
+import TweenEditDialog from './TweenEditDialog';
+import TweenReportDialog from './TweenReportDialog';
 import { motion } from 'framer-motion';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
@@ -65,6 +67,8 @@ const TweenCard = ({ tween }: TweenCardProps) => {
   const toggleLike = useToggleTweenLike();
   const deleteTween = useDeleteTween();
   const [showDetail, setShowDetail] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   const isOwn = user?.id === tween.user_id;
   const profile = tween.profiles;
@@ -98,6 +102,9 @@ const TweenCard = ({ tween }: TweenCardProps) => {
                   onClick={(e) => { e.stopPropagation(); if (profile?.user_id) navigate(`/profile/${profile.user_id}`); }}
                 >{profile?.username || 'Anonyme'}</span>
                 <span className="text-xs text-muted-foreground/60 flex-shrink-0">· {timeAgo}</span>
+                {tween.edited_at && (
+                  <span className="text-[10px] text-muted-foreground/50 italic flex-shrink-0">(modifié)</span>
+                )}
               </div>
 
               <DropdownMenu>
@@ -108,16 +115,28 @@ const TweenCard = ({ tween }: TweenCardProps) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-xl">
                   {isOwn && (
-                    <DropdownMenuItem
-                      className="text-destructive rounded-lg"
-                      onClick={(e) => { e.stopPropagation(); deleteTween.mutate(tween.id); }}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Supprimer
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem
+                        className="rounded-lg"
+                        onClick={(e) => { e.stopPropagation(); setShowEdit(true); }}
+                      >
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Modifier
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive rounded-lg"
+                        onClick={(e) => { e.stopPropagation(); deleteTween.mutate(tween.id); }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </>
                   )}
                   {!isOwn && (
-                    <DropdownMenuItem className="rounded-lg">
+                    <DropdownMenuItem
+                      className="rounded-lg text-destructive"
+                      onClick={(e) => { e.stopPropagation(); setShowReport(true); }}
+                    >
                       <Flag className="w-4 h-4 mr-2" />
                       Signaler
                     </DropdownMenuItem>
@@ -174,6 +193,22 @@ const TweenCard = ({ tween }: TweenCardProps) => {
           tween={tween}
           open={showDetail}
           onOpenChange={setShowDetail}
+        />
+      )}
+
+      {showEdit && (
+        <TweenEditDialog
+          tween={tween}
+          open={showEdit}
+          onOpenChange={setShowEdit}
+        />
+      )}
+
+      {showReport && (
+        <TweenReportDialog
+          tween={tween}
+          open={showReport}
+          onOpenChange={setShowReport}
         />
       )}
     </>

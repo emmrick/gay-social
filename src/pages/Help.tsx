@@ -737,7 +737,7 @@ const Help = ({ embedded = false }: HelpProps) => {
             </motion.div>
           )}
 
-          <div ref={scrollEndRef} />
+          <div ref={scrollEndRef} className="h-2" />
         </div>
       </div>
 

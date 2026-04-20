@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -7,7 +7,6 @@ import {
   XCircle,
   Clock,
   Loader2,
-  User,
   CreditCard,
   AlertCircle,
   FileText,
@@ -15,7 +14,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,27 +35,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   useAllWithdrawalRequests,
   useProcessWithdrawal,
   formatCents,
   WithdrawalRequest,
 } from '@/hooks/useModeratorEarnings';
+import { cn } from '@/lib/utils';
+import {
+  AdminSectionHeader,
+  StatTile,
+  AdminFilterBar,
+  AdminFilterChip,
+  AdminTable,
+  type AdminColumn,
+} from './ui';
 
-type WithdrawalWithProfile = WithdrawalRequest & { 
-  profile?: { username: string; avatar_url: string | null } 
+type WithdrawalWithProfile = WithdrawalRequest & {
+  profile?: { username: string; avatar_url: string | null };
 };
 
-const statusConfig = {
-  pending: { label: 'En attente', color: 'bg-yellow-500', icon: Clock },
-  approved: { label: 'Approuvé', color: 'bg-blue-500', icon: CheckCircle },
-  completed: { label: 'Payé', color: 'bg-green-500', icon: CheckCircle },
-  rejected: { label: 'Refusé', color: 'bg-red-500', icon: XCircle },
-};
+const statusBadge = {
+  pending: { label: 'En attente', className: 'bg-amber-500/15 text-amber-600 border-amber-500/30', icon: Clock },
+  approved: { label: 'Approuvé', className: 'bg-blue-500/15 text-blue-600 border-blue-500/30', icon: CheckCircle },
+  completed: { label: 'Payé', className: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30', icon: CheckCircle },
+  rejected: { label: 'Refusé', className: 'bg-red-500/15 text-red-600 border-red-500/30', icon: XCircle },
+} as const;
 
 const WithdrawalRequestsPanel = () => {
-  const [selectedStatus, setSelectedStatus] = useState<string>('pending');
+  const [selectedStatus, setSelectedStatus] = useState<'pending' | 'approved' | 'completed' | 'rejected' | 'all'>('pending');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedRequest, setSelectedRequest] = useState<WithdrawalWithProfile | null>(null);
   const [approveDialog, setApproveDialog] = useState(false);
   const [rejectDialog, setRejectDialog] = useState(false);
@@ -68,19 +75,34 @@ const WithdrawalRequestsPanel = () => {
   const { data: withdrawals, isLoading } = useAllWithdrawalRequests();
   const processWithdrawal = useProcessWithdrawal();
 
-  const filteredWithdrawals = withdrawals?.filter(w => 
-    selectedStatus === 'all' ? true : w.status === selectedStatus
-  );
+  const filteredWithdrawals = useMemo(() => {
+    const list = withdrawals || [];
+    return list
+      .filter((w) => (selectedStatus === 'all' ? true : w.status === selectedStatus))
+      .filter((w) =>
+        searchQuery
+          ? w.profile?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            w.payment_reference?.toLowerCase().includes(searchQuery.toLowerCase())
+          : true,
+      );
+  }, [withdrawals, selectedStatus, searchQuery]);
 
-  const pendingCount = withdrawals?.filter(w => w.status === 'pending').length || 0;
-  const approvedCount = withdrawals?.filter(w => w.status === 'approved').length || 0;
+  const stats = useMemo(() => {
+    const list = withdrawals || [];
+    return {
+      pending: list.filter((w) => w.status === 'pending').length,
+      approved: list.filter((w) => w.status === 'approved').length,
+      completed: list.filter((w) => w.status === 'completed').length,
+      rejected: list.filter((w) => w.status === 'rejected').length,
+      pendingAmount: list
+        .filter((w) => w.status === 'pending')
+        .reduce((s, w) => s + (w.amount_cents || 0), 0),
+    };
+  }, [withdrawals]);
 
   const handleApprove = async () => {
     if (!selectedRequest) return;
-    await processWithdrawal.mutateAsync({
-      requestId: selectedRequest.id,
-      status: 'approved',
-    });
+    await processWithdrawal.mutateAsync({ requestId: selectedRequest.id, status: 'approved' });
     setApproveDialog(false);
     setSelectedRequest(null);
   };
@@ -109,120 +131,278 @@ const WithdrawalRequestsPanel = () => {
     setSelectedRequest(null);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const columns: AdminColumn<WithdrawalWithProfile>[] = [
+    {
+      key: 'user',
+      header: 'Modérateur',
+      cell: (w) => (
+        <div className="flex items-center gap-3 min-w-0">
+          <Avatar className="w-9 h-9 flex-shrink-0">
+            <AvatarImage src={w.profile?.avatar_url || undefined} />
+            <AvatarFallback>{w.profile?.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="font-medium truncate">{w.profile?.username || 'Inconnu'}</p>
+            {w.payment_reference && (
+              <p className="text-[11px] text-muted-foreground font-mono truncate inline-flex items-center gap-1">
+                <FileText className="w-3 h-3" />
+                {w.payment_reference}
+              </p>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'Montant',
+      sortable: true,
+      sortValue: (w) => w.amount_cents,
+      cell: (w) => (
+        <span className="font-semibold text-primary tabular-nums">{formatCents(w.amount_cents)}</span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Statut',
+      cell: (w) => {
+        const cfg = statusBadge[w.status];
+        const Icon = cfg.icon;
+        return (
+          <Badge variant="outline" className={cn('text-[11px] inline-flex items-center gap-1', cfg.className)}>
+            <Icon className="w-3 h-3" />
+            {cfg.label}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: 'requested',
+      header: 'Demandé',
+      sortable: true,
+      sortValue: (w) => new Date(w.requested_at).getTime(),
+      hideOnMobile: true,
+      cell: (w) => (
+        <span className="text-xs text-muted-foreground">
+          {formatDistanceToNow(new Date(w.requested_at), { addSuffix: true, locale: fr })}
+        </span>
+      ),
+    },
+    {
+      key: 'processed',
+      header: 'Traité',
+      hideOnMobile: true,
+      cell: (w) =>
+        w.processed_at ? (
+          <span className="text-xs text-muted-foreground">
+            {format(new Date(w.processed_at), 'dd MMM yy', { locale: fr })}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground/50">—</span>
+        ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      cell: (w) => (
+        <div className="flex justify-end gap-1.5">
+          {w.status === 'pending' && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 px-2.5 text-red-600 border-red-500/30 hover:bg-red-500/10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedRequest(w);
+                  setRejectDialog(true);
+                }}
+              >
+                <XCircle className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                size="sm"
+                className="h-8 px-2.5 bg-blue-600 hover:bg-blue-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedRequest(w);
+                  setApproveDialog(true);
+                }}
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+              </Button>
+            </>
+          )}
+          {w.status === 'approved' && (
+            <Button
+              size="sm"
+              className="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedRequest(w);
+                setCompleteDialog(true);
+              }}
+            >
+              <CreditCard className="w-3.5 h-3.5 mr-1" />
+              Payé
+            </Button>
+          )}
+          {w.rejection_reason && w.status === 'rejected' && (
+            <span className="text-[11px] text-red-600 truncate max-w-[160px]">{w.rejection_reason}</span>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-          <ArrowUpRight className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h2 className="font-display text-lg font-semibold">Demandes de retrait</h2>
-          <p className="text-sm text-muted-foreground">
-            Gérez les demandes de paiement des modérateurs
-          </p>
-        </div>
-      </div>
+    <div className="space-y-5">
+      <AdminSectionHeader
+        icon={ArrowUpRight}
+        eyebrow="Modération"
+        title="Demandes de retrait"
+      />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-yellow-500" />
-            <span className="text-sm text-muted-foreground">En attente</span>
-          </div>
-          <p className="text-2xl font-bold text-yellow-500">{pendingCount}</p>
-        </div>
-        <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-blue-500" />
-            <span className="text-sm text-muted-foreground">Approuvés</span>
-          </div>
-          <p className="text-2xl font-bold text-blue-500">{approvedCount}</p>
-        </div>
-        <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-          <div className="flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-green-500" />
-            <span className="text-sm text-muted-foreground">Payés</span>
-          </div>
-          <p className="text-2xl font-bold text-green-500">
-            {withdrawals?.filter(w => w.status === 'completed').length || 0}
-          </p>
-        </div>
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-          <div className="flex items-center gap-2">
-            <XCircle className="w-4 h-4 text-red-500" />
-            <span className="text-sm text-muted-foreground">Refusés</span>
-          </div>
-          <p className="text-2xl font-bold text-red-500">
-            {withdrawals?.filter(w => w.status === 'rejected').length || 0}
-          </p>
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatTile label="En attente" value={stats.pending} icon={Clock} accent="orange" />
+        <StatTile
+          label="Montant en attente"
+          value={formatCents(stats.pendingAmount)}
+          icon={CreditCard}
+          accent="emerald"
+        />
+        <StatTile label="Approuvés" value={stats.approved} icon={CheckCircle} accent="blue" />
+        <StatTile label="Payés" value={stats.completed} icon={CreditCard} accent="violet" />
       </div>
 
-      {/* Filter Tabs */}
-      <Tabs value={selectedStatus} onValueChange={setSelectedStatus}>
-        <TabsList className="grid grid-cols-5">
-          <TabsTrigger value="pending" className="gap-1">
-            <Clock className="w-3 h-3" />
-            En attente
-          </TabsTrigger>
-          <TabsTrigger value="approved" className="gap-1">
-            <CheckCircle className="w-3 h-3" />
-            Approuvés
-          </TabsTrigger>
-          <TabsTrigger value="completed" className="gap-1">
-            <CreditCard className="w-3 h-3" />
-            Payés
-          </TabsTrigger>
-          <TabsTrigger value="rejected" className="gap-1">
-            <XCircle className="w-3 h-3" />
-            Refusés
-          </TabsTrigger>
-          <TabsTrigger value="all">Tous</TabsTrigger>
-        </TabsList>
+      {/* Filtres */}
+      <AdminFilterBar
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Rechercher modérateur ou référence…"
+        filters={
+          <>
+            <AdminFilterChip
+              active={selectedStatus === 'pending'}
+              onClick={() => setSelectedStatus('pending')}
+              count={stats.pending}
+            >
+              En attente
+            </AdminFilterChip>
+            <AdminFilterChip
+              active={selectedStatus === 'approved'}
+              onClick={() => setSelectedStatus('approved')}
+              count={stats.approved}
+            >
+              Approuvés
+            </AdminFilterChip>
+            <AdminFilterChip
+              active={selectedStatus === 'completed'}
+              onClick={() => setSelectedStatus('completed')}
+            >
+              Payés
+            </AdminFilterChip>
+            <AdminFilterChip
+              active={selectedStatus === 'rejected'}
+              onClick={() => setSelectedStatus('rejected')}
+            >
+              Refusés
+            </AdminFilterChip>
+            <AdminFilterChip active={selectedStatus === 'all'} onClick={() => setSelectedStatus('all')}>
+              Tous
+            </AdminFilterChip>
+          </>
+        }
+      />
 
-        <TabsContent value={selectedStatus} className="mt-4">
-          <ScrollArea className="h-[400px]">
-            {!filteredWithdrawals?.length ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <ArrowUpRight className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Aucune demande de retrait</p>
+      <AdminTable
+        data={filteredWithdrawals}
+        columns={columns}
+        rowKey={(w) => w.id}
+        loading={isLoading}
+        emptyIcon={ArrowUpRight}
+        emptyTitle="Aucune demande"
+        emptyDescription="Aucune demande de retrait ne correspond à ces critères."
+        mobileCard={(w) => {
+          const cfg = statusBadge[w.status];
+          const StatusIcon = cfg.icon;
+          return (
+            <div className="rounded-2xl border border-border/50 bg-card p-3.5 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Avatar className="w-10 h-10 flex-shrink-0">
+                    <AvatarImage src={w.profile?.avatar_url || undefined} />
+                    <AvatarFallback>
+                      {w.profile?.username?.charAt(0).toUpperCase() || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{w.profile?.username || 'Inconnu'}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatDistanceToNow(new Date(w.requested_at), { addSuffix: true, locale: fr })}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="outline" className={cn('text-[10px] gap-1', cfg.className)}>
+                  <StatusIcon className="w-3 h-3" />
+                  {cfg.label}
+                </Badge>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredWithdrawals.map((withdrawal) => (
-                  <WithdrawalCard
-                    key={withdrawal.id}
-                    withdrawal={withdrawal}
-                    onApprove={() => {
-                      setSelectedRequest(withdrawal);
-                      setApproveDialog(true);
-                    }}
-                    onReject={() => {
-                      setSelectedRequest(withdrawal);
+              <p className="text-xl font-bold text-primary tabular-nums">{formatCents(w.amount_cents)}</p>
+              {w.rejection_reason && (
+                <p className="text-[11px] text-red-600">Raison : {w.rejection_reason}</p>
+              )}
+              {w.payment_reference && (
+                <p className="text-[11px] text-emerald-600 font-mono inline-flex items-center gap-1">
+                  <FileText className="w-3 h-3" /> {w.payment_reference}
+                </p>
+              )}
+              {w.status === 'pending' && (
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 h-8 text-red-600 border-red-500/30"
+                    onClick={() => {
+                      setSelectedRequest(w);
                       setRejectDialog(true);
                     }}
-                    onComplete={() => {
-                      setSelectedRequest(withdrawal);
-                      setCompleteDialog(true);
+                  >
+                    <XCircle className="w-3.5 h-3.5 mr-1" />
+                    Refuser
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1 h-8 bg-blue-600 hover:bg-blue-700"
+                    onClick={() => {
+                      setSelectedRequest(w);
+                      setApproveDialog(true);
                     }}
-                    isProcessing={processWithdrawal.isPending}
-                  />
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </TabsContent>
-      </Tabs>
+                  >
+                    <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                    Approuver
+                  </Button>
+                </div>
+              )}
+              {w.status === 'approved' && (
+                <Button
+                  size="sm"
+                  className="w-full h-8 bg-emerald-600 hover:bg-emerald-700"
+                  onClick={() => {
+                    setSelectedRequest(w);
+                    setCompleteDialog(true);
+                  }}
+                >
+                  <CreditCard className="w-3.5 h-3.5 mr-1" />
+                  Marquer payé
+                </Button>
+              )}
+            </div>
+          );
+        }}
+      />
 
       {/* Approve Dialog */}
       <AlertDialog open={approveDialog} onOpenChange={setApproveDialog}>
@@ -233,10 +413,15 @@ const WithdrawalRequestsPanel = () => {
               Approuver la demande ?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Vous êtes sur le point d'approuver la demande de retrait de{' '}
-              <span className="font-medium">{selectedRequest?.profile?.username}</span> pour un montant de{' '}
-              <span className="font-medium text-primary">{formatCents(selectedRequest?.amount_cents || 0)}</span>.
-              <br /><br />
+              Approuver la demande de retrait de{' '}
+              <span className="font-medium">{selectedRequest?.profile?.username}</span> pour un montant
+              de{' '}
+              <span className="font-medium text-primary">
+                {formatCents(selectedRequest?.amount_cents || 0)}
+              </span>
+              .
+              <br />
+              <br />
               Une fois approuvée, vous devrez effectuer le paiement et marquer la demande comme "Payée".
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -269,7 +454,7 @@ const WithdrawalRequestsPanel = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+            <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-orange-500 mt-0.5" />
                 <p className="text-sm text-orange-600">
@@ -284,7 +469,7 @@ const WithdrawalRequestsPanel = () => {
                 id="rejection-reason"
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Expliquez la raison du refus..."
+                placeholder="Expliquez la raison du refus…"
                 rows={3}
               />
             </div>
@@ -294,11 +479,7 @@ const WithdrawalRequestsPanel = () => {
             <Button variant="outline" onClick={() => setRejectDialog(false)}>
               Annuler
             </Button>
-            <Button 
-              variant="destructive"
-              onClick={handleReject}
-              disabled={processWithdrawal.isPending}
-            >
+            <Button variant="destructive" onClick={handleReject} disabled={processWithdrawal.isPending}>
               {processWithdrawal.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (
@@ -315,7 +496,7 @@ const WithdrawalRequestsPanel = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-green-500" />
+              <CreditCard className="w-5 h-5 text-emerald-500" />
               Marquer comme payé
             </DialogTitle>
             <DialogDescription>
@@ -331,7 +512,7 @@ const WithdrawalRequestsPanel = () => {
                 id="payment-reference"
                 value={paymentReference}
                 onChange={(e) => setPaymentReference(e.target.value)}
-                placeholder="Ex: VIREMENT-2024-001, PayPal-xxx..."
+                placeholder="Ex: VIREMENT-2024-001, PayPal-xxx…"
               />
               <p className="text-xs text-muted-foreground">
                 Ajoutez une référence pour le suivi du paiement
@@ -343,10 +524,10 @@ const WithdrawalRequestsPanel = () => {
             <Button variant="outline" onClick={() => setCompleteDialog(false)}>
               Annuler
             </Button>
-            <Button 
+            <Button
               onClick={handleComplete}
               disabled={processWithdrawal.isPending}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-emerald-600 hover:bg-emerald-700"
             >
               {processWithdrawal.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -358,116 +539,6 @@ const WithdrawalRequestsPanel = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-};
-
-// Withdrawal Card Component
-const WithdrawalCard = ({
-  withdrawal,
-  onApprove,
-  onReject,
-  onComplete,
-  isProcessing,
-}: {
-  withdrawal: WithdrawalWithProfile;
-  onApprove: () => void;
-  onReject: () => void;
-  onComplete: () => void;
-  isProcessing: boolean;
-}) => {
-  const status = statusConfig[withdrawal.status];
-  const StatusIcon = status.icon;
-
-  return (
-    <div className="p-4 rounded-xl border bg-card hover:bg-secondary/30 transition-colors">
-      <div className="flex items-center gap-4">
-        {/* Avatar */}
-        <Avatar className="w-12 h-12">
-          <AvatarImage src={withdrawal.profile?.avatar_url || undefined} />
-          <AvatarFallback className="bg-primary/20">
-            <User className="w-5 h-5" />
-          </AvatarFallback>
-        </Avatar>
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium">
-              {withdrawal.profile?.username || 'Utilisateur inconnu'}
-            </span>
-            <Badge 
-              variant="outline" 
-              className={`${status.color} bg-opacity-20 text-xs`}
-            >
-              <StatusIcon className="w-3 h-3 mr-1" />
-              {status.label}
-            </Badge>
-          </div>
-          <p className="text-2xl font-bold text-primary mt-1">
-            {formatCents(withdrawal.amount_cents)}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Demandé {formatDistanceToNow(new Date(withdrawal.requested_at), { addSuffix: true, locale: fr })}
-          </p>
-          
-          {withdrawal.processed_at && (
-            <p className="text-xs text-muted-foreground">
-              Traité le {format(new Date(withdrawal.processed_at), 'dd MMM yyyy à HH:mm', { locale: fr })}
-            </p>
-          )}
-          
-          {withdrawal.rejection_reason && (
-            <p className="text-xs text-red-500 mt-1">
-              Raison: {withdrawal.rejection_reason}
-            </p>
-          )}
-          
-          {withdrawal.payment_reference && (
-            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-              <FileText className="w-3 h-3" />
-              Réf: {withdrawal.payment_reference}
-            </p>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col gap-2">
-          {withdrawal.status === 'pending' && (
-            <>
-              <Button
-                size="sm"
-                onClick={onApprove}
-                disabled={isProcessing}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <CheckCircle className="w-4 h-4 mr-1" />
-                Approuver
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={onReject}
-                disabled={isProcessing}
-              >
-                <XCircle className="w-4 h-4 mr-1" />
-                Refuser
-              </Button>
-            </>
-          )}
-          {withdrawal.status === 'approved' && (
-            <Button
-              size="sm"
-              onClick={onComplete}
-              disabled={isProcessing}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CreditCard className="w-4 h-4 mr-1" />
-              Payé
-            </Button>
-          )}
-        </div>
-      </div>
     </div>
   );
 };

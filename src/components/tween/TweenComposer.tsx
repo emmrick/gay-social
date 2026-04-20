@@ -62,52 +62,59 @@ const TweenComposer = () => {
   const videoRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // ─── Upload avec progression XHR (déclaré avant tout early return) ─────────
-  const uploadWithProgress = useCallback(
+  // ─── Upload fiable via SDK storage + retries mobile ─────────────────────────
+  const uploadTweenMedia = useCallback(
     async (path: string, file: File): Promise<void> => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) throw new Error('Session expirée — reconnecte-toi puis réessaie.');
+      const maxRetries = 3;
 
-      const supabaseUrl = (supabase as unknown as { supabaseUrl: string }).supabaseUrl
-        || import.meta.env.VITE_SUPABASE_URL;
-      const url = `${supabaseUrl}/storage/v1/object/media/${encodeURIComponent(path)}`;
+      for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
+        setUploadStage(
+          attempt === 1
+            ? 'Envoi du média…'
+            : `Nouvelle tentative d’envoi (${attempt}/${maxRetries})…`
+        );
+        setUploadProgress(Math.min(20 + (attempt - 1) * 15, 50));
 
-      return new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', url, true);
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-        xhr.setRequestHeader('x-upsert', 'false');
-        xhr.setRequestHeader('cache-control', 'max-age=31536000');
-        if (file.type) xhr.setRequestHeader('content-type', file.type);
+        try {
+          const { error } = await supabase.storage
+            .from('media')
+            .upload(path, file, {
+              cacheControl: '3600',
+              upsert: attempt > 1,
+              contentType: file.type || undefined,
+            });
 
-        xhr.upload.onprogress = (ev) => {
-          if (ev.lengthComputable) {
-            const pct = Math.round((ev.loaded / ev.total) * 100);
-            setUploadProgress(pct);
-            if (pct < 100) setUploadStage(`Envoi du média… ${pct}%`);
-            else setUploadStage('Finalisation côté serveur…');
+          if (!error) {
+            return;
           }
-        };
 
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) resolve();
-          else {
-            let msg = `Erreur ${xhr.status}`;
-            try {
-              const body = JSON.parse(xhr.responseText);
-              msg = body.message || body.error || msg;
-            } catch {
-              if (xhr.responseText) msg = xhr.responseText.slice(0, 200);
-            }
-            reject(new Error(msg));
+          const rawMessage = error.message || 'Erreur d\'envoi.';
+          const isRetryable = /LockManager|timed out|network|fetch|load failed|failed to fetch|abort|aborted/i.test(rawMessage);
+
+          if (!isRetryable || attempt === maxRetries) {
+            throw new Error(
+              isRetryable
+                ? 'Connexion interrompue pendant l\'envoi. Vérifie ton réseau puis réessaie.'
+                : rawMessage
+            );
           }
-        };
-        xhr.onerror = () => reject(new Error('Connexion interrompue pendant l\'envoi.'));
-        xhr.ontimeout = () => reject(new Error('Délai dépassé pendant l\'envoi.'));
+        } catch (err) {
+          const rawMessage = err instanceof Error ? err.message : 'Erreur d\'envoi.';
+          const isRetryable = /LockManager|timed out|network|fetch|load failed|failed to fetch|abort|aborted/i.test(rawMessage);
 
-        xhr.send(file);
-      });
+          if (!isRetryable || attempt === maxRetries) {
+            throw new Error(
+              isRetryable
+                ? 'Connexion interrompue pendant l\'envoi. Vérifie ton réseau puis réessaie.'
+                : rawMessage
+            );
+          }
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1200 * attempt));
+      }
+
+      throw new Error('Connexion interrompue pendant l\'envoi. Vérifie ton réseau puis réessaie.');
     },
     []
   );
@@ -183,8 +190,6 @@ const TweenComposer = () => {
     setErrorMsg(null);
   };
 
-  // (uploadWithProgress est défini plus haut, avant l'early return)
-
   const handlePublish = async () => {
     if (!canPublish) return;
     setErrorMsg(null);
@@ -192,22 +197,38 @@ const TweenComposer = () => {
 
     if (mediaFile && mediaType) {
       setUploading(true);
-      setUploadProgress(0);
+      setUploadProgress(5);
       setUploadStage('Préparation de l\'envoi…');
       try {
         const ext = (mediaFile.name.split('.').pop() || 'bin').toLowerCase();
         const path = `${user.id}/tweens/${Date.now()}.${ext}`;
 
-        await uploadWithProgress(path, mediaFile);
+        await uploadTweenMedia(path, mediaFile);
 
+        setUploadProgress(75);
         setUploadStage('Génération du lien sécurisé…');
-        const { data: signed, error: signError } = await supabase.storage
-          .from('media')
-          .createSignedUrl(path, 60 * 60 * 24 * 365);
-        if (signError || !signed?.signedUrl) {
-          throw new Error(signError?.message || 'Impossible de générer le lien du média.');
+
+        let signedUrl: string | undefined;
+        for (let attempt = 1; attempt <= 2; attempt += 1) {
+          const { data: signed, error: signError } = await supabase.storage
+            .from('media')
+            .createSignedUrl(path, 60 * 60 * 24 * 365);
+
+          if (!signError && signed?.signedUrl) {
+            signedUrl = signed.signedUrl;
+            break;
+          }
+
+          if (attempt === 2) {
+            throw new Error(signError?.message || 'Impossible de générer le lien du média.');
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 800));
         }
-        mediaUrl = signed.signedUrl;
+
+        mediaUrl = signedUrl;
+        setUploadProgress(90);
+        setUploadStage('Publication du Tween…');
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Erreur d\'envoi inconnue.';
         console.error('[Tween] upload error:', err);
@@ -215,11 +236,6 @@ const TweenComposer = () => {
         toast.error(message, { duration: 6000 });
         setUploading(false);
         return;
-      } finally {
-        // On garde uploading=true pendant l'insert si succès, sinon false (déjà set ci-dessus)
-        if (mediaUrl) {
-          setUploadProgress(100);
-        }
       }
     }
 
@@ -231,6 +247,8 @@ const TweenComposer = () => {
         mediaType: mediaType || undefined,
         pollOptions: validPollOptions?.length && validPollOptions.length >= 2 ? validPollOptions : undefined,
       });
+      setUploadProgress(100);
+      setUploadStage('Publication terminée');
       resetForm();
       setOpen(false);
     } catch (err) {

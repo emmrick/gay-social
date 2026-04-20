@@ -396,30 +396,28 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
 
       {/* Quick Navigation */}
       {isAdmin && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-display font-semibold text-muted-foreground">Accès rapide</h3>
+        <section className="animate-fade-in">
+          <AdminSectionHeader eyebrow="Raccourcis" title="Accès rapide" />
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {([
-              { id: 'users' as AdminSection, label: 'Utilisateurs', icon: Users },
-              { id: 'credits-surveillance' as AdminSection, label: 'Crédits', icon: TrendingUp },
-              { id: 'moderators' as AdminSection, label: 'Équipe', icon: Eye },
-              { id: 'broadcast' as AdminSection, label: 'Broadcast', icon: Globe },
-              { id: 'maintenance' as AdminSection, label: 'Maintenance', icon: Shield },
-              { id: 'stats' as AdminSection, label: 'Analytics', icon: BarChart3 },
+              { id: 'users' as AdminSection, label: 'Utilisateurs', icon: Users, accent: 'primary' as const },
+              { id: 'credits-surveillance' as AdminSection, label: 'Crédits', icon: TrendingUp, accent: 'emerald' as const },
+              { id: 'moderators' as AdminSection, label: 'Équipe', icon: Eye, accent: 'violet' as const },
+              { id: 'broadcast' as AdminSection, label: 'Broadcast', icon: Globe, accent: 'blue' as const },
+              { id: 'maintenance' as AdminSection, label: 'Maintenance', icon: Shield, accent: 'orange' as const },
+              { id: 'stats' as AdminSection, label: 'Analytics', icon: BarChart3, accent: 'primary' as const },
             ]).map((item) => (
-              <button
+              <ActionTile
                 key={item.id}
+                label={item.label}
+                icon={item.icon}
+                accent={item.accent}
+                variant="quick"
                 onClick={() => onNavigate(item.id)}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border border-border/30 bg-card/60 backdrop-blur-sm hover:bg-card/80 hover:border-border/50 hover:shadow-sm transition-all active:scale-[0.97]"
-              >
-                <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center">
-                  <item.icon className="w-4 h-4 text-primary/70" />
-                </div>
-                <span className="text-[10px] font-medium text-muted-foreground">{item.label}</span>
-              </button>
+              />
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

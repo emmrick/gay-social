@@ -32,7 +32,6 @@ export const useCreditGifts = () => {
       return result;
     },
     onSuccess: () => {
-      toast.success('Cadeau envoyé ! 🎁');
       if (user) {
         queryClient.invalidateQueries({ queryKey: ['user-credits', user.id] });
         queryClient.invalidateQueries({ queryKey: ['credit-transactions', user.id] });

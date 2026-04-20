@@ -244,7 +244,7 @@ const MemberProfile = () => {
           <ProfilePhotoCarousel
             photos={allPhotos}
             username={profile.username}
-            className="aspect-[3/4] sm:aspect-[4/5] max-h-[78vh]"
+            className="aspect-[4/5] sm:aspect-[4/5] max-h-[62vh]"
             albumSlides={albumSlides}
             onAlbumClick={() => {
               document.getElementById('albums-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -252,25 +252,25 @@ const MemberProfile = () => {
           />
 
           {/* Gradients éditoriaux */}
-          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/55 to-transparent pointer-events-none" />
-          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/85 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/55 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background via-background/85 to-transparent pointer-events-none" />
 
           {/* Top bar flottante */}
           <div className="absolute top-0 inset-x-0 pt-[env(safe-area-inset-top)] z-20">
-            <div className="flex items-center justify-between p-4">
+            <div className="flex items-center justify-between p-3">
               <motion.button
                 initial={{ x: -16, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
                 onClick={handleBack}
-                className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl flex items-center justify-center text-white hover:bg-black/60 transition-colors border border-white/10"
+                className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-xl flex items-center justify-center text-white hover:bg-black/60 transition-colors border border-white/10"
                 aria-label="Retour"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4" />
               </motion.button>
 
               <motion.div initial={{ x: 16, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center gap-2">
                 {profile.is_verified && (
-                  <Badge className="bg-emerald-500/90 text-white backdrop-blur-md border-0 shadow-lg">
-                    <Shield className="w-3 h-3 mr-1" />
+                  <Badge className="bg-emerald-500/90 text-white backdrop-blur-md border-0 shadow-lg text-[10px] py-0.5">
+                    <Shield className="w-2.5 h-2.5 mr-1" />
                     Vérifié
                   </Badge>
                 )}
@@ -282,7 +282,7 @@ const MemberProfile = () => {
           {isTrulyOnline && (
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              className="absolute top-20 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[hsl(142_76%_36%)] text-white text-[11px] font-bold uppercase tracking-wider shadow-xl z-10"
+              className="absolute top-16 left-3 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[hsl(142_76%_36%)] text-white text-[10px] font-bold uppercase tracking-wider shadow-xl z-10"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               En ligne
@@ -293,29 +293,29 @@ const MemberProfile = () => {
         {/* ===== HEADLINE ÉDITORIALE — chevauche le bas du hero ===== */}
         <motion.div
           initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
-          className="relative -mt-24 px-5 z-10"
+          className="relative -mt-16 px-4 z-10"
         >
           {/* Position badge au-dessus du nom */}
           {extendedProfile?.sexual_position && POSITION_LABELS[extendedProfile.sexual_position] && extendedProfile.sexual_position !== 'no_answer' && (
-            <Badge className="mb-3 bg-primary text-primary-foreground border-0 shadow-xl shadow-primary/40 px-3 py-1.5 text-xs font-bold">
+            <Badge className="mb-2 bg-primary text-primary-foreground border-0 shadow-xl shadow-primary/40 px-2.5 py-1 text-[11px] font-bold">
               {POSITION_LABELS[extendedProfile.sexual_position]}
               {extendedProfile.position_detail && POSITION_DETAIL_LABELS[extendedProfile.position_detail] && (
-                <span className="ml-1.5 opacity-80 font-medium">· {POSITION_DETAIL_LABELS[extendedProfile.position_detail]}</span>
+                <span className="ml-1 opacity-80 font-medium">· {POSITION_DETAIL_LABELS[extendedProfile.position_detail]}</span>
               )}
             </Badge>
           )}
 
-          <h1 className="font-display text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-[0.95] break-words">
+          <h1 className="font-display text-3xl sm:text-4xl font-black tracking-tight text-foreground leading-[0.95] break-words">
             {profile.username}
             {extendedProfile?.age && (
-              <span className="ml-3 text-3xl font-bold text-muted-foreground align-middle">{extendedProfile.age}</span>
+              <span className="ml-2 text-xl font-bold text-muted-foreground align-middle">{extendedProfile.age}</span>
             )}
           </h1>
 
           {/* Méta-infos en ligne magazine */}
-          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground">
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1 font-medium text-foreground/80">
-              <MapPin className="w-3.5 h-3.5 text-primary" />
+              <MapPin className="w-3 h-3 text-primary" />
               {profile.region}
             </span>
             {zodiac && (
@@ -328,7 +328,7 @@ const MemberProfile = () => {
               <>
                 <Dot />
                 <span className="inline-flex items-center gap-1 font-medium">
-                  <Cake className="w-3.5 h-3.5 text-pink-500" />
+                  <Cake className="w-3 h-3 text-pink-500" />
                   {formatBirthday(extendedProfile.birth_date)}
                 </span>
               </>
@@ -337,7 +337,7 @@ const MemberProfile = () => {
 
           {/* Statut présence */}
           <p className={cn(
-            "mt-1.5 text-xs font-semibold uppercase tracking-wider",
+            "mt-1 text-[10px] font-semibold uppercase tracking-wider",
             isTrulyOnline ? "text-[hsl(142_76%_36%)]" : "text-muted-foreground/70"
           )}>
             {getLastSeenText()}

@@ -63,6 +63,7 @@ const TweenComposer = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // ─── Upload fiable via SDK storage + retries mobile ─────────────────────────
+  // Optimisé : retries plus rapides + cache plus long pour fluidifier la publication vidéo.
   const uploadTweenMedia = useCallback(
     async (path: string, file: File): Promise<void> => {
       const maxRetries = 3;
@@ -79,7 +80,7 @@ const TweenComposer = () => {
           const { error } = await supabase.storage
             .from('media')
             .upload(path, file, {
-              cacheControl: '3600',
+              cacheControl: '31536000', // 1 an : médias immuables (nom unique)
               upsert: attempt > 1,
               contentType: file.type || undefined,
             });
@@ -111,7 +112,8 @@ const TweenComposer = () => {
           }
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 1200 * attempt));
+        // Backoff réduit pour relancer plus vite après une coupure brève
+        await new Promise((resolve) => setTimeout(resolve, 400 * attempt));
       }
 
       throw new Error('Connexion interrompue pendant l\'envoi. Vérifie ton réseau puis réessaie.');
@@ -223,7 +225,8 @@ const TweenComposer = () => {
             throw new Error(signError?.message || 'Impossible de générer le lien du média.');
           }
 
-          await new Promise((resolve) => setTimeout(resolve, 800));
+          // Retry plus rapide pour la signature (opération légère)
+          await new Promise((resolve) => setTimeout(resolve, 250));
         }
 
         mediaUrl = signedUrl;

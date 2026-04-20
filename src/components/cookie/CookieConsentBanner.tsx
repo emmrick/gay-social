@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cookie, Shield, BarChart3, Megaphone, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCookieConsent } from '@/contexts/CookieConsentContext';
@@ -8,6 +8,7 @@ const CookieConsentBanner = () => {
   const { hasConsented, acceptAll, rejectAll, savePreferences, isSettingsOpen, openSettings, closeSettings } = useCookieConsent();
   const [analyticsChecked, setAnalyticsChecked] = useState(false);
   const [advertisingChecked, setAdvertisingChecked] = useState(false);
+  const [otherDialogOpen, setOtherDialogOpen] = useState(false);
 
   // Vérifie si la confirmation d'âge est validée. Tant que l'utilisateur n'a pas
   // accepté la modale d'âge (AlertDialog Radix, z-50), on n'affiche PAS le banner
@@ -18,8 +19,24 @@ const CookieConsentBanner = () => {
     catch { return false; }
   })();
 
+  // Détecte si un Dialog/AlertDialog Radix est ouvert pour masquer le banner
+  // cookies et éviter tout conflit visuel ou d'interaction.
+  useEffect(() => {
+    const checkDialogs = () => {
+      const hasOpenDialog = !!document.querySelector(
+        '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]'
+      );
+      setOtherDialogOpen(hasOpenDialog);
+    };
+    checkDialogs();
+    const observer = new MutationObserver(checkDialogs);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-state'] });
+    return () => observer.disconnect();
+  }, []);
+
   if (hasConsented && !isSettingsOpen) return null;
   if (!ageConfirmed && !isSettingsOpen) return null;
+  if (otherDialogOpen && !isSettingsOpen) return null;
 
   return (
     <AnimatePresence>

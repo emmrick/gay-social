@@ -2609,6 +2609,7 @@ export type Database = {
       personal_chatbot_pricing: {
         Row: {
           created_at: string
+          extra_cost_per_node: number
           id: string
           node_count: number
           total_cost: number
@@ -2616,6 +2617,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          extra_cost_per_node?: number
           id?: string
           node_count: number
           total_cost: number
@@ -2623,6 +2625,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          extra_cost_per_node?: number
           id?: string
           node_count?: number
           total_cost?: number

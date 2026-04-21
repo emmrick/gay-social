@@ -216,6 +216,28 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
     }, REFUSE_COOLDOWN_MS);
   }, [nextTask, refuseTask, queryClient]);
 
+  // ── Keyboard shortcuts: A = accept, R = refuse (only when offering) ──
+  useEffect(() => {
+    if (queueState !== 'offering' || !nextTask) return;
+    const handler = (e: KeyboardEvent) => {
+      // Skip if typing in an input/textarea
+      const target = e.target as HTMLElement;
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) {
+        return;
+      }
+      if (e.key === 'a' || e.key === 'A') {
+        e.preventDefault();
+        handleAccept();
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        handleRefuse();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [queueState, nextTask?.id, handleAccept, handleRefuse]);
+
+
   const handleRefuseActive = useCallback(() => {
     if (!activeTask) return;
     startMissionRefuseCooldown(REFUSE_COOLDOWN_MS);

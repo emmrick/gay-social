@@ -79,11 +79,16 @@ export default {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        "pulse-subtle": {
+          "0%, 100%": { borderLeftColor: "hsl(var(--destructive) / 0.6)", boxShadow: "inset 2px 0 0 hsl(var(--destructive) / 0.3)" },
+          "50%": { borderLeftColor: "hsl(var(--destructive))", boxShadow: "inset 2px 0 0 hsl(var(--destructive) / 0.8)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 2s infinite",
+        "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

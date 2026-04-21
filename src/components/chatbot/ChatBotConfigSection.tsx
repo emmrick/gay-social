@@ -498,12 +498,12 @@ const ChatBotConfigSection = () => {
             <Button variant="outline" onClick={() => setNewDialogOpen(false)}>Annuler</Button>
             <Button
               onClick={handleSubmitDraft}
-              disabled={createNode.isPending || updateNode.isPending}
+              disabled={createNode.isPending || updateNode.isPending || (!editing && !canAfford)}
             >
               {(createNode.isPending || updateNode.isPending)
                 ? <Loader2 className="w-4 h-4 animate-spin mr-1" />
                 : <Save className="w-4 h-4 mr-1" />}
-              {editing ? 'Enregistrer' : `Créer (-${nextBlockCost})`}
+              {editing ? 'Enregistrer' : `Créer (−${nextBlockCost})`}
             </Button>
           </DialogFooter>
         </DialogContent>

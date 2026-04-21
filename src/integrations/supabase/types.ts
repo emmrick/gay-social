@@ -2178,12 +2178,15 @@ export type Database = {
           id: string
           metadata: Json | null
           offered_at: string | null
+          offered_count: number
           offered_to: string | null
+          priority_score: number
           refused_by: string[] | null
           reserved_at: string | null
           reserved_by: string | null
           reward_cents: number
           sms_notified: boolean
+          sms_resent_at: string | null
           status: string
           target_entity_id: string | null
           target_user_id: string | null
@@ -2198,12 +2201,15 @@ export type Database = {
           id?: string
           metadata?: Json | null
           offered_at?: string | null
+          offered_count?: number
           offered_to?: string | null
+          priority_score?: number
           refused_by?: string[] | null
           reserved_at?: string | null
           reserved_by?: string | null
           reward_cents?: number
           sms_notified?: boolean
+          sms_resent_at?: string | null
           status?: string
           target_entity_id?: string | null
           target_user_id?: string | null
@@ -2218,12 +2224,15 @@ export type Database = {
           id?: string
           metadata?: Json | null
           offered_at?: string | null
+          offered_count?: number
           offered_to?: string | null
+          priority_score?: number
           refused_by?: string[] | null
           reserved_at?: string | null
           reserved_by?: string | null
           reward_cents?: number
           sms_notified?: boolean
+          sms_resent_at?: string | null
           status?: string
           target_entity_id?: string | null
           target_user_id?: string | null
@@ -4756,6 +4765,14 @@ export type Database = {
         Args: { _task_id: string; _user_id: string }
         Returns: Json
       }
+      compute_task_priority: {
+        Args: {
+          _created_at: string
+          _refused_count: number
+          _task_type: string
+        }
+        Returns: number
+      }
       deduct_credits: {
         Args: {
           _amount: number
@@ -4810,12 +4827,15 @@ export type Database = {
           id: string
           metadata: Json | null
           offered_at: string | null
+          offered_count: number
           offered_to: string | null
+          priority_score: number
           refused_by: string[] | null
           reserved_at: string | null
           reserved_by: string | null
           reward_cents: number
           sms_notified: boolean
+          sms_resent_at: string | null
           status: string
           target_entity_id: string | null
           target_user_id: string | null
@@ -4906,6 +4926,14 @@ export type Database = {
               weight: number
             }[]
           }
+      get_stale_tasks_for_resms: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          task_type: string
+        }[]
+      }
       get_user_credit_balance: { Args: { _user_id: string }; Returns: Json }
       get_user_role: {
         Args: { _user_id: string }

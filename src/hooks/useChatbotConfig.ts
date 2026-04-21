@@ -113,6 +113,47 @@ export const useUpdateChatbotConfig = () => {
   });
 };
 
+/**
+ * Active le ChatBot Personnel.
+ * - 1re activation : débite 10 crédits (paiement unique).
+ * - Activations suivantes (après désactivation) : gratuites.
+ */
+export const useActivateChatbot = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!user?.id) throw new Error('Not authenticated');
+      const { data, error } = await supabase.rpc('activate_chatbot' as any, {
+        _user_id: user.id,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (!result?.success) {
+        if (result?.error === 'insufficient_credits') {
+          throw new Error(`Crédits insuffisants. Il faut ${result.required ?? 10} crédits.`);
+        }
+        throw new Error(result?.error || "Erreur lors de l'activation");
+      }
+      return result as { success: boolean; charged: boolean; cost: number };
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['chatbot-config', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['credit-transactions', user?.id] });
+      if (res.charged) {
+        toast.success(`ChatBot activé — ${res.cost} crédits débités (paiement unique)`);
+      } else {
+        toast.success('ChatBot activé');
+      }
+    },
+    onError: (e: any) => {
+      toast.error(e?.message || "Erreur lors de l'activation");
+    },
+  });
+};
+
 /* ------------------------------------------------------------------ */
 /* Nodes (arbre de blocs)                                             */
 /* ------------------------------------------------------------------ */

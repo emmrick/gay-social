@@ -4254,6 +4254,7 @@ export type Database = {
       }
       user_chatbot_config: {
         Row: {
+          activation_paid: boolean
           created_at: string
           greeting_message: string | null
           id: string
@@ -4262,6 +4263,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          activation_paid?: boolean
           created_at?: string
           greeting_message?: string | null
           id?: string
@@ -4270,6 +4272,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          activation_paid?: boolean
           created_at?: string
           greeting_message?: string | null
           id?: string
@@ -4716,6 +4719,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_chatbot: { Args: { _user_id: string }; Returns: Json }
       activate_premium: {
         Args: {
           _duration_days?: number

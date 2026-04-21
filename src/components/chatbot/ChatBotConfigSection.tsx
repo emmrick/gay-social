@@ -31,6 +31,7 @@ import {
   useAiRephrase,
   useAiSuggestBlocks,
   useEnsureChatbotConfig,
+  useActivateChatbot,
   type ChatbotNode,
 } from '@/hooks/useChatbotConfig';
 import { useCredits } from '@/hooks/useCredits';
@@ -42,6 +43,7 @@ const ChatBotConfigSection = () => {
   const { data: config, isLoading } = useChatbotConfig();
   const { data: nodes = [], isLoading: nodesLoading } = useChatbotNodes();
   const updateConfig = useUpdateChatbotConfig();
+  const activateChatbot = useActivateChatbot();
   const createNode = useCreateChatbotNode();
   const updateNode = useUpdateChatbotNode();
   const deleteNode = useDeleteChatbotNode();
@@ -94,7 +96,24 @@ const ChatBotConfigSection = () => {
 
   /* ----------------------- handlers ----------------------- */
   const handleToggle = () => {
-    updateConfig.mutate({ is_active: !isActive });
+    if (isActive) {
+      // Désactivation : toujours gratuit
+      updateConfig.mutate({ is_active: false });
+      return;
+    }
+    // Activation : 10 crédits une seule fois (jamais re-facturé après)
+    const alreadyPaid = (config as any)?.activation_paid === true;
+    if (!alreadyPaid && availableCredits < 10) {
+      toast.error(`Crédits insuffisants : 10 crédits requis pour la 1re activation.`);
+      return;
+    }
+    if (!alreadyPaid) {
+      const ok = window.confirm(
+        "Activer le ChatBot Personnel coûte 10 crédits (paiement unique). Tu pourras le désactiver et le réactiver gratuitement ensuite. Continuer ?"
+      );
+      if (!ok) return;
+    }
+    activateChatbot.mutate();
   };
 
   const handleSaveGreeting = () => {
@@ -190,7 +209,11 @@ const ChatBotConfigSection = () => {
                 </p>
               </div>
             </div>
-            <Switch checked={isActive} onCheckedChange={handleToggle} disabled={updateConfig.isPending} />
+            <Switch
+              checked={isActive}
+              onCheckedChange={handleToggle}
+              disabled={updateConfig.isPending || activateChatbot.isPending}
+            />
           </div>
 
           <div className="mb-3 p-2.5 rounded-lg bg-secondary/30 border border-border/30">

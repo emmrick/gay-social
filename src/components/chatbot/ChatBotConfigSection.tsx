@@ -46,6 +46,7 @@ const ChatBotConfigSection = () => {
   const aiRephrase = useAiRephrase();
   const aiSuggest = useAiSuggestBlocks();
   const { credits } = useCredits();
+  const availableCredits = credits?.total_credits ?? 0;
 
   const [parentStack, setParentStack] = useState<ChatbotNode[]>([]); // navigation par niveau
   const [editGreeting, setEditGreeting] = useState(false);
@@ -105,7 +106,7 @@ const ChatBotConfigSection = () => {
     if (editing) {
       await updateNode.mutateAsync({ id: editing.id, label, response_text: text });
     } else {
-      if (credits < nextBlockCost) {
+      if (availableCredits < nextBlockCost) {
         return toast.error(`Crédits insuffisants. Il faut ${nextBlockCost} crédit${nextBlockCost > 1 ? 's' : ''}.`);
       }
       await createNode.mutateAsync({

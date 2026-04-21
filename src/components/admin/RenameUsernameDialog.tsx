@@ -62,7 +62,7 @@ const RenameUsernameDialog = ({ open, onOpenChange, userId, currentUsername }: P
 
       await logAction.mutateAsync({
         targetUserId: userId,
-        actionType: 'profile_edited',
+        actionType: 'username_changed',
         details: `Surnom modifié : « ${currentUsername} » → « ${trimmed} »`,
         metadata: { field: 'username', old: currentUsername, new: trimmed },
       });

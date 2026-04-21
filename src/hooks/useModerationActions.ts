@@ -10,7 +10,8 @@ export type ModerationActionType =
   | 'verification_requested'
   | 'report_resolved'
   | 'report_dismissed'
-  | 'manual_verification';
+  | 'manual_verification'
+  | 'username_changed';
 
 export interface ModerationAction {
   id: string;
@@ -117,6 +118,7 @@ export const getActionTypeLabel = (type: ModerationActionType): string => {
     report_resolved: 'Signalement résolu',
     report_dismissed: 'Signalement rejeté',
     manual_verification: 'Vérification manuelle',
+    username_changed: 'Surnom modifié',
   };
   return labels[type];
 };
@@ -131,6 +133,7 @@ export const getActionTypeColor = (type: ModerationActionType): string => {
     report_resolved: 'text-green-500',
     report_dismissed: 'text-muted-foreground',
     manual_verification: 'text-green-500',
+    username_changed: 'text-blue-500',
   };
   return colors[type];
 };

@@ -24,6 +24,7 @@ import {
   UserCheck,
   Wifi,
   ShieldCheck,
+  PencilLine,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +56,7 @@ import { toast } from 'sonner';
 import UserProfileDialog from './UserProfileDialog';
 import ClientDossierPanel from './ClientDossierPanel';
 import SendEmailDialog from './SendEmailDialog';
+import RenameUsernameDialog from './RenameUsernameDialog';
 import BackfillWelcomeEmailsButton from './BackfillWelcomeEmailsButton';
 import {
   useSuspendUser,
@@ -755,6 +757,7 @@ const UserActionsCell = ({
 }) => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const { data: isBlocked } = useIsUserBlocked(user.user_id);
   const { data: verificationStatus } = useUserVerificationStatus(user.user_id);
   const manualVerification = useManualVerification();
@@ -828,6 +831,10 @@ const UserActionsCell = ({
                 <Mail className="w-4 h-4 mr-2" />
                 Envoyer un email
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRenameDialogOpen(true)}>
+                <PencilLine className="w-4 h-4 mr-2" />
+                Modifier le surnom
+              </DropdownMenuItem>
 
               <DropdownMenuSeparator />
               {!user.is_verified ? (
@@ -899,6 +906,12 @@ const UserActionsCell = ({
         onOpenChange={setEmailDialogOpen}
         userId={user.user_id}
         username={user.username}
+      />
+      <RenameUsernameDialog
+        open={renameDialogOpen}
+        onOpenChange={setRenameDialogOpen}
+        userId={user.user_id}
+        currentUsername={user.username}
       />
     </div>
   );

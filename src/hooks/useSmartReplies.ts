@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SmartRepliesArgs {
@@ -9,84 +8,109 @@ interface SmartRepliesArgs {
 }
 
 /**
- * Génère 3 chips de réponses rapides via Lovable AI dès qu'un nouveau message
- * de l'autre personne arrive. Désactivé tant que l'utilisateur tape.
+ * Génère 3 chips de réponses rapides basées localement sur le contenu du
+ * dernier message reçu. Aucune IA, aucun appel réseau — 100% client-side.
+ *
+ * Règles :
+ *  - Si le dernier message contient un point d'interrogation → réponses « oui / non / dis-m'en plus »
+ *  - Si message court de salut (cc, salut, hello, coucou…) → salutations
+ *  - Si remerciement (merci, thx, top…) → réponses chaleureuses
+ *  - Si proposition (on se voit, dispo, ce soir…) → accepte / horaire / refuse poliment
+ *  - Si message coquin / appréciation (photo, beau, mignon, sexy…) → compliment retour
+ *  - Sinon → set neutre par défaut
  */
-export const useSmartReplies = ({ messages, otherUserId, enabled = true }: SmartRepliesArgs) => {
+export const useSmartReplies = ({ messages, otherUserId: _otherUserId, enabled = true }: SmartRepliesArgs) => {
   const { user } = useAuth();
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [dismissedForMessageId, setDismissedForMessageId] = useState<string | null>(null);
-  const lastFetchedMessageIdRef = useRef<string | null>(null);
-  const inFlightRef = useRef(false);
 
-  useEffect(() => {
-    if (!enabled || !user || messages.length === 0) {
-      setSuggestions([]);
-      return;
-    }
-
-    // Find last text message from the other person
-    let lastFromOther: any = null;
+  const lastFromOther = useMemo(() => {
+    if (!user || messages.length === 0) return null;
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
-      if (m.sender_id === user.id) {
-        // own message after other → no suggestion needed
-        setSuggestions([]);
-        return;
-      }
+      if (m.sender_id === user.id) return null; // dernier message est de moi → rien à suggérer
       const isText = !m.message_type || m.message_type === 'text';
-      if (isText && m.content?.trim()) {
-        lastFromOther = m;
-        break;
-      }
+      if (isText && m.content?.trim()) return m;
     }
-    if (!lastFromOther) {
-      setSuggestions([]);
-      return;
+    return null;
+  }, [messages, user]);
+
+  const suggestions = useMemo<string[]>(() => {
+    if (!enabled || !lastFromOther) return [];
+    if (dismissedForMessageId === lastFromOther.id) return [];
+    return buildSuggestionsFromText(String(lastFromOther.content || ''));
+  }, [enabled, lastFromOther, dismissedForMessageId]);
+
+  // Reset le flag de dismiss si un nouveau message arrive
+  useEffect(() => {
+    if (lastFromOther && dismissedForMessageId && lastFromOther.id !== dismissedForMessageId) {
+      setDismissedForMessageId(null);
     }
-
-    // Already fetched for this message? skip.
-    if (lastFetchedMessageIdRef.current === lastFromOther.id) return;
-    if (dismissedForMessageId === lastFromOther.id) return;
-    if (inFlightRef.current) return;
-
-    inFlightRef.current = true;
-    lastFetchedMessageIdRef.current = lastFromOther.id;
-    setIsLoading(true);
-
-    // Build short context (last 6 text messages)
-    const ctx = messages
-      .filter((m: any) => (!m.message_type || m.message_type === 'text') && m.content?.trim())
-      .slice(-6)
-      .map((m: any) => ({
-        role: m.sender_id === user.id ? 'user' : 'assistant',
-        content: String(m.content).slice(0, 400),
-      }));
-
-    supabase.functions
-      .invoke('suggest-replies', { body: { messages: ctx } })
-      .then(({ data, error }) => {
-        if (error) {
-          setSuggestions([]);
-          return;
-        }
-        const arr = Array.isArray(data?.suggestions) ? data.suggestions : [];
-        setSuggestions(arr);
-      })
-      .catch(() => setSuggestions([]))
-      .finally(() => {
-        setIsLoading(false);
-        inFlightRef.current = false;
-      });
-  }, [messages, user, enabled, otherUserId, dismissedForMessageId]);
+  }, [lastFromOther, dismissedForMessageId]);
 
   const dismiss = () => {
-    if (lastFetchedMessageIdRef.current) {
-      setDismissedForMessageId(lastFetchedMessageIdRef.current);
-    }
-    setSuggestions([]);
+    if (lastFromOther) setDismissedForMessageId(lastFromOther.id);
   };
 
-  return { suggestions, isLoading, dismiss };
+  return { suggestions, isLoading: false, dismiss };
 };
+
+/* --------------------- Logique de suggestion locale --------------------- */
+
+function buildSuggestionsFromText(raw: string): string[] {
+  const text = raw.trim().toLowerCase();
+  if (!text) return [];
+
+  const has = (...words: string[]) => words.some((w) => text.includes(w));
+  const isQuestion = text.includes('?') || /^(qui|que|quoi|quel|quelle|comment|pourquoi|où|ou est|combien|quand|est-ce)/i.test(text);
+
+  // Salutations courtes
+  if (
+    text.length <= 12 &&
+    has('cc', 'salut', 'hello', 'coucou', 'hey', 'yo', 'bonjour', 'bonsoir', 'hi')
+  ) {
+    return ['Salut 👋', 'Hello, ça va ?', 'Coucou toi'];
+  }
+
+  // Comment ça va
+  if (has('ça va', 'ca va', 'comment vas', 'comment tu vas', 'comment va')) {
+    return ['Ça va et toi ?', 'Super, merci 😊', 'Ça pourrait aller mieux'];
+  }
+
+  // Remerciements
+  if (has('merci', 'thx', 'thanks', 'top', 'génial', 'parfait')) {
+    return ['Avec plaisir 😊', 'De rien !', 'Quand tu veux'];
+  }
+
+  // Compliments / attirance
+  if (has('beau', 'mignon', 'sexy', 'canon', 'jolie', 'magnifique', 'bg', 'bogoss', 'charmant')) {
+    return ['Merci 😊', 'Toi aussi 😏', 'Tu me flattes'];
+  }
+
+  // Propositions / rdv
+  if (has('on se voit', 'dispo', 'ce soir', 'demain', 'rdv', 'rencontre', 'boire un verre', 'café', 'sortir', 'tu fais quoi')) {
+    return ['Avec plaisir 😊', 'Quand ça t\'arrange ?', 'Désolé, pas dispo']; 
+  }
+
+  // Photos / médias
+  if (has('photo', 'pic', 'image', 'selfie', 'snap')) {
+    return ['Je t\'envoie ça', 'Plus tard 😉', 'Et toi ?'];
+  }
+
+  // Localisation
+  if (has('où', 'tu habites', 'tu es de', 'ville', 'région', 'quartier')) {
+    return ['Et toi ?', 'Pas très loin', 'Je préfère en privé'];
+  }
+
+  // Question générique
+  if (isQuestion) {
+    return ['Oui 😊', 'Non, désolé', 'Dis-m\'en plus'];
+  }
+
+  // Message d\'accord / validation
+  if (has('ok', 'd\'accord', 'daccord', 'ça marche', 'ca marche', 'cool')) {
+    return ['Top 👍', 'À toi 😊', 'On fait comme ça'];
+  }
+
+  // Default — set neutre
+  return ['Ah ouais ?', 'Intéressant 😊', 'Raconte'];
+}

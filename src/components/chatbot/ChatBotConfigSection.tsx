@@ -209,7 +209,11 @@ const ChatBotConfigSection = () => {
                 </p>
               </div>
             </div>
-            <Switch checked={isActive} onCheckedChange={handleToggle} disabled={updateConfig.isPending} />
+            <Switch
+              checked={isActive}
+              onCheckedChange={handleToggle}
+              disabled={updateConfig.isPending || activateChatbot.isPending}
+            />
           </div>
 
           <div className="mb-3 p-2.5 rounded-lg bg-secondary/30 border border-border/30">

@@ -792,33 +792,6 @@ export type Database = {
         }
         Relationships: []
       }
-      chatbot_conversations: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          profile_user_id: string
-          role: string
-          visitor_user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          profile_user_id: string
-          role: string
-          visitor_user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          profile_user_id?: string
-          role?: string
-          visitor_user_id?: string
-        }
-        Relationships: []
-      }
       chatbot_credit_claims: {
         Row: {
           created_at: string
@@ -2583,6 +2556,77 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      personal_chatbot_nodes: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          is_root: boolean
+          label: string
+          parent_id: string | null
+          response_text: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_root?: boolean
+          label: string
+          parent_id?: string | null
+          response_text?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_root?: boolean
+          label?: string
+          parent_id?: string | null
+          response_text?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_chatbot_nodes_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "personal_chatbot_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_chatbot_pricing: {
+        Row: {
+          created_at: string
+          id: string
+          node_count: number
+          total_cost: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          node_count: number
+          total_cost: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          node_count?: number
+          total_cost?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -4765,6 +4809,7 @@ export type Database = {
         Args: { _task_id: string; _user_id: string }
         Returns: Json
       }
+      compute_chatbot_node_cost: { Args: { _count: number }; Returns: number }
       compute_task_priority: {
         Args: {
           _created_at: string
@@ -5014,6 +5059,7 @@ export type Database = {
         Args: { _permissions?: Json; _target_user_id: string }
         Returns: Json
       }
+      purchase_chatbot_node: { Args: { _user_id: string }; Returns: Json }
       purge_old_unread_ephemeral_media: { Args: never; Returns: number }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }

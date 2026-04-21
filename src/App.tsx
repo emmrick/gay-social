@@ -109,16 +109,12 @@ const Community = lazy(() => import("./pages/Community"));
 const TweenPublicPage = lazy(() => import("./pages/Tween"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 
-// Authenticated pages
-const HomePage = lazy(() => import("./pages/HomePage"));
-const MessagesPage = lazy(() => import("./pages/MessagesPage"));
+// Authenticated pages — keep-alive pages (HomePage, MessagesPage, ProfilePage,
+// CreditsPageRoute, TweenPageRoute, SwipePageRoute, HelpPageRoute) sont importées
+// directement dans KeepAliveOutlet. Ici on ne garde que les routes "lourdes/dynamiques"
+// rendues classiquement via <Outlet />.
 const PrivateChatPage = lazy(() => import("./pages/PrivateChatPage"));
 const GroupChatPage = lazy(() => import("./pages/GroupChatPage"));
-const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const CreditsPageRoute = lazy(() => import("./pages/CreditsPageRoute"));
-const TweenPageRoute = lazy(() => import("./pages/TweenPageRoute"));
-const SwipePageRoute = lazy(() => import("./pages/SwipePageRoute"));
-const HelpPageRoute = lazy(() => import("./pages/HelpPageRoute"));
 const ChatbotConfigPage = lazy(() => import("./pages/ChatbotConfigPage"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";

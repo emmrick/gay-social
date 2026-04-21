@@ -1,16 +1,24 @@
-import { ReactNode, Suspense, lazy, useMemo } from 'react';
+import { ReactNode, Suspense, lazy, useReducer, useRef } from 'react';
 import { useLocation, matchPath } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { useScrollRestoration } from '@/hooks/useScrollRestoration';
+import { useScrollRestoration, clearScrollPosition } from '@/hooks/useScrollRestoration';
 
 /**
- * Système Keep-Alive pour les routes principales.
- * Toutes les pages enregistrées sont montées une seule fois et conservées
- * dans le DOM (display: none / block). Le démontage n'a jamais lieu, donc :
- * - aucun spinner Suspense au retour
- * - état local préservé (onglets, dialogs, formulaires)
- * - scroll position restauré automatiquement
+ * Système Keep-Alive avec politique LRU pour les routes principales.
+ *
+ * Capacité max : MAX_ALIVE pages montées simultanément. Quand une nouvelle
+ * page devient active alors que le cache est plein, la page la moins
+ * récemment utilisée (LRU) est démontée — son DOM, son state local et son
+ * scroll sont libérés. La page courante n'est jamais évincée.
+ *
+ * Avantages :
+ * - aucun spinner Suspense au retour sur une page récemment visitée
+ * - état préservé pour les pages "chaudes"
+ * - empreinte mémoire bornée (4 pages max au lieu de 7)
  */
+
+// Capacité du cache LRU. 4 = sweet spot pour mobile (Home + Messages + une 3e + buffer).
+const MAX_ALIVE = 4;
 
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const SwipePageRoute = lazy(() => import('@/pages/SwipePageRoute'));
@@ -40,14 +48,14 @@ interface KeepAlivePaneProps {
   routeKey: string;
   isActive: boolean;
   children: ReactNode;
-  hasBeenActive: boolean;
+  isMounted: boolean;
 }
 
-const KeepAlivePane = ({ routeKey, isActive, children, hasBeenActive }: KeepAlivePaneProps) => {
+const KeepAlivePane = ({ routeKey, isActive, children, isMounted }: KeepAlivePaneProps) => {
   const ref = useScrollRestoration(routeKey, isActive);
 
-  // Ne monte le contenu qu'après la 1re activation pour économiser au démarrage
-  if (!hasBeenActive) return null;
+  // Évincée par le LRU ou jamais visitée — démontage complet.
+  if (!isMounted) return null;
 
   return (
     <div
@@ -73,17 +81,23 @@ const Fallback = () => (
   </div>
 );
 
-/**
- * Renvoie l'index de la route keep-alive correspondant au pathname courant,
- * ou -1 si aucune ne matche (cas des routes "lourdes" non keep-alive).
- */
 const matchKeepAliveIndex = (pathname: string): number =>
-  KEEP_ALIVE_ROUTES.findIndex((r) =>
-    matchPath({ path: r.path, end: true }, pathname) !== null,
+  KEEP_ALIVE_ROUTES.findIndex(
+    (r) => matchPath({ path: r.path, end: true }, pathname) !== null,
   );
 
+/**
+ * Cache LRU : tableau ordonné des clés "vivantes" (la plus récente en dernier).
+ * Mute le tableau en place puis force un re-render pour rester simple/rapide.
+ */
+const touchLRU = (lru: string[], key: string): string[] => {
+  const idx = lru.indexOf(key);
+  if (idx !== -1) lru.splice(idx, 1);
+  lru.push(key);
+  return lru;
+};
+
 interface KeepAliveOutletProps {
-  /** Composant à rendre quand le pathname ne correspond à aucune route keep-alive */
   fallbackElement: ReactNode;
 }
 
@@ -92,10 +106,27 @@ const KeepAliveOutlet = ({ fallbackElement }: KeepAliveOutletProps) => {
   const activeIndex = matchKeepAliveIndex(location.pathname);
   const activeKey = activeIndex >= 0 ? KEEP_ALIVE_ROUTES[activeIndex].key : null;
 
-  // Mémorise quelles routes ont déjà été visitées (pour ne monter qu'à la demande)
-  // On garde un Set qui ne se reset jamais.
-  const visitedRef = useMemo(() => new Set<string>(), []);
-  if (activeKey) visitedRef.add(activeKey);
+  // Liste LRU persistée entre rendus (mutée en place).
+  const lruRef = useRef<string[]>([]);
+  const [, forceRender] = useReducer((x: number) => x + 1, 0);
+  const prevActiveKeyRef = useRef<string | null>(null);
+
+  if (activeKey && activeKey !== prevActiveKeyRef.current) {
+    prevActiveKeyRef.current = activeKey;
+    const lru = lruRef.current;
+    touchLRU(lru, activeKey);
+
+    // Eviction LRU : on retire les plus anciennes tant qu'on dépasse la capacité.
+    // La page courante (en queue) n'est jamais évincée.
+    while (lru.length > MAX_ALIVE) {
+      const evicted = lru.shift();
+      if (evicted) clearScrollPosition(evicted);
+    }
+    // Re-render asynchrone pour appliquer le nouvel ensemble monté.
+    queueMicrotask(forceRender);
+  }
+
+  const aliveSet = new Set(lruRef.current);
 
   return (
     <Suspense fallback={<Fallback />}>
@@ -104,7 +135,7 @@ const KeepAliveOutlet = ({ fallbackElement }: KeepAliveOutletProps) => {
           key={route.key}
           routeKey={route.key}
           isActive={activeKey === route.key}
-          hasBeenActive={visitedRef.has(route.key)}
+          isMounted={aliveSet.has(route.key)}
         >
           {route.element}
         </KeepAlivePane>

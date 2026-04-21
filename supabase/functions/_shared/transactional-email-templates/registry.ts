@@ -14,6 +14,7 @@ import { template as verificationRejected } from './verification-rejected.tsx'
 import { template as verificationConfirmed } from './verification-confirmed.tsx'
 import { template as welcomeEmail } from './welcome.tsx'
 import { template as customMessage } from './custom-message.tsx'
+import { template as weeklyDigest } from './weekly-digest.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'verification-reminder': verificationReminder,
@@ -21,4 +22,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'verification-confirmed': verificationConfirmed,
   'welcome': welcomeEmail,
   'custom-message': customMessage,
+  'weekly-digest': weeklyDigest,
 }

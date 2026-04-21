@@ -4657,6 +4657,24 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_digest_unsubscribes: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       withdrawal_requests: {
         Row: {
           amount_cents: number

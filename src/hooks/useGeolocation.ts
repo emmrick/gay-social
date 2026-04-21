@@ -10,16 +10,40 @@ interface GeolocationState {
   permissionState: PermissionState | null;
 }
 
+// Cache module-level partagé entre tous les montages du hook.
+// Évite que la position soit réinitialisée quand on quitte/revient sur la page.
+const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
+
+interface CachedPosition {
+  latitude: number;
+  longitude: number;
+  timestamp: number;
+}
+
+let cachedPosition: CachedPosition | null = null;
+let inflightRequest: Promise<boolean> | null = null;
+const subscribers = new Set<(pos: CachedPosition) => void>();
+
+const notifySubscribers = (pos: CachedPosition) => {
+  subscribers.forEach((cb) => {
+    try {
+      cb(pos);
+    } catch (err) {
+      console.error('[geolocation] subscriber error:', err);
+    }
+  });
+};
+
 export const useGeolocation = () => {
   const { user } = useAuth();
   const isMountedRef = useRef(true);
-  const [state, setState] = useState<GeolocationState>({
-    latitude: null,
-    longitude: null,
+  const [state, setState] = useState<GeolocationState>(() => ({
+    latitude: cachedPosition?.latitude ?? null,
+    longitude: cachedPosition?.longitude ?? null,
     error: null,
     loading: false,
     permissionState: null,
-  });
+  }));
 
   // Check permission state
   const checkPermission = useCallback(async () => {
@@ -39,8 +63,8 @@ export const useGeolocation = () => {
     }
   }, []);
 
-  // Request location
-  const requestLocation = useCallback(async (): Promise<boolean> => {
+  // Request location (force = ignore le cache même s'il est frais)
+  const requestLocation = useCallback(async (force = false): Promise<boolean> => {
     if (!navigator.geolocation) {
       setState(prev => ({ 
         ...prev, 
@@ -49,25 +73,37 @@ export const useGeolocation = () => {
       return false;
     }
 
-    if (!isMountedRef.current) return false;
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    // Sert depuis le cache si frais (< 10 min) et pas de force
+    if (!force && cachedPosition && Date.now() - cachedPosition.timestamp < REFRESH_INTERVAL_MS) {
+      if (isMountedRef.current) {
+        setState(prev => ({
+          ...prev,
+          latitude: cachedPosition!.latitude,
+          longitude: cachedPosition!.longitude,
+          loading: false,
+          error: null,
+        }));
+      }
+      return true;
+    }
 
-    return new Promise((resolve) => {
+    // Coalesce les requêtes concurrentes
+    if (inflightRequest) {
+      if (isMountedRef.current) setState(prev => ({ ...prev, loading: true }));
+      return inflightRequest;
+    }
+
+    if (isMountedRef.current) setState(prev => ({ ...prev, loading: true, error: null }));
+
+    inflightRequest = new Promise<boolean>((resolve) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           try {
             const { latitude, longitude } = position.coords;
-            if (!isMountedRef.current) return;
+            cachedPosition = { latitude, longitude, timestamp: Date.now() };
+            notifySubscribers(cachedPosition);
 
-            setState(prev => ({
-              ...prev,
-              latitude,
-              longitude,
-              loading: false,
-              error: null,
-            }));
-
-            // Fire-and-forget DB update (avoid unhandled rejections from async callbacks)
+            // Fire-and-forget DB update
             if (user) {
               void (async () => {
                 try {
@@ -92,12 +128,13 @@ export const useGeolocation = () => {
             resolve(true);
           } catch (err) {
             console.error('[geolocation] Unexpected success callback error:', err);
-            if (!isMountedRef.current) return;
-            setState(prev => ({
-              ...prev,
-              loading: false,
-              error: 'Erreur inattendue lors de la récupération de ta position',
-            }));
+            if (isMountedRef.current) {
+              setState(prev => ({
+                ...prev,
+                loading: false,
+                error: 'Erreur inattendue lors de la récupération de ta position',
+              }));
+            }
             resolve(false);
           }
         },
@@ -116,33 +153,57 @@ export const useGeolocation = () => {
               break;
           }
 
-          if (!isMountedRef.current) return;
-          setState(prev => ({
-            ...prev,
-            loading: false,
-            error: errorMessage,
-          }));
+          if (isMountedRef.current) {
+            setState(prev => ({
+              ...prev,
+              loading: false,
+              error: errorMessage,
+            }));
+          }
           resolve(false);
         },
         {
-          // High accuracy can be unstable/heavy on some Android devices.
-          // We prefer a stable fix first; distance calc does not require GPS-level precision.
           enableHighAccuracy: false,
           timeout: 12000,
-          maximumAge: 5 * 60 * 1000, // 5 minutes
+          maximumAge: REFRESH_INTERVAL_MS,
         }
       );
+    }).finally(() => {
+      inflightRequest = null;
     });
+
+    return inflightRequest;
   }, [user]);
 
-  // Check permission on mount
+  // Souscription aux mises à jour du cache + refresh auto toutes les 10 min
   useEffect(() => {
     isMountedRef.current = true;
     checkPermission();
+
+    const handleUpdate = (pos: CachedPosition) => {
+      if (!isMountedRef.current) return;
+      setState(prev => ({
+        ...prev,
+        latitude: pos.latitude,
+        longitude: pos.longitude,
+        loading: false,
+        error: null,
+      }));
+    };
+    subscribers.add(handleUpdate);
+
+    // Refresh automatique toutes les 10 minutes (un seul timer global suffirait, mais
+    // chaque hook gère le sien — protégé par le cache + inflightRequest, donc safe)
+    const interval = window.setInterval(() => {
+      void requestLocation(true);
+    }, REFRESH_INTERVAL_MS);
+
     return () => {
       isMountedRef.current = false;
+      subscribers.delete(handleUpdate);
+      window.clearInterval(interval);
     };
-  }, [checkPermission]);
+  }, [checkPermission, requestLocation]);
 
   return {
     ...state,

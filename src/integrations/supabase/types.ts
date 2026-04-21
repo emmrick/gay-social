@@ -4254,7 +4254,6 @@ export type Database = {
       }
       user_chatbot_config: {
         Row: {
-          chatbot_info: string[] | null
           created_at: string
           greeting_message: string | null
           id: string
@@ -4263,7 +4262,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          chatbot_info?: string[] | null
           created_at?: string
           greeting_message?: string | null
           id?: string
@@ -4272,7 +4270,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          chatbot_info?: string[] | null
           created_at?: string
           greeting_message?: string | null
           id?: string
@@ -4281,53 +4278,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      user_chatbot_nodes: {
-        Row: {
-          created_at: string | null
-          display_order: number | null
-          id: string
-          is_active: boolean | null
-          is_root: boolean | null
-          label: string
-          parent_id: string | null
-          response_text: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          display_order?: number | null
-          id?: string
-          is_active?: boolean | null
-          is_root?: boolean | null
-          label: string
-          parent_id?: string | null
-          response_text?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          display_order?: number | null
-          id?: string
-          is_active?: boolean | null
-          is_root?: boolean | null
-          label?: string
-          parent_id?: string | null
-          response_text?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_chatbot_nodes_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "user_chatbot_nodes"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_credits: {
         Row: {
@@ -4840,6 +4790,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      ensure_chatbot_config: { Args: { _user_id: string }; Returns: undefined }
       expire_stale_moderation_tasks: { Args: never; Returns: number }
       generate_referral_code: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }

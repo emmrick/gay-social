@@ -112,6 +112,19 @@ const HIV_STATUS_OPTIONS = [
   { value: 'no_answer', label: 'Ne souhaite pas répondre' },
 ];
 
+const SectionCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <div className={cn("rounded-xl border border-border/50 bg-card/50 p-4 space-y-3", className)}>
+    {children}
+  </div>
+);
+
+const SectionTitle = ({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) => (
+  <div className="flex items-center gap-2 text-sm font-semibold text-foreground mb-1">
+    {icon}
+    {children}
+  </div>
+);
+
 const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
   const { user, profile, updateProfile } = useAuth();
   const queryClient = useQueryClient();
@@ -367,19 +380,6 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
       setIsSaving(false);
     }
   };
-
-  const SectionCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div className={cn("rounded-xl border border-border/50 bg-card/50 p-4 space-y-3", className)}>
-      {children}
-    </div>
-  );
-
-  const SectionTitle = ({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) => (
-    <div className="flex items-center gap-2 text-sm font-semibold text-foreground mb-1">
-      {icon}
-      {children}
-    </div>
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

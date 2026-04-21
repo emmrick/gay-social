@@ -73,7 +73,7 @@ export const useIsStaffUser = (userId: string) => {
       return (data?.length ?? 0) > 0;
     },
     enabled: !!userId,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
   });
 };
 

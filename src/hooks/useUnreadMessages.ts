@@ -42,7 +42,7 @@ export const useUnreadMessages = () => {
       }));
     },
     enabled: !!user,
-    staleTime: 30_000,
+    staleTime: 90_000,
   });
 
   // Real-time subscription for new messages

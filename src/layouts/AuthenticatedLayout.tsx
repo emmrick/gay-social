@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import KeepAliveOutlet from '@/components/system/KeepAliveOutlet';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlockedUserContext } from '@/components/BlockedUserGuard';
@@ -171,14 +172,18 @@ const AuthenticatedLayout = () => {
           paddingBottom: showBottomNav ? 'calc(82px + env(safe-area-inset-bottom, 0px))' : undefined,
         }}
       >
-        <Suspense fallback={<LazyFallback />}>
-          <Outlet context={{
-            onlineCount,
-            isRestricted,
-            isAdmin,
-            isModerator,
-          }} />
-        </Suspense>
+        <KeepAliveOutlet
+          fallbackElement={
+            <Suspense fallback={<LazyFallback />}>
+              <Outlet context={{
+                onlineCount,
+                isRestricted,
+                isAdmin,
+                isModerator,
+              }} />
+            </Suspense>
+          }
+        />
 
         {/* Global Ad Banner */}
         {showGlobalAd && (

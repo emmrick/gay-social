@@ -43,7 +43,7 @@ export const useProfilePhotos = (userId?: string) => {
       return resolved;
     },
     enabled: !!targetUserId,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
   });
 
   // Upload a new photo

@@ -39,7 +39,7 @@ export const useProfilesByRegion = (region: string) => {
       return resolveProfileAvatars(filtered);
     },
     enabled: !!region,
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,
   });
 };
 
@@ -73,6 +73,6 @@ export const useProfile = (userId: string) => {
       return resolveProfileAvatar(data);
     },
     enabled: !!userId,
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,
   });
 };

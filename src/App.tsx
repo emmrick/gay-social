@@ -109,16 +109,12 @@ const Community = lazy(() => import("./pages/Community"));
 const TweenPublicPage = lazy(() => import("./pages/Tween"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 
-// Authenticated pages
-const HomePage = lazy(() => import("./pages/HomePage"));
-const MessagesPage = lazy(() => import("./pages/MessagesPage"));
+// Authenticated pages — keep-alive pages (HomePage, MessagesPage, ProfilePage,
+// CreditsPageRoute, TweenPageRoute, SwipePageRoute, HelpPageRoute) sont importées
+// directement dans KeepAliveOutlet. Ici on ne garde que les routes "lourdes/dynamiques"
+// rendues classiquement via <Outlet />.
 const PrivateChatPage = lazy(() => import("./pages/PrivateChatPage"));
 const GroupChatPage = lazy(() => import("./pages/GroupChatPage"));
-const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const CreditsPageRoute = lazy(() => import("./pages/CreditsPageRoute"));
-const TweenPageRoute = lazy(() => import("./pages/TweenPageRoute"));
-const SwipePageRoute = lazy(() => import("./pages/SwipePageRoute"));
-const HelpPageRoute = lazy(() => import("./pages/HelpPageRoute"));
 const ChatbotConfigPage = lazy(() => import("./pages/ChatbotConfigPage"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
@@ -191,18 +187,22 @@ const AuthenticatedApp = () => {
                           <Route path="/" element={<Index />} />
                           <Route path="/auth" element={<Suspense fallback={<PageFallback />}><Auth /></Suspense>} />
 
-                          {/* Authenticated routes with shared layout */}
+                          {/* Authenticated routes with shared layout.
+                              Les routes "keep-alive" (home/swipe/messages/tween/profile/credits/aide-chat)
+                              sont rendues par KeepAliveOutlet dans le layout, pas via <Outlet />,
+                              donc on passe element={null} pour éviter un double-mount.
+                              Les routes lourdes/dynamiques (chat, chatbot) restent en montage classique. */}
                           <Route element={<AuthenticatedLayout />}>
-                            <Route path="/home" element={<HomePage />} />
-                            <Route path="/swipe" element={<SwipePageRoute />} />
-                            <Route path="/messages" element={<MessagesPage />} />
+                            <Route path="/home" element={null} />
+                            <Route path="/swipe" element={null} />
+                            <Route path="/messages" element={null} />
                             <Route path="/messages/:userId" element={<PrivateChatPage />} />
                             <Route path="/chat/:regionCode" element={<GroupChatPage />} />
-                            <Route path="/profile" element={<ProfilePage />} />
+                            <Route path="/profile" element={null} />
                             <Route path="/profile/chatbot" element={<ChatbotConfigPage />} />
-                            <Route path="/credits" element={<CreditsPageRoute />} />
-                            <Route path="/tween" element={<TweenPageRoute />} />
-                            <Route path="/aide/chat" element={<HelpPageRoute />} />
+                            <Route path="/credits" element={null} />
+                            <Route path="/tween" element={null} />
+                            <Route path="/aide/chat" element={null} />
                           </Route>
 
                           {/* Public pages */}

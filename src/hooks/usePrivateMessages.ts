@@ -94,7 +94,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
       }));
     },
     enabled: !!user && !!otherUserId,
-    staleTime: 15_000,
+    staleTime: 60_000,
   });
 
   // Real-time subscription for new messages AND updates (for read status)

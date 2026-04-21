@@ -10,8 +10,9 @@
 import { useMemo, useState } from 'react';
 import {
   Bot, Plus, X, MessageSquare, Loader2, Sparkles, Wand2, ChevronRight,
-  ChevronLeft, Save, Coins, Zap,
+  ChevronLeft, Save, Coins, Zap, TrendingUp, Wallet, ArrowRight,
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -71,7 +72,14 @@ const ChatBotConfigSection = () => {
   const totalNodes = nodes.length;
   const { data: currentTotalCost = 0 } = useNodeCost(totalNodes);
   const { data: nextTotalCost = 0 } = useNodeCost(totalNodes + 1);
+  const { data: nextNextTotalCost = 0 } = useNodeCost(totalNodes + 2);
   const nextBlockCost = Math.max(0, nextTotalCost - currentTotalCost);
+  const followingBlockCost = Math.max(0, nextNextTotalCost - nextTotalCost);
+  const creditsAfterPurchase = Math.max(0, availableCredits - nextBlockCost);
+  const canAfford = availableCredits >= nextBlockCost;
+  const budgetUsedPct = availableCredits + currentTotalCost > 0
+    ? Math.min(100, Math.round((currentTotalCost / (currentTotalCost + availableCredits)) * 100))
+    : 0;
 
   const resetDraft = () => { setDraftLabel(''); setDraftText(''); setEditing(null); };
 
@@ -218,7 +226,73 @@ const ChatBotConfigSection = () => {
       {/* ─── Carte blocs ─── */}
       <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
         <CardContent className="p-4">
-          {/* Breadcrumb + KPIs */}
+          {/* ── Mini-dashboard sticky : coût total & prochain palier ── */}
+          <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-3 px-4 pt-4 pb-3 bg-gradient-to-b from-card/95 to-card/80 backdrop-blur-md border-b border-border/40">
+            <div className="grid grid-cols-3 gap-2">
+              {/* Total actuel */}
+              <div className="rounded-lg bg-secondary/40 border border-border/30 p-2">
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-0.5">
+                  <Coins className="w-3 h-3" /> Investi
+                </div>
+                <div className="text-base font-bold leading-none tabular-nums">
+                  {currentTotalCost}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">
+                  {totalNodes} bloc{totalNodes > 1 ? 's' : ''}
+                </div>
+              </div>
+
+              {/* Solde */}
+              <div className="rounded-lg bg-secondary/40 border border-border/30 p-2">
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-0.5">
+                  <Wallet className="w-3 h-3" /> Solde
+                </div>
+                <div className="text-base font-bold leading-none tabular-nums">
+                  {availableCredits}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">disponible</div>
+              </div>
+
+              {/* Prochain palier */}
+              <div className={cn(
+                'rounded-lg border p-2 transition-colors',
+                canAfford
+                  ? 'bg-primary/10 border-primary/30'
+                  : 'bg-destructive/10 border-destructive/30',
+              )}>
+                <div className={cn(
+                  'flex items-center gap-1 text-[10px] mb-0.5',
+                  canAfford ? 'text-primary' : 'text-destructive',
+                )}>
+                  <TrendingUp className="w-3 h-3" /> Prochain
+                </div>
+                <div className={cn(
+                  'text-base font-bold leading-none tabular-nums',
+                  canAfford ? 'text-primary' : 'text-destructive',
+                )}>
+                  −{nextBlockCost}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">
+                  reste {creditsAfterPurchase}
+                </div>
+              </div>
+            </div>
+
+            {/* Progress budget */}
+            <div className="mt-2">
+              <Progress value={budgetUsedPct} className="h-1" />
+              <div className="flex items-center justify-between mt-1 text-[10px] text-muted-foreground">
+                <span>{budgetUsedPct}% du budget utilisé</span>
+                {followingBlockCost > nextBlockCost && (
+                  <span className="text-destructive font-medium">
+                    +1 = −{followingBlockCost} ⚠
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Breadcrumb */}
           <div className="flex items-center justify-between mb-3 gap-2">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
               {parentStack.length > 0 && (
@@ -234,9 +308,6 @@ const ChatBotConfigSection = () => {
                 {currentParent ? currentParent.label : 'Blocs principaux'}
               </h4>
             </div>
-            <Badge variant="outline" className="text-[10px] gap-1 shrink-0">
-              <Coins className="w-3 h-3" /> {totalNodes} blocs · {currentTotalCost} crédits
-            </Badge>
           </div>
 
           {/* Boutons IA */}
@@ -256,10 +327,10 @@ const ChatBotConfigSection = () => {
               size="sm"
               className="flex-1 h-9 text-xs gap-1.5"
               onClick={handleOpenNew}
-              disabled={createNode.isPending}
+              disabled={createNode.isPending || !canAfford}
             >
               <Plus className="w-3.5 h-3.5" />
-              Nouveau bloc <span className="opacity-70">· {nextBlockCost}€</span>
+              Nouveau bloc <span className="opacity-70">· −{nextBlockCost}</span>
             </Button>
           </div>
 
@@ -377,11 +448,48 @@ const ChatBotConfigSection = () => {
             </div>
 
             {!editing && (
-              <div className="flex items-center justify-between p-2.5 rounded-lg bg-primary/5 border border-primary/20">
-                <span className="text-xs text-muted-foreground">Coût de ce bloc</span>
-                <span className="text-sm font-semibold text-primary flex items-center gap-1">
-                  <Coins className="w-3.5 h-3.5" /> {nextBlockCost} crédit{nextBlockCost > 1 ? 's' : ''}
-                </span>
+              <div className={cn(
+                'rounded-lg border p-3 space-y-2',
+                canAfford ? 'bg-primary/5 border-primary/20' : 'bg-destructive/5 border-destructive/30',
+              )}>
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Coins className="w-3 h-3" /> Récapitulatif du débit
+                </div>
+
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Solde actuel</span>
+                    <span className="font-medium tabular-nums">{availableCredits}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Coût de ce bloc (n°{totalNodes + 1})</span>
+                    <span className="font-medium text-destructive tabular-nums">−{nextBlockCost}</span>
+                  </div>
+                  <div className="border-t border-border/40 pt-1 flex items-center justify-between">
+                    <span className="font-semibold flex items-center gap-1">
+                      <ArrowRight className="w-3 h-3" /> Solde après
+                    </span>
+                    <span className={cn(
+                      'font-bold tabular-nums',
+                      canAfford ? 'text-primary' : 'text-destructive',
+                    )}>
+                      {creditsAfterPurchase}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-[10px] text-muted-foreground border-t border-border/40 pt-1.5 flex items-center justify-between">
+                  <span>Total investi : <strong className="text-foreground">{nextTotalCost}</strong> crédits</span>
+                  {followingBlockCost > 0 && (
+                    <span>+1 = <strong className="text-destructive">−{followingBlockCost}</strong></span>
+                  )}
+                </div>
+
+                {!canAfford && (
+                  <div className="text-[11px] text-destructive font-medium">
+                    Crédits insuffisants — il manque {nextBlockCost - availableCredits} crédit{(nextBlockCost - availableCredits) > 1 ? 's' : ''}.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -390,12 +498,12 @@ const ChatBotConfigSection = () => {
             <Button variant="outline" onClick={() => setNewDialogOpen(false)}>Annuler</Button>
             <Button
               onClick={handleSubmitDraft}
-              disabled={createNode.isPending || updateNode.isPending}
+              disabled={createNode.isPending || updateNode.isPending || (!editing && !canAfford)}
             >
               {(createNode.isPending || updateNode.isPending)
                 ? <Loader2 className="w-4 h-4 animate-spin mr-1" />
                 : <Save className="w-4 h-4 mr-1" />}
-              {editing ? 'Enregistrer' : `Créer (-${nextBlockCost})`}
+              {editing ? 'Enregistrer' : `Créer (−${nextBlockCost})`}
             </Button>
           </DialogFooter>
         </DialogContent>

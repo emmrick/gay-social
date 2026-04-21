@@ -31,10 +31,23 @@ interface ChatbotConfig {
   user_id: string;
   is_active: boolean;
   greeting_message: string;
-  chatbot_info: string[]; // legacy, conservé pour compat
   created_at: string;
   updated_at: string;
 }
+
+/**
+ * Garantit qu'un utilisateur a une config (création silencieuse au besoin).
+ * Appelée à l'ouverture du panneau de config pour migrer les anciens utilisateurs.
+ */
+export const useEnsureChatbotConfig = () => {
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async () => {
+      if (!user?.id) return;
+      await supabase.rpc('ensure_chatbot_config' as any, { _user_id: user.id });
+    },
+  });
+};
 
 /* ------------------------------------------------------------------ */
 /* Configuration (greeting + actif)                                    */

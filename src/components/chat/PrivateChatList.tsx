@@ -44,6 +44,8 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
   const { getUnreadCount, markAsRead, markAsUnread } = useUnreadMessages();
   const { archiveConversation, unarchiveConversation, deleteConversation } = useConversationStatus();
   const { data: pendingSnaps } = usePendingEphemeralSnaps();
+  const baseConvList = showArchived ? archivedConversations : conversations;
+  const typingPartners = useConversationsTypingStatus(baseConvList.map((c) => c.otherUser.user_id));
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [autoDeleteSheet, setAutoDeleteSheet] = useState<{ conversationId: string; username: string } | null>(null);

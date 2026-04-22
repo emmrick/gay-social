@@ -70,7 +70,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
     }
   }, []);
 
-  const baseConversations = showArchived ? archivedConversations : conversations;
+  const baseConversations = baseConvList;
 
   // Apply filters
   const displayConversations = baseConversations.filter((conv) => {

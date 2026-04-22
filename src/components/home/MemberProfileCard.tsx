@@ -120,6 +120,8 @@ const MemberProfileCard = ({
                   <img
                     src={currentPhotoUrl}
                     alt={profile?.username}
+                    fetchPriority="high"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 ) : (

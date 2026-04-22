@@ -65,7 +65,7 @@ const VisitsTab = ({ onViewProfile }: VisitsTabProps) => {
           >
             <div className="w-11 h-11 rounded-2xl bg-muted flex items-center justify-center overflow-hidden border-2 border-primary/10 group-hover:border-primary/25 flex-shrink-0 transition-colors">
               {visit.visitor_avatar ? (
-                <img src={visit.visitor_avatar} alt={visit.visitor_username} className="w-full h-full object-cover" />
+                <img src={visit.visitor_avatar} alt={visit.visitor_username} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               ) : (
                 <User className="w-5 h-5 text-muted-foreground" />
               )}

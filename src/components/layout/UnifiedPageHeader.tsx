@@ -50,7 +50,16 @@ const UnifiedPageHeader = ({
     >
       <div className="px-5 pb-4 flex items-center justify-between w-full">
         <div className="min-w-0 flex items-center gap-2.5">
-          <img src={logoSrc} alt="Gay Social" className="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-primary/30 flex-shrink-0 vertical-align-middle" style={{ display: 'block' }} />
+          <img
+            src={logoSrc}
+            alt="Gay Social"
+            width={40}
+            height={40}
+            fetchPriority="high"
+            decoding="async"
+            className="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-primary/30 flex-shrink-0 vertical-align-middle"
+            style={{ display: 'block' }}
+          />
           <h1 className="font-display text-xl font-extrabold rainbow-text leading-none flex items-center">
             Gay Social
           </h1>
@@ -73,7 +82,15 @@ const UnifiedPageHeader = ({
             className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors overflow-hidden border-2 border-primary/20"
           >
             {avatarSigned ? (
-              <img src={avatarSigned} alt="Profil" className="w-full h-full object-cover" />
+              <img
+                src={avatarSigned}
+                alt="Profil"
+                width={36}
+                height={36}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <User className="w-4 h-4 text-muted-foreground" />
             )}

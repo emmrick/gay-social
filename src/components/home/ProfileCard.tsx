@@ -84,7 +84,8 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
               <img
                 src={resolvedAvatar}
                 alt={profile.username}
-                loading="lazy"
+                loading={index < 4 ? 'eager' : 'lazy'}
+                fetchPriority={index < 4 ? 'high' : 'auto'}
                 decoding="async"
                 onLoad={() => setImgLoaded(true)}
                 className={cn(

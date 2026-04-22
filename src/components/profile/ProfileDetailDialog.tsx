@@ -54,6 +54,9 @@ const ProfileDetailDialog = ({
                 <img
                   src={resolvedAvatar}
                   alt={profile.username}
+                  width={96}
+                  height={96}
+                  decoding="async"
                   className="w-full h-full object-cover"
                 />
               ) : (

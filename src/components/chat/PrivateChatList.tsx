@@ -388,6 +388,15 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                           {isSnapPhoto ? <Camera className="w-4 h-4" /> : <Video className="w-4 h-4" />}
                           <span>{isSnapPhoto ? 'Nouveau Selfie' : 'Nouvelle Vidéo'}</span>
                         </div>
+                      ) : isPartnerTyping ? (
+                        <div className="flex items-center gap-1.5 text-[13.5px] font-semibold text-primary leading-snug">
+                          <span className="flex gap-0.5">
+                            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '120ms' }} />
+                            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '240ms' }} />
+                          </span>
+                          <span className="italic">en train d'écrire…</span>
+                        </div>
                       ) : (
                         <p
                           className={cn(

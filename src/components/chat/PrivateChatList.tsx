@@ -281,6 +281,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
               const snap = pendingSnaps?.get(conv.otherUser.user_id);
               const hasSnap = !!snap;
               const isSnapPhoto = snap?.mediaType === 'image';
+              const isPartnerTyping = typingPartners.has(conv.otherUser.user_id);
 
               const snapColorClass = isSnapPhoto ? 'text-teal-500' : 'text-orange-500';
               const snapRingClass = isSnapPhoto ? 'ring-teal-500/50' : 'ring-orange-500/50';

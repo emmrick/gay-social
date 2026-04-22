@@ -6,6 +6,7 @@ import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useConversationStatus } from '@/hooks/useConversationStatus';
+import { useConversationsTypingStatus } from '@/hooks/useConversationsTypingStatus';
 import LiveOnlineDot from '@/components/presence/LiveOnlineDot';
 import { usePendingEphemeralSnaps } from '@/hooks/usePendingEphemeralSnaps';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -43,6 +44,8 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
   const { getUnreadCount, markAsRead, markAsUnread } = useUnreadMessages();
   const { archiveConversation, unarchiveConversation, deleteConversation } = useConversationStatus();
   const { data: pendingSnaps } = usePendingEphemeralSnaps();
+  const baseConvList = showArchived ? archivedConversations : conversations;
+  const typingPartners = useConversationsTypingStatus(baseConvList.map((c) => c.otherUser.user_id));
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [autoDeleteSheet, setAutoDeleteSheet] = useState<{ conversationId: string; username: string } | null>(null);
@@ -67,7 +70,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
     }
   }, []);
 
-  const baseConversations = showArchived ? archivedConversations : conversations;
+  const baseConversations = baseConvList;
 
   // Apply filters
   const displayConversations = baseConversations.filter((conv) => {
@@ -278,6 +281,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
               const snap = pendingSnaps?.get(conv.otherUser.user_id);
               const hasSnap = !!snap;
               const isSnapPhoto = snap?.mediaType === 'image';
+              const isPartnerTyping = typingPartners.has(conv.otherUser.user_id);
 
               const snapColorClass = isSnapPhoto ? 'text-teal-500' : 'text-orange-500';
               const snapRingClass = isSnapPhoto ? 'ring-teal-500/50' : 'ring-orange-500/50';
@@ -383,6 +387,15 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                         <div className={cn('flex items-center gap-1.5 text-[13px] font-semibold', snapColorClass)}>
                           {isSnapPhoto ? <Camera className="w-4 h-4" /> : <Video className="w-4 h-4" />}
                           <span>{isSnapPhoto ? 'Nouveau Selfie' : 'Nouvelle Vidéo'}</span>
+                        </div>
+                      ) : isPartnerTyping ? (
+                        <div className="flex items-center gap-1.5 text-[13.5px] font-semibold text-primary leading-snug">
+                          <span className="flex gap-0.5">
+                            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '120ms' }} />
+                            <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: '240ms' }} />
+                          </span>
+                          <span className="italic">en train d'écrire…</span>
                         </div>
                       ) : (
                         <p

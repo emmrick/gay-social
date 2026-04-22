@@ -15,10 +15,12 @@ import {
   AtSign,
   Coins,
   ShieldCheck,
-  Megaphone
+  Megaphone,
+  Mail
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { useWeeklyDigestPreference } from '@/hooks/useWeeklyDigestPreference';
 import { useNotificationSound, NOTIFICATION_SOUNDS, NotificationSoundType } from '@/hooks/useNotificationSound';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -75,6 +77,7 @@ const NotificationPreferencesSection = () => {
   } = useNotificationPreferences();
   
   const { previewSound } = useNotificationSound();
+  const weeklyDigest = useWeeklyDigestPreference();
 
   const handleSoundChange = (value: NotificationSoundType) => {
     // Store in localStorage for immediate access
@@ -210,6 +213,21 @@ const NotificationPreferencesSection = () => {
         onCheckedChange={() => togglePreference('push_announcements' as any)}
         disabled={isUpdating}
       />
+
+      <div className="pt-2 border-t border-border space-y-3">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-sm font-medium text-muted-foreground">E-mails</span>
+        </div>
+        <PreferenceItem
+          icon={Mail}
+          iconColor="text-indigo-500"
+          title="Récapitulatif hebdomadaire"
+          description="Recevoir un e-mail chaque semaine avec ton résumé d'activité"
+          checked={weeklyDigest.enabled}
+          onCheckedChange={weeklyDigest.toggle}
+          disabled={weeklyDigest.isLoading || weeklyDigest.isUpdating}
+        />
+      </div>
 
       <div className="pt-2 border-t border-border space-y-3">
         <PreferenceItem

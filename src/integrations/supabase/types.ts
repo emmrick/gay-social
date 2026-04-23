@@ -4541,6 +4541,7 @@ export type Database = {
       user_suggestions: {
         Row: {
           admin_notes: string | null
+          attachments: Json
           category: string
           created_at: string
           credits_awarded: number
@@ -4556,6 +4557,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          attachments?: Json
           category?: string
           created_at?: string
           credits_awarded?: number
@@ -4571,6 +4573,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          attachments?: Json
           category?: string
           created_at?: string
           credits_awarded?: number

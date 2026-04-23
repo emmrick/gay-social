@@ -18,6 +18,8 @@ import ChatBotProfileCard from '@/components/chatbot/ChatBotProfileCard';
 import ProfileHeroCard from './ProfileHeroCard';
 import ProfileInfoCards from './ProfileInfoCards';
 import ProfileStatsGrid from './ProfileStatsGrid';
+import SuggestionDialog from './SuggestionDialog';
+import { Lightbulb } from 'lucide-react';
 
 const POSITION_LABELS: Record<string, string> = {
   'actif': '🔝 Actif', 'passif': '🔽 Passif', 'versatile': '↕️ Versatile',

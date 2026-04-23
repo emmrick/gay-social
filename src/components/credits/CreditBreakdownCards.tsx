@@ -13,6 +13,7 @@ const CreditBreakdownCards = () => {
     passiveCredits, bonusCredits, purchasedCredits,
     lockPassive, lockBonus, lockPurchased,
     toggleCreditLock, isLoading,
+    lastPassiveCreditAt,
   } = useCredits();
   const { data: dynamicCosts } = useDynamicCreditCosts();
 

@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import PassiveCountdown from './PassiveCountdown';
 
 const CreditBreakdownCards = () => {
   const {
@@ -12,6 +13,7 @@ const CreditBreakdownCards = () => {
     passiveCredits, bonusCredits, purchasedCredits,
     lockPassive, lockBonus, lockPurchased,
     toggleCreditLock, isLoading,
+    lastPassiveCreditAt,
   } = useCredits();
   const { data: dynamicCosts } = useDynamicCreditCosts();
 
@@ -151,11 +153,15 @@ const CreditBreakdownCards = () => {
               )}
             </p>
 
-            {/* Promo detail */}
-            {(card as any).promo && (
-              <p className="text-[9px] text-orange-500 font-medium mt-1">
-                ⚡ +{currentAmount} / {currentInterval}h
-              </p>
+            {/* Passive countdown */}
+            {card.label === 'Passif' && (
+              <PassiveCountdown
+                lastPassiveCreditAt={lastPassiveCreditAt}
+                intervalHours={currentInterval}
+                amount={currentAmount}
+                isAtMax={passiveCredits >= currentMax}
+                isPromo={isPassivePromo}
+              />
             )}
 
             {/* Progress bar */}

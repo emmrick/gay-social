@@ -442,6 +442,7 @@ export const useCredits = () => {
     transactionsLoading,
     // Balances
     passiveCredits: query.data?.passive_credits || 0,
+    lastPassiveCreditAt: (query.data as any)?.last_passive_credit_at || null,
     dailyCredits: query.data?.daily_credits || 0,
     bonusCredits: query.data?.bonus_credits || 0,
     purchasedCredits: query.data?.purchased_credits || 0,

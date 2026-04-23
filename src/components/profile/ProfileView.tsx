@@ -139,6 +139,25 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
           </motion.div>
         )}
 
+        {/* Suggestion d'amélioration */}
+        <motion.button
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.28 }}
+          onClick={() => setShowSuggestionDialog(true)}
+          className="w-full bg-gradient-to-br from-yellow-500/10 via-primary/5 to-yellow-500/10 hover:from-yellow-500/20 hover:to-yellow-500/20 transition-all rounded-2xl border border-yellow-500/20 p-4 text-left group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform">
+              <Lightbulb className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">💡 Proposer une amélioration</p>
+              <p className="text-xs text-muted-foreground">Partage ton idée et gagne <span className="font-semibold text-yellow-600 dark:text-yellow-400">+30 crédits</span> si approuvée</p>
+            </div>
+          </div>
+        </motion.button>
+
         {/* Reactions */}
         {profile.user_id && (
           <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>

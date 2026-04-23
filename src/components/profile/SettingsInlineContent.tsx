@@ -21,6 +21,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useLocalSettings, type AccentColor, type TextSize, type Density, type ChatBackground } from '@/hooks/useLocalSettings';
 import { openOnboardingTour } from '@/hooks/useOnboarding';
 import NotificationPreferencesSection from './NotificationPreferencesSection';
+import LocationHideCard from './LocationHideCard';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help' | 'language';
 
@@ -435,6 +436,14 @@ const SettingsInlineContent = ({ type, onBack, onContactAdmin, onClose }: Settin
               checked={local.typingIndicator}
               onCheckedChange={(v) => setLocal('typingIndicator', v)}
             />
+
+            {/* Location hiding (paid feature) */}
+            <Separator className="my-2 opacity-30" />
+            <div className="flex items-center gap-2 mb-2 px-1">
+              <Shield className="w-4 h-4 text-purple-500" />
+              <span className="text-sm font-medium text-foreground">Localisation</span>
+            </div>
+            <LocationHideCard />
 
             {/* Quick links to dedicated tools */}
             <Separator className="my-2 opacity-30" />

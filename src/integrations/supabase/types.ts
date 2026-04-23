@@ -1963,6 +1963,42 @@ export type Database = {
           },
         ]
       }
+      location_hide_periods: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          is_currently_hidden: boolean
+          last_paused_at: string | null
+          purchased_at: string
+          remaining_seconds_when_paused: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          is_currently_hidden?: boolean
+          last_paused_at?: string | null
+          purchased_at?: string
+          remaining_seconds_when_paused?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_currently_hidden?: boolean
+          last_paused_at?: string | null
+          purchased_at?: string
+          remaining_seconds_when_paused?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       maintenance_mode: {
         Row: {
           activated_at: string | null
@@ -4921,6 +4957,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_location_hide_status: { Args: { _user_id: string }; Returns: Json }
       get_nearby_profiles: {
         Args: {
           limit_count?: number
@@ -5087,6 +5124,7 @@ export type Database = {
         Returns: Json
       }
       purchase_chatbot_node: { Args: { _user_id: string }; Returns: Json }
+      purchase_location_hide: { Args: { _user_id: string }; Returns: Json }
       purge_old_unread_ephemeral_media: { Args: never; Returns: number }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
@@ -5164,6 +5202,10 @@ export type Database = {
       toggle_credit_lock: {
         Args: { _lock_type: string; _value: boolean }
         Returns: undefined
+      }
+      toggle_location_visibility: {
+        Args: { _hide: boolean; _user_id: string }
+        Returns: Json
       }
       update_successful_referrals: {
         Args: { _referral_code_id: string }

@@ -141,7 +141,25 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
           </motion.div>
         )}
 
-        {/* Suggestion d'amélioration */}
+        {/* Henry — assistant de mise en relation */}
+        <motion.button
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.27 }}
+          onClick={() => navigate('/henry')}
+          className="w-full bg-gradient-to-br from-primary/10 via-primary/5 to-primary/15 hover:from-primary/20 hover:to-primary/20 transition-all rounded-2xl border border-primary/20 p-4 text-left group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform">
+              <Sparkles className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">✨ Henry — Mise en relation</p>
+              <p className="text-xs text-muted-foreground">Discute avec Henry pour qu'il te <span className="font-semibold text-primary">propose des profils compatibles</span></p>
+            </div>
+          </div>
+        </motion.button>
+
         <motion.button
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

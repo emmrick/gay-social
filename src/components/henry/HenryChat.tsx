@@ -83,13 +83,21 @@ const HenryChat = () => {
   const currentStep = (conversation?.current_step ?? 'greeting') as HenryStep;
   const stepDef = HENRY_FLOW[currentStep];
 
-  // Auto-scroll
+  // Auto-scroll : ScrollArea (Radix) scrolle sur son viewport interne, pas sur la racine.
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: 'smooth',
+    const root = scrollRef.current;
+    if (!root) return;
+    const viewport = root.querySelector<HTMLElement>(
+      '[data-radix-scroll-area-viewport]',
+    );
+    const target = viewport ?? root;
+    // double rAF pour laisser le DOM se peindre (motion + image)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        target.scrollTo({ top: target.scrollHeight, behavior: 'smooth' });
+      });
     });
-  }, [messages.length, matches.length, currentStep, henryTyping, askingReason]);
+  }, [messages.length, matches.length, matchIndex, currentStep, henryTyping, askingReason, searching]);
 
   /** Envoie un message Henry avec animation de frappe. */
   const sendBotMessage = async (

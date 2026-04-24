@@ -20,11 +20,12 @@ import { useNavigate } from 'react-router-dom';
 import {
   HENRY_FLOW,
   HenryStep,
-  buildIntroSuggestions,
+  REJECT_REASONS,
 } from '@/lib/henry/henryFlow';
 import { useHenryChat, HenryProfileMatch } from '@/hooks/useHenryChat';
 import { useCredits } from '@/hooks/useCredits';
 import HenryProfileCard from './HenryProfileCard';
+import HenryTypingBubble from './HenryTypingBubble';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -37,13 +38,22 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const labelFor = (
-  step: HenryStep,
-  value: string,
-): string => {
+const labelFor = (step: HenryStep, value: string): string => {
   const def = HENRY_FLOW[step];
   return def.options?.find((o) => o.value === value)?.label ?? value;
 };
+
+const REJECT_REPLIES: Record<string, string> = {
+  not_my_type: 'Ok noté ✌️ Je te trouve quelqu\'un dans un autre style.',
+  too_far: 'Compris, je cherche plus proche de chez toi 📍',
+  age_off: 'Bien reçu, j\'ajuste l\'âge 🎂',
+  no_photo: 'Ok, je privilégie des profils avec photo claire 📸',
+  no_bio: 'Bien noté, je te propose des profils avec une bio 📝',
+  other: 'D\'accord, voyons un autre profil 👇',
+};
+
+/** Petit délai pour simuler la frappe d'Henry. */
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const HenryChat = () => {
   const navigate = useNavigate();
@@ -65,6 +75,9 @@ const HenryChat = () => {
   const [searching, setSearching] = useState(false);
   const [multiSel, setMultiSel] = useState<string[]>([]);
   const [creditAlert, setCreditAlert] = useState(false);
+  const [henryTyping, setHenryTyping] = useState(false);
+  /** true → on demande la raison du rejet du profil courant. */
+  const [askingReason, setAskingReason] = useState(false);
   const initRef = useRef(false);
 
   const currentStep = (conversation?.current_step ?? 'greeting') as HenryStep;
@@ -76,7 +89,24 @@ const HenryChat = () => {
       top: scrollRef.current.scrollHeight,
       behavior: 'smooth',
     });
-  }, [messages.length, matches.length, currentStep]);
+  }, [messages.length, matches.length, currentStep, henryTyping, askingReason]);
+
+  /** Envoie un message Henry avec animation de frappe. */
+  const sendBotMessage = async (
+    content: string,
+    payload?: any,
+    typingMs = 700,
+  ) => {
+    setHenryTyping(true);
+    // durée proportionnelle à la longueur, plafonnée
+    const dur = Math.min(1600, Math.max(typingMs, content.length * 18));
+    await wait(dur);
+    try {
+      await saveBotMessage.mutateAsync({ content, payload });
+    } finally {
+      setHenryTyping(false);
+    }
+  };
 
   // Initial greeting
   useEffect(() => {
@@ -88,18 +118,15 @@ const HenryChat = () => {
       return;
     }
     initRef.current = true;
-    saveBotMessage.mutate({
-      content: HENRY_FLOW.greeting.question,
-      payload: { step: 'greeting' },
-    });
-  }, [conversation, messages.length, isLoading, saveBotMessage]);
+    sendBotMessage(HENRY_FLOW.greeting.question, { step: 'greeting' }, 400);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation, messages.length, isLoading]);
 
   const interests = conversation?.interests ?? [];
 
   const handleQuickReply = async (value: string, label: string) => {
-    if (sendUserMessage.isPending || saveBotMessage.isPending) return;
+    if (sendUserMessage.isPending || saveBotMessage.isPending || henryTyping) return;
 
-    // Multi-select accumulation
     if (stepDef.multi && value !== '__no_pref__') {
       const next = multiSel.includes(value)
         ? multiSel.filter((v) => v !== value)
@@ -108,7 +135,6 @@ const HenryChat = () => {
       return;
     }
 
-    // Pre-flight credit check (next message would push pending to 5)
     const nextPending = (conversation?.pending_message_count ?? 0) + 1;
     if (nextPending >= 5 && availableCredits < 1) {
       setCreditAlert(true);
@@ -123,9 +149,7 @@ const HenryChat = () => {
       toast.error('Choisis au moins une option 🙂');
       return;
     }
-    const labels = multiSel
-      .map((v) => labelFor(currentStep, v))
-      .join(', ');
+    const labels = multiSel.map((v) => labelFor(currentStep, v)).join(', ');
     await advance(multiSel.join(','), labels, multiSel);
     setMultiSel([]);
   };
@@ -136,7 +160,6 @@ const HenryChat = () => {
     multiValues?: string[],
   ) => {
     try {
-      // 1. Save user choice
       await sendUserMessage.mutateAsync({
         content: displayLabel,
         payload: { step: currentStep, value: rawValue },
@@ -150,7 +173,6 @@ const HenryChat = () => {
       return;
     }
 
-    // 2. Update criteria based on step
     const criteriaUpdate: any = {};
     if (currentStep === 'goal') criteriaUpdate.relationship_goal = rawValue;
     if (currentStep === 'age') {
@@ -177,21 +199,12 @@ const HenryChat = () => {
       await updateCriteria.mutateAsync(criteriaUpdate);
     }
 
-    // 3. Bot response
     if (nextStep === 'matching') {
-      await saveBotMessage.mutateAsync({
-        content: HENRY_FLOW.matching.question,
-        payload: { step: 'matching' },
-      });
+      await sendBotMessage(HENRY_FLOW.matching.question, { step: 'matching' });
       await runMatching();
-    } else if (nextStep === 'free') {
-      // already handled by matching path
-    } else {
+    } else if (nextStep !== 'free') {
       const nextDef = HENRY_FLOW[nextStep];
-      await saveBotMessage.mutateAsync({
-        content: nextDef.question,
-        payload: { step: nextStep },
-      });
+      await sendBotMessage(nextDef.question, { step: nextStep });
     }
   };
 
@@ -200,19 +213,18 @@ const HenryChat = () => {
     try {
       const results = await findMatches(shownIds);
       if (results.length === 0) {
-        await saveBotMessage.mutateAsync({
-          content:
-            "😕 Je n'ai pas trouvé de profils correspondant à 100 % à tes critères. Essaie d'élargir la zone ou la tranche d'âge !",
-          payload: { step: 'no_match' },
-        });
+        await sendBotMessage(
+          "😕 Je n'ai pas trouvé de profils correspondant à 100 % à tes critères. Essaie d'élargir la zone ou la tranche d'âge !",
+          { step: 'no_match' },
+        );
       } else {
         setMatches(results);
         setMatchIndex(0);
         setShownIds((prev) => [...prev, ...results.map((r) => r.user_id)]);
-        await saveBotMessage.mutateAsync({
-          content: `🎯 J'ai trouvé **${results.length} profils** susceptibles de te plaire. Voici le premier :`,
-          payload: { step: 'matches', count: results.length },
-        });
+        await sendBotMessage(
+          `🎯 J'ai trouvé **${results.length} profils** susceptibles de te plaire. Voici le premier :`,
+          { step: 'matches', count: results.length },
+        );
       }
       await updateCriteria.mutateAsync({ current_step: 'free' });
     } finally {
@@ -220,18 +232,45 @@ const HenryChat = () => {
     }
   };
 
-  const handleNextMatch = async () => {
+  /** L'utilisateur clique sur "Suivant" → on demande pourquoi. */
+  const handleSkipRequest = async () => {
+    setAskingReason(true);
+    await sendBotMessage(
+      'Pourquoi ce profil ne te plaît pas ? Ça m\'aide à mieux te cibler 👇',
+      { step: 'reject_reason' },
+      400,
+    );
+  };
+
+  /** L'utilisateur choisit une raison → on passe au profil suivant. */
+  const handleRejectReason = async (value: string, label: string) => {
+    setAskingReason(false);
+    try {
+      await sendUserMessage.mutateAsync({
+        content: label,
+        payload: { step: 'reject_reason', value },
+      });
+    } catch (err: any) {
+      if (err?.message === 'INSUFFICIENT_CREDITS') {
+        setCreditAlert(true);
+        return;
+      }
+    }
+    await sendBotMessage(REJECT_REPLIES[value] ?? REJECT_REPLIES.other);
+    await goNextProfile();
+  };
+
+  const goNextProfile = async () => {
     const nextIdx = matchIndex + 1;
     if (nextIdx < matches.length) {
       setMatchIndex(nextIdx);
+      await sendBotMessage('Voici un autre profil 👇', undefined, 400);
     } else {
-      // Out of matches → propose to refresh
-      await saveBotMessage.mutateAsync({
-        content:
-          'Tu as vu tous les profils que j\'avais en réserve ! Veux-tu que je relance une nouvelle recherche ?',
-        payload: { step: 'free' },
-      });
       setMatches([]);
+      await sendBotMessage(
+        'Tu as vu tous les profils de cette sélection. Veux-tu que je relance une nouvelle recherche ?',
+        { step: 'free' },
+      );
     }
   };
 
@@ -244,15 +283,13 @@ const HenryChat = () => {
     } else if (value === '__refine__') {
       await sendUserMessage.mutateAsync({ content: 'Affiner ma recherche' });
       await updateCriteria.mutateAsync({ current_step: 'goal' });
-      await saveBotMessage.mutateAsync({
-        content: HENRY_FLOW.goal.question,
-        payload: { step: 'goal' },
-      });
+      await sendBotMessage(HENRY_FLOW.goal.question, { step: 'goal' });
     } else if (value === '__reset__') {
       await resetConversation.mutateAsync();
       setMatches([]);
       setShownIds([]);
       setMatchIndex(0);
+      setAskingReason(false);
       initRef.current = false;
     }
   };
@@ -260,11 +297,12 @@ const HenryChat = () => {
   const currentMatch = matches[matchIndex];
 
   const showQuickReplies = useMemo(() => {
-    if (searching) return false;
+    if (searching || henryTyping) return false;
+    if (askingReason) return false;
     if (currentMatch) return false;
     if (currentStep === 'matching') return false;
     return !!stepDef.options?.length;
-  }, [searching, currentMatch, currentStep, stepDef.options]);
+  }, [searching, henryTyping, askingReason, currentMatch, currentStep, stepDef.options]);
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -276,7 +314,7 @@ const HenryChat = () => {
         <div className="flex-1 min-w-0">
           <h1 className="font-bold text-base leading-tight">Henry</h1>
           <p className="text-xs text-muted-foreground">
-            Votre assistant de mise en relation
+            {henryTyping ? 'écrit…' : 'Votre assistant de mise en relation'}
           </p>
         </div>
         <Badge variant="outline" className="gap-1 text-xs">
@@ -324,6 +362,10 @@ const HenryChat = () => {
             ))}
           </AnimatePresence>
 
+          <AnimatePresence>
+            {henryTyping && <HenryTypingBubble key="typing" />}
+          </AnimatePresence>
+
           {/* Searching indicator */}
           {searching && (
             <motion.div
@@ -337,17 +379,35 @@ const HenryChat = () => {
           )}
 
           {/* Profile card */}
-          {currentMatch && (
+          {currentMatch && !askingReason && !henryTyping && (
             <div className="flex justify-center pt-2">
               <HenryProfileCard
                 profile={currentMatch}
                 interests={interests}
-                onSkip={handleNextMatch}
+                onSkip={handleSkipRequest}
               />
             </div>
           )}
         </div>
       </ScrollArea>
+
+      {/* Reject reason quick replies */}
+      {askingReason && !henryTyping && (
+        <div className="border-t border-border/50 bg-card/30 backdrop-blur p-3 shrink-0">
+          <div className="max-w-2xl mx-auto flex flex-wrap gap-2">
+            {REJECT_REASONS.map((opt) => (
+              <Button
+                key={opt.value}
+                variant="outline"
+                size="sm"
+                onClick={() => handleRejectReason(opt.value, opt.label)}
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Quick replies */}
       {showQuickReplies && (

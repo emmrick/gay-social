@@ -43,6 +43,10 @@ export const GOAL_OPTIONS: HenryQuickReply[] = [
   { value: 'amitie', label: '🤝 De l\'amitié' },
   { value: 'discussion', label: '💬 Discuter' },
   { value: 'webcam', label: '📹 Webcam' },
+  { value: 'sortie', label: '🍻 Sortir / verre' },
+  { value: 'voyage_buddy', label: '✈️ Voyage' },
+  { value: 'sport_buddy', label: '🏋️ Partenaire sport' },
+  { value: 'curieux', label: '🤔 Je découvre' },
 ];
 
 export const AGE_OPTIONS: HenryQuickReply[] = [
@@ -50,6 +54,7 @@ export const AGE_OPTIONS: HenryQuickReply[] = [
   { value: '25-35', label: '25-35 ans' },
   { value: '35-45', label: '35-45 ans' },
   { value: '45-60', label: '45-60 ans' },
+  { value: '60-99', label: '60+ ans' },
   { value: '18-99', label: 'Peu importe' },
 ];
 
@@ -63,7 +68,10 @@ export const REGION_OPTIONS: HenryQuickReply[] = [
   { value: 'nice', label: 'Nice' },
   { value: 'nantes', label: 'Nantes' },
   { value: 'strasbourg', label: 'Strasbourg' },
-  { value: '__any__', label: 'Partout en France' },
+  { value: 'rennes', label: 'Rennes' },
+  { value: 'montpellier', label: 'Montpellier' },
+  { value: 'reims', label: 'Reims' },
+  { value: '__any__', label: '🌍 Partout en France' },
 ];
 
 export const TRIBE_OPTIONS: HenryQuickReply[] = [
@@ -76,6 +84,8 @@ export const TRIBE_OPTIONS: HenryQuickReply[] = [
   { value: 'twink_otter', label: '✨ Twottter' },
   { value: 'leather', label: '🖤 Cuir' },
   { value: 'geek', label: '🎮 Geek' },
+  { value: 'muscle', label: '🦾 Muscle' },
+  { value: 'chubby', label: '🧸 Chubby' },
   { value: 'no_pref', label: 'Peu importe' },
 ];
 
@@ -89,6 +99,19 @@ export const INTEREST_OPTIONS: HenryQuickReply[] = [
   { value: 'art', label: '🎨 Art' },
   { value: 'gaming', label: '🎮 Gaming' },
   { value: 'lecture', label: '📚 Lecture' },
+  { value: 'nature', label: '🌿 Nature' },
+  { value: 'mode', label: '👗 Mode' },
+  { value: 'animaux', label: '🐾 Animaux' },
+];
+
+/** Raisons proposées quand l'utilisateur ne veut pas du profil affiché */
+export const REJECT_REASONS: HenryQuickReply[] = [
+  { value: 'not_my_type', label: '😶 Pas mon type' },
+  { value: 'too_far', label: '📍 Trop loin' },
+  { value: 'age_off', label: '🎂 Âge ne correspond pas' },
+  { value: 'no_photo', label: '📷 Photo peu claire' },
+  { value: 'no_bio', label: '📝 Profil vide' },
+  { value: 'other', label: '🤷 Autre raison' },
 ];
 
 export const HENRY_FLOW: Record<HenryStep, HenryStepDef> = {

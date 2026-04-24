@@ -1,5 +1,5 @@
 import { memo, useMemo, useEffect } from 'react';
-import { MessageCircle, Home, Sparkles, HelpCircle, Rss } from 'lucide-react';
+import { MessageCircle, Home, Sparkles, HelpCircle, Rss, Wand2 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
@@ -13,6 +13,7 @@ const allTabs = [
   { id: 'home', path: '/home', icon: Home, label: 'Accueil', featureKey: null, prefetchKey: 'home' as const },
   { id: 'tween', path: '/tween', icon: Rss, label: 'Tween', featureKey: null, prefetchKey: 'tween' as const },
   { id: 'swipe', path: '/swipe', icon: Sparkles, label: 'Swipe', featureKey: 'swipe_page', prefetchKey: 'swipe' as const },
+  { id: 'henry', path: '/henry', icon: Wand2, label: 'Henry', featureKey: null, prefetchKey: 'henry' as const },
   { id: 'messages', path: '/messages', icon: MessageCircle, label: 'Messages', featureKey: null, prefetchKey: 'messages' as const },
   { id: 'help', path: '/aide/chat', icon: HelpCircle, label: 'Aide', featureKey: null, prefetchKey: 'help' as const },
 ] as const;

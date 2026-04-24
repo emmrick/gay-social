@@ -12,6 +12,7 @@ const loaders: Record<string, () => Promise<unknown>> = {
   messages: () => import('@/pages/MessagesPage'),
   tween: () => import('@/pages/TweenPageRoute'),
   help: () => import('@/pages/HelpPageRoute'),
+  henry: () => import('@/pages/HenryPage'),
   profile: () => import('@/pages/ProfilePage'),
   credits: () => import('@/pages/CreditsPageRoute'),
   privateChat: () => import('@/pages/PrivateChatPage'),

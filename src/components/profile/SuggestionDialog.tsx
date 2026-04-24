@@ -172,7 +172,9 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
         </div>
 
         <ScrollArea className="flex-1 -mx-6 px-6">
-          {view === 'form' ? (
+          {view === 'community' ? (
+            <CommunitySuggestions />
+          ) : view === 'form' ? (
             <div className="space-y-4 py-2">
               <div className="rounded-lg bg-gradient-to-br from-primary/5 to-yellow-500/5 border border-primary/10 p-3 text-xs space-y-1">
                 <p className="font-semibold flex items-center gap-1.5">

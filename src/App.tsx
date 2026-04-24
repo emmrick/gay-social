@@ -116,6 +116,7 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const PrivateChatPage = lazy(() => import("./pages/PrivateChatPage"));
 const GroupChatPage = lazy(() => import("./pages/GroupChatPage"));
 const ChatbotConfigPage = lazy(() => import("./pages/ChatbotConfigPage"));
+const HenryPage = lazy(() => import("./pages/HenryPage"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 
@@ -200,6 +201,7 @@ const AuthenticatedApp = () => {
                             <Route path="/chat/:regionCode" element={<GroupChatPage />} />
                             <Route path="/profile" element={null} />
                             <Route path="/profile/chatbot" element={<ChatbotConfigPage />} />
+                            <Route path="/henry" element={<HenryPage />} />
                             <Route path="/credits" element={null} />
                             <Route path="/tween" element={null} />
                             <Route path="/aide/chat" element={null} />

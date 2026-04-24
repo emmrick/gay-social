@@ -3718,6 +3718,41 @@ export type Database = {
           },
         ]
       }
+      suggestion_votes: {
+        Row: {
+          created_at: string
+          id: string
+          suggestion_id: string
+          updated_at: string
+          vote_type: string
+          voter_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          suggestion_id: string
+          updated_at?: string
+          vote_type: string
+          voter_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          suggestion_id?: string
+          updated_at?: string
+          vote_type?: string
+          voter_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestion_votes_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "user_suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_messages: {
         Row: {
           content: string
@@ -4850,6 +4885,10 @@ export type Database = {
         Returns: boolean
       }
       can_manage_credits: { Args: { _user_id: string }; Returns: boolean }
+      cast_suggestion_vote: {
+        Args: { _suggestion_id: string; _vote_type: string }
+        Returns: Json
+      }
       check_stale_tasks_send_sms: { Args: never; Returns: undefined }
       check_sufficient_credits: {
         Args: { _amount: number; _user_id: string }

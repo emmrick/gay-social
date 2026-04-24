@@ -1,7 +1,10 @@
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+
+const ERROR_COOLDOWN_MS = 3000;
 
 /**
  * Manage opt-in/opt-out for the weekly digest email.

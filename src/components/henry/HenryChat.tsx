@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
 import { Sparkles, RefreshCw, Coins } from 'lucide-react';
+
+/** Rendu inline minimal : transforme **gras** en <strong>. */
+const renderRich = (text: string) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((p, i) =>
+    p.startsWith('**') && p.endsWith('**') ? (
+      <strong key={i} className="font-semibold">{p.slice(2, -2)}</strong>
+    ) : (
+      <span key={i}>{p}</span>
+    ),
+  );
+};
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -307,16 +318,7 @@ const HenryChat = () => {
                       : 'bg-muted text-foreground rounded-bl-md'
                   }`}
                 >
-                  <ReactMarkdown
-                    components={{
-                      p: ({ children }) => <p className="m-0">{children}</p>,
-                      strong: ({ children }) => (
-                        <strong className="font-semibold">{children}</strong>
-                      ),
-                    }}
-                  >
-                    {m.content}
-                  </ReactMarkdown>
+                  <p className="m-0 whitespace-pre-wrap">{renderRich(m.content)}</p>
                 </div>
               </motion.div>
             ))}

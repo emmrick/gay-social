@@ -41,10 +41,16 @@ const STATUS_BADGE: Record<string, { label: string; icon: any; className: string
 
 const CommunitySuggestions = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { availableCredits, totalCredits, isLoading: creditsLoading } = useCredits();
   const { data: suggestions, isLoading } = useCommunitySuggestions();
   const castVote = useCastSuggestionVote();
   const [sort, setSort] = useState<SortMode>('top');
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [insufficientOpen, setInsufficientOpen] = useState(false);
+
+  const balance = availableCredits ?? totalCredits ?? 0;
+  const isBroke = !creditsLoading && balance < VOTE_COST;
 
   const sorted = useMemo(() => {
     if (!suggestions) return [];
@@ -59,12 +65,26 @@ const CommunitySuggestions = () => {
     return list;
   }, [suggestions, sort]);
 
+  const goToCredits = () => {
+    setInsufficientOpen(false);
+    navigate('/credits');
+  };
+
   const handleVote = async (s: CommunitySuggestion, type: 'up' | 'down') => {
     if (!user) return;
     if (s.user_id === user.id) {
       toast.info('Vous ne pouvez pas voter pour votre propre idée');
       return;
     }
+
+    // Vérification client : un nouveau vote coûte 1 crédit.
+    // Changer ou retirer son vote est gratuit.
+    const isNewVote = s.myVote === null;
+    if (isNewVote && balance < VOTE_COST) {
+      setInsufficientOpen(true);
+      return;
+    }
+
     setPendingId(s.id);
     try {
       const res = await castVote.mutateAsync({ suggestionId: s.id, voteType: type });
@@ -80,9 +100,8 @@ const CommunitySuggestions = () => {
     } catch (e: any) {
       const msg = e?.message ?? '';
       if (msg === 'INSUFFICIENT_CREDITS') {
-        toast.error('Crédits insuffisants', {
-          description: 'Voter coûte 1 crédit. Rechargez votre solde pour soutenir cette idée.',
-        });
+        // Filet de sécurité côté serveur
+        setInsufficientOpen(true);
       } else if (msg === 'CANNOT_VOTE_OWN_SUGGESTION') {
         toast.info('Vous ne pouvez pas voter pour votre propre idée');
       } else {

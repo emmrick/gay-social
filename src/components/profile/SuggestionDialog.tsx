@@ -47,7 +47,7 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
   const [examples, setExamples] = useState('');
   const [attachments, setAttachments] = useState<AttachmentMeta[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [view, setView] = useState<'form' | 'history'>('form');
+  const [view, setView] = useState<'form' | 'history' | 'community'>('form');
 
   const { data: suggestions } = useQuery({
     queryKey: ['user-suggestions', user?.id],

@@ -31,6 +31,7 @@ import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import { useAdminRealtimeBridge } from '@/hooks/admin/useAdminRealtimeBridge';
 import { AdminPageTransition } from '@/components/admin/AdminPageTransition';
+import AdminModerationSubTabs from '@/components/admin/AdminModerationSubTabs';
 import {
   buildAdminPath,
   sectionFromSlug,

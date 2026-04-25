@@ -143,8 +143,8 @@ const HenryChat = () => {
       return;
     }
 
-    const nextPending = (conversation?.pending_message_count ?? 0) + 1;
-    if (nextPending >= 5 && availableCredits < 1) {
+    // Vérification crédits : 0.2 crédit par message
+    if (availableCredits < 0.2) {
       setCreditAlert(true);
       return;
     }
@@ -342,7 +342,7 @@ const HenryChat = () => {
 
       {/* Cost notice */}
       <div className="px-4 py-2 text-[11px] text-center text-muted-foreground bg-muted/40 border-b border-border/30">
-        💡 1 crédit débité tous les 5 messages échangés ({conversation?.pending_message_count ?? 0}/5)
+        💡 0,2 crédit débité par message envoyé à Henry
       </div>
 
       {/* Messages */}
@@ -475,7 +475,7 @@ const HenryChat = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Crédits insuffisants 🪙</AlertDialogTitle>
             <AlertDialogDescription>
-              Henry débite <strong>1 crédit tous les 5 messages</strong> envoyés.
+              Henry débite <strong>0,2 crédit par message</strong> envoyé.
               Tu dois recharger ton solde pour continuer ta conversation.
               <br />
               <br />

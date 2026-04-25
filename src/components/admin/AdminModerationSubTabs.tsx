@@ -16,6 +16,7 @@ import {
   ListChecks,
   Headphones,
   Star,
+  Radio,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminSection, ModPermissions } from './AdminSidebar';
@@ -34,6 +35,7 @@ const MOD_TABS: SubTab[] = [
   { id: 'support-ratings', label: 'Avis', icon: Star, adminOnly: true },
   { id: 'reports', label: 'Signalements', icon: Filter, permissionKey: 'can_manage_reports' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, permissionKey: 'can_manage_content' },
+  { id: 'live-content', label: 'Direct', icon: Radio, permissionKey: 'can_manage_content' },
   { id: 'ai-moderation', label: 'IA', icon: Bot, permissionKey: 'can_ai_moderation' },
   { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, permissionKey: 'can_screenshot_sanctions' },
   { id: 'verification', label: 'Identité', icon: IdCard, adminOnly: true, permissionKey: 'can_verify_identity' },
@@ -45,6 +47,7 @@ const MODERATION_SECTIONS: AdminSection[] = [
   'support-ratings',
   'reports',
   'moderation',
+  'live-content',
   'ai-moderation',
   'screenshot-sanctions',
   'verification',

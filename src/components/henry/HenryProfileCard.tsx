@@ -72,12 +72,12 @@ const HenryProfileCard = ({ profile, interests, onSkip }: Props) => {
         initial={{ opacity: 0, y: 10, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.25 }}
-        className="w-full max-w-[320px]"
+        className="w-full max-w-[380px]"
       >
         <Card className="overflow-hidden border-primary/20 bg-card shadow-md">
-          {/* Layout horizontal compact : avatar carré + infos */}
+          {/* Layout horizontal : avatar + infos */}
           <div className="flex gap-3 p-3">
-            <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-muted shrink-0">
+            <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-muted shrink-0">
               {resolvedAvatar ? (
                 <img
                   src={resolvedAvatar}
@@ -90,17 +90,17 @@ const HenryProfileCard = ({ profile, interests, onSkip }: Props) => {
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
-                  <User className="w-8 h-8 opacity-40" />
+                  <User className="w-10 h-10 opacity-40" />
                 </div>
               )}
               {profile.is_online && (
-                <span className="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-card" />
+                <span className="absolute bottom-1.5 right-1.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-card" />
               )}
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="font-bold text-sm leading-tight truncate">
+                <h3 className="font-bold text-base leading-tight truncate">
                   {profile.username}
                   {profile.age != null && (
                     <span className="text-muted-foreground font-normal">
@@ -108,18 +108,18 @@ const HenryProfileCard = ({ profile, interests, onSkip }: Props) => {
                     </span>
                   )}
                 </h3>
-                <Badge className="bg-primary/15 text-primary border-0 gap-0.5 text-[10px] px-1.5 py-0 h-5 shrink-0">
+                <Badge className="bg-primary/15 text-primary border-0 gap-0.5 text-[11px] px-1.5 py-0 h-5 shrink-0">
                   <Sparkles className="w-2.5 h-2.5" />
                   {profile.compatibility}%
                 </Badge>
               </div>
               {profile.region && (
-                <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                   <MapPin className="w-3 h-3" /> {profile.region}
                 </p>
               )}
               {profile.reasons.length > 0 && (
-                <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">
+                <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
                   ✓ {profile.reasons.slice(0, 2).join(' · ')}
                 </p>
               )}
@@ -127,7 +127,7 @@ const HenryProfileCard = ({ profile, interests, onSkip }: Props) => {
           </div>
 
           {profile.bio && (
-            <p className="text-xs text-foreground/75 px-3 pb-2 line-clamp-2">
+            <p className="text-[13px] text-foreground/80 px-3 pb-2.5 line-clamp-3">
               "{profile.bio}"
             </p>
           )}
@@ -135,18 +135,18 @@ const HenryProfileCard = ({ profile, interests, onSkip }: Props) => {
           <div className="flex gap-2 px-3 pb-3">
             <Button
               onClick={() => setIntroOpen(true)}
-              className="flex-1 gap-1.5 h-8 text-xs"
+              className="flex-1 gap-1.5 h-9 text-sm"
               size="sm"
             >
-              <MessageCircle className="w-3.5 h-3.5" /> Message
+              <MessageCircle className="w-4 h-4" /> Message
             </Button>
             <Button
               onClick={onSkip}
               variant="outline"
               size="sm"
-              className="gap-1.5 h-8 text-xs"
+              className="gap-1.5 h-9 text-sm"
             >
-              <SkipForward className="w-3.5 h-3.5" /> Suivant
+              <SkipForward className="w-4 h-4" /> Suivant
             </Button>
           </div>
         </Card>

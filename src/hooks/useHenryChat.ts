@@ -171,6 +171,12 @@ export const useHenryChat = () => {
       tribes?: string[] | null;
       interests?: string[] | null;
       current_step?: string | null;
+      height_min?: number | null;
+      height_max?: number | null;
+      languages?: string[] | null;
+      availability?: string[] | null;
+      free_note_step?: string | null;
+      free_note_text?: string | null;
     }) => {
       const { data, error } = await supabase.rpc('henry_update_criteria' as any, {
         _relationship_goal: params.relationship_goal ?? null,
@@ -180,6 +186,12 @@ export const useHenryChat = () => {
         _tribes: params.tribes ?? null,
         _interests: params.interests ?? null,
         _current_step: params.current_step ?? null,
+        _height_min: params.height_min ?? null,
+        _height_max: params.height_max ?? null,
+        _languages: params.languages ?? null,
+        _availability: params.availability ?? null,
+        _free_note_step: params.free_note_step ?? null,
+        _free_note_text: params.free_note_text ?? null,
       });
       if (error) throw error;
       return data;

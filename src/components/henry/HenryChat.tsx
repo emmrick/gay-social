@@ -431,6 +431,7 @@ const HenryChat = () => {
       setMatchIndex(0);
       setAskingReason(false);
       initRef.current = false;
+      try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
     }
   };
 

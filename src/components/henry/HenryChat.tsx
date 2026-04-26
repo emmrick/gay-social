@@ -565,6 +565,52 @@ const HenryChat = () => {
                 );
               })}
             </div>
+
+            {/* Saisie libre + skip */}
+            {stepDef.freeText && (
+              <div className="mt-3 pt-3 border-t border-border/40">
+                <div className="flex gap-2 items-center">
+                  <Input
+                    value={freeText}
+                    onChange={(e) => setFreeText(e.target.value)}
+                    placeholder={stepDef.freeText.placeholder}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleFreeTextSubmit();
+                      }
+                    }}
+                    disabled={sendUserMessage.isPending || henryTyping}
+                    className="text-sm"
+                    maxLength={300}
+                  />
+                  <Button
+                    size="icon"
+                    onClick={handleFreeTextSubmit}
+                    disabled={!freeText.trim() || sendUserMessage.isPending || henryTyping}
+                    title={stepDef.freeText.submitLabel ?? 'Envoyer'}
+                    className="shrink-0"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                  {currentStep !== 'free' && currentStep !== 'greeting' && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleSkipStep}
+                      disabled={sendUserMessage.isPending || henryTyping}
+                      title="Passer cette étape"
+                      className="shrink-0"
+                    >
+                      <SkipForward className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="mt-1.5 text-[10px] text-muted-foreground/70 px-1">
+                  ✏️ Tu peux écrire ta propre réponse · Entrée pour envoyer
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

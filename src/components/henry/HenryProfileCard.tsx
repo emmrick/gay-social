@@ -45,15 +45,14 @@ const HenryProfileCard = ({ profile, interests, onSkip }: Props) => {
     if (!user) return;
     setSending(true);
     try {
-      const conv = await getOrCreateConversation.mutateAsync(profile.user_id);
+      await getOrCreateConversation.mutateAsync(profile.user_id);
       const { error } = await supabase.from('messages').insert({
         sender_id: user.id,
         recipient_id: profile.user_id,
-        conversation_id: conv.id,
         content: text,
         message_type: 'text',
         is_private: true,
-      } as any);
+      });
       if (error) throw error;
       toast.success(`Message envoyé à ${profile.username} 💌`);
       setIntroOpen(false);

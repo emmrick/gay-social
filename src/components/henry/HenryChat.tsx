@@ -323,7 +323,7 @@ const HenryChat = () => {
         <div className="flex-1 min-w-0">
           <h2 className="font-bold text-sm leading-tight">Henry</h2>
           <p className="text-[11px] text-muted-foreground">
-            {henryTyping ? 'écrit…' : `Assistant de mise en relation · ${availableCredits.toFixed(1)} crédits`}
+            {henryTyping ? 'écrit…' : 'Assistant de mise en relation'}
           </p>
         </div>
         <Button

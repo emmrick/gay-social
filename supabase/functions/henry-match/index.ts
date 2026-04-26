@@ -68,7 +68,8 @@ Deno.serve(async (req) => {
     ;(iBlocked ?? []).forEach((b: any) => exclude.add(b.blocked_id))
     ;(blockedMe ?? []).forEach((b: any) => exclude.add(b.blocker_id))
 
-    // Pull a candidate pool of verified profiles with photo, age in range
+    // Pull a candidate pool of VERIFIED profiles only (identité validée),
+    // avec photo, âge dans la fourchette. Henry ne propose JAMAIS de profils non vérifiés.
     let q = supabase
       .from('profiles')
       .select(
@@ -76,6 +77,7 @@ Deno.serve(async (req) => {
       )
       .eq('is_verified', true)
       .not('avatar_url', 'is', null)
+      .neq('avatar_url', '')
       .gte('age', ageMin)
       .lte('age', ageMax)
       .limit(80)
@@ -85,7 +87,23 @@ Deno.serve(async (req) => {
     const { data: candidates, error } = await q
     if (error) throw error
 
-    const filtered = (candidates ?? []).filter((p: any) => !exclude.has(p.user_id))
+    // Filtre supplémentaire : exclure les comptes suspendus / bannis globalement
+    const baseFiltered = (candidates ?? []).filter((p: any) => !exclude.has(p.user_id) && p.is_verified === true)
+
+    const suspensionChecks = await Promise.all(
+      baseFiltered.map(async (p: any) => {
+        try {
+          const { data: suspended } = await supabase.rpc('is_user_suspended', { _user_id: p.user_id })
+          return { user_id: p.user_id, suspended: suspended === true }
+        } catch {
+          return { user_id: p.user_id, suspended: false }
+        }
+      }),
+    )
+    const suspendedSet = new Set(
+      suspensionChecks.filter((c) => c.suspended).map((c) => c.user_id),
+    )
+    const filtered = baseFiltered.filter((p: any) => !suspendedSet.has(p.user_id))
 
     // Score each candidate
     const interestSet = new Set(interests.map((i) => i.toLowerCase()))

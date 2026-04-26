@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, RefreshCw } from 'lucide-react';
+import { Sparkles, RefreshCw, Send, SkipForward } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { emitCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
 
 /** Rendu inline minimal : transforme **gras** en <strong>. */

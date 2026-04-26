@@ -79,6 +79,14 @@ export default {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        "shimmer-bg": {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
+        },
+        wiggle: {
+          "0%, 100%": { transform: "rotate(-8deg)" },
+          "50%": { transform: "rotate(8deg)" },
+        },
         "pulse-subtle": {
           "0%, 100%": { borderLeftColor: "hsl(var(--destructive) / 0.6)", boxShadow: "inset 2px 0 0 hsl(var(--destructive) / 0.3)" },
           "50%": { borderLeftColor: "hsl(var(--destructive))", boxShadow: "inset 2px 0 0 hsl(var(--destructive) / 0.8)" },
@@ -88,6 +96,8 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 2s infinite",
+        "shimmer-bg": "shimmer-bg 2s linear infinite",
+        wiggle: "wiggle 0.6s ease-in-out infinite",
         "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
       },
       backgroundImage: {

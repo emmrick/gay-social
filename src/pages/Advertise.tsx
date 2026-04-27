@@ -983,7 +983,7 @@ const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEd
           )}
         </TabsContent>
 
-        <TabsContent value="stats" className="mt-4">
+        <TabsContent value="stats" className="mt-4 space-y-4">
           <Card>
             <CardContent className="p-5 space-y-4">
               <h4 className="font-bold text-sm">Résumé global</h4>
@@ -997,6 +997,8 @@ const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEd
               </div>
             </CardContent>
           </Card>
+
+          <AdvertiserStatsChart advertiserEmail={email} days={14} />
         </TabsContent>
       </Tabs>
     </div>

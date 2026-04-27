@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, Megaphone, Send, CheckCircle2, BarChart3, Users, Shield, Sparkles, Wallet, Eye, MousePointerClick, Pencil, CreditCard, Loader2, Search, Upload, X, Image as ImageIcon, Pause, Play, MapPin, Ticket } from 'lucide-react';
+import { ArrowLeft, Megaphone, Send, CheckCircle2, BarChart3, Users, Shield, Sparkles, Wallet, Eye, MousePointerClick, Pencil, CreditCard, Loader2, Mail, Upload, X, Image as ImageIcon, Pause, Play, MapPin, Ticket, CalendarRange, Target, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import SEOHead from '@/components/seo/SEOHead';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { AdPreviewGrid } from '@/components/ads/AdPreview';
+import { AdvertiserStatsChart } from '@/components/ads/AdvertiserStatsChart';
 
 const advertiseSchema = z.object({
   advertiser_name: z.string().trim().min(2, 'Nom requis').max(100),
@@ -31,6 +33,10 @@ const advertiseSchema = z.object({
   budget_cents: z.coerce.number().min(500, 'Budget minimum : 5€').max(1000000),
   geo_targeting: z.enum(['local', 'regional', 'national']),
   geo_postal_codes: z.string().optional(),
+  starts_at: z.string().optional(),
+  ends_at: z.string().optional(),
+  max_impressions: z.coerce.number().int().min(0).optional(),
+  max_clicks: z.coerce.number().int().min(0).optional(),
 });
 
 type AdvertiseForm = z.infer<typeof advertiseSchema>;

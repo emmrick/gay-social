@@ -37,6 +37,8 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
   const { totalCredits } = useCreditCheck();
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [swipeCount, setSwipeCount] = useState(0);
+  const [showAdInterstitial, setShowAdInterstitial] = useState(false);
   const [activeTab, setActiveTab] = useState<'swipe' | 'likes'>('swipe');
   const [matchPopup, setMatchPopup] = useState<{ isOpen: boolean; username: string; avatar: string | null; userId: string }>({
     isOpen: false, username: '', avatar: null, userId: '',

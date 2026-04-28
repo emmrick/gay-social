@@ -509,6 +509,8 @@ const HenryChat = () => {
         return;
       }
     }
+    // Persist rejection reason so Henry can refine future searches
+    await recordRejectReason(value);
     await sendBotMessage(REJECT_REPLIES[value] ?? REJECT_REPLIES.other);
     await goNextProfile();
   };

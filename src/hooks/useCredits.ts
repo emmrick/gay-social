@@ -160,6 +160,9 @@ export const deductCredits = async (
   // Invalidate credit queries to update UI immediately
   if (result.success) {
     invalidateCreditQueries(userId);
+  } else {
+    // Affiche un toast riche au lieu d'échouer silencieusement
+    notifyInsufficientCreditsSync(description);
   }
 
   return result;

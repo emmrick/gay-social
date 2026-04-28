@@ -354,11 +354,16 @@ const EmptySwipeState = ({ onRefresh }: { onRefresh: () => void }) => (
     <Button 
       onClick={onRefresh} 
       variant="outline" 
-      className="gap-2 rounded-2xl h-12 px-8 font-semibold text-sm border-primary/20 hover:bg-primary/5 hover:border-primary/30"
+      className="gap-2 rounded-2xl h-12 px-8 font-semibold text-sm border-primary/20 hover:bg-primary/5 hover:border-primary/30 mb-8"
     >
       <RefreshCw className="w-4 h-4" />
       Rafraîchir
     </Button>
+
+    {/* Sponsored square ad shown when no more profiles */}
+    <div className="w-full max-w-sm">
+      <AdBanner placement="sponsored_card" />
+    </div>
   </div>
 );
 

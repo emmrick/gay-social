@@ -68,8 +68,10 @@ const HenryChat = () => {
     updateCriteria,
     resetConversation,
     findMatches,
+    recordRejectReason,
   } = useHenryChat();
   const { availableCredits } = useCredits();
+  const { profile: myProfile } = useNavigate as any === undefined ? { profile: null as any } : (require('@/contexts/AuthContext').useAuth?.() ?? { profile: null });
   const scrollRef = useRef<HTMLDivElement>(null);
   // Persistance des matches : ils doivent survivre au démontage du composant
   // (navigation hors du chatbot puis retour).

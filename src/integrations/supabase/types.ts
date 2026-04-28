@@ -1913,7 +1913,9 @@ export type Database = {
           languages: string[]
           pending_message_count: number
           region: string | null
+          rejected_reasons: Json
           relationship_goal: string | null
+          setup_completed: boolean
           total_messages_sent: number
           tribes: string[] | null
           updated_at: string
@@ -1933,7 +1935,9 @@ export type Database = {
           languages?: string[]
           pending_message_count?: number
           region?: string | null
+          rejected_reasons?: Json
           relationship_goal?: string | null
+          setup_completed?: boolean
           total_messages_sent?: number
           tribes?: string[] | null
           updated_at?: string
@@ -1953,7 +1957,9 @@ export type Database = {
           languages?: string[]
           pending_message_count?: number
           region?: string | null
+          rejected_reasons?: Json
           relationship_goal?: string | null
+          setup_completed?: boolean
           total_messages_sent?: number
           tribes?: string[] | null
           updated_at?: string
@@ -5264,7 +5270,9 @@ export type Database = {
           languages: string[]
           pending_message_count: number
           region: string | null
+          rejected_reasons: Json
           relationship_goal: string | null
+          setup_completed: boolean
           total_messages_sent: number
           tribes: string[] | null
           updated_at: string
@@ -5276,6 +5284,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      henry_record_reject_reason: {
+        Args: { _reason: string }
+        Returns: undefined
       }
       henry_reset_conversation: {
         Args: never
@@ -5293,7 +5305,9 @@ export type Database = {
           languages: string[]
           pending_message_count: number
           region: string | null
+          rejected_reasons: Json
           relationship_goal: string | null
+          setup_completed: boolean
           total_messages_sent: number
           tribes: string[] | null
           updated_at: string
@@ -5339,7 +5353,9 @@ export type Database = {
               languages: string[]
               pending_message_count: number
               region: string | null
+              rejected_reasons: Json
               relationship_goal: string | null
+              setup_completed: boolean
               total_messages_sent: number
               tribes: string[] | null
               updated_at: string
@@ -5366,6 +5382,7 @@ export type Database = {
               _languages?: string[]
               _region?: string
               _relationship_goal?: string
+              _setup_completed?: boolean
               _tribes?: string[]
             }
             Returns: {
@@ -5382,7 +5399,9 @@ export type Database = {
               languages: string[]
               pending_message_count: number
               region: string | null
+              rejected_reasons: Json
               relationship_goal: string | null
+              setup_completed: boolean
               total_messages_sent: number
               tribes: string[] | null
               updated_at: string

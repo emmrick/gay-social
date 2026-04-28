@@ -16,6 +16,7 @@ import { useCreditCheck } from '@/hooks/useCreditCheck';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
+import { useAds } from '@/hooks/useAds';
 
 interface SwipePageProps {
   onStartChat: (userId: string) => void;

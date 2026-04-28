@@ -482,7 +482,7 @@ const HenryChat = () => {
           { step: 'matches', count: results.length },
         );
       }
-      await updateCriteria.mutateAsync({ current_step: 'free' });
+      await updateCriteria.mutateAsync({ current_step: 'free', setup_completed: true });
     } finally {
       setSearching(false);
     }

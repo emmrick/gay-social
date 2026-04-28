@@ -171,6 +171,9 @@ export const REJECT_REASONS: HenryQuickReply[] = [
   { value: 'age_off', label: '🎂 Âge ne correspond pas' },
   { value: 'no_photo', label: '📷 Photo peu claire' },
   { value: 'no_bio', label: '📝 Profil vide' },
+  { value: 'wrong_tribe', label: '✨ Pas le bon style' },
+  { value: 'wrong_goal', label: '🎯 Pas le même but' },
+  { value: 'no_chemistry', label: '💔 Pas d\'alchimie' },
   { value: 'other', label: '🤷 Autre raison' },
 ];
 

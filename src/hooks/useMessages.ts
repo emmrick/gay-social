@@ -186,6 +186,7 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
         // Check if user has enough credits
         const hasCredits = await checkSufficientCredits(user.id, creditCost);
         if (!hasCredits) {
+          notifyInsufficientCreditsSync('Message de groupe');
           throw new Error('INSUFFICIENT_CREDITS');
         }
 

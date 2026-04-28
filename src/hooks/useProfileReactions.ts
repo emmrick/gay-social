@@ -123,6 +123,7 @@ export const useToggleProfileReaction = () => {
         if (reactionCost > 0) {
           const hasCredits = await checkSufficientCredits(user.id, reactionCost);
           if (!hasCredits) {
+            notifyInsufficientCreditsSync('Réaction profil');
             throw new Error('INSUFFICIENT_CREDITS');
           }
 

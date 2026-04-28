@@ -9,6 +9,7 @@ import { notifyNewPrivateMessage, notifyPrivateMessageInApp } from '@/services/p
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 import { isUserViewingPrivateChat } from '@/hooks/useActiveConversation';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 
 type Message = Tables<'messages'>;
 

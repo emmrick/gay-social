@@ -74,6 +74,7 @@ const HenryChat = () => {
     resetConversation,
     findMatches,
     recordRejectReason,
+    clearShownProfiles,
   } = useHenryChat();
   const { availableCredits } = useCredits();
   const { profile: myProfile } = useAuth();

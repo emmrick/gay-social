@@ -65,6 +65,14 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
 
     setTimeout(() => {
       setCurrentIndex(prev => prev + 1);
+      setSwipeCount(prev => {
+        const next = prev + 1;
+        // Show square ad every 5 swipes
+        if (next > 0 && next % 5 === 0) {
+          setShowAdInterstitial(true);
+        }
+        return next;
+      });
     }, 300);
   }, [profiles, currentIndex, swipe]);
 

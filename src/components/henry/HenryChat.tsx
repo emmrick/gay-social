@@ -257,6 +257,42 @@ const HenryChat = () => {
       return;
     }
 
+    // Step "confirm" : raccourcis dédiés
+    if (currentStep === 'confirm') {
+      try {
+        await sendUserMessage.mutateAsync({
+          content: label,
+          payload: { step: 'confirm', value },
+        });
+      } catch (err: any) {
+        if (err?.message === 'INSUFFICIENT_CREDITS') {
+          setCreditAlert(true);
+          return;
+        }
+        toast.error('Henry ne peut pas envoyer ton message.');
+        return;
+      }
+      if (value === '__confirm__') {
+        await updateCriteria.mutateAsync({ current_step: 'matching', setup_completed: true });
+        // Sync goal back to user profile if changed
+        if (conversation?.relationship_goal && myProfile?.user_id) {
+          try {
+            const current = myProfile.looking_for ?? [];
+            if (!current.includes(conversation.relationship_goal)) {
+              const next = [conversation.relationship_goal, ...current.filter((v: string) => v !== conversation.relationship_goal)];
+              await supabase.from('profiles').update({ looking_for: next }).eq('user_id', myProfile.user_id);
+            }
+          } catch { /* ignore */ }
+        }
+        await sendBotMessage(HENRY_FLOW.matching.question, { step: 'matching' });
+        await runMatching();
+      } else {
+        await updateCriteria.mutateAsync({ current_step: 'goal' });
+        await sendBotMessage(HENRY_FLOW.goal.question, { step: 'goal' });
+      }
+      return;
+    }
+
     await advance(value, label);
   };
 

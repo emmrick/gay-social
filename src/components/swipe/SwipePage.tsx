@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import AdBanner from '@/components/ads/AdBanner';
+import SwipeAdInterstitial from './SwipeAdInterstitial';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Sparkles, MessageCircle, Loader2, RefreshCw, X, EyeOff, Flame, Zap, Rocket, Users, ShieldCheck } from 'lucide-react';
 import { useSwipeActions } from '@/hooks/useSwipeActions';
@@ -36,6 +37,8 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
   const { totalCredits } = useCreditCheck();
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [swipeCount, setSwipeCount] = useState(0);
+  const [showAdInterstitial, setShowAdInterstitial] = useState(false);
   const [activeTab, setActiveTab] = useState<'swipe' | 'likes'>('swipe');
   const [matchPopup, setMatchPopup] = useState<{ isOpen: boolean; username: string; avatar: string | null; userId: string }>({
     isOpen: false, username: '', avatar: null, userId: '',
@@ -62,6 +65,14 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
 
     setTimeout(() => {
       setCurrentIndex(prev => prev + 1);
+      setSwipeCount(prev => {
+        const next = prev + 1;
+        // Show square ad every 5 swipes
+        if (next > 0 && next % 5 === 0) {
+          setShowAdInterstitial(true);
+        }
+        return next;
+      });
     }, 300);
   }, [profiles, currentIndex, swipe]);
 
@@ -143,7 +154,7 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                 {/* Cards stack */}
                 <div className="flex-1 relative min-h-0">
                   <AnimatePresence mode="popLayout">
-                    {remainingProfiles.slice(0, 3).map((profile, index) => (
+                    {!showAdInterstitial && remainingProfiles.slice(0, 3).map((profile, index) => (
                       <SwipeCard
                         key={profile.id}
                         profile={profile}
@@ -153,24 +164,32 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                       />
                     ))}
                   </AnimatePresence>
+                  <AnimatePresence>
+                    {showAdInterstitial && (
+                      <SwipeAdInterstitial
+                        key="ad-interstitial"
+                        onContinue={() => setShowAdInterstitial(false)}
+                      />
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Action buttons */}
                 <div className="relative z-20 flex justify-center items-center gap-5 py-4 px-6">
                   <ActionButton
-                    onClick={() => remainingProfiles[0] && handleSwipe('left')}
+                    onClick={() => !showAdInterstitial && remainingProfiles[0] && handleSwipe('left')}
                     color="destructive"
                     size="lg"
                     icon={<X className="w-7 h-7" strokeWidth={2.5} />}
                   />
                   <ActionButton
-                    onClick={() => remainingProfiles[0] && handleSwipe('up')}
+                    onClick={() => !showAdInterstitial && remainingProfiles[0] && handleSwipe('up')}
                     color="muted"
                     size="sm"
                     icon={<EyeOff className="w-5 h-5" />}
                   />
                   <ActionButton
-                    onClick={() => remainingProfiles[0] && handleSwipe('right')}
+                    onClick={() => !showAdInterstitial && remainingProfiles[0] && handleSwipe('right')}
                     color="primary"
                     size="lg"
                     icon={<Heart className="w-7 h-7" fill="white" />}

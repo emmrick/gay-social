@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCoupleCreditsUserId } from '@/hooks/useCoupleCreditsUserId';
 import { toast } from 'sonner';
 import { emitCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 
 // Global query client reference for standalone functions
 let globalQueryClient: QueryClient | null = null;
@@ -159,6 +160,9 @@ export const deductCredits = async (
   // Invalidate credit queries to update UI immediately
   if (result.success) {
     invalidateCreditQueries(userId);
+  } else {
+    // Affiche un toast riche au lieu d'échouer silencieusement
+    notifyInsufficientCreditsSync(description);
   }
 
   return result;
@@ -323,14 +327,11 @@ export const useCredits = () => {
       });
     },
     onError: (error: Error) => {
-      if (error.message === 'Insufficient credits') {
-        toast.error('Crédits insuffisants', {
-          description: 'Achetez des crédits ou réclamez vos crédits quotidiens.',
-          action: {
-            label: 'Acheter',
-            onClick: () => window.location.href = '/?tab=credits',
-          },
-        });
+      if (
+        error.message === 'Insufficient credits' ||
+        error.message === 'INSUFFICIENT_CREDITS'
+      ) {
+        notifyInsufficientCreditsSync();
       }
     },
   });

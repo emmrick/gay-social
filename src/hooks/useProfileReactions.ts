@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 import { notifyNewReaction } from '@/services/pushNotificationService';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 
 interface ProfileReaction {
   id: string;
@@ -122,6 +123,7 @@ export const useToggleProfileReaction = () => {
         if (reactionCost > 0) {
           const hasCredits = await checkSufficientCredits(user.id, reactionCost);
           if (!hasCredits) {
+            notifyInsufficientCreditsSync('Réaction profil');
             throw new Error('INSUFFICIENT_CREDITS');
           }
 

@@ -9,6 +9,7 @@ import { notifyNewPrivateMessage, notifyPrivateMessageInApp } from '@/services/p
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 import { isUserViewingPrivateChat } from '@/hooks/useActiveConversation';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 
 type Message = Tables<'messages'>;
 
@@ -200,7 +201,10 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         const creditCost = await getDynamicCreditCost(costKey);
 
         const hasCredits = await checkSufficientCredits(user.id, creditCost);
-        if (!hasCredits) throw new Error('INSUFFICIENT_CREDITS');
+        if (!hasCredits) {
+          notifyInsufficientCreditsSync('Message privé');
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
 
         const deductResult = await deductCredits(
           user.id, 

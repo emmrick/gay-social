@@ -8,6 +8,7 @@ import { playNotificationSoundStandalone, playAnnouncementSoundStandalone } from
 import { notifyNewGroupMessage } from '@/services/pushNotificationService';
 import { isUserViewingChatRoom } from '@/hooks/useActiveConversation';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 
 type Message = Tables<'messages'>;
 
@@ -185,6 +186,7 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
         // Check if user has enough credits
         const hasCredits = await checkSufficientCredits(user.id, creditCost);
         if (!hasCredits) {
+          notifyInsufficientCreditsSync('Message de groupe');
           throw new Error('INSUFFICIENT_CREDITS');
         }
 

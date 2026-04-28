@@ -8,6 +8,7 @@ import { playNotificationSoundStandalone, playAnnouncementSoundStandalone } from
 import { notifyNewGroupMessage } from '@/services/pushNotificationService';
 import { isUserViewingChatRoom } from '@/hooks/useActiveConversation';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 
 type Message = Tables<'messages'>;
 

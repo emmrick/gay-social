@@ -184,6 +184,16 @@ export const HENRY_FLOW: Record<HenryStep, HenryStepDef> = {
     next: 'goal',
     options: [{ value: '__start__', label: '🚀 C\'est parti' }],
   },
+  confirm: {
+    id: 'confirm',
+    question:
+      "J'ai jeté un œil à ton profil 👀 Voici ce que je vais utiliser pour ta recherche :",
+    next: 'matching',
+    options: [
+      { value: '__confirm__', label: '🎯 Trouver mon match' },
+      { value: '__edit__', label: '✏️ Modifier mes critères' },
+    ],
+  },
   goal: {
     id: 'goal',
     question: '👀 Que cherches-tu en priorité en ce moment ?',

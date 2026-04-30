@@ -119,7 +119,18 @@ const useRecentMessages = (search: string) => {
         .select('user_id, username, avatar_url')
         .in('user_id', senderIds);
 
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      // Sign avatar URLs (private bucket)
+      const signedMap = new Map<string, string | null>();
+      await Promise.all(
+        (profiles || []).map(async (p) => {
+          const url = await getSignedAvatarUrl(p.avatar_url);
+          signedMap.set(p.user_id, url);
+        })
+      );
+
+      const profileMap = new Map(
+        (profiles || []).map(p => [p.user_id, { ...p, avatar_url: signedMap.get(p.user_id) ?? null }])
+      );
 
       return (data || []).map(msg => ({
         ...msg,

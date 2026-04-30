@@ -485,7 +485,18 @@ const ContentModerationPanel = () => {
                         En attente
                       </Badge>
                     </div>
-                    <div className="p-3 space-y-2">
+                    <div
+                      className="p-3 space-y-2 cursor-pointer hover:bg-muted/30"
+                      onClick={() => setSummaryItem({
+                        kind: 'pending-photo',
+                        id: photo.id,
+                        userId: photo.user_id,
+                        username: photo.profile?.username,
+                        avatarUrl: photo.profile?.avatar_url ?? null,
+                        photoUrl: photo.signed_url,
+                        createdAt: photo.created_at,
+                      })}
+                    >
                       <div className="flex items-center gap-2">
                         <User className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-sm font-medium">{photo.profile?.username || 'Inconnu'}</span>

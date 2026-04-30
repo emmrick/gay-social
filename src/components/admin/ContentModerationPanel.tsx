@@ -751,7 +751,20 @@ const ContentModerationPanel = () => {
                 {albums?.map((album) => (
                   <div
                     key={album.id}
-                    className="p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSummaryItem({
+                      kind: 'album',
+                      id: album.id,
+                      userId: album.user_id,
+                      username: album.profile?.username,
+                      avatarUrl: album.profile?.avatar_url ?? null,
+                      name: album.name,
+                      isPrivate: album.is_private,
+                      mediaCount: album.media_count,
+                      createdAt: album.created_at,
+                    })}
+                    className="p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
@@ -780,7 +793,7 @@ const ContentModerationPanel = () => {
                         variant="ghost"
                         size="icon"
                         className="text-destructive hover:text-destructive"
-                        onClick={() => confirmDelete('album', album.id, album.name)}
+                        onClick={(e) => { e.stopPropagation(); confirmDelete('album', album.id, album.name); }}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

@@ -837,6 +837,20 @@ const ContentModerationPanel = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Moderation Summary Dialog */}
+      <ModerationSummaryDialog
+        item={summaryItem}
+        onClose={() => setSummaryItem(null)}
+        onPreviewImage={(url) => setPreviewImage(url)}
+        onApprove={(id) => approvePhoto.mutate(id)}
+        onReject={(id) => rejectPhoto.mutate({ photoId: id, reason: 'Photo non conforme aux règles' })}
+        onDelete={(it) => {
+          if (it.kind === 'message') confirmDelete('message', it.id, it.content || 'message');
+          else if (it.kind === 'reported-photo') confirmDelete('photo', it.id, 'cette photo');
+          else if (it.kind === 'album') confirmDelete('album', it.id, it.name);
+        }}
+      />
     </div>
   );
 };

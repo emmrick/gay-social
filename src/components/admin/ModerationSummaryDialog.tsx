@@ -54,7 +54,7 @@ const ModerationSummaryDialog = ({ item, onClose, onDelete, onApprove, onReject,
       if (!userId) return null;
       const [profileRes, reportsRes, photosRes, actionsRes] = await Promise.all([
         supabase.from('profiles')
-          .select('user_id, username, avatar_url, age, region, bio, created_at, is_verified, last_seen, gender')
+          .select('user_id, username, avatar_url, age, region, bio, created_at, is_verified, last_seen')
           .eq('user_id', userId).maybeSingle(),
         supabase.from('reports')
           .select('id, reason, description, status, created_at, resolved_at, report_type')

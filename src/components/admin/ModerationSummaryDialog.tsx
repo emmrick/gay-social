@@ -215,9 +215,9 @@ const ModerationSummaryDialog = ({ item, onClose, onDelete, onApprove, onReject,
                       </div>
                     </div>
                     <div className="rounded-md border border-border p-2">
-                      <div className="text-lg font-semibold">{details.sanctions.length}</div>
+                      <div className="text-lg font-semibold">{details.photoStats.pending}</div>
                       <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-1">
-                        <AlertTriangle className="w-3 h-3" />Sanctions
+                        <AlertTriangle className="w-3 h-3" />En attente
                       </div>
                     </div>
                     <div className="rounded-md border border-border p-2">

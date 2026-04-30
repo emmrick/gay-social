@@ -10,7 +10,12 @@
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+// Anti-spam : 1 toast global toutes les 8 s, ET 1 toast par "contexte" (action)
+// toutes les 15 s, même si plusieurs requêtes échouent en parallèle.
+const GLOBAL_COOLDOWN_MS = 8000;
+const PER_CONTEXT_COOLDOWN_MS = 15000;
 let lastShownAt = 0;
+const lastShownByContext = new Map<string, number>();
 
 /** Formate un nombre de jours/heures restantes en FR. */
 const formatRemaining = (msUntilReset: number): string => {
@@ -53,8 +58,23 @@ export const notifyInsufficientCredits = async (
   context?: string,
 ): Promise<void> => {
   const now = Date.now();
-  if (now - lastShownAt < 4000) return;
+  const ctxKey = (context || '__default__').toLowerCase();
+
+  // 1) Cooldown global : pas plus d'un toast toutes les 8s, tous contextes confondus
+  if (now - lastShownAt < GLOBAL_COOLDOWN_MS) return;
+  // 2) Cooldown par contexte : pas plus d'un toast par action toutes les 15s
+  const lastForCtx = lastShownByContext.get(ctxKey) ?? 0;
+  if (now - lastForCtx < PER_CONTEXT_COOLDOWN_MS) return;
+
   lastShownAt = now;
+  lastShownByContext.set(ctxKey, now);
+
+  // GC léger : on retire les contextes anciens pour éviter une croissance infinie
+  if (lastShownByContext.size > 50) {
+    for (const [k, t] of lastShownByContext) {
+      if (now - t > PER_CONTEXT_COOLDOWN_MS * 4) lastShownByContext.delete(k);
+    }
+  }
 
   // Récupère l'user courant (sans bloquer si non dispo)
   let userId: string | null = null;
@@ -76,6 +96,7 @@ export const notifyInsufficientCredits = async (
         }`;
 
   toast.error('Crédits insuffisants', {
+    id: `insufficient-credits:${ctxKey}`, // déduplication native sonner
     description,
     duration: 6000,
     action: {

@@ -618,7 +618,7 @@ const ContentModerationPanel = () => {
                           variant="ghost"
                           size="icon"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => confirmDelete('message', msg.id, msg.content || 'message')}
+                          onClick={(e) => { e.stopPropagation(); confirmDelete('message', msg.id, msg.content || 'message'); }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

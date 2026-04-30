@@ -27,6 +27,8 @@ project_id = "vxrsqftlaguiwprcqlbw"
     verify_jwt = false
   [functions.process-email-queue]
     verify_jwt = true
+  [functions.resend-webhook]
+    verify_jwt = false
   [functions.rate-limiter]
     verify_jwt = false
   [functions.send-otp-sms]

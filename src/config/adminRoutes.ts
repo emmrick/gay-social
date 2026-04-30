@@ -77,6 +77,7 @@ export const ADMIN_ROUTES: AdminRouteEntry[] = [
   // Logs
   { section: 'error-logs', slug: 'erreurs', title: 'Journal des erreurs', group: 'logs' },
   { section: 'security', slug: 'securite', title: 'Événements de sécurité', group: 'logs' },
+  { section: 'emails', slug: 'emails', title: 'Suivi des e-mails', group: 'logs' },
 ];
 
 const sectionToSlug = new Map<AdminSection, string>(

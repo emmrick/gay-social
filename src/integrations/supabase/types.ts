@@ -1324,31 +1324,55 @@ export type Database = {
       }
       email_send_log: {
         Row: {
+          bounced_at: string | null
+          clicked_at: string | null
+          clicked_count: number
+          complained_at: string | null
           created_at: string
+          delivered_at: string | null
           error_message: string | null
           id: string
+          last_event_at: string | null
           message_id: string | null
           metadata: Json | null
+          opened_at: string | null
+          opened_count: number
           recipient_email: string
           status: string
           template_name: string
         }
         Insert: {
+          bounced_at?: string | null
+          clicked_at?: string | null
+          clicked_count?: number
+          complained_at?: string | null
           created_at?: string
+          delivered_at?: string | null
           error_message?: string | null
           id?: string
+          last_event_at?: string | null
           message_id?: string | null
           metadata?: Json | null
+          opened_at?: string | null
+          opened_count?: number
           recipient_email: string
           status: string
           template_name: string
         }
         Update: {
+          bounced_at?: string | null
+          clicked_at?: string | null
+          clicked_count?: number
+          complained_at?: string | null
           created_at?: string
+          delivered_at?: string | null
           error_message?: string | null
           id?: string
+          last_event_at?: string | null
           message_id?: string | null
           metadata?: Json | null
+          opened_at?: string | null
+          opened_count?: number
           recipient_email?: string
           status?: string
           template_name?: string

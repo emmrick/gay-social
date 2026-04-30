@@ -2,7 +2,7 @@ import {
   Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter,
   MessageSquare, IdCard, Ticket, Coins, ChevronLeft, ChevronsRight, Home,
   Bell, Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench,
-  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut, Sparkles, ToggleLeft, Rocket, Megaphone, Radio,
+  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut, Sparkles, ToggleLeft, Rocket, Megaphone, Radio, Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ export type AdminSection =
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
   | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
   | 'promo-images' | 'error-logs' | 'security' | 'feature-toggles'
-  | 'site-updates' | 'ads' | 'live-content';
+  | 'site-updates' | 'ads' | 'live-content' | 'emails';
 
 export interface ModPermissions {
   can_manage_users?: boolean | null;
@@ -102,6 +102,7 @@ const navItems: NavItem[] = [
   { id: 'feature-toggles', label: 'Toggles', icon: ToggleLeft, group: 'config', adminOnly: true },
   { id: 'error-logs', label: 'Erreurs', icon: Activity, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
   { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
+  { id: 'emails', label: 'E-mails', icon: Mail, group: 'logs', permissionKey: 'can_view_logs' },
 ];
 
 const groupConfig: Record<NavGroup, { label: string }> = {

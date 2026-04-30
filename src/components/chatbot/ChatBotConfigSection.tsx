@@ -144,7 +144,8 @@ const ChatBotConfigSection = () => {
       await updateNode.mutateAsync({ id: editing.id, label, response_text: text });
     } else {
       if (availableCredits < nextBlockCost) {
-        return toast.error(`Crédits insuffisants. Il faut ${nextBlockCost} crédit${nextBlockCost > 1 ? 's' : ''}.`);
+        notifyInsufficientCreditsSync(`Bloc chatbot (${nextBlockCost} cr requis)`);
+        return;
       }
       await createNode.mutateAsync({
         label,

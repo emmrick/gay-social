@@ -47,27 +47,32 @@ const ModerationSummaryDialog = ({ item, onClose, onDelete, onApprove, onReject,
   const open = !!item;
   const userId = item?.userId;
 
-  // Fetch full profile + reports + photo stats in parallel
+  // Fetch full profile + reports + photo stats + history in parallel
   const { data: details, isLoading } = useQuery({
     queryKey: ['mod-summary', item?.kind, item?.id, userId],
     queryFn: async () => {
       if (!userId) return null;
-      const [profileRes, reportsRes, photosRes] = await Promise.all([
+      const [profileRes, reportsRes, photosRes, actionsRes] = await Promise.all([
         supabase.from('profiles')
-          .select('user_id, username, avatar_url, age, region, bio, created_at, is_verified')
+          .select('user_id, username, avatar_url, age, region, bio, created_at, is_verified, last_seen, gender')
           .eq('user_id', userId).maybeSingle(),
         supabase.from('reports')
-          .select('id, reason, status, created_at')
+          .select('id, reason, description, status, created_at, resolved_at, report_type')
           .eq('reported_user_id', userId)
           .order('created_at', { ascending: false }).limit(20),
         supabase.from('profile_photos')
           .select('id, status')
           .eq('user_id', userId),
+        supabase.from('moderation_actions')
+          .select('id, action_type, details, created_at, performed_by')
+          .eq('target_user_id', userId)
+          .order('created_at', { ascending: false }).limit(15),
       ]);
       const photos = (photosRes.data ?? []) as Array<{ id: string; status: string | null }>;
       return {
         profile: profileRes.data,
         reports: reportsRes.data ?? [],
+        actions: actionsRes.data ?? [],
         photoStats: {
           total: photos.length,
           approved: photos.filter(p => p.status === 'approved').length,

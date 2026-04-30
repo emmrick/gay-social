@@ -419,27 +419,27 @@ const ContentModerationPanel = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 w-fit">
-          <TabsTrigger value="pending-photos" className="gap-2 relative">
-            <ShieldCheck className="w-4 h-4" />
-            Approbation
+        <TabsList className="grid grid-cols-4 w-full h-auto">
+          <TabsTrigger value="pending-photos" className="gap-1 sm:gap-2 relative text-xs sm:text-sm px-2 py-2">
+            <ShieldCheck className="w-4 h-4 shrink-0" />
+            <span className="truncate">Approbation</span>
             {pendingPhotos.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                 {pendingPhotos.length}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="messages" className="gap-2">
-            <MessageSquare className="w-4 h-4" />
-            Messages
+          <TabsTrigger value="messages" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2">
+            <MessageSquare className="w-4 h-4 shrink-0" />
+            <span className="truncate">Messages</span>
           </TabsTrigger>
-          <TabsTrigger value="photos" className="gap-2">
-            <Image className="w-4 h-4" />
-            Photos
+          <TabsTrigger value="photos" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2">
+            <Image className="w-4 h-4 shrink-0" />
+            <span className="truncate">Photos</span>
           </TabsTrigger>
-          <TabsTrigger value="albums" className="gap-2">
-            <Folder className="w-4 h-4" />
-            Albums
+          <TabsTrigger value="albums" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2">
+            <Folder className="w-4 h-4 shrink-0" />
+            <span className="truncate">Albums</span>
           </TabsTrigger>
         </TabsList>
 

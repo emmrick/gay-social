@@ -687,7 +687,7 @@ const ContentModerationPanel = () => {
                     </div>
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2">
                       <p className="text-white text-xs font-medium">{photo.profile?.username}</p>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                         <Button
                           size="icon"
                           variant="secondary"

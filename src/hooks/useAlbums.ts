@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useCreateNotification } from '@/hooks/useNotifications';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 
 interface Album {
   id: string;

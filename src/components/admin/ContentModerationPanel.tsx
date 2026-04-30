@@ -251,6 +251,7 @@ const ContentModerationPanel = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: string; id: string; label: string } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [summaryItem, setSummaryItem] = useState<ModerationSummaryItem | null>(null);
 
   const queryClient = useQueryClient();
   const { user } = useAuth();

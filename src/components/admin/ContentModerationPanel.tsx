@@ -664,13 +664,25 @@ const ContentModerationPanel = () => {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {photos?.map((photo) => (
-                  <div key={photo.id} className="group relative">
+                  <div
+                    key={photo.id}
+                    className="group relative cursor-pointer"
+                    onClick={() => setSummaryItem({
+                      kind: 'reported-photo',
+                      id: photo.id,
+                      userId: photo.user_id,
+                      username: photo.profile?.username,
+                      avatarUrl: photo.profile?.avatar_url ?? null,
+                      photoUrl: photo.signed_url || photo.photo_url,
+                      isPrimary: photo.is_primary,
+                      createdAt: photo.created_at,
+                    })}
+                  >
                     <div className="aspect-square rounded-lg overflow-hidden bg-secondary">
                       <img
                         src={photo.signed_url || photo.photo_url}
                         alt=""
-                        className="w-full h-full object-cover cursor-pointer"
-                        onClick={() => setPreviewImage(photo.signed_url || photo.photo_url)}
+                        className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2">

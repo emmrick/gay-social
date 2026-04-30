@@ -105,7 +105,7 @@ const ChatBotConfigSection = () => {
     // Activation : 10 crédits une seule fois (jamais re-facturé après)
     const alreadyPaid = (config as any)?.activation_paid === true;
     if (!alreadyPaid && availableCredits < 10) {
-      toast.error(`Crédits insuffisants : 10 crédits requis pour la 1re activation.`);
+      notifyInsufficientCreditsSync('Activation du chatbot');
       return;
     }
     if (!alreadyPaid) {

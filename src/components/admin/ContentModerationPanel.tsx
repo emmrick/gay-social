@@ -161,7 +161,7 @@ const useReportedUsers = () => {
 const useProfilePhotos = (reportedUserIds: string[]) => {
   return useQuery({
     queryKey: ['admin-profile-photos', reportedUserIds],
-    queryFn: async (): Promise<ProfilePhoto[]> => {
+    queryFn: async (): Promise<(ProfilePhoto & { signed_url?: string })[]> => {
       if (reportedUserIds.length === 0) return [];
 
       const { data, error } = await supabase
@@ -182,10 +182,19 @@ const useProfilePhotos = (reportedUserIds: string[]) => {
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-      return (data || []).map(photo => ({
-        ...photo,
-        profile: profileMap.get(photo.user_id),
-      }));
+      // Sign all photo URLs (private bucket)
+      const resolved = await Promise.all(
+        (data || []).map(async (photo) => {
+          const signed = await getSignedAvatarUrl(photo.photo_url);
+          return {
+            ...photo,
+            signed_url: signed || photo.photo_url,
+            profile: profileMap.get(photo.user_id),
+          };
+        })
+      );
+
+      return resolved;
     },
     enabled: reportedUserIds.length > 0,
   });

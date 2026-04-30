@@ -119,7 +119,18 @@ const useRecentMessages = (search: string) => {
         .select('user_id, username, avatar_url')
         .in('user_id', senderIds);
 
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      // Sign avatar URLs (private bucket)
+      const signedMap = new Map<string, string | null>();
+      await Promise.all(
+        (profiles || []).map(async (p) => {
+          const url = await getSignedAvatarUrl(p.avatar_url);
+          signedMap.set(p.user_id, url);
+        })
+      );
+
+      const profileMap = new Map(
+        (profiles || []).map(p => [p.user_id, { ...p, avatar_url: signedMap.get(p.user_id) ?? null }])
+      );
 
       return (data || []).map(msg => ({
         ...msg,
@@ -150,7 +161,7 @@ const useReportedUsers = () => {
 const useProfilePhotos = (reportedUserIds: string[]) => {
   return useQuery({
     queryKey: ['admin-profile-photos', reportedUserIds],
-    queryFn: async (): Promise<ProfilePhoto[]> => {
+    queryFn: async (): Promise<(ProfilePhoto & { signed_url?: string })[]> => {
       if (reportedUserIds.length === 0) return [];
 
       const { data, error } = await supabase
@@ -171,10 +182,19 @@ const useProfilePhotos = (reportedUserIds: string[]) => {
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-      return (data || []).map(photo => ({
-        ...photo,
-        profile: profileMap.get(photo.user_id),
-      }));
+      // Sign all photo URLs (private bucket)
+      const resolved = await Promise.all(
+        (data || []).map(async (photo) => {
+          const signed = await getSignedAvatarUrl(photo.photo_url);
+          return {
+            ...photo,
+            signed_url: signed || photo.photo_url,
+            profile: profileMap.get(photo.user_id),
+          };
+        })
+      );
+
+      return resolved;
     },
     enabled: reportedUserIds.length > 0,
   });
@@ -399,27 +419,27 @@ const ContentModerationPanel = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 w-fit">
-          <TabsTrigger value="pending-photos" className="gap-2 relative">
-            <ShieldCheck className="w-4 h-4" />
-            Approbation
+        <TabsList className="grid grid-cols-4 w-full h-auto">
+          <TabsTrigger value="pending-photos" className="gap-1 sm:gap-2 relative text-xs sm:text-sm px-2 py-2">
+            <ShieldCheck className="w-4 h-4 shrink-0" />
+            <span className="truncate">Approbation</span>
             {pendingPhotos.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                 {pendingPhotos.length}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="messages" className="gap-2">
-            <MessageSquare className="w-4 h-4" />
-            Messages
+          <TabsTrigger value="messages" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2">
+            <MessageSquare className="w-4 h-4 shrink-0" />
+            <span className="truncate">Messages</span>
           </TabsTrigger>
-          <TabsTrigger value="photos" className="gap-2">
-            <Image className="w-4 h-4" />
-            Photos
+          <TabsTrigger value="photos" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2">
+            <Image className="w-4 h-4 shrink-0" />
+            <span className="truncate">Photos</span>
           </TabsTrigger>
-          <TabsTrigger value="albums" className="gap-2">
-            <Folder className="w-4 h-4" />
-            Albums
+          <TabsTrigger value="albums" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2">
+            <Folder className="w-4 h-4 shrink-0" />
+            <span className="truncate">Albums</span>
           </TabsTrigger>
         </TabsList>
 
@@ -620,10 +640,10 @@ const ContentModerationPanel = () => {
                   <div key={photo.id} className="group relative">
                     <div className="aspect-square rounded-lg overflow-hidden bg-secondary">
                       <img
-                        src={photo.photo_url}
+                        src={photo.signed_url || photo.photo_url}
                         alt=""
                         className="w-full h-full object-cover cursor-pointer"
-                        onClick={() => setPreviewImage(photo.photo_url)}
+                        onClick={() => setPreviewImage(photo.signed_url || photo.photo_url)}
                       />
                     </div>
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2">
@@ -633,7 +653,7 @@ const ContentModerationPanel = () => {
                           size="icon"
                           variant="secondary"
                           className="h-8 w-8"
-                          onClick={() => setPreviewImage(photo.photo_url)}
+                          onClick={() => setPreviewImage(photo.signed_url || photo.photo_url)}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>

@@ -84,8 +84,71 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
         .order('created_at', { ascending: false });
       return data ?? [];
     },
-    enabled: !!user?.id && open,
+    enabled: !!user?.id,
   });
+
+  // Realtime: refresh + toast on status change for the current user's suggestions
+  useEffect(() => {
+    if (!user?.id) return;
+    const prevStatusMap = new Map<string, string>(
+      (suggestions ?? []).map((s: any) => [s.id, s.status])
+    );
+
+    const channel = supabase
+      .channel(`user-suggestions-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_suggestions',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const next: any = payload.new;
+          const prev: any = payload.old;
+
+          if (payload.eventType === 'UPDATE' && next?.status && prev?.status && next.status !== prev.status) {
+            const cfg = STATUS_CONFIG[next.status];
+            if (cfg) {
+              const title = next.title ? `« ${String(next.title).slice(0, 40)}${String(next.title).length > 40 ? '…' : ''} »` : 'Votre proposition';
+              if (next.status === 'approved') {
+                toast.success(`🎉 ${title} approuvée !`, {
+                  description: next.credits_awarded > 0 ? `+${next.credits_awarded} crédits crédités` : 'Merci pour votre idée !',
+                });
+              } else if (next.status === 'rejected') {
+                toast.error(`${title} refusée`, { description: next.admin_notes ?? undefined });
+              } else if (next.status === 'in_review') {
+                toast.info(`${title} est en cours d'examen`);
+              }
+            }
+          } else if (payload.eventType === 'INSERT' && next?.id && !prevStatusMap.has(next.id)) {
+            // Inserted from another tab/device
+            toast.info('Nouvelle proposition enregistrée');
+          }
+
+          qc.invalidateQueries({ queryKey: ['user-suggestions', user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // We intentionally exclude `suggestions` to avoid re-subscribing on every refetch
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, qc]);
+
+  // Status counts for the badge breakdown
+  const statusCounts = (suggestions ?? []).reduce(
+    (acc: Record<string, number>, s: any) => {
+      acc[s.status] = (acc[s.status] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+  const pendingCount = (statusCounts.pending ?? 0) + (statusCounts.in_review ?? 0);
+  const approvedCount = statusCounts.approved ?? 0;
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || !user?.id) return;

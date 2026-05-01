@@ -1,18 +1,34 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Lightbulb, Sparkles, Loader2, CheckCircle2, Clock, XCircle, Eye, Coins, Paperclip, X, FileText, Image as ImageIcon, Users } from 'lucide-react';
+import {
+  Lightbulb,
+  Sparkles,
+  Loader2,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Eye,
+  Coins,
+  Paperclip,
+  X,
+  FileText,
+  Image as ImageIcon,
+  Users,
+  PenLine,
+  History,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import CommunitySuggestions from './CommunitySuggestions';
 
 interface SuggestionDialogProps {
@@ -35,19 +51,27 @@ const STATUS_CONFIG: Record<string, { label: string; icon: any; className: strin
 };
 
 const ACCEPTED_TYPES = 'image/png,image/jpeg,image/webp,image/gif,application/pdf';
-const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8 MB
+const MAX_FILE_SIZE = 8 * 1024 * 1024;
 const MAX_FILES = 5;
+
+type ViewMode = 'form' | 'community' | 'history';
 
 const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
   const { user } = useAuth();
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [examples, setExamples] = useState('');
   const [attachments, setAttachments] = useState<AttachmentMeta[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [view, setView] = useState<'form' | 'history' | 'community'>('form');
+  const [view, setView] = useState<ViewMode>('form');
+
+  // Reset scroll on view switch so the user always lands at the top
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [view]);
 
   const { data: suggestions } = useQuery({
     queryKey: ['user-suggestions', user?.id],
@@ -119,7 +143,7 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success('Proposition envoyée ! Notre équipe va l\'examiner. 30 crédits si approuvée 🎁');
+      toast.success('Proposition envoyée ! +30 crédits si approuvée 🎁');
       setTitle('');
       setDescription('');
       setExamples('');
@@ -130,164 +154,308 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const isFormValid = title.trim().length >= 5 && description.trim().length >= 30;
+
+  const tabs: { key: ViewMode; label: string; icon: any; badge?: number }[] = [
+    { key: 'form', label: 'Nouvelle', icon: PenLine },
+    { key: 'community', label: 'Communauté', icon: Users },
+    { key: 'history', label: 'Mes idées', icon: History, badge: suggestions?.length },
+  ];
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Lightbulb className="w-5 h-5 text-yellow-500" />
-            Proposer une amélioration
-          </DialogTitle>
-          <DialogDescription>
-            Vos idées font évoluer Gay Social. <span className="font-semibold text-primary">+30 crédits par proposition approuvée.</span>
-          </DialogDescription>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        className={cn(
+          'p-0 border-0 bg-transparent shadow-none',
+          // Bottom sheet: takes available visible viewport (dvh handles keyboard)
+          'h-[92dvh] max-h-[92dvh] flex flex-col',
+          'data-[state=open]:animate-in data-[state=closed]:animate-out',
+          'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom'
+        )}
+      >
+        <div className="flex flex-col h-full overflow-hidden rounded-t-3xl bg-card border-t border-x border-border/60 shadow-2xl">
+          {/* Drag handle */}
+          <div className="flex justify-center pt-2.5 pb-1.5 flex-shrink-0">
+            <div className="w-10 h-1.5 rounded-full bg-muted-foreground/25" />
+          </div>
 
-        <div className="flex gap-2 border-b overflow-x-auto">
-          <button
-            onClick={() => setView('form')}
-            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              view === 'form' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
-            }`}
-          >
-            Nouvelle idée
-          </button>
-          <button
-            onClick={() => setView('community')}
-            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-              view === 'community' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            Communauté
-          </button>
-          <button
-            onClick={() => setView('history')}
-            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              view === 'history' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
-            }`}
-          >
-            Mes propositions ({suggestions?.length ?? 0})
-          </button>
-        </div>
-
-        <ScrollArea className="flex-1 -mx-6 px-6">
-          {view === 'community' ? (
-            <CommunitySuggestions />
-          ) : view === 'form' ? (
-            <div className="space-y-4 py-2">
-              <div className="rounded-lg bg-gradient-to-br from-primary/5 to-yellow-500/5 border border-primary/10 p-3 text-xs space-y-1">
-                <p className="font-semibold flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
-                  Pour maximiser vos chances d'approbation :
+          {/* Header */}
+          <div className="px-5 pt-1 pb-3 flex-shrink-0 relative">
+            <div className="flex items-start gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-yellow-400/20 via-primary/15 to-accent/20 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/10">
+                <Lightbulb className="w-5 h-5 text-yellow-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-bold leading-tight">Proposer une amélioration</h2>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                  Vos idées font évoluer Gay Social.{' '}
+                  <span className="font-semibold text-primary">+30 crédits si approuvée</span>
                 </p>
-                <ul className="list-disc list-inside text-muted-foreground space-y-0.5 ml-1">
-                  <li>Expliquez clairement votre idée</li>
-                  <li>Donnez des exemples concrets d'utilisation</li>
-                  <li>Joignez une capture d'écran ou un PDF si possible</li>
-                </ul>
               </div>
+              <button
+                onClick={() => onOpenChange(false)}
+                className="w-8 h-8 rounded-full bg-muted/60 hover:bg-muted flex items-center justify-center flex-shrink-0 transition-colors"
+                aria-label="Fermer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="sugg-title">Titre de la proposition *</Label>
-                <Input
-                  id="sugg-title"
-                  placeholder="Ex: Ajouter un mode sombre amélioré"
-                  maxLength={200}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground text-right">{title.length}/200</p>
+          {/* Tabs */}
+          <div className="px-3 pb-3 flex-shrink-0">
+            <div className="grid grid-cols-3 gap-1 p-1 bg-muted/40 rounded-2xl">
+              {tabs.map((t) => {
+                const Icon = t.icon;
+                const active = view === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setView(t.key)}
+                    className={cn(
+                      'relative flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-semibold rounded-xl transition-all',
+                      active
+                        ? 'bg-card text-foreground shadow-sm ring-1 ring-border/50'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span className="truncate">{t.label}</span>
+                    {t.badge ? (
+                      <span className="ml-0.5 min-w-[16px] h-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full bg-primary/15 text-primary font-bold">
+                        {t.badge}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Scroll area — flex-1 + min-h-0 so the keyboard can shrink it without breaking */}
+          <div
+            ref={scrollRef}
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {view === 'community' ? (
+              <div className="pb-4">
+                <CommunitySuggestions />
               </div>
+            ) : view === 'form' ? (
+              <div className="space-y-4 pb-6">
+                <div className="rounded-2xl bg-gradient-to-br from-primary/8 via-yellow-500/5 to-accent/8 border border-primary/15 p-3.5 text-xs space-y-1.5">
+                  <p className="font-bold flex items-center gap-1.5 text-foreground">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    Maximisez vos chances d'approbation
+                  </p>
+                  <ul className="text-muted-foreground space-y-0.5 ml-5 list-disc">
+                    <li>Expliquez clairement votre idée</li>
+                    <li>Donnez des exemples concrets</li>
+                    <li>Joignez une capture d'écran si possible</li>
+                  </ul>
+                </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="sugg-desc">Description détaillée *</Label>
-                <Textarea
-                  id="sugg-desc"
-                  placeholder="Expliquez en détail votre idée : à quoi sert-elle, quel problème résout-elle, comment fonctionnerait-elle ?"
-                  maxLength={5000}
-                  rows={6}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground text-right">{description.length}/5000</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="sugg-examples">Exemples concrets (recommandé)</Label>
-                <Textarea
-                  id="sugg-examples"
-                  placeholder="Donnez des exemples d'utilisation, mentionnez d'autres apps qui le font, ou décrivez un scénario."
-                  maxLength={2000}
-                  rows={4}
-                  value={examples}
-                  onChange={(e) => setExamples(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground text-right">{examples.length}/2000</p>
-              </div>
-
-              {/* Pièces jointes */}
-              <div className="space-y-1.5">
-                <Label>Pièces jointes (captures d'écran, PDF…)</Label>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={ACCEPTED_TYPES}
-                  multiple
-                  className="hidden"
-                  onChange={(e) => handleFiles(e.target.files)}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading || attachments.length >= MAX_FILES}
-                  className="w-full"
-                >
-                  {uploading ? (
-                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Upload en cours…</>
-                  ) : (
-                    <><Paperclip className="w-4 h-4 mr-2" /> Joindre un fichier ({attachments.length}/{MAX_FILES})</>
-                  )}
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Images (PNG, JPG, WEBP, GIF) ou PDF · max 8 Mo par fichier · 5 fichiers max
-                </p>
-
-                {attachments.length > 0 && (
-                  <div className="space-y-1.5 mt-2">
-                    {attachments.map((att) => {
-                      const isImage = att.type.startsWith('image/');
-                      const Icon = isImage ? ImageIcon : FileText;
-                      return (
-                        <div key={att.path} className="flex items-center gap-2 bg-muted/50 rounded-md p-2 text-xs">
-                          <Icon className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-                          <span className="flex-1 truncate font-medium">{att.name}</span>
-                          <span className="text-muted-foreground flex-shrink-0">{(att.size / 1024).toFixed(0)} Ko</span>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(att)}
-                            className="text-muted-foreground hover:text-destructive flex-shrink-0"
-                            aria-label="Supprimer"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      );
-                    })}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="sugg-title" className="text-xs font-bold">
+                      Titre <span className="text-destructive">*</span>
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {title.length}/200
+                    </span>
                   </div>
+                  <Input
+                    id="sugg-title"
+                    placeholder="Ex: Mode sombre amélioré"
+                    maxLength={200}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="h-11 rounded-xl"
+                    onFocus={(e) => {
+                      // Make sure the focused field stays visible above the keyboard
+                      setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250);
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="sugg-desc" className="text-xs font-bold">
+                      Description <span className="text-destructive">*</span>
+                    </Label>
+                    <span className={cn(
+                      'text-[10px] tabular-nums',
+                      description.trim().length < 30 ? 'text-muted-foreground' : 'text-green-600 dark:text-green-400 font-semibold'
+                    )}>
+                      {description.length}/5000 {description.trim().length >= 30 && '✓'}
+                    </span>
+                  </div>
+                  <Textarea
+                    id="sugg-desc"
+                    placeholder="Expliquez votre idée : à quoi sert-elle, quel problème résout-elle, comment fonctionnerait-elle ?"
+                    maxLength={5000}
+                    rows={5}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="rounded-xl resize-none"
+                    onFocus={(e) => {
+                      setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250);
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="sugg-examples" className="text-xs font-bold">
+                      Exemples <span className="text-muted-foreground font-normal">(recommandé)</span>
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {examples.length}/2000
+                    </span>
+                  </div>
+                  <Textarea
+                    id="sugg-examples"
+                    placeholder="Donnez des cas d'usage, citez des apps qui le font..."
+                    maxLength={2000}
+                    rows={3}
+                    value={examples}
+                    onChange={(e) => setExamples(e.target.value)}
+                    className="rounded-xl resize-none"
+                    onFocus={(e) => {
+                      setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250);
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold">Pièces jointes</Label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ACCEPTED_TYPES}
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleFiles(e.target.files)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading || attachments.length >= MAX_FILES}
+                    className="w-full h-11 rounded-xl border-dashed"
+                  >
+                    {uploading ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Upload en cours…</>
+                    ) : (
+                      <><Paperclip className="w-4 h-4 mr-2" /> Joindre un fichier ({attachments.length}/{MAX_FILES})</>
+                    )}
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    PNG, JPG, WEBP, GIF ou PDF · max 8 Mo · 5 fichiers max
+                  </p>
+
+                  {attachments.length > 0 && (
+                    <div className="space-y-1.5">
+                      {attachments.map((att) => {
+                        const isImage = att.type.startsWith('image/');
+                        const Icon = isImage ? ImageIcon : FileText;
+                        return (
+                          <div key={att.path} className="flex items-center gap-2 bg-muted/50 rounded-xl p-2.5 text-xs">
+                            <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center flex-shrink-0">
+                              <Icon className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="truncate font-medium">{att.name}</p>
+                              <p className="text-muted-foreground">{(att.size / 1024).toFixed(0)} Ko</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeAttachment(att)}
+                              className="w-7 h-7 rounded-full bg-background hover:bg-destructive/10 hover:text-destructive flex items-center justify-center flex-shrink-0 transition-colors"
+                              aria-label="Supprimer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-muted-foreground italic leading-snug">
+                  ⚠️ Les propositions sont vérifiées. Si elles répondent à un besoin elles sont approuvées, sinon elles peuvent rester en attente ou être refusées.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5 pb-6">
+                {!suggestions?.length ? (
+                  <div className="text-center py-16 text-muted-foreground">
+                    <div className="w-16 h-16 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-3">
+                      <Lightbulb className="w-7 h-7 opacity-40" />
+                    </div>
+                    <p className="text-sm font-medium">Aucune proposition</p>
+                    <p className="text-xs mt-1">Partagez votre première idée !</p>
+                    <Button size="sm" variant="outline" className="mt-4 rounded-xl" onClick={() => setView('form')}>
+                      <PenLine className="w-3.5 h-3.5 mr-1.5" />
+                      Nouvelle proposition
+                    </Button>
+                  </div>
+                ) : (
+                  suggestions.map((s) => {
+                    const cfg = STATUS_CONFIG[s.status] ?? STATUS_CONFIG.pending;
+                    const Icon = cfg.icon;
+                    const atts = (s.attachments as any as AttachmentMeta[]) ?? [];
+                    return (
+                      <div key={s.id} className="rounded-2xl border border-border bg-card p-3.5 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-bold text-sm flex-1 leading-snug">{s.title}</h4>
+                          <Badge variant="outline" className={cn(cfg.className, 'flex-shrink-0 text-[10px] rounded-full')}>
+                            <Icon className="w-2.5 h-2.5 mr-1" />
+                            {cfg.label}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">{s.description}</p>
+                        {atts.length > 0 && (
+                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                            <Paperclip className="w-3 h-3" />
+                            {atts.length} pièce{atts.length > 1 ? 's' : ''} jointe{atts.length > 1 ? 's' : ''}
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40">
+                          <span>{format(new Date(s.created_at), 'd MMM yyyy', { locale: fr })}</span>
+                          {s.credits_awarded > 0 && (
+                            <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 font-bold">
+                              <Coins className="w-3 h-3" /> +{s.credits_awarded} crédits
+                            </span>
+                          )}
+                        </div>
+                        {s.admin_notes && (
+                          <div className="text-xs bg-muted/40 rounded-xl p-2.5 border border-border/40">
+                            <span className="font-bold">Réponse de l'équipe : </span>
+                            <span className="text-muted-foreground">{s.admin_notes}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
+            )}
+          </div>
 
-              <p className="text-xs text-muted-foreground italic">
-                ⚠️ Les propositions sont soumises à des tests et vérifications. Si elles répondent à un besoin elles seront approuvées, sinon elles pourront rester en attente ou être refusées.
-              </p>
-
+          {/* Sticky submit footer (only on form view) */}
+          {view === 'form' && (
+            <div
+              className="flex-shrink-0 px-5 pt-3 pb-4 border-t border-border/40 bg-card/95 backdrop-blur-xl"
+              style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+            >
               <Button
                 onClick={() => submit.mutate()}
-                disabled={submit.isPending || uploading || title.trim().length < 5 || description.trim().length < 30}
-                className="w-full"
+                disabled={submit.isPending || uploading || !isFormValid}
+                className="w-full h-12 rounded-2xl bg-gradient-to-r from-primary via-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20 font-bold"
                 size="lg"
               >
                 {submit.isPending ? (
@@ -296,58 +464,18 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
                   <><Sparkles className="w-4 h-4 mr-2" /> Envoyer ma proposition</>
                 )}
               </Button>
-            </div>
-          ) : (
-            <div className="space-y-3 py-2">
-              {!suggestions?.length ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Lightbulb className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">Aucune proposition pour le moment.</p>
-                </div>
-              ) : (
-                suggestions.map((s) => {
-                  const cfg = STATUS_CONFIG[s.status] ?? STATUS_CONFIG.pending;
-                  const Icon = cfg.icon;
-                  const atts = (s.attachments as any as AttachmentMeta[]) ?? [];
-                  return (
-                    <div key={s.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-semibold text-sm flex-1">{s.title}</h4>
-                        <Badge variant="outline" className={`${cfg.className} flex-shrink-0 text-xs`}>
-                          <Icon className="w-3 h-3 mr-1" />
-                          {cfg.label}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground line-clamp-3">{s.description}</p>
-                      {atts.length > 0 && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Paperclip className="w-3 h-3" />
-                          {atts.length} pièce{atts.length > 1 ? 's' : ''} jointe{atts.length > 1 ? 's' : ''}
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{format(new Date(s.created_at), 'd MMM yyyy', { locale: fr })}</span>
-                        {s.credits_awarded > 0 && (
-                          <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 font-semibold">
-                            <Coins className="w-3 h-3" /> +{s.credits_awarded} crédits
-                          </span>
-                        )}
-                      </div>
-                      {s.admin_notes && (
-                        <div className="text-xs bg-muted/50 rounded p-2 mt-1">
-                          <span className="font-semibold">Réponse de l'équipe : </span>
-                          {s.admin_notes}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
+              {!isFormValid && (title.length > 0 || description.length > 0) && (
+                <p className="text-[11px] text-center text-muted-foreground mt-2">
+                  {title.trim().length < 5
+                    ? `Titre : ${5 - title.trim().length} caractère(s) restant(s)`
+                    : `Description : ${30 - description.trim().length} caractère(s) restant(s)`}
+                </p>
               )}
             </div>
           )}
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 

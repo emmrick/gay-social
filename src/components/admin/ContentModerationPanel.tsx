@@ -914,6 +914,108 @@ const ContentModerationPanel = () => {
           else if (it.kind === 'album') confirmDelete('album', it.id, it.name);
         }}
       />
+
+      {/* Conversation Thread Dialog */}
+      <Dialog open={!!openConversation} onOpenChange={(open) => !open && setOpenConversation(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="p-4 border-b border-border">
+            <DialogTitle className="flex items-center gap-3 text-base">
+              {openConversation && (
+                <>
+                  <div className="flex -space-x-2">
+                    <Avatar className="w-8 h-8 border-2 border-background">
+                      <AvatarImage src={openConversation.userA.avatar_url || ''} />
+                      <AvatarFallback>{openConversation.userA.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                    </Avatar>
+                    <Avatar className="w-8 h-8 border-2 border-background">
+                      <AvatarImage src={openConversation.userB.avatar_url || ''} />
+                      <AvatarFallback>{openConversation.userB.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <span>
+                    {openConversation.userA.username} ↔ {openConversation.userB.username}
+                  </span>
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription className="sr-only">Fil de conversation complet</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="flex-1 p-4">
+            {threadLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 rounded-lg" />
+                ))}
+              </div>
+            ) : !threadMessages || threadMessages.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                Aucun message
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {threadMessages.map((msg) => {
+                  const isUserA = msg.sender_id === openConversation?.userA.id;
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex gap-2 ${isUserA ? 'justify-start' : 'justify-end'}`}
+                    >
+                      {isUserA && (
+                        <Avatar className="w-7 h-7 shrink-0">
+                          <AvatarImage src={msg.sender?.avatar_url || ''} />
+                          <AvatarFallback>{msg.sender?.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div
+                        className={`group max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
+                          msg.deleted_at
+                            ? 'bg-orange-500/10 border border-orange-500/30 italic text-orange-500/80'
+                            : isUserA
+                              ? 'bg-muted text-foreground'
+                              : 'bg-primary text-primary-foreground'
+                        }`}
+                      >
+                        <div className="text-[10px] font-medium opacity-70 mb-0.5">
+                          {msg.sender?.username || 'Inconnu'}
+                        </div>
+                        <div className="whitespace-pre-wrap break-words">
+                          {msg.content || `[${msg.message_type}]`}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] opacity-60">
+                            {format(new Date(msg.created_at), 'dd/MM HH:mm', { locale: fr })}
+                          </span>
+                          {msg.deleted_at && (
+                            <Badge variant="secondary" className="text-[9px] py-0 h-4">
+                              Supprimé
+                            </Badge>
+                          )}
+                          {!msg.deleted_at && (
+                            <button
+                              type="button"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => confirmDelete('message', msg.id, msg.content || 'message')}
+                              title="Supprimer le message"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {!isUserA && (
+                        <Avatar className="w-7 h-7 shrink-0">
+                          <AvatarImage src={msg.sender?.avatar_url || ''} />
+                          <AvatarFallback>{msg.sender?.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

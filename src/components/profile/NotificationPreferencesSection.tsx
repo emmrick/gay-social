@@ -217,6 +217,39 @@ const NotificationPreferencesSection = () => {
 
       <div className="pt-2 border-t border-border space-y-3">
         <div className="flex items-center gap-2 mb-1">
+          <span className="text-sm font-medium text-muted-foreground">Décisions sur tes idées</span>
+        </div>
+        <PreferenceItem
+          icon={Sparkles}
+          iconColor="text-fuchsia-500"
+          title="Notification dans l'app"
+          description="Recevoir une notification quand une idée est approuvée ou refusée"
+          checked={(preferences as any).suggestion_decisions_inapp ?? true}
+          onCheckedChange={() => togglePreference('suggestion_decisions_inapp' as any)}
+          disabled={isUpdating}
+        />
+        <PreferenceItem
+          icon={Megaphone}
+          iconColor="text-fuchsia-500"
+          title="Notification push"
+          description="Recevoir une notification push sur ton appareil"
+          checked={(preferences as any).suggestion_decisions_push ?? true}
+          onCheckedChange={() => togglePreference('suggestion_decisions_push' as any)}
+          disabled={isUpdating}
+        />
+        <PreferenceItem
+          icon={Mail}
+          iconColor="text-fuchsia-500"
+          title="E-mail"
+          description="Recevoir un e-mail détaillé avec le motif et les crédits"
+          checked={(preferences as any).suggestion_decisions_email ?? true}
+          onCheckedChange={() => togglePreference('suggestion_decisions_email' as any)}
+          disabled={isUpdating}
+        />
+      </div>
+
+      <div className="pt-2 border-t border-border space-y-3">
+        <div className="flex items-center gap-2 mb-1">
           <span className="text-sm font-medium text-muted-foreground">E-mails</span>
         </div>
         <PreferenceItem

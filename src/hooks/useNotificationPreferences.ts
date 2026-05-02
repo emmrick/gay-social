@@ -18,6 +18,9 @@ interface NotificationPreferences {
   push_mentions: boolean;
   push_credits: boolean;
   push_verification: boolean;
+  suggestion_decisions_inapp: boolean;
+  suggestion_decisions_push: boolean;
+  suggestion_decisions_email: boolean;
   sound_enabled: boolean;
   notification_sound: string;
   created_at: string;
@@ -34,6 +37,9 @@ const defaultPreferences = {
   push_mentions: true,
   push_credits: true,
   push_verification: true,
+  suggestion_decisions_inapp: true,
+  suggestion_decisions_push: true,
+  suggestion_decisions_email: true,
   sound_enabled: true,
   notification_sound: 'default',
 };

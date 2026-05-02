@@ -2649,6 +2649,9 @@ export type Database = {
           push_reactions: boolean
           push_verification: boolean
           sound_enabled: boolean
+          suggestion_decisions_email: boolean
+          suggestion_decisions_inapp: boolean
+          suggestion_decisions_push: boolean
           updated_at: string
           user_id: string
         }
@@ -2667,6 +2670,9 @@ export type Database = {
           push_reactions?: boolean
           push_verification?: boolean
           sound_enabled?: boolean
+          suggestion_decisions_email?: boolean
+          suggestion_decisions_inapp?: boolean
+          suggestion_decisions_push?: boolean
           updated_at?: string
           user_id: string
         }
@@ -2685,6 +2691,9 @@ export type Database = {
           push_reactions?: boolean
           push_verification?: boolean
           sound_enabled?: boolean
+          suggestion_decisions_email?: boolean
+          suggestion_decisions_inapp?: boolean
+          suggestion_decisions_push?: boolean
           updated_at?: string
           user_id?: string
         }

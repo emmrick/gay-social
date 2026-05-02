@@ -42,6 +42,15 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
+    // Load notification preferences (defaults to true)
+    const { data: prefs } = await admin
+      .from("notification_preferences")
+      .select("suggestion_decisions_push, suggestion_decisions_email")
+      .eq("user_id", payload.user_id)
+      .maybeSingle();
+    const pushEnabled = prefs?.suggestion_decisions_push ?? true;
+    const emailEnabled = prefs?.suggestion_decisions_email ?? true;
+
     // Resolve recipient: email + pseudo
     const { data: authUserRes } = await admin.auth.admin.getUserById(
       payload.user_id,
@@ -58,37 +67,39 @@ serve(async (req) => {
     const isApproved = payload.status === "approved";
     const titleShort = (payload.title ?? "Votre proposition").slice(0, 80);
 
-    // 1. Push notification (best-effort)
-    try {
-      const pushBody = {
-        userId: payload.user_id,
-        title: isApproved
-          ? "🎉 Votre idée a été approuvée !"
-          : "Mise à jour sur votre proposition",
-        body: isApproved
-          ? payload.credits_awarded && payload.credits_awarded > 0
-            ? `« ${titleShort} » — +${payload.credits_awarded} crédits crédités !`
-            : `« ${titleShort} » a été approuvée. Merci !`
-          : `« ${titleShort} » n'a pas été retenue cette fois-ci.`,
-        url: "/profile",
-        tag: `suggestion-${payload.suggestion_id}`,
-        notificationType: "system",
-      };
+    // 1. Push notification (best-effort, respects preference)
+    if (pushEnabled) {
+      try {
+        const pushBody = {
+          userId: payload.user_id,
+          title: isApproved
+            ? "🎉 Votre idée a été approuvée !"
+            : "Mise à jour sur votre proposition",
+          body: isApproved
+            ? payload.credits_awarded && payload.credits_awarded > 0
+              ? `« ${titleShort} » — +${payload.credits_awarded} crédits crédités !`
+              : `« ${titleShort} » a été approuvée. Merci !`
+            : `« ${titleShort} » n'a pas été retenue cette fois-ci.`,
+          url: "/profile",
+          tag: `suggestion-${payload.suggestion_id}`,
+          notificationType: "system",
+        };
 
-      await fetch(`${SUPABASE_URL}/functions/v1/send-push-notification`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SERVICE_KEY}`,
-        },
-        body: JSON.stringify(pushBody),
-      });
-    } catch (e) {
-      console.error("[notify-suggestion-decision] push error:", e);
+        await fetch(`${SUPABASE_URL}/functions/v1/send-push-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SERVICE_KEY}`,
+          },
+          body: JSON.stringify(pushBody),
+        });
+      } catch (e) {
+        console.error("[notify-suggestion-decision] push error:", e);
+      }
     }
 
-    // 2. Transactional email (best-effort)
-    if (email) {
+    // 2. Transactional email (best-effort, respects preference)
+    if (email && emailEnabled) {
       try {
         const templateName = isApproved
           ? "suggestion-approved"

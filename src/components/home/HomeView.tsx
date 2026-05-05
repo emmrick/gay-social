@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Star, SlidersHorizontal, Compass, Eye, Heart } from 'lucide-react';
+import { Star, SlidersHorizontal, Compass, Eye, Heart, Map as MapIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -17,13 +17,14 @@ import FavoritesGrid from './FavoritesGrid';
 import AdOrInfoBanner from './AdOrInfoBanner';
 import VisitsTab from './VisitsTab';
 import ReactionsTab from './ReactionsTab';
+import MapTab from './MapTab';
 
 interface HomeViewProps {
   onViewProfile?: (userId: string) => void;
   onStartPrivateChat?: (userId: string) => void;
 }
 
-type HomeSection = 'accueil' | 'favorites' | 'visites' | 'reactions';
+type HomeSection = 'accueil' | 'favorites' | 'visites' | 'reactions' | 'carte';
 
 const HomeView = ({ 
   onViewProfile,
@@ -79,7 +80,7 @@ const HomeView = ({
           if (section === 'visites') markVisitsSeen();
         }}>
           <div className="flex items-center gap-2">
-            <TabsList className="flex-1 grid grid-cols-4 h-11 p-1 bg-card/80 backdrop-blur-xl border border-border/40 rounded-2xl">
+            <TabsList className="flex-1 grid grid-cols-5 h-11 p-1 bg-card/80 backdrop-blur-xl border border-border/40 rounded-2xl">
               <TabsTrigger
                 value="accueil"
                 className="gap-1 text-xs font-bold rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/15 data-[state=active]:to-accent/10 data-[state=active]:border data-[state=active]:border-primary/20 data-[state=active]:shadow-sm data-[state=active]:shadow-primary/10"
@@ -117,6 +118,13 @@ const HomeView = ({
                     {reactionsCount > 99 ? '99+' : reactionsCount}
                   </span>
                 )}
+              </TabsTrigger>
+              <TabsTrigger
+                value="carte"
+                className="gap-1 text-xs font-bold rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/15 data-[state=active]:to-accent/10 data-[state=active]:border data-[state=active]:border-primary/20 data-[state=active]:shadow-sm data-[state=active]:shadow-primary/10"
+              >
+                <MapIcon className="w-3.5 h-3.5" />
+                <span className="hidden min-[400px]:inline">Carte</span>
               </TabsTrigger>
             </TabsList>
 
@@ -193,6 +201,10 @@ const HomeView = ({
 
           <TabsContent value="reactions" className="mt-3">
             <ReactionsTab onViewProfile={handleViewProfile} />
+          </TabsContent>
+
+          <TabsContent value="carte" className="mt-3">
+            <MapTab onViewProfile={handleViewProfile} />
           </TabsContent>
         </Tabs>
       </div>

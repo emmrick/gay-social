@@ -13,17 +13,45 @@ interface MapTabProps {
   onViewProfile?: (userId: string) => void;
 }
 
-const buildAvatarIcon = (url: string | null, isSelf = false) => {
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+
+const buildAvatarIcon = (url: string | null, label?: string, opts?: { isSelf?: boolean; isOnline?: boolean }) => {
+  const isSelf = !!opts?.isSelf;
+  const isOnline = !!opts?.isOnline;
   const ring = isSelf ? 'hsl(var(--accent))' : 'hsl(var(--primary))';
+  const size = isSelf ? 38 : 34;
   const bg = url
     ? `background-image:url('${url}');background-size:cover;background-position:center;`
-    : 'background:hsl(var(--muted));';
+    : `background:linear-gradient(135deg,hsl(var(--primary)/.6),hsl(var(--accent)/.6));`;
+
+  const dot = isOnline
+    ? `<span style="position:absolute;right:-2px;bottom:-2px;width:10px;height:10px;border-radius:9999px;background:#22c55e;border:2px solid hsl(var(--background));"></span>`
+    : '';
+
+  const pulse = isSelf
+    ? `<span style="position:absolute;inset:-6px;border-radius:9999px;border:2px solid hsl(var(--accent)/.5);animation:gs-pulse 2s ease-out infinite;"></span>`
+    : '';
+
+  const name = label
+    ? `<span style="margin-top:4px;max-width:80px;padding:2px 6px;border-radius:9999px;background:hsl(var(--background)/.92);color:hsl(var(--foreground));font:600 10px/1.1 'Plus Jakarta Sans',system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 6px rgba(0,0,0,.25);backdrop-filter:blur(6px);">${escapeHtml(label)}</span>`
+    : '';
+
+  const totalH = size + (label ? 20 : 0) + 6;
+
   return L.divIcon({
     className: 'gs-map-marker',
-    html: `<div style="width:42px;height:42px;border-radius:9999px;border:3px solid ${ring};box-shadow:0 4px 12px rgba(0,0,0,.3);${bg}"></div>`,
-    iconSize: [42, 42],
-    iconAnchor: [21, 21],
-    popupAnchor: [0, -22],
+    html: `<div style="position:relative;display:flex;flex-direction:column;align-items:center;transform:translateY(-2px);">
+      ${pulse}
+      <div style="position:relative;width:${size}px;height:${size}px;border-radius:9999px;border:2.5px solid ${ring};box-shadow:0 4px 14px rgba(0,0,0,.35),0 0 0 2px hsl(var(--background));${bg}">
+        ${dot}
+      </div>
+      <span style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid ${ring};margin-top:-1px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));"></span>
+      ${name}
+    </div>`,
+    iconSize: [Math.max(size, 84), totalH],
+    iconAnchor: [Math.max(size, 84) / 2, size + 6],
+    popupAnchor: [0, -(size + 4)],
   });
 };
 
@@ -98,7 +126,7 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
         />
         <Recenter lat={latitude!} lng={longitude!} />
 
-        <Marker position={[latitude!, longitude!]} icon={buildAvatarIcon(null, true)}>
+        <Marker position={[latitude!, longitude!]} icon={buildAvatarIcon(null, 'Toi', { isSelf: true })}>
           <Popup>Toi</Popup>
         </Marker>
 
@@ -106,7 +134,7 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
           <Marker
             key={p.user_id}
             position={[p.latitude, p.longitude]}
-            icon={buildAvatarIcon(p.avatar_url)}
+            icon={buildAvatarIcon(p.avatar_url, p.username, { isOnline: p.is_online })}
             eventHandlers={{
               click: () => onViewProfile?.(p.user_id),
             }}

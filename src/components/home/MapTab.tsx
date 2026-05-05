@@ -126,7 +126,7 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
         />
         <Recenter lat={latitude!} lng={longitude!} />
 
-        <Marker position={[latitude!, longitude!]} icon={buildAvatarIcon(null, true)}>
+        <Marker position={[latitude!, longitude!]} icon={buildAvatarIcon(null, 'Toi', { isSelf: true })}>
           <Popup>Toi</Popup>
         </Marker>
 

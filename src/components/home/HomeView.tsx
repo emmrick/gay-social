@@ -202,6 +202,10 @@ const HomeView = ({
           <TabsContent value="reactions" className="mt-3">
             <ReactionsTab onViewProfile={handleViewProfile} />
           </TabsContent>
+
+          <TabsContent value="carte" className="mt-3">
+            <MapTab onViewProfile={handleViewProfile} />
+          </TabsContent>
         </Tabs>
       </div>
     </div>

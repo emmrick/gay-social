@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const usePrivateTypingIndicator = (otherUserId: string | null) => {
@@ -8,96 +9,66 @@ export const usePrivateTypingIndicator = (otherUserId: string | null) => {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef(false);
   const otherTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Conserve une référence unique au channel pour éviter de créer
+  // un channel jetable à chaque startTyping/stopTyping (fuite mémoire).
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
-  // Generate a consistent conversation key
   const conversationKey = useCallback(() => {
     if (!user?.id || !otherUserId) return null;
-    // Sort IDs to ensure same key regardless of who's sender/receiver
     const ids = [user.id, otherUserId].sort();
     return `private-${ids[0]}-${ids[1]}`;
   }, [user?.id, otherUserId])();
 
-  // Subscribe to typing indicators for this private conversation using Broadcast (more reliable)
   useEffect(() => {
     if (!conversationKey || !otherUserId || !user?.id) return;
 
-    console.log('[Typing] Subscribing to broadcast channel:', conversationKey);
-
-    // Use Supabase Broadcast for typing - more reliable than postgres_changes
     const channel = supabase
       .channel(`typing-broadcast-${conversationKey}`)
       .on('broadcast', { event: 'typing' }, (payload) => {
-        console.log('[Typing] Received broadcast:', payload);
-        
         if (payload.payload?.user_id === otherUserId) {
-          console.log('[Typing] Other user is typing');
           setIsOtherTyping(true);
-          
-          // Clear existing timeout
-          if (otherTypingTimeoutRef.current) {
-            clearTimeout(otherTypingTimeoutRef.current);
-          }
-          
-          // Auto-hide after 3 seconds if no update
-          otherTypingTimeoutRef.current = setTimeout(() => {
-            console.log('[Typing] Timeout - hiding indicator');
-            setIsOtherTyping(false);
-          }, 3000);
+          if (otherTypingTimeoutRef.current) clearTimeout(otherTypingTimeoutRef.current);
+          otherTypingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 3000);
         }
       })
       .on('broadcast', { event: 'stop_typing' }, (payload) => {
-        console.log('[Typing] Received stop broadcast:', payload);
-        
         if (payload.payload?.user_id === otherUserId) {
-          console.log('[Typing] Other user stopped typing');
           setIsOtherTyping(false);
-          if (otherTypingTimeoutRef.current) {
-            clearTimeout(otherTypingTimeoutRef.current);
-          }
+          if (otherTypingTimeoutRef.current) clearTimeout(otherTypingTimeoutRef.current);
         }
       })
-      .subscribe((status) => {
-        console.log('[Typing] Broadcast subscription status:', status);
-      });
+      .subscribe();
+
+    channelRef.current = channel;
 
     return () => {
-      console.log('[Typing] Unsubscribing from broadcast channel');
-      supabase.removeChannel(channel);
-      if (otherTypingTimeoutRef.current) {
-        clearTimeout(otherTypingTimeoutRef.current);
+      if (isTypingRef.current && user?.id) {
+        try {
+          channel.send({
+            type: 'broadcast',
+            event: 'stop_typing',
+            payload: { user_id: user.id },
+          });
+        } catch { /* best-effort */ }
+        isTypingRef.current = false;
       }
+      supabase.removeChannel(channel);
+      channelRef.current = null;
+      if (otherTypingTimeoutRef.current) clearTimeout(otherTypingTimeoutRef.current);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, [conversationKey, otherUserId, user?.id]);
 
-  // Cleanup typing indicator on unmount
-  useEffect(() => {
-    return () => {
-      if (conversationKey && user?.id && isTypingRef.current) {
-        const channel = supabase.channel(`typing-broadcast-${conversationKey}`);
-        channel.send({
-          type: 'broadcast',
-          event: 'stop_typing',
-          payload: { user_id: user.id },
-        });
-      }
-    };
-  }, [conversationKey, user?.id]);
-
   const startTyping = useCallback(async (hasText: boolean = true) => {
     if (!conversationKey || !user?.id || !profile?.username) return;
+    const channel = channelRef.current;
+    if (!channel) return;
 
-    // Clear existing timeout
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
-    // If no text, stop typing immediately
     if (!hasText) {
       if (isTypingRef.current) {
         isTypingRef.current = false;
-        console.log('[Typing] No text - stopping typing');
-        
-        const channel = supabase.channel(`typing-broadcast-${conversationKey}`);
         await channel.send({
           type: 'broadcast',
           event: 'stop_typing',
@@ -107,13 +78,8 @@ export const usePrivateTypingIndicator = (otherUserId: string | null) => {
       return;
     }
 
-    // Only broadcast if not already typing
     if (!isTypingRef.current) {
       isTypingRef.current = true;
-      console.log('[Typing] Starting to type, broadcasting');
-      
-      // Use Broadcast instead of database for instant delivery
-      const channel = supabase.channel(`typing-broadcast-${conversationKey}`);
       await channel.send({
         type: 'broadcast',
         event: 'typing',
@@ -121,25 +87,16 @@ export const usePrivateTypingIndicator = (otherUserId: string | null) => {
       });
     }
 
-    // Set timeout to refresh typing indicator (keep alive) - still shows as typing if text present
-    typingTimeoutRef.current = setTimeout(async () => {
-      // Don't auto-stop anymore - will be stopped when text is cleared or message sent
-      console.log('[Typing] Keepalive timeout');
-    }, 3000);
+    typingTimeoutRef.current = setTimeout(() => { /* keepalive */ }, 3000);
   }, [conversationKey, user?.id, profile?.username]);
 
   const stopTyping = useCallback(async () => {
     if (!conversationKey || !user?.id) return;
+    const channel = channelRef.current;
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    if (isTypingRef.current) {
+    if (isTypingRef.current && channel) {
       isTypingRef.current = false;
-      console.log('[Typing] Manually stopping typing');
-      
-      const channel = supabase.channel(`typing-broadcast-${conversationKey}`);
       await channel.send({
         type: 'broadcast',
         event: 'stop_typing',

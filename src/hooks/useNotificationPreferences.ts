@@ -100,6 +100,9 @@ export const useNotificationPreferences = () => {
     enabled: !!user,
   });
 
+  // Tracks keys currently being toggled — prevents race when user spams a switch
+  const inFlightRef = useRef<Set<string>>(new Set());
+
   const updatePreferences = useMutation({
     mutationFn: async (updates: Partial<Omit<NotificationPreferences, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
       if (!user) throw new Error('Not authenticated');
@@ -114,10 +117,25 @@ export const useNotificationPreferences = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notification-preferences', user?.id] });
+    onMutate: async (updates) => {
+      // Optimistic update — guarantees UI reflects user intent immediately
+      // and that the next toggle reads the freshest value (no stale-read race).
+      await queryClient.cancelQueries({ queryKey: ['notification-preferences', user?.id] });
+      const previous = queryClient.getQueryData<NotificationPreferences>(['notification-preferences', user?.id]);
+      if (previous) {
+        queryClient.setQueryData(['notification-preferences', user?.id], { ...previous, ...updates });
+      }
+      return { previous };
     },
-    onError: (error: any) => {
+    onSuccess: (data) => {
+      // Sync with server response (handles updated_at etc.)
+      queryClient.setQueryData(['notification-preferences', user?.id], data);
+    },
+    onError: (error: any, _updates, context) => {
+      // Rollback optimistic update
+      if (context?.previous) {
+        queryClient.setQueryData(['notification-preferences', user?.id], context.previous);
+      }
       console.error('Error updating preferences:', error);
       const description =
         error?.message && typeof error.message === 'string'
@@ -130,13 +148,24 @@ export const useNotificationPreferences = () => {
     },
   });
 
-  const togglePreference = async (key: keyof typeof defaultPreferences) => {
-    if (!query.data) return;
-    if (updatePreferences.isPending || isCoolingDown) return;
+  const togglePreference = useCallback(async (key: keyof typeof defaultPreferences) => {
+    if (isCoolingDown) return;
+    // Per-key lock : empêche la double mutation concurrente sur la même clé
+    if (inFlightRef.current.has(key)) return;
 
-    const currentValue = query.data[key];
-    await updatePreferences.mutateAsync({ [key]: !currentValue });
-  };
+    // Lit la valeur LA PLUS RÉCENTE depuis le cache (pas la prop figée query.data)
+    const current = queryClient.getQueryData<NotificationPreferences>(['notification-preferences', user?.id]);
+    if (!current) return;
+
+    inFlightRef.current.add(key);
+    try {
+      await updatePreferences.mutateAsync({ [key]: !current[key] });
+    } catch {
+      /* géré par onError */
+    } finally {
+      inFlightRef.current.delete(key);
+    }
+  }, [isCoolingDown, queryClient, updatePreferences, user?.id]);
 
   return {
     preferences: query.data || {

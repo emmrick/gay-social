@@ -468,19 +468,25 @@ const HenryChat = () => {
   const runMatching = async () => {
     setSearching(true);
     try {
-      const results = await findMatches(shownIds);
-      if (results.length === 0) {
+      // Merge serveur + local pour garantir l'exclusion même si sessionStorage a été purgé
+      const serverShown = (conversation as any)?.shown_profile_ids ?? [];
+      const excludeSet = new Set<string>([...shownIds, ...serverShown]);
+      const results = await findMatches(Array.from(excludeSet));
+      // Filtre défensif côté client : si l'edge a renvoyé un profil déjà vu, on le retire
+      const fresh = results.filter((r) => !excludeSet.has(r.user_id));
+      if (fresh.length === 0) {
         await sendBotMessage(
           "😕 Je n'ai pas trouvé de profils correspondant à 100 % à tes critères. Essaie d'élargir la zone ou la tranche d'âge !",
           { step: 'no_match' },
         );
       } else {
-        setMatches(results);
+        setMatches(fresh);
         setMatchIndex(0);
-        setShownIds((prev) => [...prev, ...results.map((r) => r.user_id)]);
+        // Dédoublonnage strict
+        setShownIds((prev) => Array.from(new Set([...prev, ...fresh.map((r) => r.user_id)])));
         await sendBotMessage(
-          `🎯 J'ai trouvé **${results.length} profils** susceptibles de te plaire. Voici le premier :`,
-          { step: 'matches', count: results.length },
+          `🎯 J'ai trouvé **${fresh.length} profils** susceptibles de te plaire. Voici le premier :`,
+          { step: 'matches', count: fresh.length },
         );
       }
       await updateCriteria.mutateAsync({ current_step: 'free', setup_completed: true });

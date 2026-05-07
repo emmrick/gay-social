@@ -168,13 +168,25 @@ Deno.serve(async (req) => {
 
     // Persiste les profils proposés afin de ne JAMAIS les re-proposer
     // tant que l'utilisateur n'a pas réinitialisé sa conversation Henry.
+    // IMPORTANT : on doit utiliser le client user-scopé (anon + JWT) car
+    // henry_add_shown_profiles utilise auth.uid() qui retourne NULL avec service_role.
     if (top.length > 0) {
-      try {
-        await supabase.rpc('henry_add_shown_profiles', {
-          _ids: top.map((p) => p.user_id),
-        })
-      } catch (e) {
-        console.warn('[henry-match] add_shown_profiles failed', e)
+      const ids = top.map((p) => p.user_id)
+      const { error: addErr } = await userClient.rpc('henry_add_shown_profiles', {
+        _ids: ids,
+      })
+      if (addErr) {
+        console.error('[henry-match] add_shown_profiles failed', addErr)
+        // Fallback : update direct via service role en filtrant explicitement par user_id
+        try {
+          const merged = Array.from(new Set([...(alreadyShown ?? []), ...ids]))
+          await supabase
+            .from('henry_conversations')
+            .update({ shown_profile_ids: merged, updated_at: new Date().toISOString() })
+            .eq('user_id', me.id)
+        } catch (e2) {
+          console.error('[henry-match] fallback update failed', e2)
+        }
       }
     }
 

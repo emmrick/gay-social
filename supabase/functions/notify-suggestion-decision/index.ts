@@ -127,13 +127,15 @@ serve(async (req) => {
           },
           body: JSON.stringify(pushBody),
         });
+        await logSent("push");
+        pushSent = true;
       } catch (e) {
         console.error("[notify-suggestion-decision] push error:", e);
       }
     }
 
-    // 2. Transactional email (best-effort, respects preference)
-    if (email && emailEnabled) {
+    // 2. Transactional email (best-effort, respects preference + dedup)
+    if (email && emailEnabled && !alreadySent("email")) {
       try {
         const templateName = isApproved
           ? "suggestion-approved"
@@ -161,6 +163,8 @@ serve(async (req) => {
             templateData,
           }),
         });
+        await logSent("email");
+        emailSent = true;
       } catch (e) {
         console.error("[notify-suggestion-decision] email error:", e);
       }
@@ -169,8 +173,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        push_sent: pushEnabled,
-        email_sent: !!email && emailEnabled,
+        push_sent: pushSent,
+        email_sent: emailSent,
+        deduped: {
+          push: pushEnabled && !pushSent,
+          email: !!email && emailEnabled && !emailSent,
+        },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

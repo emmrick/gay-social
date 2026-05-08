@@ -60,8 +60,8 @@ const SuggestionRejectedEmail = ({
         </Text>
 
         <Section style={buttonSection}>
-          <Button style={primaryButton} href="https://gaysocial.fr">
-            Proposer une nouvelle idée
+          <Button style={primaryButton} href={suggestionUrl ?? 'https://gaysocial.fr/profile'}>
+            {suggestionUrl ? 'Voir ma proposition' : 'Proposer une nouvelle idée'}
           </Button>
         </Section>
 

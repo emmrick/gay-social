@@ -82,15 +82,23 @@ const SuggestionDialog = ({ open, onOpenChange, initialSuggestionId }: Suggestio
     }
   }, [open, initialSuggestionId]);
 
-  // Scroll the highlighted suggestion into view once it's in the DOM
+  // Scroll the highlighted suggestion into view once it's in the DOM.
+  // Polls briefly because the suggestions list is async-loaded.
   useEffect(() => {
     if (!highlightedId || view !== 'history') return;
-    const id = window.setTimeout(() => {
+    let tries = 0;
+    const interval = window.setInterval(() => {
+      tries += 1;
       const el = document.getElementById(`suggestion-row-${highlightedId}`);
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 120);
-    return () => window.clearTimeout(id);
-  }, [highlightedId, view, suggestions]);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        window.clearInterval(interval);
+      } else if (tries > 25) {
+        window.clearInterval(interval);
+      }
+    }, 200);
+    return () => window.clearInterval(interval);
+  }, [highlightedId, view]);
 
   // Reset scroll on view switch so the user always lands at the top
   useEffect(() => {

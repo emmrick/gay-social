@@ -34,6 +34,7 @@ import CommunitySuggestions from './CommunitySuggestions';
 interface SuggestionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialSuggestionId?: string | null;
 }
 
 interface AttachmentMeta {

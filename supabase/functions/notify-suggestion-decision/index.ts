@@ -117,7 +117,7 @@ serve(async (req) => {
               ? `« ${titleShort} » — +${payload.credits_awarded} crédits crédités !`
               : `« ${titleShort} » a été approuvée. Merci !`
             : `« ${titleShort} » n'a pas été retenue cette fois-ci.`,
-          url: "/profile",
+          url: suggestionPath,
           tag: `suggestion-${payload.suggestion_id}`,
           notificationType: "system",
         };

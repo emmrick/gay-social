@@ -66,8 +66,8 @@ const SuggestionApprovedEmail = ({
         ) : null}
 
         <Section style={buttonSection}>
-          <Button style={primaryButton} href="https://gaysocial.fr">
-            Voir mes idées
+          <Button style={primaryButton} href={suggestionUrl ?? 'https://gaysocial.fr/profile'}>
+            {suggestionUrl ? 'Voir mon idée' : 'Voir mes idées'}
           </Button>
         </Section>
 

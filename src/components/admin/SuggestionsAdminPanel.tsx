@@ -227,13 +227,14 @@ const SuggestionsAdminPanel = () => {
 
       // Crédit l'auteur si une récompense est définie et qu'on approuve
       if (payload.status === 'approved' && (payload.credits_awarded ?? 0) > 0) {
-        await supabase.rpc('add_credits' as any, {
+        const { error: cErr } = await supabase.rpc('add_credits' as any, {
           _user_id: data.user_id,
           _amount: payload.credits_awarded,
+          _credit_type: 'bonus',
+          _transaction_type: 'suggestion_reward',
           _description: `Idée approuvée : ${data.title}`,
-        }).then((r) => {
-          if (r.error) console.warn('add_credits failed', r.error);
         });
+        if (cErr) console.warn('add_credits failed', cErr);
       }
       return data;
     },

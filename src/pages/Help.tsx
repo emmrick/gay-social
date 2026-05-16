@@ -136,6 +136,9 @@ const Help = ({ embedded = false }: HelpProps) => {
   const waitTimeData = useEstimatedWaitTime(selectedTicket?.id ?? null);
 
   // Auto-resume active ticket
+  // Restaure la session si un ticket actif existe en DB. Sinon, si la phase
+  // persistée indique waiting_agent/agent mais qu'aucun ticket actif n'existe
+  // (clôturé en backend, expiré…), on retombe proprement sur le chatbot.
   useEffect(() => {
     if (hasCheckedActiveTicket || !user?.id || ticketsLoading) return;
     setHasCheckedActiveTicket(true);
@@ -150,8 +153,16 @@ const Help = ({ embedded = false }: HelpProps) => {
       } else {
         setPhase('waiting_agent');
       }
+    } else if (phase === 'waiting_agent' || phase === 'agent') {
+      // Phase persistée mais plus aucun ticket actif → reset propre
+      try {
+        localStorage.removeItem(STORAGE_KEY_TICKET);
+        localStorage.removeItem('gc-help-wait-start-v2');
+      } catch { /* noop */ }
+      setPhase('chatbot');
+      setWaitStartTime(null);
     }
-  }, [tickets, user?.id, hasCheckedActiveTicket, ticketsLoading]);
+  }, [tickets, user?.id, hasCheckedActiveTicket, ticketsLoading, phase]);
 
   // Live ticket polling
   const { messages: ticketMessages } = useSupportMessages(selectedTicket?.id ?? null);

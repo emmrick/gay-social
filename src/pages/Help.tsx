@@ -111,6 +111,15 @@ const Help = ({ embedded = false }: HelpProps) => {
   const typewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const agentInputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Clear navigation state once consumed
+  useEffect(() => {
+    if (resumeTicket) {
+      agentJoinedRef.current = resumeTicket.status === 'assigned';
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Persist
   useEffect(() => {
     try {

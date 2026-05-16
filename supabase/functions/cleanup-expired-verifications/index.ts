@@ -10,7 +10,6 @@ const corsHeaders = {
 const MAX_RETENTION_HOURS = 72
 
 Deno.serve(async (req) => {
-  const __cronStart = Date.now();
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -89,8 +88,8 @@ Deno.serve(async (req) => {
           console.log(`[RGPD Cleanup] Successfully cleaned up verification ${verification.id}`)
         }
         await logCronRun("cleanup-expired-verifications", "success", { durationMs: Date.now() - __cronStart });
-      } catch (err) {
-    const __errMsg = (typeof error !== "undefined" && error instanceof Error) ? error.message : String(error);
+      }
+  const __cronStart = Date.now(); catch (err) {
     await logCronRun("cleanup-expired-verifications", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
         console.error(`[RGPD Cleanup] Error processing verification ${verification.id}:`, err)
         errorCount++
@@ -151,7 +150,11 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
+    await logCronRun("cleanup-expired-verifications", "success", { durationMs: Date.now() - __cronStart });
+
   } catch (error) {
+    const __errMsg = (error instanceof Error) ? error.message : String(error);
+    await logCronRun("cleanup-expired-verifications", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     console.error('[RGPD Cleanup] Fatal error:', errorMessage)
     return new Response(

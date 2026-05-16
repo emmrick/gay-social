@@ -127,7 +127,6 @@ Deno.serve(async (req) => {
           });
           await logCronRun("check-expired-album-shares", "success", { durationMs: Date.now() - __cronStart });
         } catch (pushErr) {
-    const __errMsg = (typeof error !== "undefined" && error instanceof Error) ? error.message : String(error);
     await logCronRun("check-expired-album-shares", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
           console.error("Error sending push for album expiry:", pushErr);
         }
@@ -156,7 +155,11 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
+    await logCronRun("check-expired-album-shares", "success", { durationMs: Date.now() - __cronStart });
+
   } catch (error: unknown) {
+    const __errMsg = (error instanceof Error) ? error.message : String(error);
+    await logCronRun("check-expired-album-shares", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     console.error("Error in check-expired-album-shares:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(

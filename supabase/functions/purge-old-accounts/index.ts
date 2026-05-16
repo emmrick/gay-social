@@ -11,7 +11,6 @@ const DATA_RETENTION_YEARS = 2
 const WARNING_DAYS = [90, 30, 7]
 
 Deno.serve(async (req) => {
-  const __cronStart = Date.now();
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -105,8 +104,8 @@ Deno.serve(async (req) => {
             purgedCount++
           }
           await logCronRun("purge-old-accounts", "success", { durationMs: Date.now() - __cronStart });
-        } catch (e) {
-    const __errMsg = (typeof error !== "undefined" && error instanceof Error) ? error.message : String(error);
+        }
+  const __cronStart = Date.now(); catch (e) {
     await logCronRun("purge-old-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
           errors.push(`${user.user_id}: ${e.message}`)
         }
@@ -150,7 +149,11 @@ Deno.serve(async (req) => {
       errors: errors.length ? errors : undefined,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
+    await logCronRun("purge-old-accounts", "success", { durationMs: Date.now() - __cronStart });
+
   } catch (error) {
+    const __errMsg = (error instanceof Error) ? error.message : String(error);
+    await logCronRun("purge-old-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     console.error('[PURGE-OLD] Fatal:', error)
     return new Response(JSON.stringify({ success: false, error: error.message }), {
       status: 500,

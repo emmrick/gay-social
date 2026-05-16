@@ -10,7 +10,6 @@ const PURGE_AFTER_DAYS = 30
 const WARNING_DAYS = [7, 3, 1] // Days before purge to send warnings
 
 Deno.serve(async (req) => {
-  const __cronStart = Date.now();
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -102,8 +101,8 @@ Deno.serve(async (req) => {
                 })
                 console.log(`[PURGE] Push notification sent to ${user.user_id} (J-${daysBefore})`)
                 await logCronRun("purge-unverified-accounts", "success", { durationMs: Date.now() - __cronStart });
-              } catch (pushErr) {
-    const __errMsg = (typeof error !== "undefined" && error instanceof Error) ? error.message : String(error);
+              }
+  const __cronStart = Date.now(); catch (pushErr) {
     await logCronRun("purge-unverified-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
                 console.warn(`[PURGE] Failed to send push to ${user.user_id}:`, pushErr)
               }
@@ -241,7 +240,11 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
+    await logCronRun("purge-unverified-accounts", "success", { durationMs: Date.now() - __cronStart });
+
   } catch (error) {
+    const __errMsg = (error instanceof Error) ? error.message : String(error);
+    await logCronRun("purge-unverified-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('[PURGE] Fatal error:', msg)
     return new Response(JSON.stringify({ error: msg }), {

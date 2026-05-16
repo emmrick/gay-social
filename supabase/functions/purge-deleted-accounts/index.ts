@@ -104,7 +104,6 @@ Deno.serve(async (req) => {
             }
             await logCronRun("purge-deleted-accounts", "success", { durationMs: Date.now() - __cronStart });
           } catch (e) {
-    const __errMsg = (typeof error !== "undefined" && error instanceof Error) ? error.message : String(error);
     await logCronRun("purge-deleted-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
             // Continue with other tables even if one fails
             console.warn(`Warning cleaning ${item.table}: ${e}`);
@@ -149,7 +148,11 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+    await logCronRun("purge-deleted-accounts", "success", { durationMs: Date.now() - __cronStart });
+
   } catch (e) {
+    const __errMsg = (e instanceof Error) ? e.message : String(e);
+    await logCronRun("purge-deleted-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     console.error('Purge error:', e);
     return new Response(JSON.stringify({ error: String(e) }), {
       status: 500,

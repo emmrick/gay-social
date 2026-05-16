@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  const __cronStart = Date.now();
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -70,8 +69,8 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
     await logCronRun("cleanup-auto-delete-messages", "success", { durationMs: Date.now() - __cronStart });
-  } catch (error) {
-    const __errMsg = (typeof error !== "undefined" && error instanceof Error) ? error.message : String(error);
+  }
+  const __cronStart = Date.now(); catch (error) {
     await logCronRun("cleanup-auto-delete-messages", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     console.error('Auto-delete cleanup error:', error)
     return new Response(

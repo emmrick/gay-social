@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { logCronRun } from "../_shared/cron-logger.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,7 @@ const PURGE_AFTER_DAYS = 30
 const WARNING_DAYS = [7, 3, 1] // Days before purge to send warnings
 
 Deno.serve(async (req) => {
+  const __cronStart = Date.now();
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -99,7 +101,10 @@ Deno.serve(async (req) => {
                   }),
                 })
                 console.log(`[PURGE] Push notification sent to ${user.user_id} (J-${daysBefore})`)
+                await logCronRun("purge-unverified-accounts", "success", { durationMs: Date.now() - __cronStart });
               } catch (pushErr) {
+    const __errMsg = (typeof error !== "undefined" && error instanceof Error) ? error.message : String(error);
+    await logCronRun("purge-unverified-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
                 console.warn(`[PURGE] Failed to send push to ${user.user_id}:`, pushErr)
               }
             }

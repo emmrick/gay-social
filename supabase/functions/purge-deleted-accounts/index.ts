@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logCronRun } from "../_shared/cron-logger.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  const __cronStart = Date.now();
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -100,7 +102,10 @@ Deno.serve(async (req) => {
             } else {
               await supabase.from(item.table).delete().eq(item.column, userId);
             }
+            await logCronRun("purge-deleted-accounts", "success", { durationMs: Date.now() - __cronStart });
           } catch (e) {
+    const __errMsg = (typeof error !== "undefined" && error instanceof Error) ? error.message : String(error);
+    await logCronRun("purge-deleted-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
             // Continue with other tables even if one fails
             console.warn(`Warning cleaning ${item.table}: ${e}`);
           }

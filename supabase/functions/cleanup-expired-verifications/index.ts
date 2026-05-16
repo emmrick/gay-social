@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { logCronRun } from "../_shared/cron-logger.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,7 @@ const corsHeaders = {
 const MAX_RETENTION_HOURS = 72
 
 Deno.serve(async (req) => {
+  const __cronStart = Date.now();
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -86,7 +88,10 @@ Deno.serve(async (req) => {
           deletedCount++
           console.log(`[RGPD Cleanup] Successfully cleaned up verification ${verification.id}`)
         }
+        await logCronRun("cleanup-expired-verifications", "success", { durationMs: Date.now() - __cronStart });
       } catch (err) {
+    const __errMsg = (typeof error !== "undefined" && error instanceof Error) ? error.message : String(error);
+    await logCronRun("cleanup-expired-verifications", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
         console.error(`[RGPD Cleanup] Error processing verification ${verification.id}:`, err)
         errorCount++
       }

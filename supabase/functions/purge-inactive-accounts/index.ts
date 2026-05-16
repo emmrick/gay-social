@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { logCronRun } from "../_shared/cron-logger.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,7 @@ const INACTIVITY_YEARS = 2
 const WARNING_DAYS = [90, 30, 7] // Days before purge to send warnings
 
 Deno.serve(async (req) => {
+  const __cronStart = Date.now();
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -114,7 +116,10 @@ Deno.serve(async (req) => {
               const filePaths = files.map(f => `${userId}/${f.name}`)
               await supabase.storage.from(bucket).remove(filePaths)
             }
+            await logCronRun("purge-inactive-accounts", "success", { durationMs: Date.now() - __cronStart });
           } catch (e) {
+    const __errMsg = (typeof error !== "undefined" && error instanceof Error) ? error.message : String(error);
+    await logCronRun("purge-inactive-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
             // Bucket might not exist or no files, continue
           }
         }

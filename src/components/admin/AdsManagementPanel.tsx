@@ -339,7 +339,12 @@ const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
                           <span className="font-medium">{(ad.spent_cents / 100).toFixed(2)}€</span>
                         </div>
                       </div>
-                      {!ad.is_active && ad.status === 'approved' && (
+                      {ad.always_active && (
+                        <Badge variant="outline" className="text-[10px] gap-1 border-primary/40 text-primary">
+                          <InfinityIcon className="w-3 h-3" /> Continue
+                        </Badge>
+                      )}
+                      {!ad.is_active && ad.status === 'approved' && !ad.always_active && (
                         <Badge variant="outline" className="text-[10px]">Inactive</Badge>
                       )}
                     </div>

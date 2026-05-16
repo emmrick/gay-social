@@ -134,6 +134,16 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
     await refetchNearby();
   }, [requestLocation, refetchNearby]);
 
+  // Refresh déclenché par le parent (HomeView) via incrément de token
+  const lastTokenRef = useRef(refreshToken);
+  useEffect(() => {
+    if (refreshToken === undefined) return;
+    if (refreshToken !== lastTokenRef.current) {
+      lastTokenRef.current = refreshToken;
+      void handleRefresh();
+    }
+  }, [refreshToken, handleRefresh]);
+
   // Infinite scroll
   useEffect(() => {
     const sentinel = sentinelRef.current;

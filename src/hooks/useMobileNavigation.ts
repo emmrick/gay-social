@@ -31,9 +31,15 @@ export const useMobileNavigation = ({
 }: UseMobileNavigationOptions) => {
   const sentinelKeyRef = useRef<string | null>(null);
   const triggeredRef = useRef(false);
+  const onBackRef = useRef(onBack);
+
+  // Toujours pointer vers le dernier onBack sans relancer l'effet de sentinelle.
+  useEffect(() => {
+    onBackRef.current = onBack;
+  }, [onBack]);
 
   useEffect(() => {
-    if (!enabled || !onBack) return;
+    if (!enabled || !onBackRef.current) return;
 
     const key = `nav_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     sentinelKeyRef.current = key;
@@ -44,7 +50,7 @@ export const useMobileNavigation = ({
     const trigger = () => {
       if (triggeredRef.current) return;
       triggeredRef.current = true;
-      onBack();
+      onBackRef.current?.();
     };
 
     const handlePopState = (e: PopStateEvent) => {
@@ -59,16 +65,13 @@ export const useMobileNavigation = ({
     let removeNativeListener: (() => void) | null = null;
     if (isNative()) {
       const handle = CapacitorApp.addListener('backButton', () => {
-        // Consomme la sentinelle => popstate prendra le relais et appellera onBack
         if (window.history.state?.navSentinel === key) {
           window.history.back();
         } else {
-          // Sentinelle déjà consommée : déclenche directement
           trigger();
         }
       });
       removeNativeListener = () => {
-        // handle est une Promise<PluginListenerHandle> en v8
         Promise.resolve(handle).then((h) => h?.remove?.()).catch(() => {});
       };
     }
@@ -85,7 +88,7 @@ export const useMobileNavigation = ({
       }
       sentinelKeyRef.current = null;
     };
-  }, [onBack, enabled]);
+  }, [enabled]);
 
   // Swipe gesture (bord gauche → droite) — uniquement web mobile
   useEffect(() => {

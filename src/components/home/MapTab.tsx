@@ -116,11 +116,14 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
     queryKey: ['nearby-profile-coords', userIdsKey],
     enabled: userIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('user_id, latitude, longitude')
-        .in('user_id', userIds);
-      return data ?? [];
+      const { data, error } = await supabase.rpc('get_profile_map_coords' as any, {
+        _user_ids: userIds,
+      });
+      if (error) {
+        console.error('[MapTab] coords RPC error', error);
+        return [];
+      }
+      return (data ?? []) as Array<{ user_id: string; latitude: number; longitude: number }>;
     },
     staleTime: 60000,
   });

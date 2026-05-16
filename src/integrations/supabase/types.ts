@@ -3921,6 +3921,50 @@ export type Database = {
           },
         ]
       }
+      suggestion_moderation_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          admin_notes: string | null
+          created_at: string
+          credits_awarded: number | null
+          id: string
+          new_status: string | null
+          previous_status: string | null
+          suggestion_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          credits_awarded?: number | null
+          id?: string
+          new_status?: string | null
+          previous_status?: string | null
+          suggestion_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          credits_awarded?: number | null
+          id?: string
+          new_status?: string | null
+          previous_status?: string | null
+          suggestion_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestion_moderation_logs_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "user_suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suggestion_notification_log: {
         Row: {
           channel: string

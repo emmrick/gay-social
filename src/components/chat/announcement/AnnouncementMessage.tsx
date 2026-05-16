@@ -105,7 +105,7 @@ const AnnouncementMessage = ({
               {reactions.length > 0 && (
                 <MessageReactions
                   reactions={reactions}
-                  onReact={(emoji) => onToggleReaction?.(id, emoji)}
+                  onToggleReaction={(emoji) => onToggleReaction?.(id, emoji)}
                 />
               )}
             </div>

@@ -64,6 +64,8 @@ interface MoreItem {
 }
 
 const MORE_ITEMS: MoreItem[] = [
+  { id: 'live-content',    label: 'Direct',       icon: Radio,       group: 'communication', permissionKey: 'can_manage_content' },
+  { id: 'suggestions',     label: 'Idées',        icon: Lightbulb,   group: 'communication', permissionKey: 'can_manage_content' },
   { id: 'broadcast',       label: 'Push',         icon: Bell,        group: 'communication', adminOnly: true, permissionKey: 'can_broadcast' },
   { id: 'popups',          label: 'Pop-ups',      icon: Bell,        group: 'communication', adminOnly: true, permissionKey: 'can_manage_popups' },
   { id: 'faq',             label: 'Aide',         icon: HelpCircle,  group: 'communication', adminOnly: true, permissionKey: 'can_manage_faq' },
@@ -78,6 +80,8 @@ const MORE_ITEMS: MoreItem[] = [
   { id: 'feature-toggles', label: 'Toggles',      icon: ToggleLeft,  group: 'config',        adminOnly: true },
   { id: 'error-logs',      label: 'Erreurs',      icon: Activity,    group: 'logs',          adminOnly: true, permissionKey: 'can_view_logs' },
   { id: 'security',        label: 'Sécurité',     icon: ShieldAlert, group: 'logs',          adminOnly: true, permissionKey: 'can_view_logs' },
+  { id: 'emails',          label: 'E-mails',      icon: Mail,        group: 'logs',          adminOnly: true, permissionKey: 'can_view_logs' },
+  { id: 'cron-logs',       label: 'Cron',         icon: Clock,       group: 'logs',          adminOnly: true, permissionKey: 'can_view_logs' },
 ];
 
 const GROUP_LABELS = {

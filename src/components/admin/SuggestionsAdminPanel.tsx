@@ -517,6 +517,9 @@ const SuggestionDetailDialog = ({
               </section>
             )}
 
+            {/* Journal de modération */}
+            <ModerationLogSection suggestionId={suggestion.id} />
+
             {/* Modération */}
             <section className="space-y-3 pt-2 border-t">
               <div>

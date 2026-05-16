@@ -104,8 +104,7 @@ Deno.serve(async (req) => {
           } else {
             purgedCount++
           }
-        }
-      } catch (e) {
+        } catch (e) {
           errors.push(`${user.user_id}: ${e.message}`)
         }
       }

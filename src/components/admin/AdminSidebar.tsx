@@ -24,7 +24,7 @@ export type AdminSection =
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
   | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
   | 'promo-images' | 'error-logs' | 'security' | 'feature-toggles'
-  | 'site-updates' | 'ads' | 'live-content' | 'emails' | 'cron-logs';
+  | 'site-updates' | 'ads' | 'live-content' | 'emails' | 'cron-logs' | 'suggestions';
 
 export interface ModPermissions {
   can_manage_users?: boolean | null;
@@ -78,6 +78,7 @@ const navItems: NavItem[] = [
   { id: 'live-content', label: 'Direct', icon: Radio, group: 'moderation', permissionKey: 'can_manage_content' },
   { id: 'ai-moderation', label: 'IA', icon: Bot, group: 'moderation', permissionKey: 'can_ai_moderation' },
   { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, group: 'moderation', permissionKey: 'can_screenshot_sanctions' },
+  { id: 'suggestions', label: 'Idées', icon: Sparkles, group: 'moderation', permissionKey: 'can_manage_content' },
   { id: 'verification', label: 'Identité', icon: IdCard, group: 'moderation', adminOnly: true, permissionKey: 'can_verify_identity' },
   { id: 'users', label: 'Membres', icon: Users, group: 'users', adminOnly: true, permissionKey: 'can_manage_users' },
   { id: 'stats', label: 'Stats', icon: BarChart3, group: 'users', adminOnly: true, permissionKey: 'can_view_stats' },

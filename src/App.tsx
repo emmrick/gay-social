@@ -82,6 +82,7 @@ const AdminGlobalEarningsPage = lazy(() => import("./pages/admin/sections/Global
 const AdminBroadcastPage = lazy(() => import("./pages/admin/sections/BroadcastPage"));
 const AdminPopupsPage = lazy(() => import("./pages/admin/sections/PopupsPage"));
 const AdminFAQPage = lazy(() => import("./pages/admin/sections/FAQPage"));
+const AdminSuggestionsPage = lazy(() => import("./pages/admin/sections/SuggestionsPage"));
 const AdminFlyersPage = lazy(() => import("./pages/admin/sections/FlyersPage"));
 const AdminPromoPage = lazy(() => import("./pages/admin/sections/PromoPage"));
 const AdminAdsPage = lazy(() => import("./pages/admin/sections/AdsPage"));
@@ -224,6 +225,7 @@ const AuthenticatedApp = () => {
                             <Route path="direct" element={<AdminLiveContentPage />} />
                             <Route path="ia" element={<AdminAIModerationPage />} />
                             <Route path="captures" element={<AdminScreenshotSanctionsPage />} />
+                            <Route path="idees" element={<AdminSuggestionsPage />} />
                             <Route path="membres" element={<AdminMembersPage />} />
                             <Route path="stats" element={<AdminStatsPage />} />
                             <Route path="equipe" element={<AdminModeratorsPage />} />

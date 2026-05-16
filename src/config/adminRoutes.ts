@@ -49,6 +49,7 @@ export const ADMIN_ROUTES: AdminRouteEntry[] = [
   { section: 'live-content', slug: 'direct', title: 'Surveillance en direct', group: 'moderation' },
   { section: 'ai-moderation', slug: 'ia', title: 'Modération IA', group: 'moderation' },
   { section: 'screenshot-sanctions', slug: 'captures', title: 'Sanctions captures', group: 'moderation' },
+  { section: 'suggestions', slug: 'idees', title: 'Idées de la communauté', group: 'moderation' },
   // Utilisateurs
   { section: 'users', slug: 'membres', title: 'Membres', group: 'users' },
   { section: 'stats', slug: 'stats', title: 'Statistiques', group: 'users' },

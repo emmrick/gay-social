@@ -20,7 +20,7 @@ import {
   ListOrdered, Headphones, Star, IdCard, MessageSquare, Bot, Camera, Filter,
   BarChart3, UserCog, Activity, ShoppingCart, Euro, ArrowUpRight, PieChart,
   Bell, HelpCircle, FileImage, Sparkles, Rocket, Ticket, Megaphone, Coins,
-  Heart, Wrench, ToggleLeft, ShieldAlert,
+  Heart, Wrench, ToggleLeft, ShieldAlert, Radio, Lightbulb, Mail, Clock,
 } from 'lucide-react';
 
 interface AdminBottomTabsProps {

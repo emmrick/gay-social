@@ -126,7 +126,17 @@ const ActiveSupportBadge = () => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          onClick={() => navigate('/help')}
+          onClick={() =>
+            navigate('/help', {
+              state: {
+                resumeTicket: {
+                  id: ticket!.id,
+                  status: ticket!.status,
+                  assigned_to: ticket!.assigned_to,
+                },
+              },
+            })
+          }
           className={cn(
             'fixed z-[60] left-1/2 -translate-x-1/2',
             'flex items-center gap-2 px-4 py-2.5 rounded-full',

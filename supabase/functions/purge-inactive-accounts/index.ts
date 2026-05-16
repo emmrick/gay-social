@@ -116,8 +116,7 @@ Deno.serve(async (req) => {
               const filePaths = files.map(f => `${userId}/${f.name}`)
               await supabase.storage.from(bucket).remove(filePaths)
             }
-          }
-      } catch (e) {
+          } catch (e) {
             // Bucket might not exist or no files, continue
           }
         }

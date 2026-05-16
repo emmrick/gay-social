@@ -39,6 +39,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const live = useLivePresence(profile);
   const isOnline = live.showIndicator;
   const lastSeen = live.lastSeenText;

@@ -52,9 +52,12 @@ import {
   Calendar,
   Filter as FilterIcon,
   Search,
+  History,
+  PenLine,
+  StickyNote,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { AdminCard } from '@/components/admin/ui/AdminCard';
@@ -680,6 +683,148 @@ const AttachmentPreview = ({
         {(attachment.size / 1024).toFixed(0)} ko
       </span>
     </a>
+  );
+};
+
+/* ------------------------- Moderation log section ------------------------ */
+
+interface ModLogRow {
+  id: string;
+  actor_id: string | null;
+  action: string;
+  previous_status: string | null;
+  new_status: string | null;
+  admin_notes: string | null;
+  credits_awarded: number | null;
+  created_at: string;
+  actorUsername: string | null;
+  actorAvatarUrl: string | null;
+}
+
+const ACTION_META: Record<string, { label: string; className: string; icon: any }> = {
+  created: { label: 'Création', className: 'bg-muted text-muted-foreground border-border', icon: Sparkles },
+  pending: { label: 'Remise en attente', className: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/30', icon: Clock },
+  in_review: { label: 'Mise en examen', className: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30', icon: Eye },
+  approved: { label: 'Approuvée', className: 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30', icon: CheckCircle2 },
+  rejected: { label: 'Rejetée', className: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30', icon: XCircle },
+  implemented: { label: 'Implémentée', className: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/30', icon: Sparkles },
+  note_updated: { label: 'Note mise à jour', className: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30', icon: StickyNote },
+  credits_awarded: { label: 'Crédits ajustés', className: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30', icon: Coins },
+};
+
+const ModerationLogSection = ({ suggestionId }: { suggestionId: string }) => {
+  const { data: logs, isLoading } = useQuery({
+    queryKey: ['suggestion-mod-logs', suggestionId],
+    queryFn: async (): Promise<ModLogRow[]> => {
+      const { data, error } = await supabase
+        .from('suggestion_moderation_logs' as any)
+        .select('id, actor_id, action, previous_status, new_status, admin_notes, credits_awarded, created_at')
+        .eq('suggestion_id', suggestionId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error || !data) return [];
+      const actorIds = Array.from(
+        new Set((data as any[]).map((r) => r.actor_id).filter(Boolean)),
+      ) as string[];
+      let profileMap = new Map<string, any>();
+      if (actorIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', actorIds);
+        profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+      }
+      return (data as any[]).map((r) => {
+        const actor: any = r.actor_id ? profileMap.get(r.actor_id) : null;
+        return {
+          ...r,
+          actorUsername: actor?.username ?? null,
+          actorAvatarUrl: actor?.avatar_url ?? null,
+        } as ModLogRow;
+      });
+    },
+    staleTime: 5_000,
+  });
+
+  return (
+    <section className="space-y-2 pt-2 border-t">
+      <div className="flex items-center gap-2">
+        <History className="w-3.5 h-3.5 text-muted-foreground" />
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Journal de modération
+        </h4>
+        {logs && logs.length > 0 && (
+          <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+            {logs.length}
+          </Badge>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          Chargement…
+        </div>
+      ) : !logs || logs.length === 0 ? (
+        <p className="text-xs text-muted-foreground italic py-2">
+          Aucune action enregistrée pour cette idée.
+        </p>
+      ) : (
+        <ol className="relative space-y-2 ps-4 border-s border-border/60">
+          {logs.map((l) => {
+            const meta = ACTION_META[l.action] ?? {
+              label: l.action,
+              className: 'bg-muted text-muted-foreground border-border',
+              icon: PenLine,
+            };
+            const Icon = meta.icon;
+            return (
+              <li key={l.id} className="relative">
+                <span className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-card border-2 border-primary/40" />
+                <div className="rounded-lg border border-border bg-muted/30 p-2.5 space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className={cn(meta.className, 'text-[10px]')}>
+                      <Icon className="w-2.5 h-2.5 mr-1" />
+                      {meta.label}
+                    </Badge>
+                    {l.previous_status && l.new_status && l.previous_status !== l.new_status && (
+                      <span className="text-[10px] text-muted-foreground tabular-nums">
+                        {l.previous_status} → {l.new_status}
+                      </span>
+                    )}
+                    {l.credits_awarded != null && l.credits_awarded > 0 && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 dark:text-amber-400">
+                        <Coins className="w-2.5 h-2.5" />+{l.credits_awarded}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <Avatar className="w-4 h-4">
+                      <AvatarImage src={l.actorAvatarUrl ?? undefined} />
+                      <AvatarFallback className="text-[8px]">
+                        {(l.actorUsername ?? '?').slice(0, 1).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium text-foreground/80">
+                      {l.actorUsername ?? (l.actor_id ? 'Staff' : 'Système')}
+                    </span>
+                    <span>·</span>
+                    <span title={format(new Date(l.created_at), 'd MMM yyyy à HH:mm:ss', { locale: fr })}>
+                      {formatDistanceToNow(new Date(l.created_at), { addSuffix: true, locale: fr })}
+                    </span>
+                  </div>
+                  {l.admin_notes && (
+                    <p className="text-xs text-foreground/80 whitespace-pre-wrap bg-background/60 border border-border/60 rounded-md px-2 py-1.5">
+                      {l.admin_notes}
+                    </p>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </section>
   );
 };
 

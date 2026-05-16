@@ -35,6 +35,7 @@ import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoti
 import ForcedSupportChat from "@/components/moderation/ForcedSupportChat";
 import PromoPopup from "@/components/popups/PromoPopup";
 import GlobalMissionOverlay from "@/components/moderation/GlobalMissionOverlay";
+import ActiveSupportBadge from "@/components/support/ActiveSupportBadge";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import AppLockGate from "@/components/security/AppLockGate";
 import DossierAccessPopup from "@/components/moderation/DossierAccessPopup";

@@ -10,6 +10,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
+  const __cronStart = Date.now();
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -24,6 +25,7 @@ Deno.serve(async (req) => {
 
     if (fetchError) throw fetchError
     if (!statuses || statuses.length === 0) {
+      await logCronRun("cleanup-auto-delete-messages", "success", { durationMs: Date.now() - __cronStart, details: { updated: 0 } });
       return new Response(JSON.stringify({ updated: 0 }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -43,11 +45,8 @@ Deno.serve(async (req) => {
       let newHiddenBefore: string | null = null
 
       if (mode === 'immediate') {
-        // For immediate mode: hide all messages up to now
-        // (messages are hidden as soon as they exist)
         newHiddenBefore = new Date().toISOString()
       } else if (intervals[mode]) {
-        // Time-based: hide messages older than the interval
         newHiddenBefore = new Date(Date.now() - intervals[mode]).toISOString()
       }
 
@@ -64,17 +63,17 @@ Deno.serve(async (req) => {
       }
     }
 
+    await logCronRun("cleanup-auto-delete-messages", "success", { durationMs: Date.now() - __cronStart, details: { updated: updatedCount } });
     return new Response(
       JSON.stringify({ success: true, updated: updatedCount }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
-    await logCronRun("cleanup-auto-delete-messages", "success", { durationMs: Date.now() - __cronStart });
-  }
-  const __cronStart = Date.now(); catch (error) {
+  } catch (error) {
+    const __errMsg = (error instanceof Error) ? error.message : String(error);
     await logCronRun("cleanup-auto-delete-messages", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     console.error('Auto-delete cleanup error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

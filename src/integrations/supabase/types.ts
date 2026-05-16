@@ -5174,6 +5174,10 @@ export type Database = {
       }
       ensure_chatbot_config: { Args: { _user_id: string }; Returns: undefined }
       expire_stale_moderation_tasks: { Args: never; Returns: number }
+      filter_suspended_or_blocked_users: {
+        Args: { _user_ids: string[] }
+        Returns: string[]
+      }
       generate_referral_code: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
       get_active_credit_promotion: {

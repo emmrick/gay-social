@@ -81,11 +81,15 @@ export const useNearbyProfiles = (
 
       profiles = profiles.filter(p => !!p.avatar_url);
 
-      const checks = await Promise.all(
-        profiles.map(p => supabase.rpc('is_user_suspended_or_blocked', { _user_id: p.user_id }))
-      );
+      if (profiles.length > 0) {
+        const { data: blockedIds } = await supabase.rpc('filter_suspended_or_blocked_users', {
+          _user_ids: profiles.map(p => p.user_id),
+        });
+        const blockedSet = new Set<string>((blockedIds as string[] | null) ?? []);
+        profiles = profiles.filter(p => !blockedSet.has(p.user_id));
+      }
 
-      return profiles.filter((_, i) => checks[i].data !== true);
+      return profiles;
     },
     enabled: !!user,
     staleTime: 30000,
@@ -124,11 +128,12 @@ export const useNearbyProfiles = (
         .map(fixStaleOnlineStatus)
         .map((p: any) => ({ ...p, is_verified: true }));
 
-      // Filter out suspended/blocked users
-      const checks = await Promise.all(
-        geoProfiles.map(p => supabase.rpc('is_user_suspended_or_blocked', { _user_id: p.user_id }))
-      );
-      return geoProfiles.filter((_, i) => checks[i].data !== true);
+      if (geoProfiles.length === 0) return geoProfiles;
+      const { data: blockedIds } = await supabase.rpc('filter_suspended_or_blocked_users', {
+        _user_ids: geoProfiles.map(p => p.user_id),
+      });
+      const blockedSet = new Set<string>((blockedIds as string[] | null) ?? []);
+      return geoProfiles.filter(p => !blockedSet.has(p.user_id));
     },
     enabled: !!user && latitude != null && longitude != null,
     staleTime: 45000,

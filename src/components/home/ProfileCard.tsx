@@ -39,6 +39,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const live = useLivePresence(profile);
   const isOnline = live.showIndicator;
   const lastSeen = live.lastSeenText;
@@ -76,7 +77,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
       >
         {/* Image */}
         <div className="absolute inset-0">
-          {resolvedAvatar ? (
+          {resolvedAvatar && !imgError ? (
             <>
               {!imgLoaded && (
                 <div className="absolute inset-0 bg-muted animate-pulse" />
@@ -84,12 +85,13 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
               <img
                 src={resolvedAvatar}
                 alt={profile.username}
-                loading={index < 4 ? 'eager' : 'lazy'}
+                loading={index < 6 ? 'eager' : 'lazy'}
                 fetchPriority={index < 4 ? 'high' : 'auto'}
                 decoding="async"
                 onLoad={() => setImgLoaded(true)}
+                onError={() => { setImgError(true); setImgLoaded(true); }}
                 className={cn(
-                  "w-full h-full object-cover transition-opacity duration-300",
+                  "w-full h-full object-cover transition-opacity duration-200",
                   imgLoaded ? "opacity-100" : "opacity-0"
                 )}
               />

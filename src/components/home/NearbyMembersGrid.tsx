@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyProfiles } from '@/hooks/useNearbyProfiles';
 import { useAuth } from '@/contexts/AuthContext';
+import { getSignedAvatarUrls } from '@/hooks/useAvatarUrl';
 import ProfileCard from './ProfileCard';
 import GeolocationGate from './GeolocationGate';
 import type { RadiusValue } from './RadiusSelector';
@@ -128,9 +129,20 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
   const externalProfilesCount = allProfiles.filter((p) => !p.isCurrentUser).length;
   const isRefreshing = nearbyFetching;
 
+  // Pré-signe en lot toutes les URLs d'avatars dès que les profils arrivent
+  // → chaque ProfileCard trouve l'URL dans le cache et l'affiche immédiatement
+  useEffect(() => {
+    if (!nearbyProfiles || nearbyProfiles.length === 0) return;
+    const urls = nearbyProfiles.map((p) => p.avatar_url).filter(Boolean) as string[];
+    if (urls.length > 0) {
+      void getSignedAvatarUrls(urls);
+    }
+  }, [nearbyProfiles]);
+
   const handleRefresh = useCallback(async () => {
     setVisibleCount(PROFILES_PER_PAGE);
-    await requestLocation();
+    // Refetch en parallèle de la géoloc pour ne pas attendre le GPS
+    void requestLocation();
     await refetchNearby();
   }, [requestLocation, refetchNearby]);
 

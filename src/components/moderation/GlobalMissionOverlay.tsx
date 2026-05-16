@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Check, X, Euro, Loader2, Phone, Timer,
+  Check, X, Euro, Loader2, Phone, PhoneOff, Timer,
   ChevronRight, CheckCircle2, Headphones, PauseCircle, Power
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -282,59 +282,155 @@ const GlobalMissionOverlay = () => {
         )}
       </AnimatePresence>
 
-      {/* Offering */}
+      {/* Offering — Modern "Incoming Call" design (synced with TaskQueuePopup) */}
       <AnimatePresence>
         {queueState === 'offering' && nextTask && !activeTask && missionsActive && (
           <motion.div
-            initial={{ opacity: 0, y: -100, scale: 0.9 }}
+            initial={{ opacity: 0, y: -120, scale: 0.85 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -100, scale: 0.9 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md z-[60]"
-            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
+            exit={{ opacity: 0, y: -120, scale: 0.85 }}
+            transition={{ type: 'spring', damping: 22, stiffness: 320 }}
+            className="fixed top-0 left-0 right-0 sm:top-3 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[92vw] sm:max-w-[420px] z-[60] px-2 sm:px-0"
+            style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}
           >
-            <div className="rounded-2xl border-2 border-primary/30 bg-card shadow-2xl shadow-primary/10 overflow-hidden">
-              <div className="bg-gradient-to-r from-primary/20 via-primary/10 to-accent/20 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                    <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary animate-pulse" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="font-semibold text-xs sm:text-sm text-foreground block">Mission entrante</span>
-                    <span className="text-[10px] text-muted-foreground">Proposée exclusivement pour vous</span>
-                  </div>
+            <div className="relative">
+              <div className="absolute -inset-3 bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30 rounded-3xl blur-2xl opacity-70 animate-pulse pointer-events-none" />
+
+              <div className="relative rounded-3xl border border-primary/20 bg-card/95 backdrop-blur-xl shadow-2xl shadow-primary/20 overflow-hidden">
+                {/* Progress bar */}
+                <div className="relative h-1.5 bg-muted overflow-hidden">
+                  <div
+                    className={`absolute inset-y-0 left-0 transition-all duration-1000 ease-linear ${
+                      countdown <= 10
+                        ? 'bg-gradient-to-r from-red-500 via-rose-400 to-red-500'
+                        : countdown <= 30
+                          ? 'bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500'
+                          : 'bg-gradient-to-r from-primary via-accent to-primary'
+                    } bg-[length:200%_100%] animate-shimmer-bg`}
+                    style={{ width: `${(countdown / OFFER_TTL_SECONDS) * 100}%` }}
+                  />
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${countdownBg}`}>
-                    <Timer className={`w-3 h-3 ${countdownColor}`} />
-                    <span className={`text-xs font-bold tabular-nums ${countdownColor}`}>{countdown}s</span>
+
+                {/* Body */}
+                <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-5">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    {/* Pulsing avatar with countdown ring */}
+                    <div className="relative shrink-0">
+                      <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
+                      <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping [animation-delay:300ms]" />
+
+                      <svg
+                        className="relative w-16 h-16 sm:w-[72px] sm:h-[72px] -rotate-90"
+                        viewBox="0 0 72 72"
+                      >
+                        <circle cx="36" cy="36" r="32" fill="none" strokeWidth="3" className="stroke-muted" />
+                        <circle
+                          cx="36" cy="36" r="32" fill="none" strokeWidth="3" strokeLinecap="round"
+                          className={
+                            countdown <= 10
+                              ? 'stroke-red-500'
+                              : countdown <= 30
+                                ? 'stroke-orange-500'
+                                : 'stroke-primary'
+                          }
+                          strokeDasharray={2 * Math.PI * 32}
+                          strokeDashoffset={2 * Math.PI * 32 * (1 - countdown / OFFER_TTL_SECONDS)}
+                          style={{ transition: 'stroke-dashoffset 1s linear' }}
+                        />
+                      </svg>
+
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/40">
+                          <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground animate-wiggle" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mission info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                        </span>
+                        <span className="text-[11px] uppercase tracking-wider font-bold text-emerald-600 dark:text-emerald-400">
+                          Mission entrante
+                        </span>
+                      </div>
+
+                      <p className="text-base sm:text-lg font-bold text-foreground leading-tight truncate">
+                        {getTaskTypeLabel(nextTask.task_type)}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Proposée exclusivement pour vous
+                      </p>
+
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-500/15 to-emerald-400/10 border border-emerald-500/30">
+                          <Euro className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 tabular-nums">
+                            {formatCentsReward(nextTask.reward_cents)}
+                          </span>
+                        </div>
+                        <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${
+                          countdown <= 10
+                            ? 'bg-red-500/10 border-red-500/30'
+                            : countdown <= 30
+                              ? 'bg-orange-500/10 border-orange-500/30'
+                              : 'bg-muted border-border'
+                        }`}>
+                          <Timer className={`w-3 h-3 ${countdownColor}`} />
+                          <span className={`text-xs font-bold tabular-nums ${countdownColor}`}>
+                            {countdown}s
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <Badge variant="outline" className="border-primary/50 text-primary font-bold text-xs">
-                    <Euro className="w-3 h-3 mr-1" />
-                    {formatCentsReward(nextTask.reward_cents)}
-                  </Badge>
+
+                  {nextTask.description && (
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-3 line-clamp-2 px-1">
+                      {nextTask.description}
+                    </p>
+                  )}
                 </div>
-              </div>
-              <div className="h-1 bg-muted">
-                <div
-                  className={`h-full transition-all duration-1000 ease-linear ${countdown <= 10 ? 'bg-red-500' : countdown <= 30 ? 'bg-orange-500' : 'bg-primary'}`}
-                  style={{ width: `${(countdown / OFFER_TTL_SECONDS) * 100}%` }}
-                />
-              </div>
-              <div className="p-3 sm:p-4 space-y-2.5 sm:space-y-3">
-                <p className="text-sm sm:text-base font-medium text-foreground">{getTaskTypeLabel(nextTask.task_type)}</p>
-                {nextTask.description && (
-                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{nextTask.description}</p>
-                )}
-                <div className="flex gap-2 pt-1">
-                  <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm h-11 active:scale-95 transition-transform" onClick={handleRefuse} disabled={refuseTask.isPending || reserveTask.isPending}>
-                    {refuseTask.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <X className="w-4 h-4 mr-1" />}
-                    Passer
-                  </Button>
-                  <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90 text-xs sm:text-sm h-11 active:scale-95 transition-transform" onClick={handleAccept} disabled={reserveTask.isPending || refuseTask.isPending}>
-                    {reserveTask.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
-                    Accepter
-                  </Button>
+
+                {/* Call-style actions */}
+                <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={handleRefuse}
+                      disabled={refuseTask.isPending || reserveTask.isPending}
+                      className="group relative h-14 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white font-semibold shadow-lg shadow-red-500/30 active:scale-95 transition-all hover:shadow-xl hover:shadow-red-500/40 disabled:opacity-50 disabled:active:scale-100 overflow-hidden"
+                    >
+                      <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative flex items-center justify-center gap-2">
+                        {refuseTask.isPending ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <PhoneOff className="w-5 h-5 rotate-[135deg]" />
+                        )}
+                        <span className="text-sm">Passer</span>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={handleAccept}
+                      disabled={reserveTask.isPending || refuseTask.isPending}
+                      className="group relative h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 text-white font-semibold shadow-lg shadow-emerald-500/40 active:scale-95 transition-all hover:shadow-xl hover:shadow-emerald-500/50 disabled:opacity-50 disabled:active:scale-100 overflow-hidden"
+                    >
+                      <span className="absolute inset-0 rounded-2xl ring-2 ring-emerald-400/60 animate-pulse" />
+                      <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative flex items-center justify-center gap-2">
+                        {reserveTask.isPending ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Phone className="w-5 h-5" />
+                        )}
+                        <span className="text-sm">Accepter</span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

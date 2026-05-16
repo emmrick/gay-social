@@ -106,6 +106,7 @@ const AnnouncementMessage = ({
                 <MessageReactions
                   reactions={reactions}
                   onToggleReaction={(emoji) => onToggleReaction?.(id, emoji)}
+                  isOwn={false}
                 />
               )}
             </div>

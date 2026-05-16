@@ -30,7 +30,7 @@ const SwipePageRoute = () => {
         onNavigateToCredits={() => navigate('/credits')}
         onNavigateToProfile={() => navigate('/profile')}
       />
-      <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+      <Suspense fallback={null}>
         <SwipePage onStartChat={handleStartChat} />
       </Suspense>
     </div>

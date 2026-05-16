@@ -1289,6 +1289,36 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_run_log: {
+        Row: {
+          created_at: string
+          details: Json | null
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          job_name: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          job_name: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          job_name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       dossier_access_requests: {
         Row: {
           created_at: string
@@ -5535,6 +5565,7 @@ export type Database = {
       }
       purchase_chatbot_node: { Args: { _user_id: string }; Returns: Json }
       purchase_location_hide: { Args: { _user_id: string }; Returns: Json }
+      purge_old_cron_run_logs: { Args: never; Returns: undefined }
       purge_old_unread_ephemeral_media: { Args: never; Returns: number }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }

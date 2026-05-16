@@ -36,7 +36,7 @@ const ProfileSkeleton = ({ index }: { index: number }) => (
   </div>
 );
 
-const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembersGridProps) => {
+const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refreshToken }: NearbyMembersGridProps) => {
   const { profile: currentUserProfile } = useAuth();
   const {
     latitude,
@@ -46,23 +46,6 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
     requestLocation,
     permissionState,
   } = useGeolocation();
-
-  // Sélecteur de rayon (persisté en localStorage)
-  const [radius, setRadius] = useState<RadiusValue>(() => {
-    if (typeof window === 'undefined') return DEFAULT_RADIUS;
-    const stored = window.localStorage.getItem(RADIUS_STORAGE_KEY);
-    if (!stored) return DEFAULT_RADIUS;
-    const parsed = Number(stored) as RadiusValue;
-    return ([5, 10, 25, 50, 100, 0] as number[]).includes(parsed) ? parsed : DEFAULT_RADIUS;
-  });
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(RADIUS_STORAGE_KEY, String(radius));
-    } catch {
-      /* ignore quota errors */
-    }
-  }, [radius]);
 
   // 0 = illimité → on envoie une grande valeur au RPC
   const maxDistanceKm = radius === 0 ? 100000 : radius;

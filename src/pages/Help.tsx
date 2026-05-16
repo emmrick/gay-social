@@ -3,7 +3,7 @@
  * Refonte complète : aucun appel IA, réponses 100 % cohérentes, style iMessage premium.
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -78,11 +78,22 @@ interface HelpProps { embedded?: boolean }
 const Help = ({ embedded = false }: HelpProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const resumeTicket = (location.state as any)?.resumeTicket as
+    | { id: string; status: string; assigned_to: string | null }
+    | undefined;
 
-  const [phase, setPhase] = useState<ChatPhase>(loadPhase);
+  const [phase, setPhase] = useState<ChatPhase>(() => {
+    if (resumeTicket) {
+      return resumeTicket.status === 'assigned' ? 'agent' : 'waiting_agent';
+    }
+    return loadPhase();
+  });
   const [messages, setMessages] = useState<ChatMessage[]>(loadMessages);
   const [currentNodeId, setCurrentNodeId] = useState<string>(loadCurrentNode);
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(
+    resumeTicket ? ({ id: resumeTicket.id, status: resumeTicket.status, assigned_to: resumeTicket.assigned_to } as SupportTicket) : null,
+  );
   const [agentInput, setAgentInput] = useState('');
   const [ratingEmoji, setRatingEmoji] = useState<string | null>(null);
   const [ratingComment, setRatingComment] = useState('');
@@ -99,6 +110,15 @@ const Help = ({ embedded = false }: HelpProps) => {
   const hasInitializedRef = useRef(false);
   const typewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const agentInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Clear navigation state once consumed
+  useEffect(() => {
+    if (resumeTicket) {
+      agentJoinedRef.current = resumeTicket.status === 'assigned';
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Persist
   useEffect(() => {

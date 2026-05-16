@@ -6,11 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import ChatMessage from './ChatMessage';
+import AnnouncementMessage from './announcement/AnnouncementMessage';
+import AnnouncementComposer from './announcement/AnnouncementComposer';
 import MuteButton from './MuteButton';
-import { ArrowLeft, Megaphone, Loader2, ChevronDown, Send } from 'lucide-react';
+import { ArrowLeft, Megaphone, Loader2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { sendPushNotification } from '@/services/pushNotificationService';
 
@@ -37,14 +37,11 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
 
   useMobileNavigation({ onBack, enabled: true });
 
-  const { messages, isLoading, sendMessage } = useMessages(roomId, undefined, true);
+  const { messages, isLoading } = useMessages(roomId, undefined, true);
   const { getReactionsForMessage, toggleReaction } = useMessageReactions(roomId);
 
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [adminMessage, setAdminMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -75,24 +72,22 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
     toggleReaction.mutate({ messageId, emoji });
   };
 
-  const handleAdminSend = async () => {
-    if (!adminMessage.trim() || !user || isSending) return;
-    setIsSending(true);
+  const handleAdminSend = async (content: string) => {
+    if (!content.trim() || !user) return;
     try {
-      // Admin sends without credit cost - direct insert
       const { error } = await supabase
         .from('messages')
         .insert({
           chat_room_id: roomId,
           sender_id: user.id,
-          content: adminMessage.trim(),
+          content: content.trim(),
           message_type: 'text',
           is_private: false,
         });
 
       if (error) throw error;
 
-      // Send push notifications to all users for announcement
+      // Push notification (preview = première ligne texte)
       try {
         const { data: allProfiles } = await supabase
           .from('profiles')
@@ -101,10 +96,11 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
           .limit(1000);
 
         if (allProfiles) {
-          // Fire and forget - send push to all users
-          const preview = adminMessage.trim().length > 80 
-            ? adminMessage.trim().substring(0, 80) + '...' 
-            : adminMessage.trim();
+          const plain = content.trim()
+            .replace(/!\[[^\]]*\]\([^)]+\)/g, '[image]')
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+            .replace(/[*_~`]/g, '');
+          const preview = plain.length > 80 ? plain.substring(0, 80) + '…' : plain;
 
           for (const profile of allProfiles) {
             sendPushNotification({
@@ -114,30 +110,20 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
               url: '/',
               tag: 'announcement',
               notificationType: 'system',
-            }).catch(() => {}); // Ignore individual failures
+            }).catch(() => {});
           }
         }
       } catch (pushErr) {
         console.error('Error sending announcement push:', pushErr);
       }
 
-      setAdminMessage('');
       toast.success('Message publié sur le canal');
     } catch (err) {
       console.error('Error sending announcement:', err);
       toast.error('Erreur lors de la publication');
-    } finally {
-      setIsSending(false);
+      throw err;
     }
   };
-
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
-    }
-  }, [adminMessage]);
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden w-full max-w-full">
@@ -168,7 +154,7 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
         ref={scrollRef}
         onScroll={handleScroll}
       >
-        <div className="space-y-4 pb-4">
+        <div className="space-y-6 pb-4">
           {/* Welcome */}
           <div className="text-center py-8">
             <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mb-4">
@@ -178,7 +164,7 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
               Canal Informations
             </h2>
             <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-              Annonces officielles de l'équipe. Vous pouvez réagir aux messages avec des emojis.
+              Annonces officielles de l'équipe. Réagissez avec des emojis.
             </p>
           </div>
 
@@ -189,23 +175,15 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
           )}
 
           {messages.map((message) => (
-            <ChatMessage
+            <AnnouncementMessage
               key={message.id}
-              message={{
-                id: message.id,
-                content: message.content || '',
-                senderId: message.sender_id,
-                senderName: message.senderUsername || 'Admin',
-                senderAvatar: message.senderAvatar || undefined,
-                timestamp: new Date(message.created_at),
-                type: message.message_type as 'text' | 'image',
-                replyToMessage: message.replyToMessage,
-              }}
-              isOwn={false}
+              id={message.id}
+              content={message.content || ''}
+              senderName={message.senderUsername || 'Admin'}
+              senderAvatar={message.senderAvatar}
+              timestamp={new Date(message.created_at)}
               reactions={getReactionsForMessage(message.id)}
-              chatRoomId={roomId}
               onToggleReaction={handleToggleReaction}
-              // No reply, no avatar click, no pin — read-only channel
             />
           ))}
         </div>
@@ -223,34 +201,12 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
         </Button>
       )}
 
-      {/* Admin input OR read-only notice */}
-      <div className="flex-shrink-0 border-t border-border">
+      {/* Composer or read-only notice */}
+      <div className="flex-shrink-0">
         {isAdminOrMod ? (
-          <div className="p-3 flex gap-2 items-end">
-            <Textarea
-              ref={textareaRef}
-              value={adminMessage}
-              onChange={(e) => setAdminMessage(e.target.value)}
-              placeholder="Publier une annonce..."
-              className="resize-none min-h-[40px] max-h-[120px] text-sm"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleAdminSend();
-                }
-              }}
-            />
-            <Button
-              size="icon"
-              onClick={handleAdminSend}
-              disabled={!adminMessage.trim() || isSending}
-              className="flex-shrink-0 bg-amber-500 hover:bg-amber-600"
-            >
-              {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </Button>
-          </div>
+          <AnnouncementComposer onSend={handleAdminSend} />
         ) : (
-          <div className="px-4 py-3 text-center">
+          <div className="border-t border-border px-4 py-3 text-center">
             <p className="text-xs text-muted-foreground">
               📢 Canal en lecture seule — Réagissez avec des emojis
             </p>

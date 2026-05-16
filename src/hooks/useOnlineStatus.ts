@@ -38,33 +38,34 @@ export const shouldShowOnlineIndicator = (profile: ProfileWithStatus | null | un
   return isUserTrulyOnline(profile);
 };
 
+/** Au-delà de ce seuil, on affiche simplement « Hors ligne ». */
+const OFFLINE_LABEL_THRESHOLD_DAYS = 7;
+
 /**
- * Get a human-readable "last seen" text for a user
+ * Get a human-readable "last seen" text for a user.
+ * - En ligne : null (l'indicateur vert s'affiche à la place)
+ * - < 7 jours : durée écoulée (À l'instant, 12min, 3h, 2j…)
+ * - >= 7 jours ou inconnu : « Hors ligne »
  */
 export const getLastSeenText = (
   profile: ProfileWithStatus | null | undefined,
   options?: { prefix?: string }
 ): string | null => {
   if (!profile) return 'Hors ligne';
-  
+
   const prefix = options?.prefix ?? '';
-  
-  // If hiding both statuses, return null (show nothing)
+
   if (profile.hide_online_status && profile.hide_last_seen) return null;
-  
-  // If truly online and not hidden, return null (will show online indicator instead)
   if (!profile.hide_online_status && isUserTrulyOnline(profile)) return null;
-  
-  // If hiding last seen, just show "Hors ligne"
   if (profile.hide_last_seen) return 'Hors ligne';
-  
   if (!profile.last_seen) return 'Hors ligne';
-  
+
   const diff = Date.now() - new Date(profile.last_seen).getTime();
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  
+
+  if (days >= OFFLINE_LABEL_THRESHOLD_DAYS) return 'Hors ligne';
   if (minutes < 5) return `${prefix}À l'instant`;
   if (minutes < 60) return `${prefix}${minutes}min`;
   if (hours < 24) return `${prefix}${hours}h`;
@@ -72,25 +73,27 @@ export const getLastSeenText = (
 };
 
 /**
- * Get detailed last seen text with "Vu il y a" prefix
+ * Detailed variant with "Vu il y a" prefix.
  */
 export const getDetailedLastSeenText = (profile: ProfileWithStatus | null | undefined): string => {
   if (!profile) return 'Hors ligne';
-  
+
   if (isUserTrulyOnline(profile) && !profile.hide_online_status) {
     return 'En ligne maintenant';
   }
-  
+
   if (profile.hide_last_seen) return 'Hors ligne';
   if (!profile.last_seen) return 'Hors ligne';
-  
+
   const diff = Date.now() - new Date(profile.last_seen).getTime();
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  
+
+  if (days >= OFFLINE_LABEL_THRESHOLD_DAYS) return 'Hors ligne';
   if (minutes < 5) return 'Vu à l\'instant';
   if (minutes < 60) return `Vu il y a ${minutes} min`;
   if (hours < 24) return `Vu il y a ${hours}h`;
   return `Vu il y a ${days}j`;
 };
+

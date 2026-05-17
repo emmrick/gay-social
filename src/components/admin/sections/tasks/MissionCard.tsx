@@ -50,6 +50,7 @@ const TYPE_META: Record<string, { color: string; bg: string; icon: React.Compone
   promo_validation: { color: 'border-l-purple-500', bg: 'bg-purple-500/10', icon: Ticket },
   support_chat: { color: 'border-l-violet-500', bg: 'bg-violet-500/10', icon: Headphones },
   tween_review: { color: 'border-l-sky-500', bg: 'bg-sky-500/10', icon: Bird },
+  photo_exchange_review: { color: 'border-l-fuchsia-500', bg: 'bg-fuchsia-500/10', icon: ImageIcon },
   screenshot_investigation: { color: 'border-l-pink-500', bg: 'bg-pink-500/10', icon: Shield },
 };
 

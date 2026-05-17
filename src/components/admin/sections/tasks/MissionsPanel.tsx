@@ -369,6 +369,10 @@ const MissionsPanel = () => {
                 task={task}
                 onRecycle={(id) => recycleTask.mutate(id)}
                 onViewTarget={viewTarget}
+                onOpenTask={(t) => {
+                  const exId = (t.metadata?.exchange_id as string) || t.target_entity_id;
+                  if (exId) setReviewExchangeId(exId);
+                }}
                 recycling={recycleTask.isPending}
               />
             ))}
@@ -411,6 +415,10 @@ const MissionsPanel = () => {
                     onToggleSelect={toggleSelect}
                     onRecycle={(id) => recycleTask.mutate(id)}
                     onViewTarget={viewTarget}
+                    onOpenTask={(t) => {
+                      const exId = (t.metadata?.exchange_id as string) || t.target_entity_id;
+                      if (exId) setReviewExchangeId(exId);
+                    }}
                     recycling={recycleTask.isPending}
                   />
                 ))
@@ -419,6 +427,12 @@ const MissionsPanel = () => {
           </ScrollArea>
         </div>
       )}
+
+      <PhotoExchangeReviewDialog
+        exchangeId={reviewExchangeId}
+        open={!!reviewExchangeId}
+        onOpenChange={(o) => !o && setReviewExchangeId(null)}
+      />
     </div>
   );
 };

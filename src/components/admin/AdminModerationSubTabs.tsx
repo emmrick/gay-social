@@ -1,10 +1,10 @@
 /**
- * Sous-onglets horizontaux affichés en haut des sections du groupe "Modération"
- * sur mobile. Permet de naviguer entre Signalements / Contenu / IA / Captures /
- * Identité sans devoir repasser par le dashboard.
+ * Sous-onglets horizontaux affichés en haut des sections groupées
+ * (Modération, Membres, Finances) sur mobile. Permet de naviguer entre
+ * les sections d'un même groupe sans repasser par le dashboard.
  *
- * Les items sont filtrés selon les permissions du modérateur (ou tous visibles
- * pour les admins).
+ * Les items sont filtrés selon les permissions du modérateur (ou tous
+ * visibles pour les admins).
  */
 import { memo, useMemo } from 'react';
 import {
@@ -17,6 +17,16 @@ import {
   Headphones,
   Star,
   Radio,
+  Lightbulb,
+  Users,
+  BarChart3,
+  UserCog,
+  Wallet,
+  Activity,
+  ShoppingCart,
+  Euro,
+  ArrowUpRight,
+  PieChart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminSection, ModPermissions } from './AdminSidebar';
@@ -38,20 +48,28 @@ const MOD_TABS: SubTab[] = [
   { id: 'live-content', label: 'Direct', icon: Radio, permissionKey: 'can_manage_content' },
   { id: 'ai-moderation', label: 'IA', icon: Bot, permissionKey: 'can_ai_moderation' },
   { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, permissionKey: 'can_screenshot_sanctions' },
+  { id: 'suggestions', label: 'Idées', icon: Lightbulb, permissionKey: 'can_manage_content' },
   { id: 'verification', label: 'Identité', icon: IdCard, adminOnly: true, permissionKey: 'can_verify_identity' },
 ];
 
-const MODERATION_SECTIONS: AdminSection[] = [
-  'pending-tasks',
-  'support',
-  'support-ratings',
-  'reports',
-  'moderation',
-  'live-content',
-  'ai-moderation',
-  'screenshot-sanctions',
-  'verification',
+const USERS_TABS: SubTab[] = [
+  { id: 'users', label: 'Membres', icon: Users, adminOnly: true, permissionKey: 'can_manage_users' },
+  { id: 'stats', label: 'Stats', icon: BarChart3, adminOnly: true, permissionKey: 'can_view_stats' },
+  { id: 'moderators', label: 'Équipe', icon: UserCog, adminOnly: true },
 ];
+
+const FINANCES_TABS: SubTab[] = [
+  { id: 'wallet', label: 'Portefeuille', icon: Wallet },
+  { id: 'credits-surveillance', label: 'Surveillance', icon: Activity, adminOnly: true, permissionKey: 'can_manage_credits' },
+  { id: 'credit-purchases', label: 'Achats', icon: ShoppingCart, permissionKey: 'can_manage_credits' },
+  { id: 'rates', label: 'Tarifs', icon: Euro, adminOnly: true },
+  { id: 'withdrawals', label: 'Retraits', icon: ArrowUpRight, adminOnly: true },
+  { id: 'global', label: 'Gains', icon: PieChart, adminOnly: true },
+];
+
+const MODERATION_SECTIONS: AdminSection[] = MOD_TABS.map((t) => t.id);
+const USERS_SECTIONS: AdminSection[] = USERS_TABS.map((t) => t.id);
+const FINANCES_SECTIONS: AdminSection[] = FINANCES_TABS.map((t) => t.id);
 
 interface Props {
   activeSection: AdminSection;
@@ -66,17 +84,24 @@ const AdminModerationSubTabs = ({
   isAdmin,
   modPermissions,
 }: Props) => {
+  const activeGroupTabs = useMemo<SubTab[] | null>(() => {
+    if (MODERATION_SECTIONS.includes(activeSection)) return MOD_TABS;
+    if (USERS_SECTIONS.includes(activeSection)) return USERS_TABS;
+    if (FINANCES_SECTIONS.includes(activeSection)) return FINANCES_TABS;
+    return null;
+  }, [activeSection]);
+
   const visible = useMemo(() => {
-    return MOD_TABS.filter((t) => {
+    if (!activeGroupTabs) return [];
+    return activeGroupTabs.filter((t) => {
       if (isAdmin) return true;
       if (t.adminOnly) return false;
-      // Si une permission est requise, on la vérifie. Sinon (pas de clé), c'est visible.
       if (!t.permissionKey) return true;
       return Boolean(modPermissions?.[t.permissionKey as keyof ModPermissions]);
     });
-  }, [isAdmin, modPermissions]);
+  }, [activeGroupTabs, isAdmin, modPermissions]);
 
-  if (!MODERATION_SECTIONS.includes(activeSection)) return null;
+  if (!activeGroupTabs) return null;
   if (visible.length <= 1) return null;
 
   return (
@@ -108,4 +133,4 @@ const AdminModerationSubTabs = ({
 };
 
 export default memo(AdminModerationSubTabs);
-export { MODERATION_SECTIONS };
+export { MODERATION_SECTIONS, USERS_SECTIONS, FINANCES_SECTIONS };

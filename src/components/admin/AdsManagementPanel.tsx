@@ -257,6 +257,8 @@ const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
         </Card>
       </div>
 
+      <AdRotationStatsPanel />
+
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">

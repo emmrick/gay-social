@@ -151,25 +151,28 @@ export const useAds = (_placement?: string, limit = 10) => {
   return { ads: isAdFree ? [] : (shuffledAds || []), currentAd: isAdFree ? null : currentAd, isAdFree, rotationIndex, getAdByOffset, ...rest };
 };
 
-/** Track impression (once per ad per session) */
-export const useAdImpression = (adId: string | undefined) => {
+/** Track impression (once per ad+placement per session) */
+export const useAdImpression = (adId: string | undefined, placement?: string) => {
   const { user } = useAuth();
   const tracked = useRef(new Set<string>());
 
   useEffect(() => {
-    if (!adId || !user?.id || tracked.current.has(adId)) return;
-    tracked.current.add(adId);
+    if (!adId || !user?.id) return;
+    const key = `${adId}|${placement || 'unknown'}`;
+    if (tracked.current.has(key)) return;
+    tracked.current.add(key);
 
     const track = async () => {
       await supabase.from('ad_impressions').insert({
         ad_id: adId,
         user_id: user.id,
         page_url: window.location.pathname,
+        placement: placement || null,
       } as any);
       await supabase.rpc('increment_ad_impressions' as any, { _ad_id: adId });
     };
     track().catch(() => {});
-  }, [adId, user?.id]);
+  }, [adId, user?.id, placement]);
 };
 
 /** Track click */

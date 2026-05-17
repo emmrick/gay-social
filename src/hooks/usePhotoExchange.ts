@@ -125,6 +125,31 @@ export const usePhotoExchangeMutations = (conversationId: string | null | undefi
         .select()
         .single();
       if (error) throw error;
+
+      // Notification au destinataire
+      const { data: profile } = await supabase
+        .from('profiles').select('username').eq('user_id', user.id).maybeSingle();
+      const username = profile?.username ?? 'Quelqu\'un';
+      const actionUrl = `/chat/${recipientId}`;
+      await supabase.from('notifications').insert({
+        user_id: recipientId,
+        type: 'photo_exchange_request',
+        title: `📸 ${username} propose un échange de photos`,
+        message: 'Acceptez pour échanger une photo vérifiée par la modération.',
+        action_url: actionUrl,
+      });
+      try {
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            userId: recipientId,
+            title: `📸 ${username}`,
+            body: 'Propose un échange de photos',
+            url: actionUrl,
+            notificationType: 'system',
+          },
+        });
+      } catch (e) { console.warn('[photoExchange push]', e); }
+
       return data as unknown as PhotoExchange;
     },
     onSuccess: () => { toast.success('Demande d\'échange envoyée'); invalidate(); },
@@ -133,11 +158,44 @@ export const usePhotoExchangeMutations = (conversationId: string | null | undefi
 
   const respondToExchange = useMutation({
     mutationFn: async ({ id, accept }: { id: string; accept: boolean }) => {
+      if (!user) throw new Error('Not authenticated');
+      const { data: exchange, error: fetchErr } = await supabase
+        .from('photo_exchanges' as any)
+        .select('initiator_id')
+        .eq('id', id)
+        .single();
+      if (fetchErr) throw fetchErr;
+
       const { error } = await supabase
         .from('photo_exchanges' as any)
         .update({ status: accept ? 'accepted' : 'cancelled' })
         .eq('id', id);
       if (error) throw error;
+
+      // Notifier l'initiateur de la réponse
+      const initiatorId = (exchange as any).initiator_id as string;
+      const { data: profile } = await supabase
+        .from('profiles').select('username').eq('user_id', user.id).maybeSingle();
+      const username = profile?.username ?? 'Quelqu\'un';
+      const actionUrl = `/chat/${initiatorId}`;
+      await supabase.from('notifications').insert({
+        user_id: initiatorId,
+        type: 'photo_exchange_response',
+        title: accept ? `✅ ${username} a accepté` : `❌ ${username} a refusé`,
+        message: accept ? 'Vous pouvez maintenant envoyer votre photo.' : 'L\'échange a été refusé.',
+        action_url: actionUrl,
+      });
+      try {
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            userId: initiatorId,
+            title: accept ? `✅ ${username} a accepté` : `❌ ${username} a refusé`,
+            body: accept ? 'Envoyez votre photo' : 'Échange refusé',
+            url: actionUrl,
+            notificationType: 'system',
+          },
+        });
+      } catch (e) { console.warn('[photoExchange push]', e); }
     },
     onSuccess: (_d, v) => { toast.success(v.accept ? 'Échange accepté' : 'Demande refusée'); invalidate(); },
     onError: (e: any) => toast.error(e.message ?? 'Erreur'),

@@ -163,6 +163,7 @@ export type Database = {
           created_at: string
           id: string
           page_url: string | null
+          placement: string | null
           user_id: string | null
         }
         Insert: {
@@ -170,6 +171,7 @@ export type Database = {
           created_at?: string
           id?: string
           page_url?: string | null
+          placement?: string | null
           user_id?: string | null
         }
         Update: {
@@ -177,6 +179,7 @@ export type Database = {
           created_at?: string
           id?: string
           page_url?: string | null
+          placement?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -5370,6 +5373,18 @@ export type Database = {
           id: string
           label: string
           starts_at: string
+        }[]
+      }
+      get_ad_rotation_stats: {
+        Args: { _hours?: number }
+        Returns: {
+          ad_id: string
+          ad_title: string
+          advertiser_name: string
+          impressions: number
+          last_impression: string
+          placement: string
+          unique_users: number
         }[]
       }
       get_advertiser_wallet: { Args: { _email: string }; Returns: Json }

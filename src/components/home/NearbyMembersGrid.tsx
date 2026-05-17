@@ -265,7 +265,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
               {/* Pub après chaque bloc de 9 profils, sauf après le tout dernier si plus rien ne suit */}
               {(chunkIdx < chunks.length - 1 || hasMore) && (
                 <AdBanner
-                  placement="sponsored_card"
+                  placement="native"
                   index={chunkIdx}
                   className="my-1"
                 />

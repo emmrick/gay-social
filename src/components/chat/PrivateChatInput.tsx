@@ -6,7 +6,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2, Plus, FolderLock, Camera, Gift } from 'lucide-react';
+import { Send, Loader2, Plus, FolderLock, Camera, Gift, ImagePlus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SavedMessagesDialog from './SavedMessagesDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';

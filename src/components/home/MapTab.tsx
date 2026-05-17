@@ -108,6 +108,10 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
   const { data: profiles = [], isLoading, isFetching, refetch } = useNearbyProfiles(latitude, longitude, 50);
   const mapRef = useRef<L.Map | null>(null);
   const [signedAvatars, setSignedAvatars] = useState<Map<string, string>>(new Map());
+  // Stable unique key per mount → forces react-leaflet to use a fresh DOM
+  // container, preventing "Map container is already initialized" after
+  // navigation / tab switches.
+  const [mapKey] = useState(() => `map-${Math.random().toString(36).slice(2)}-${Date.now()}`);
 
   const userIds = useMemo(() => profiles.map((p: any) => p.user_id), [profiles]);
   const userIdsKey = userIds.join(',');
@@ -224,6 +228,7 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
       </div>
 
       <MapContainer
+        key={mapKey}
         center={[latitude!, longitude!]}
         zoom={13}
         scrollWheelZoom

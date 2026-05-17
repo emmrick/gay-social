@@ -215,11 +215,27 @@ const SuggestionsAdminPanel = () => {
       admin_notes?: string;
       credits_awarded?: number;
     }) => {
+      // For status changes that should reward the author (approval), use the atomic RPC
+      // so the suggestion update + credit award happen in a single transaction and are
+      // idempotent (re-approving never double-credits).
+      if (payload.status) {
+        const { data, error } = await supabase.rpc('process_suggestion_decision' as any, {
+          p_suggestion_id: payload.id,
+          p_status: payload.status,
+          p_admin_notes: payload.admin_notes ?? null,
+          p_credits_awarded: payload.credits_awarded ?? 0,
+        });
+        if (error) throw error;
+        if (data && (data as any).success === false) {
+          throw new Error((data as any).error ?? 'Échec de la décision');
+        }
+        return data;
+      }
+
+      // Pure metadata edit (notes/credits without status change)
       const patch: any = { reviewed_by: user?.id, reviewed_at: new Date().toISOString() };
-      if (payload.status) patch.status = payload.status;
       if (payload.admin_notes !== undefined) patch.admin_notes = payload.admin_notes;
       if (payload.credits_awarded !== undefined) patch.credits_awarded = payload.credits_awarded;
-
       const { data, error } = await supabase
         .from('user_suggestions')
         .update(patch)
@@ -227,18 +243,6 @@ const SuggestionsAdminPanel = () => {
         .select()
         .single();
       if (error) throw error;
-
-      // Crédit l'auteur si une récompense est définie et qu'on approuve
-      if (payload.status === 'approved' && (payload.credits_awarded ?? 0) > 0) {
-        const { error: cErr } = await supabase.rpc('add_credits' as any, {
-          _user_id: data.user_id,
-          _amount: payload.credits_awarded,
-          _credit_type: 'bonus',
-          _transaction_type: 'suggestion_reward',
-          _description: `Idée approuvée : ${data.title}`,
-        });
-        if (cErr) console.warn('add_credits failed', cErr);
-      }
       return data;
     },
     onSuccess: () => {

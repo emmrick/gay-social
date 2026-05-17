@@ -530,6 +530,7 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
               }}
               onDismiss={dismissSmart}
             />
+            <PhotoExchangePanel conversationId={conversationId} otherUserId={otherUserId} />
             <PrivateChatInput
               onSendMessage={handleSendMessage}
               recipientId={otherUserId}
@@ -538,6 +539,7 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
               onFocus={handleInputFocus}
               onTyping={startTyping}
               onSendGift={handleSendGift}
+              onStartPhotoExchange={handleStartPhotoExchange}
             />
           </>
         )}

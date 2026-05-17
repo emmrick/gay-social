@@ -228,6 +228,7 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
       </div>
 
       <MapContainer
+        key={mapKey}
         center={[latitude!, longitude!]}
         zoom={13}
         scrollWheelZoom

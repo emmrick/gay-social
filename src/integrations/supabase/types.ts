@@ -2875,6 +2875,51 @@ export type Database = {
         }
         Relationships: []
       }
+      photo_exchange_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          exchange_id: string
+          id: string
+          photo_id: string | null
+          reason: string | null
+          reviewer_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          exchange_id: string
+          id?: string
+          photo_id?: string | null
+          reason?: string | null
+          reviewer_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          exchange_id?: string
+          id?: string
+          photo_id?: string | null
+          reason?: string | null
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_exchange_audit_logs_exchange_id_fkey"
+            columns: ["exchange_id"]
+            isOneToOne: false
+            referencedRelation: "photo_exchanges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_exchange_audit_logs_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photo_exchange_photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       photo_exchange_photos: {
         Row: {
           created_at: string

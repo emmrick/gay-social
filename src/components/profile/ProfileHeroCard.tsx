@@ -80,7 +80,7 @@ const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionL
             </div>
 
             {/* Info */}
-            <div className="flex-1 min-w-0 pt-1">
+            <div className="flex-1 min-w-0 pt-8 sm:pt-10">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h1 className="text-lg font-display font-bold truncate">{profile.username}</h1>
                 {profile.is_verified && <Verified className="w-4.5 h-4.5 text-blue-500 fill-blue-500 flex-shrink-0" />}

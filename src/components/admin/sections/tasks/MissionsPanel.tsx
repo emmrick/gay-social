@@ -37,6 +37,7 @@ const TYPE_FILTERS = [
   { value: 'content_moderation', label: '📸 Contenu' },
   { value: 'screenshot_investigation', label: '🛡️ Screenshots' },
   { value: 'tween_review', label: '🐦 Tween' },
+  { value: 'photo_exchange_review', label: '🖼️ Échange photo' },
 ];
 
 const SLA_FILTERS = [

@@ -46,7 +46,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .maybeSingle();
     
     if (error) {
-      console.error('Error fetching profile:', error.message || JSON.stringify(error));
+      // AbortError is a benign cancellation when the user navigates away
+      // before the request finishes — not worth logging or surfacing.
+      const msg = error.message || '';
+      if (!msg.includes('abort')) {
+        console.warn('[AuthContext] fetchProfile error:', msg || JSON.stringify(error));
+      }
       return null;
     }
     return data;

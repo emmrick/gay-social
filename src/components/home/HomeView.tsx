@@ -20,6 +20,7 @@ import AdOrInfoBanner from './AdOrInfoBanner';
 import VisitsTab from './VisitsTab';
 import ReactionsTab from './ReactionsTab';
 import MapTab from './MapTab';
+import SectionErrorBoundary from '@/components/SectionErrorBoundary';
 import type { RadiusValue } from './RadiusSelector';
 
 interface HomeViewProps {
@@ -265,7 +266,9 @@ const HomeView = ({
           </TabsContent>
 
           <TabsContent value="carte" className="mt-2">
-            <MapTab onViewProfile={handleViewProfile} />
+            <SectionErrorBoundary label="La carte n'a pas pu se charger">
+              <MapTab onViewProfile={handleViewProfile} />
+            </SectionErrorBoundary>
           </TabsContent>
         </Tabs>
       </div>

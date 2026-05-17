@@ -25,7 +25,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SectionHeader, EmptyState, LoadingList, ErrorState } from '../_shared/AdminAtoms';
 import MissionCard from './MissionCard';
 import PhotoExchangeReviewDialog from '@/components/admin/PhotoExchangeReviewDialog';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -74,11 +75,47 @@ const MissionsPanel = () => {
   const [reviewExchangeId, setReviewExchangeId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   useEffect(() => {
     fetchMissions('pending');
     const interval = setInterval(() => fetchMissions('pending', { force: true }), 15000);
     return () => clearInterval(interval);
   }, [fetchMissions]);
+
+  // Auto-open photo-exchange review dialog when ?task=<id> targets one
+  useEffect(() => {
+    const taskId = searchParams.get('task');
+    if (!taskId) return;
+    const local = missions.find((m) => m.id === taskId);
+    if (local?.task_type === 'photo_exchange_review') {
+      const exId = (local.metadata?.exchange_id as string) || local.target_entity_id;
+      if (exId) {
+        setReviewExchangeId(exId);
+        const next = new URLSearchParams(searchParams);
+        next.delete('task');
+        setSearchParams(next, { replace: true });
+        return;
+      }
+    }
+    // Fallback: fetch the task directly (covers cases where store isn't loaded yet)
+    (async () => {
+      const { data } = await supabase
+        .from('moderation_tasks')
+        .select('id, task_type, target_entity_id, metadata')
+        .eq('id', taskId)
+        .maybeSingle();
+      if (data?.task_type === 'photo_exchange_review') {
+        const exId = ((data.metadata as any)?.exchange_id as string) || data.target_entity_id;
+        if (exId) {
+          setReviewExchangeId(exId);
+          const next = new URLSearchParams(searchParams);
+          next.delete('task');
+          setSearchParams(next, { replace: true });
+        }
+      }
+    })();
+  }, [searchParams, missions, setSearchParams]);
 
   const { reserved, pending } = useMemo(() => {
     return {

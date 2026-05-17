@@ -130,6 +130,12 @@ serve(async (req) => {
       credit_management: '💰 Demande de crédits',
       withdrawal_management: '🏦 Demande de retrait',
       content_moderation: '📸 Modération contenu',
+      photo_exchange_review: '🖼️ Échange de photos à vérifier',
+      tween_review: '🐦 Tween signalé',
+      screenshot_investigation: '🛡️ Capture d\'écran à examiner',
+      ad_review: '📢 Annonce publicitaire à vérifier',
+      promo_validation: '🎟️ Code promo à valider',
+      user_suspension: '🔒 Suspension à traiter',
     };
 
     const title = '🔔 Nouvelle mission';
@@ -142,7 +148,7 @@ serve(async (req) => {
       icon: '/pwa-192x192.png',
       badge: '/pwa-192x192.png',
       tag: `mission-${task_id}`,
-      url: '/admin',
+      url: `/admin/missions?task=${task_id}`,
     });
 
     let successCount = 0;

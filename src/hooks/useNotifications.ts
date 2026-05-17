@@ -23,7 +23,7 @@ export const useNotifications = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const pollIntervalRef = useRef(10000);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const lastSyncRef = useRef<string | null>(null);
   const knownIdsRef = useRef<Set<string>>(new Set());
 

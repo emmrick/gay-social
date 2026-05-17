@@ -32,6 +32,13 @@ serve(async (req) => {
       identity_verification: '🪪 Vérification d\'identité',
       report_review: '⚠️ Signalement',
       credit_management: '💳 Gestion crédits',
+      withdrawal_management: '🏦 Demande de retrait',
+      content_moderation: '📸 Modération contenu',
+      photo_exchange_review: '🖼️ Échange de photos à vérifier',
+      tween_review: '🐦 Tween signalé',
+      screenshot_investigation: '🛡️ Capture d\'écran',
+      ad_review: '📢 Annonce publicitaire',
+      promo_validation: '🎟️ Code promo',
     };
 
     const label = taskTypeLabels[task_type] || task_type;

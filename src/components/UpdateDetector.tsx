@@ -52,7 +52,7 @@ const UpdateDetector = () => {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [retryCount, setRetryCount] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   // Source de vérité : la version réellement embarquée dans le bundle JS chargé.
   const localVersionRef = useRef<string>(BUILD_VERSION);
 

@@ -63,12 +63,30 @@ export const useAdFreeStatus = () => {
   return { data: !!data?.isActive, isLoading };
 };
 
+// Shared rotation state across ALL useAds() instances so that
+// multiple AdBanner placements on the same page stay in sync and
+// pick DISTINCT ads via getAdByOffset(index).
+let _sharedRotationIndex = 0;
+let _sharedShuffleSeed = Math.random();
+const _rotationListeners = new Set<() => void>();
+let _rotationTimer: ReturnType<typeof setInterval> | null = null;
+
+const ensureSharedRotationTimer = () => {
+  if (_rotationTimer) return;
+  _rotationTimer = setInterval(() => {
+    _sharedRotationIndex += 1;
+    _sharedShuffleSeed = Math.random();
+    _rotationListeners.forEach(l => l());
+  }, AD_ROTATION_INTERVAL_MS);
+};
+
 /** Fetch approved ads filtered by placement */
 export const useAds = (_placement?: string, limit = 10) => {
   const { user } = useAuth();
   const { data: isAdFree } = useAdFreeStatus();
-  const [rotationIndex, setRotationIndex] = useState(0);
-  const [shuffleSeed, setShuffleSeed] = useState(() => Math.random());
+  const [, forceTick] = useState(0);
+  const rotationIndex = _sharedRotationIndex;
+  const shuffleSeed = _sharedShuffleSeed;
 
   const { data: ads, ...rest } = useQuery({
     queryKey: ['active-ads', limit],
@@ -115,12 +133,10 @@ export const useAds = (_placement?: string, limit = 10) => {
 
   useEffect(() => {
     if (!shuffledAds || shuffledAds.length <= 1) return;
-    const timer = setInterval(() => {
-      setRotationIndex(prev => prev + 1);
-      // Re-shuffle on each full cycle
-      setShuffleSeed(Math.random());
-    }, AD_ROTATION_INTERVAL_MS);
-    return () => clearInterval(timer);
+    ensureSharedRotationTimer();
+    const listener = () => forceTick(t => t + 1);
+    _rotationListeners.add(listener);
+    return () => { _rotationListeners.delete(listener); };
   }, [shuffledAds?.length]);
 
   const currentAd = shuffledAds && shuffledAds.length > 0 ? shuffledAds[rotationIndex % shuffledAds.length] : null;

@@ -22,8 +22,8 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
   const [dismissed, setDismissed] = useState(false);
   const impressionTracked = useRef(new Set<string>());
 
-  // Use offset-based ad for multiple banners on same page
-  const ad = index === 0 ? currentAd : getAdByOffset(index);
+  // Always use offset-based pick so multiple banners on the same page show DISTINCT ads
+  const ad = getAdByOffset(index);
 
   // Track impression
   useEffect(() => {

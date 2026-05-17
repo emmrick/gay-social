@@ -47,6 +47,7 @@ const TASK_TYPE_SECTIONS: Record<string, string> = {
   promo_validation: 'promo',
   support_chat: 'support',
   tween_review: 'reports',
+  photo_exchange_review: 'moderation',
 };
 
 /** Get entity ID from task metadata for direct navigation */

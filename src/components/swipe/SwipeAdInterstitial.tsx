@@ -33,6 +33,7 @@ const SwipeAdInterstitial = ({ onContinue }: SwipeAdInterstitialProps) => {
           ad_id: ad.id,
           user_id: user.id,
           page_url: window.location.pathname,
+          placement: 'swipe_interstitial',
         } as any);
         await supabase.rpc('increment_ad_impressions' as any, { _ad_id: ad.id });
       } catch {}

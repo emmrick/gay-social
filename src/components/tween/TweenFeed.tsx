@@ -93,17 +93,24 @@ const TweenFeed = () => {
           <p className="text-sm text-muted-foreground mt-1.5">Soyez le premier à publier !</p>
         </motion.div>
       ) : (
-        tweens.map((tween, index) => (
-          <motion.div
-            key={tween.id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: Math.min(index * 0.03, 0.15), duration: 0.3 }}
-          >
-            <TweenCard tween={tween} />
-            {index === 2 && <AdBanner placement="compact" className="my-3" />}
-          </motion.div>
-        ))
+        tweens.map((tween, index) => {
+          // Insert a large sponsored card every 5 tweens (Facebook/TikTok style)
+          const showAd = index > 0 && (index + 1) % 5 === 0;
+          const adOffset = Math.floor((index + 1) / 5);
+          return (
+            <motion.div
+              key={tween.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: Math.min(index * 0.03, 0.15), duration: 0.3 }}
+            >
+              <TweenCard tween={tween} />
+              {showAd && (
+                <AdBanner placement="sponsored_card" index={adOffset} className="mt-4" />
+              )}
+            </motion.div>
+          );
+        })
       )}
 
         <div ref={sentinelRef} className="h-1" />

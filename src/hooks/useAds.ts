@@ -8,6 +8,7 @@ interface Ad {
   title: string;
   description: string | null;
   image_url: string | null;
+  image_urls: string[] | null;
   link_url: string | null;
   advertiser_name: string;
   advertiser_email?: string | null;
@@ -93,7 +94,7 @@ export const useAds = (_placement?: string, limit = 10) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ads')
-        .select('id, title, description, image_url, link_url, advertiser_name, advertiser_email, placement, impressions_count, clicks_count, budget_cents, spent_cents')
+        .select('id, title, description, image_url, image_urls, link_url, advertiser_name, advertiser_email, placement, impressions_count, clicks_count, budget_cents, spent_cents')
         .eq('status', 'approved')
         .eq('is_active', true)
         .order('created_at', { ascending: false })

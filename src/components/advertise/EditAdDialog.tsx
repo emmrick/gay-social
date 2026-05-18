@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import AdImageUpload from './AdImageUpload';
+import AdImagesUpload from './AdImagesUpload';
 
 interface EditAdDialogProps {
   ad: any;
@@ -14,12 +14,15 @@ interface EditAdDialogProps {
 const EditAdDialog = ({ ad, onClose, onSave }: EditAdDialogProps) => {
   const [title, setTitle] = useState(ad.title);
   const [description, setDescription] = useState(ad.description || '');
-  const [imageUrl, setImageUrl] = useState(ad.image_url || '');
+  const initialImages: string[] = Array.isArray(ad.image_urls) && ad.image_urls.length > 0
+    ? ad.image_urls
+    : (ad.image_url ? [ad.image_url] : []);
+  const [imageUrls, setImageUrls] = useState<string[]>(initialImages);
   const [linkUrl, setLinkUrl] = useState(ad.link_url || '');
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Modifier l'annonce</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div>
@@ -30,7 +33,7 @@ const EditAdDialog = ({ ad, onClose, onSave }: EditAdDialogProps) => {
             <label className="text-xs font-medium">Description</label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
           </div>
-          <AdImageUpload value={imageUrl} onChange={setImageUrl} label="Image de l'annonce" />
+          <AdImagesUpload value={imageUrls} onChange={setImageUrls} />
           <div>
             <label className="text-xs font-medium">URL destination</label>
             <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} />
@@ -43,7 +46,8 @@ const EditAdDialog = ({ ad, onClose, onSave }: EditAdDialogProps) => {
               onSave(ad.id, {
                 title,
                 description: description || null,
-                image_url: imageUrl || null,
+                image_url: imageUrls[0] || null,
+                image_urls: imageUrls,
                 link_url: linkUrl || null,
               })
             }

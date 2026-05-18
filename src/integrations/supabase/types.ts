@@ -251,6 +251,7 @@ export type Database = {
           geo_targeting: string
           id: string
           image_url: string | null
+          image_urls: string[]
           impressions_count: number | null
           is_active: boolean | null
           link_url: string | null
@@ -283,6 +284,7 @@ export type Database = {
           geo_targeting?: string
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           impressions_count?: number | null
           is_active?: boolean | null
           link_url?: string | null
@@ -315,6 +317,7 @@ export type Database = {
           geo_targeting?: string
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           impressions_count?: number | null
           is_active?: boolean | null
           link_url?: string | null

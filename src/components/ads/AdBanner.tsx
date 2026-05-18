@@ -86,9 +86,9 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
           onClick={() => handleClick(ad.id, ad.link_url)}
           className="flex items-center gap-3 w-full text-left"
         >
-          {ad.image_url && (
+          {displayedImage && (
             <img
-              src={ad.image_url}
+              src={displayedImage}
               alt=""
               className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
               loading="lazy"
@@ -140,10 +140,10 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
           onClick={() => handleClick(ad.id, ad.link_url)}
           className="w-full text-left block"
         >
-          {ad.image_url && (
+          {displayedImage && (
             <div className="relative aspect-[4/5] overflow-hidden bg-muted">
               <img
-                src={ad.image_url}
+                src={displayedImage}
                 alt={ad.title}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                 loading="lazy"
@@ -204,9 +204,9 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
         onClick={() => handleClick(ad.id, ad.link_url)}
         className="flex items-start gap-3 w-full text-left"
       >
-        {ad.image_url && (
+        {displayedImage && (
           <img
-            src={ad.image_url}
+            src={displayedImage}
             alt=""
             className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
             loading="lazy"

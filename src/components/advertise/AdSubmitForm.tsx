@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { CalendarRange, Eye, MapPin, Send, Target } from 'lucide-react';
-import AdImageUpload from './AdImageUpload';
+import AdImagesUpload from './AdImagesUpload';
 import { AdPreviewGrid } from '@/components/ads/AdPreview';
 import { placementLabels } from './constants';
 
@@ -33,12 +33,12 @@ export type AdvertiseForm = z.infer<typeof advertiseSchema>;
 
 interface AdSubmitFormProps {
   loading: boolean;
-  adImageUrl: string;
-  setAdImageUrl: (url: string) => void;
+  adImageUrls: string[];
+  setAdImageUrls: (urls: string[]) => void;
   onSubmit: (values: AdvertiseForm) => Promise<void> | void;
 }
 
-const AdSubmitForm = ({ loading, adImageUrl, setAdImageUrl, onSubmit }: AdSubmitFormProps) => {
+const AdSubmitForm = ({ loading, adImageUrls, setAdImageUrls, onSubmit }: AdSubmitFormProps) => {
   const form = useForm<AdvertiseForm>({
     resolver: zodResolver(advertiseSchema),
     defaultValues: {
@@ -122,7 +122,7 @@ const AdSubmitForm = ({ loading, adImageUrl, setAdImageUrl, onSubmit }: AdSubmit
             />
 
             <div className="grid sm:grid-cols-2 gap-4">
-              <AdImageUpload value={adImageUrl} onChange={setAdImageUrl} />
+              <AdImagesUpload value={adImageUrls} onChange={setAdImageUrls} />
               <FormField
                 control={form.control}
                 name="link_url"
@@ -300,7 +300,7 @@ const AdSubmitForm = ({ loading, adImageUrl, setAdImageUrl, onSubmit }: AdSubmit
                 selectedPlacements={form.watch('placements') || []}
                 title={form.watch('title')}
                 description={form.watch('description')}
-                imageUrl={adImageUrl}
+                imageUrl={adImageUrls[0] || ''}
                 hasLink={!!form.watch('link_url')}
               />
             </div>

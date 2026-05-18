@@ -23,7 +23,7 @@ const Advertise = () => {
   const [topupAmount, setTopupAmount] = useState(10);
   const [topupLoading, setTopupLoading] = useState(false);
   const [editingAd, setEditingAd] = useState<any>(null);
-  const [adImageUrl, setAdImageUrl] = useState('');
+  const [adImageUrls, setAdImageUrls] = useState<string[]>([]);
   const [lastSubmittedEmail, setLastSubmittedEmail] = useState<string | null>(null);
   const [magicLoading, setMagicLoading] = useState(false);
 
@@ -157,7 +157,11 @@ const Advertise = () => {
   };
 
   const handleUpdateAd = async (adId: string, updates: Record<string, any>) => {
-    const contentChanged = updates.title || updates.description !== undefined || updates.image_url !== undefined;
+    const contentChanged =
+      updates.title ||
+      updates.description !== undefined ||
+      updates.image_url !== undefined ||
+      updates.image_urls !== undefined;
     if (contentChanged) {
       updates.status = 'pending';
       updates.is_active = false;
@@ -182,7 +186,8 @@ const Advertise = () => {
           advertiser_email: values.advertiser_email,
           title: values.title,
           description: values.description || null,
-          image_url: adImageUrl || null,
+          image_url: adImageUrls[0] || null,
+          image_urls: adImageUrls,
           link_url: values.link_url || null,
           placement,
           budget_cents: values.budget_cents,
@@ -199,7 +204,7 @@ const Advertise = () => {
       }
       setLastSubmittedEmail(values.advertiser_email);
       setSubmitted(true);
-      setAdImageUrl('');
+      setAdImageUrls([]);
       toast.success('Demande envoyée avec succès !');
     } catch {
       toast.error("Erreur lors de l'envoi. Veuillez réessayer.");
@@ -264,8 +269,8 @@ const Advertise = () => {
         magicLoading={magicLoading}
         onDashboardAccess={handleDashboardAccess}
         loading={loading}
-        adImageUrl={adImageUrl}
-        setAdImageUrl={setAdImageUrl}
+        adImageUrls={adImageUrls}
+        setAdImageUrls={setAdImageUrls}
         onSubmit={onSubmit}
       />
     </>

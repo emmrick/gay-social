@@ -18,8 +18,8 @@ interface AdvertiseLandingProps {
   magicLoading: boolean;
   onDashboardAccess: () => void;
   loading: boolean;
-  adImageUrl: string;
-  setAdImageUrl: (url: string) => void;
+  adImageUrls: string[];
+  setAdImageUrls: (urls: string[]) => void;
   onSubmit: (values: AdvertiseForm) => Promise<void> | void;
 }
 
@@ -30,8 +30,8 @@ const AdvertiseLanding = ({
   magicLoading,
   onDashboardAccess,
   loading,
-  adImageUrl,
-  setAdImageUrl,
+  adImageUrls,
+  setAdImageUrls,
   onSubmit,
 }: AdvertiseLandingProps) => (
   <div className="min-h-screen bg-background pb-20">
@@ -130,8 +130,8 @@ const AdvertiseLanding = ({
       {/* Submit form */}
       <AdSubmitForm
         loading={loading}
-        adImageUrl={adImageUrl}
-        setAdImageUrl={setAdImageUrl}
+        adImageUrls={adImageUrls}
+        setAdImageUrls={setAdImageUrls}
         onSubmit={onSubmit}
       />
     </div>

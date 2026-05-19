@@ -301,8 +301,15 @@ const AdSubmitForm = ({ loading, adImageUrls, setAdImageUrls, onSubmit }: AdSubm
                 title={form.watch('title')}
                 description={form.watch('description')}
                 imageUrl={adImageUrls[0] || ''}
+                imageUrls={adImageUrls}
                 hasLink={!!form.watch('link_url')}
               />
+              {adImageUrls.length > 1 && (
+                <p className="text-[10px] text-muted-foreground/80">
+                  Pendant la diffusion, l'un de vos {adImageUrls.length} visuels est choisi
+                  au hasard à chaque affichage chez l'utilisateur.
+                </p>
+              )}
             </div>
 
             <div className="pt-2">

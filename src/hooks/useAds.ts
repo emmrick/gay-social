@@ -130,22 +130,25 @@ const ensureSharedRotationTimer = () => {
 export const useAds = (_placement?: string, limit = 10) => {
   const { user } = useAuth();
   const { data: isAdFree } = useAdFreeStatus();
+  const { data: userRegion } = useUserRegion();
   const [, forceTick] = useState(0);
   const rotationIndex = _sharedRotationIndex;
   const shuffleSeed = _sharedShuffleSeed;
 
   const { data: ads, ...rest } = useQuery({
-    queryKey: ['active-ads', limit],
+    queryKey: ['active-ads', limit, userRegion || 'no-region'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ads')
-        .select('id, title, description, image_url, image_urls, link_url, advertiser_name, advertiser_email, placement, impressions_count, clicks_count, budget_cents, spent_cents')
+        .select('id, title, description, image_url, image_urls, link_url, advertiser_name, advertiser_email, placement, impressions_count, clicks_count, budget_cents, spent_cents, geo_targeting, geo_postal_codes')
         .eq('status', 'approved')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(limit);
       if (error) throw error;
-      return ((data || []) as Ad[]).filter(ad => (ad.budget_cents || 0) > (ad.spent_cents || 0));
+      return ((data || []) as Ad[])
+        .filter((ad) => (ad.budget_cents || 0) > (ad.spent_cents || 0))
+        .filter((ad) => adMatchesRegion(ad, userRegion ?? null));
     },
     enabled: !isAdFree,
     staleTime: 30000,

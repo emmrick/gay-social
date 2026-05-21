@@ -65,6 +65,19 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
   const hasLocation = latitude != null && longitude != null;
   const [visibleCount, setVisibleCount] = useState(PROFILES_PER_PAGE);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const mountTimeRef = useRef<number>(performance.now());
+  const firstRenderRecordedRef = useRef(false);
+
+  // Mesure le temps mount → premier rendu de profils
+  useEffect(() => {
+    if (!firstRenderRecordedRef.current && (nearbyProfiles?.length ?? 0) > 0) {
+      firstRenderRecordedRef.current = true;
+      recordPerfMetric('home', 'time_to_first_profile', performance.now() - mountTimeRef.current, {
+        rows: nearbyProfiles?.length ?? 0,
+        has_geo: hasLocation,
+      });
+    }
+  }, [nearbyProfiles, hasLocation]);
 
   // Auto-request si la permission est déjà accordée (pas de prompt en double)
   useEffect(() => {

@@ -38,6 +38,9 @@ const useFullDashboardStats = () => {
       const startOfToday = startOfDay(today).toISOString();
       const weekAgo = subDays(today, 7).toISOString();
       const monthAgo = subDays(today, 30).toISOString();
+      // Considère "en ligne" uniquement les profils vus dans les 5 dernières minutes
+      // (cohérent avec le compteur public de la home).
+      const onlineCutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
       const cq = (table: string, filters?: Record<string, any>, gte?: { col: string; val: string }) => {
         let q = supabase.from(table as any).select('*', { count: 'exact', head: true });
@@ -46,8 +49,14 @@ const useFullDashboardStats = () => {
         return q as any;
       };
 
+      const onlineQuery = supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_online', true)
+        .gte('last_seen', onlineCutoff);
+
       const [r1, r2, r3, r4, r5, r6, r7, r8] = await Promise.all([
-        cq('profiles'), cq('profiles', { is_online: true }), cq('profiles', { is_verified: true }),
+        cq('profiles'), onlineQuery, cq('profiles', { is_verified: true }),
         cq('credit_transactions'), cq('profiles', undefined, { col: 'created_at', val: startOfToday }),
         cq('profiles', undefined, { col: 'created_at', val: weekAgo }),
         cq('profiles', undefined, { col: 'created_at', val: monthAgo }), cq('messages'),

@@ -29,6 +29,7 @@ const useDetailedStats = () => {
       const startOfToday = startOfDay(today).toISOString();
       const weekAgo = subDays(today, 7).toISOString();
       const monthAgo = subDays(today, 30).toISOString();
+      const onlineCutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
       const countQuery = (table: string, filters?: Record<string, any>, gte?: { col: string; val: string }) => {
         let q = supabase.from(table as any).select('*', { count: 'exact', head: true });
@@ -37,9 +38,15 @@ const useDetailedStats = () => {
         return q as any;
       };
 
+      const onlineQuery = supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_online', true)
+        .gte('last_seen', onlineCutoff);
+
       const [r1, r2, r3, r4, r5, r6, r7, r8] = await Promise.all([
         countQuery('profiles'),
-        countQuery('profiles', { is_online: true }),
+        onlineQuery,
         countQuery('profiles', { is_verified: true }),
         countQuery('credit_transactions'),
         countQuery('messages'),

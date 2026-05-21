@@ -110,6 +110,7 @@ export const useNearbyProfiles = (
     queryKey: ['nearby-profiles-geo', latitude, longitude, maxDistance],
     queryFn: async (): Promise<NearbyProfile[]> => {
       if (latitude == null || longitude == null) return [];
+      const t0 = performance.now();
 
       const { data, error } = await supabase
         .rpc('get_nearby_profiles', {
@@ -118,6 +119,12 @@ export const useNearbyProfiles = (
           max_distance_km: maxDistance,
           limit_count: 200,
         });
+
+      recordPerfMetric('home', 'nearby_geo_rpc', performance.now() - t0, {
+        ok: !error,
+        rows: (data as any[] | null)?.length ?? 0,
+        radius_km: maxDistance,
+      });
 
       if (error) throw error;
 

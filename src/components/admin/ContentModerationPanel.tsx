@@ -326,6 +326,61 @@ const useAlbums = (reportedUserIds: string[]) => {
   });
 };
 
+const formatAdminMessage = (msg: { content: string | null; message_type: string }): { label: string | null; text: string } => {
+  const type = msg.message_type;
+  const content = msg.content || '';
+  const tryJSON = () => { try { return JSON.parse(content); } catch { return null; } };
+
+  if (type === 'album_share') {
+    const d = tryJSON();
+    const data = d?.shareId ? d : d?.data;
+    if (data) {
+      const expires = data.expiresAt ? format(new Date(data.expiresAt), 'dd/MM/yyyy HH:mm', { locale: fr }) : '—';
+      return { label: '📁 Album partagé', text: `Album : ${data.albumName || 'Sans nom'}\nExpire le ${expires}` };
+    }
+    return { label: '📁 Album partagé', text: '[Lien d\'album]' };
+  }
+  if (type === 'album_access_request') {
+    const d = tryJSON();
+    const names = Array.isArray(d?.albumNames) ? d.albumNames.join(', ') : (d?.albumName || '');
+    return { label: '🔓 Demande d\'accès album', text: names ? `Albums : ${names}` : '[Demande d\'accès]' };
+  }
+  if (type === 'credit_request') {
+    const d = tryJSON();
+    return { label: '💰 Demande de crédits', text: d?.amount ? `${d.amount} crédits demandés` : '[Demande de crédits]' };
+  }
+  if (type === 'credit_gift') {
+    const d = tryJSON();
+    return { label: '🎁 Cadeau de crédits', text: d?.amount ? `${d.amount} crédits offerts` : '[Cadeau de crédits]' };
+  }
+  if (type === 'image') {
+    return { label: '🖼️ Image', text: content.startsWith('http') ? content : '[Image éphémère]' };
+  }
+  if (type === 'video') {
+    return { label: '🎬 Vidéo', text: content.startsWith('http') ? content : '[Vidéo éphémère]' };
+  }
+  if (type === 'voice') {
+    return { label: '🎙️ Message vocal', text: '[Audio]' };
+  }
+  if (type === 'system_screenshot') {
+    return { label: '📸 Système — capture d\'écran', text: content || '[Capture détectée]' };
+  }
+  if (type === 'system_external_warning') {
+    return { label: '⚠️ Système — avertissement', text: content || '[Avertissement automatique]' };
+  }
+  if (type === 'poll') {
+    const d = tryJSON();
+    return { label: '📊 Sondage', text: d?.question || '[Sondage]' };
+  }
+  // Default text: if content is JSON, pretty print short
+  if (content.startsWith('{') || content.startsWith('[')) {
+    const d = tryJSON();
+    if (d) return { label: `[${type}]`, text: JSON.stringify(d, null, 2) };
+  }
+  return { label: null, text: content || `[${type}]` };
+};
+
+
 const ContentModerationPanel = () => {
   const [activeTab, setActiveTab] = useState('pending-photos');
   const [messageSearch, setMessageSearch] = useState('');

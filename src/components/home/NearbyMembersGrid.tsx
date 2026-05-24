@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyProfiles } from '@/hooks/useNearbyProfiles';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { getSignedAvatarUrls } from '@/hooks/useAvatarUrl';
 import ProfileCard from './ProfileCard';
 import GeolocationGate from './GeolocationGate';

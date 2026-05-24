@@ -146,12 +146,17 @@ const AuthenticatedLayout = () => {
 
   return (
     <div
-      className="h-dvh h-screen bg-background flex flex-col overflow-hidden relative"
+      className="app-shell h-dvh h-screen bg-background flex flex-col overflow-hidden relative"
       style={{
-        paddingLeft: 'env(safe-area-inset-left, 0px)',
-        paddingRight: 'env(safe-area-inset-right, 0px)',
+        // Padding latéral SYMÉTRIQUE : on prend le max des deux insets pour
+        // que l'app reste parfaitement centrée même quand l'appareil expose
+        // une encoche / punch-hole d'un seul côté (cas fréquent sur Android,
+        // pliables, et fenêtres en bulle Android 14+/17).
+        paddingLeft: 'max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))',
+        paddingRight: 'max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))',
       }}
     >
+      
       
 
       {/* Verification Reminder Banner */}
@@ -187,7 +192,7 @@ const AuthenticatedLayout = () => {
 
         {/* Global Ad Banner */}
         {showGlobalAd && (
-          <div className="px-3 py-1 shrink-0">
+          <div className="global-ad-banner px-3 py-1 shrink-0" data-ad-placement="compact">
             <AdBanner placement="compact" />
           </div>
         )}

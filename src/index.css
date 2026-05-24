@@ -739,3 +739,66 @@ html {
   backdrop-filter: blur(6px);
 }
 .leaflet-control-attribution a { color: hsl(var(--primary)) !important; }
+
+/* =====================================================================
+   COMPATIBILITÉ FENÊTRES "BULLES" / PiP / SPLIT-SCREEN (Android 14+/17)
+   Quand l'app est ouverte dans une bulle de conversation ou en
+   freeform/PiP, le viewport descend très bas (souvent < 420×560).
+   On bascule alors en "mode compact" : on rétrécit la nav, on réduit
+   les paddings, et on laisse les overlays/dialogs s'adapter.
+   ===================================================================== */
+
+/* Le shell de l'app utilise 100svh (small viewport) en priorité pour ne
+   jamais déborder quand la bulle est redimensionnée. */
+.app-shell {
+  height: 100svh;
+  height: 100dvh; /* override sur navigateurs qui supportent les deux */
+  min-height: 0;
+}
+
+/* Mode bulle / PiP : viewport très réduit. */
+@media (max-height: 560px) and (max-width: 460px) {
+  :root {
+    /* Réduit la hauteur de la bottom nav pour libérer du contenu utile */
+    --bottom-nav-height: 56px;
+  }
+
+  .app-shell {
+    /* Padding latéral minimal en bulle (les insets ne s'appliquent
+       quasiment jamais dans ce contexte de toute façon) */
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Compacte les barres et boutons de navigation */
+  .bottom-nav-spacing {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Réduit les paddings horizontaux génériques de 16 → 10px */
+  main.px-4, main .px-4 {
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+
+  /* Les bottom-sheets / drawers prennent toute la hauteur en bulle */
+  [data-radix-dialog-content][data-vaul-drawer],
+  [data-vaul-drawer-wrapper] [data-vaul-drawer] {
+    max-height: 100svh !important;
+  }
+
+  /* Les Dialog centrés prennent presque tout l'écran */
+  [role="dialog"][data-state="open"] {
+    max-width: 96vw !important;
+    max-height: 96svh !important;
+  }
+}
+
+/* Très petit viewport (bulle minimale) : on cache la pub globale pour
+   garder le contenu lisible. */
+@media (max-height: 480px) and (max-width: 380px) {
+  .global-ad-banner,
+  [data-ad-placement="compact"] {
+    display: none !important;
+  }
+}

@@ -41,6 +41,13 @@ const ProfileSkeleton = ({ index }: { index: number }) => (
 
 const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refreshToken }: NearbyMembersGridProps) => {
   const { profile: currentUserProfile } = useAuth();
+  // Fallback: si l'utilisateur n'a pas d'avatar_url sur son profil mais a
+  // une photo primaire dans profile_photos, on l'utilise pour la carte "Toi".
+  const { photos: currentUserPhotos } = useProfilePhotos();
+  const currentUserAvatar = currentUserProfile?.avatar_url
+    ?? currentUserPhotos?.find((p) => p.is_primary)?.photo_url
+    ?? currentUserPhotos?.[0]?.photo_url
+    ?? null;
   const {
     latitude,
     longitude,

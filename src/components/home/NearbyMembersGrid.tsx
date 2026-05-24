@@ -99,14 +99,14 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
   const [stableUser, setStableUser] = useState<any>(null);
   useEffect(() => {
     if (!currentUserProfile) return;
-    const key = `${currentUserProfile.user_id}|${currentUserProfile.avatar_url}|${currentUserProfile.username}`;
+    const key = `${currentUserProfile.user_id}|${currentUserAvatar}|${currentUserProfile.username}`;
     if (key !== prevKeyRef.current) {
       prevKeyRef.current = key;
       setStableUser({
         id: currentUserProfile.id,
         user_id: currentUserProfile.user_id,
         username: currentUserProfile.username,
-        avatar_url: currentUserProfile.avatar_url,
+        avatar_url: currentUserAvatar,
         age: currentUserProfile.age,
         is_online: currentUserProfile.is_online,
         last_seen: currentUserProfile.last_seen,
@@ -115,7 +115,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
         created_at: (currentUserProfile as any).created_at,
       });
     }
-  }, [currentUserProfile]);
+  }, [currentUserProfile, currentUserAvatar]);
 
   // Tri : profils avec distance d'abord (croissant), puis profils sans GPS en bas
   const sortedProfiles = useMemo(() => {

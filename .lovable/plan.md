@@ -1,85 +1,115 @@
-# Échange de photos vérifié
+# Plan Now / Recherche Express
 
-Nouvelle fonctionnalité accessible depuis une conversation privée : deux membres peuvent s'échanger une (ou plusieurs) photo, mais aucun ne voit la photo de l'autre tant que **les deux** ont envoyé ET qu'un modérateur/admin a validé chaque photo via une mission.
+Mode d'activation temporaire qui met en avant un profil cherchant une rencontre immédiate, avec auto-réponses configurables et option d'échange d'albums sécurisé.
 
-## Parcours utilisateur
+## Vue d'ensemble
 
-1. Dans le chat privé, bouton **« Échange de photos »** dans le menu + (à côté des cadeaux, sondages…).
-2. L'initiateur envoie une demande → bloc interactif dans le chat « A propose un échange de photos · Accepter / Refuser ».
-3. Le destinataire **accepte** → l'échange passe en statut `accepted`. Les deux côtés voient un bloc « Uploadez votre photo ».
-4. Chacun upload sa photo (bucket privé `photo-exchanges`, watermarkée, jamais visible à l'autre tant que non validée).
-5. **Dès que les 2 photos sont uploadées**, une **mission de modération** `photo_exchange_review` est créée automatiquement (réutilise le système de missions existant, rémunération 0,30 € — à confirmer).
-6. Un modérateur ouvre la mission, voit les 2 photos côte à côte, valide ou rejette **chaque photo individuellement** (conformité, pas de contenu interdit, correspond à ce qui était prévu).
-7. Si **les 2 photos sont validées** → l'échange passe en `completed`, le bloc dans le chat devient cliquable des deux côtés pour révéler la photo reçue (l'utilisateur ne voit toujours pas sa propre photo côté chat puisqu'il l'a uploadée).
-8. Si une photo est **rejetée** → l'utilisateur concerné reçoit une notif « Votre photo n'est pas conforme, raison : … » et peut re-uploader (1 retry). L'autre attend.
-9. Tant qu'un côté n'a pas validé/uploadé, **aucune photo n'est révélée** (flou total, vraiment invisible côté front et côté URLs signées).
+- **Activation** : 5 crédits pour 30 minutes (durée fixe v1, prolongeable par une nouvelle activation).
+- **Effet** : badge "⚡ Plan Now" sur la carte profil, tri prioritaire sur Home (onglet Proximité et nouvel onglet dédié), notification opt-in aux profils proches actifs.
+- **Auto-réponses** : 3 questions pré-configurables (recherche / dispo / photos) répondues automatiquement dans le DM pendant la session.
+- **Échange d'albums** : si les deux participants sont en Plan Now actif, bouton 1-tap qui déverrouille mutuellement un album privé choisi, pour 30 min, avec watermark renforcé et blocage capture.
+- **Reprise manuelle** : à tout moment l'utilisateur clique "Personnaliser la réponse" et la session passe en mode manuel sur cette conversation (auto-réponses désactivées pour ce chat).
 
-## Schéma backend
+## Architecture backend
 
-### Table `photo_exchanges`
-- `id` uuid pk
-- `conversation_id` uuid (référence conversation privée)
-- `initiator_id`, `recipient_id` uuid
-- `status` enum : `pending` (en attente d'accept) | `accepted` (uploads en cours) | `awaiting_review` (2 photos là, mission créée) | `completed` (les 2 validées, révélées) | `rejected` | `cancelled`
-- `created_at`, `updated_at`
+### Nouvelles tables
 
-### Table `photo_exchange_photos`
-- `id` uuid pk
-- `exchange_id` uuid (référence `photo_exchanges`)
-- `user_id` uuid (qui a uploadé)
-- `storage_path` text (bucket privé `photo-exchanges`, jamais d'URL publique)
-- `review_status` enum : `pending` | `approved` | `rejected`
-- `review_reason` text (si rejet)
-- `reviewed_by` uuid, `reviewed_at` timestamptz
-- `retry_count` int default 0 (max 1)
+**`plan_now_sessions`**
+- `user_id` uuid (FK auth.users)
+- `started_at`, `expires_at` timestamptz
+- `status` enum : `active` | `expired` | `cancelled`
+- `credits_spent` int default 5
+- index sur `(expires_at)` partiel `WHERE status='active'`
+
+**`plan_now_auto_replies`** (1 row par user, persiste entre sessions)
+- `user_id` uuid PK
+- `looking_for` text (réponse à "tu recherches quoi ?")
+- `available_now` text
+- `photo_exchange` text
+- `enabled` bool default true
+- `updated_at`
+
+**`plan_now_album_shares`** (réutilise la logique albums existante)
+- `id`, `from_user_id`, `to_user_id`, `album_id`
+- `expires_at` (now + 30 min)
+- `accepted` bool default false
+- contrainte unique `(from_user_id, to_user_id, album_id)`
 
 ### RLS
-- Lecture d'un `photo_exchanges` : initiator OU recipient OU staff.
-- Lecture d'une `photo_exchange_photos` :
-  - Le propriétaire (`user_id = auth.uid()`) peut toujours lire sa propre row (mais l'image n'est servie qu'après upload).
-  - L'**autre participant** peut lire la row **seulement si** `review_status = 'approved'` ET que **toutes** les photos de l'échange sont `approved` (status `completed`).
-  - Staff (admin/modérateur avec `can_manage_content`) : lecture complète.
-- Insert : seulement par le participant concerné.
 
-### Bucket Storage
-- Nouveau bucket privé `photo-exchanges`, signed URLs 1h (règle mémoire respectée).
-- Policy : seul le owner, l'autre participant **si exchange completed**, et le staff peuvent générer une signed URL via Edge Function.
+- `plan_now_sessions` : lecture publique des sessions `active` (pour afficher le badge), insert/update self uniquement.
+- `plan_now_auto_replies` : CRUD self uniquement.
+- `plan_now_album_shares` : lecture par from/to, insert par from, update (accept) par to.
 
-### Trigger
-- Après insert/update sur `photo_exchange_photos` : si l'échange a 2 photos uploadées → passer le statut à `awaiting_review` et créer une **mission** dans `pending_tasks` (type `photo_exchange_review`).
-- Quand les 2 `review_status = 'approved'` → passer l'échange à `completed` et notifier les 2 participants.
+### Fonctions / triggers
+
+- Trigger `before_insert plan_now_sessions` : vérifie crédits via `consume_credits('plan_now', user_id)`, créé une promo entry `credit_costs.plan_now = 5`.
+- Cron 1 min : expire les sessions et album_shares `expires_at < now()`.
+- RPC `get_plan_now_active_profiles(geo, radius)` : profils actifs + distance, tri prioritaire.
+- Modification de `get_nearby_profiles` : `ORDER BY plan_now_active DESC, distance ASC`.
+
+### Edge function
+
+**`plan-now-auto-reply`** : déclenchée par trigger `after_insert private_messages`. Si destinataire a une session active + auto-replies enabled + la conversation n'a pas le flag `manual_override`, analyse le texte du message via Gemini Flash Lite (classification simple : looking_for / available / photos / other) et insère la réponse automatique correspondante. Marque le message avec un flag `auto_replied = true` pour affichage côté UI ("Réponse automatique").
 
 ## Frontend
 
-### Chat privé
-- Nouveau bouton « Échange de photos » dans le menu d'actions du composer (icône `ImagePlus`).
-- Nouveau bloc interactif `PhotoExchangeBlock` (similaire aux polls / credit gifts) avec 4 états visuels : pending / accepted-uploading / awaiting-review / completed (révélation tap).
-- Composant `PhotoExchangeUploadSheet` (bottom sheet) pour uploader sa photo.
+### Composants nouveaux
 
-### Mission de modération
-- Nouvelle carte mission dans `pending-tasks` admin : photos côte à côte, boutons Approuver / Rejeter (avec raison) pour chaque photo.
-- Rémunération à ajouter dans `credit_costs` / config mission rewards.
+- `src/components/plan-now/PlanNowToggle.tsx` : sheet d'activation (résumé + bouton "Activer pour 5 crédits / 30 min"), countdown live.
+- `src/components/plan-now/PlanNowBadge.tsx` : badge ⚡ animé pour les cartes profil + ring jaune/orange sur l'avatar.
+- `src/components/plan-now/PlanNowSettingsSheet.tsx` : édition des 3 réponses auto (textareas, 280 caractères max).
+- `src/components/plan-now/PlanNowAlbumShareSheet.tsx` : choix de l'album à partager + accept côté destinataire.
+- `src/components/messaging/PlanNowAutoReplyBubble.tsx` : variant de bulle avec label "✨ Réponse auto".
+- `src/components/messaging/PlanNowComposerBanner.tsx` : bandeau "Auto-réponses actives — Personnaliser la réponse".
 
-### Notifications
-- Notif push : « X vous propose un échange de photos »
-- Notif : « Votre photo a été validée » / « Photo non conforme : … »
-- Notif : « Échange complété ! Découvrez la photo »
+### Hooks
 
-## Coût en crédits
-- Proposition : **gratuit** pour la demande, mais **5 crédits** prélevés à l'initiateur quand l'échange est `completed` (pour couvrir le coût de modération). À valider avec toi.
+- `usePlanNowSession.ts` : session active de l'user courant + countdown.
+- `usePlanNowActiveUsers.ts` : liste live (realtime) des plans actifs proches.
+- `usePlanNowAutoReplies.ts` : CRUD des réponses auto.
+- `usePlanNowAlbumShare.ts` : créer / accepter une demande d'échange.
 
-## Fichiers principaux à créer
-- Migration SQL (tables, enums, RLS, trigger, bucket)
-- `src/hooks/usePhotoExchange.ts`
-- `src/components/messaging/PhotoExchangeBlock.tsx`
-- `src/components/messaging/PhotoExchangeUploadSheet.tsx`
-- `src/components/admin/PhotoExchangeReviewPanel.tsx` (dans le détail d'une mission)
-- Edge function `photo-exchange-signed-url` pour servir les URLs signées avec vérification d'accès stricte
-- Intégration dans `PrivateChatComposer`, `MessagesList`, mission system
+### Intégrations UI
 
-## Questions avant de coder
+- **Home** : nouvel onglet "⚡ Plan Now" entre Proximité et Favoris quand au moins 1 profil actif dans le rayon. Cards triées avec ring orange.
+- **Profile self** : carte "Recherche Express" dans `ProfileView` avec toggle d'activation.
+- **MemberProfile** : badge à côté du nom si actif, bouton "Échanger un album" visible uniquement si les deux ont Plan Now actif.
+- **Composer DM** : bandeau jaune si auto-replies actives sur cette conversation, lien "Personnaliser" → flag `manual_override`.
+- **Settings drawer** : nouvelle entrée "Plan Now" pour éditer les réponses auto même hors session.
 
-1. **Coût en crédits** : gratuit, ou X crédits prélevés (à qui et quand) ?
-2. **Nombre de photos** : 1 seule de chaque côté, ou jusqu'à N (3 ?) avec un compteur ?
-3. **Mission rémunération** : combien pour le modérateur (proposition 0,30 €) ?
-4. **Retry après rejet** : 1 tentative supplémentaire OK, ou plus ?
+### Sécurité albums Plan Now
+
+- Réutilise le système d'albums existant + bucket privé.
+- URLs signées 30 min max (au lieu de 1h standard).
+- Watermark renforcé : pseudo destinataire + "Plan Now" + timestamp sur chaque photo.
+- `usePreventiveScreenshotBlur` activé dès l'ouverture, log screenshot → sanction immédiate.
+
+## Notifications
+
+- Push "⚡ X est en Plan Now près de toi" envoyé aux profils dans 10 km qui ont opt-in (nouvelle pref `notify_plan_now` dans `notification_preferences`, default true).
+- Push "✨ Auto-réponse envoyée à X" pour l'owner de la session, action "Reprendre la main".
+- Push "📸 X veut échanger un album" si Plan Now mutuel.
+
+## Admin
+
+- Feature toggle `plan_now_enabled` (default false, à activer après QA).
+- Section `/admin/plan-now` : sessions actives en temps réel, revenus générés, durée moyenne, taux de matching, abus reportés.
+- `credit_costs.plan_now` (5) éditable depuis `/admin/credit-costs`.
+
+## Étapes d'implémentation
+
+1. **Migration SQL** : tables + RLS + RPC + trigger crédits + entry `credit_costs`.
+2. **Hooks + UI activation** : toggle + countdown sur Profile, badge sur cards.
+3. **Auto-replies CRUD** : sheet de config + persistence + bandeau composer.
+4. **Edge function auto-reply** : trigger + classification Gemini + insertion message.
+5. **Album share** : sheet + accept flow + signed URLs 30 min + watermark.
+6. **Onglet Home + notifications push** + feature toggle admin.
+7. **QA** : 2 comptes test, activation, auto-reply, album share, expiration, abus.
+
+## Points à confirmer
+
+- Durée fixe 30 min ok ? (alternative : 15/30/60 au choix +/- crédits)
+- Notification push aux profils proches : opt-in par défaut ou opt-out ?
+- Limite quotidienne (ex. max 3 activations / jour) ?
+- Auto-replies désactivées automatiquement quand la session expire, ou restent en mémoire pour la prochaine ?

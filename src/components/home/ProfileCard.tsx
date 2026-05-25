@@ -7,6 +7,8 @@ import { useLivePresence } from '@/hooks/useLivePresence';
 import { useAvatarUrl, getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useInView } from '@/hooks/useInView';
 import { formatDistance } from '@/lib/formatDistance';
+import { useIsPlanNowActive } from '@/hooks/usePlanNowSession';
+import PlanNowBadge from '@/components/plan-now/PlanNowBadge';
 
 
 interface ProfileCardProps {
@@ -46,6 +48,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const isOnline = live.showIndicator;
   const lastSeen = live.lastSeenText;
   const isNew = isNewUser(profile.created_at);
+  const isPlanNow = useIsPlanNowActive(profile.user_id);
   // First 6 cards (above the fold) load eagerly. The rest use a two-stage
   // gate: a wide "prefetch" window (~1200px) warms the signed URL and the
   // browser image cache; a tighter "render" window (~400px) actually mounts
@@ -187,6 +190,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
                 Nouveau
               </span>
             )}
+            {isPlanNow && <PlanNowBadge size="xs" withLabel />}
           </div>
 
           {!profile.isCurrentUser && (

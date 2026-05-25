@@ -20,6 +20,7 @@ import ProfileInfoCards from './ProfileInfoCards';
 import ProfileStatsGrid from './ProfileStatsGrid';
 import SuggestionDialog from './SuggestionDialog';
 import { Lightbulb, Sparkles } from 'lucide-react';
+import PlanNowActivationCard from '@/components/plan-now/PlanNowActivationCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const POSITION_LABELS: Record<string, string> = {
@@ -145,6 +146,9 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
           ethnicityLabels={ETHNICITY_LABELS}
           hivStatusLabels={HIV_STATUS_LABELS}
         />
+
+        {/* Plan Now — Recherche Express */}
+        <PlanNowActivationCard />
 
         {/* Ad */}
         <AdBanner placement="compact" />

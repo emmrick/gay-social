@@ -40,7 +40,7 @@ export const usePlanNowSession = () => {
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data as PlanNowSession | null;
+      return (data as unknown) as PlanNowSession | null;
     },
     enabled: !!user?.id,
     refetchInterval: 60_000,

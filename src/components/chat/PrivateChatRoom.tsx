@@ -522,6 +522,7 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
           </div>
         ) : (
           <>
+            <PlanNowComposerBanner />
             <SmartReplyChips
               suggestions={smartSuggestions}
               isLoading={smartLoading}

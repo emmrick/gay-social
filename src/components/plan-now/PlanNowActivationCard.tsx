@@ -148,6 +148,8 @@ const PlanNowActivationCard = () => {
         </div>
       </SheetContent>
     </Sheet>
+    <PlanNowSettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
+    </>
   );
 };
 

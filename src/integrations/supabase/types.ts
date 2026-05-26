@@ -2299,6 +2299,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           id: string
+          is_auto_reply: boolean
           is_private: boolean | null
           message_type: string
           read_at: string | null
@@ -2313,6 +2314,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           id?: string
+          is_auto_reply?: boolean
           is_private?: boolean | null
           message_type?: string
           read_at?: string | null
@@ -2327,6 +2329,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           id?: string
+          is_auto_reply?: boolean
           is_private?: boolean | null
           message_type?: string
           read_at?: string | null
@@ -3109,6 +3112,27 @@ export type Database = {
           looking_for?: string | null
           photo_exchange?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      plan_now_manual_overrides: {
+        Row: {
+          created_at: string
+          id: string
+          other_user_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          other_user_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          other_user_id?: string
           user_id?: string
         }
         Relationships: []

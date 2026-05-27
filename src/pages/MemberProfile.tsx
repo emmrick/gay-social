@@ -496,7 +496,10 @@ const MemberProfile = () => {
 
             {/* Albums */}
             {userId && (
-              <section id="albums-section">
+              <section id="albums-section" className="space-y-2">
+                <div className="flex justify-end">
+                  <PlanNowAlbumExchangeButton otherUserId={userId} otherUsername={profile.username} />
+                </div>
                 <MemberProfileAlbumsSection profileUserId={userId} profileUsername={profile.username} onStartChat={handleStartChat} />
               </section>
             )}

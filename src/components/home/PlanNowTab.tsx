@@ -78,12 +78,12 @@ const PlanNowTab = ({ onViewProfile, radius }: Props) => {
         </p>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {profiles.map((profile) => (
+        {profiles.map((profile, i) => (
           <ProfileCard
             key={profile.user_id}
             profile={profile as any}
+            index={i}
             onViewProfile={onViewProfile}
-            onStartChat={onStartChat}
           />
         ))}
       </div>

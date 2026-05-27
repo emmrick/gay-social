@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { Star, SlidersHorizontal, Compass, Eye, Heart, Map as MapIcon, RefreshCw, Ruler, Check } from 'lucide-react';
+import { Star, SlidersHorizontal, Compass, Eye, Heart, Map as MapIcon, RefreshCw, Ruler, Check, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -20,6 +20,7 @@ import AdOrInfoBanner from './AdOrInfoBanner';
 import VisitsTab from './VisitsTab';
 import ReactionsTab from './ReactionsTab';
 import MapTab from './MapTab';
+import PlanNowTab from './PlanNowTab';
 import SectionErrorBoundary from '@/components/SectionErrorBoundary';
 import type { RadiusValue } from './RadiusSelector';
 
@@ -28,7 +29,7 @@ interface HomeViewProps {
   onStartPrivateChat?: (userId: string) => void;
 }
 
-type HomeSection = 'accueil' | 'favorites' | 'visites' | 'reactions' | 'carte';
+type HomeSection = 'accueil' | 'plan-now' | 'favorites' | 'visites' | 'reactions' | 'carte';
 
 const RADIUS_STORAGE_KEY = 'gc_nearby_radius_km';
 const DEFAULT_RADIUS: RadiusValue = 10;

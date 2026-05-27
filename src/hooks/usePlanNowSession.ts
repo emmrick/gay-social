@@ -80,6 +80,16 @@ export const usePlanNowSession = () => {
         status: 'active',
       } as any);
       if (error) throw error;
+
+      // Notifie les profils proches (best-effort, ignore les erreurs)
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000, maximumAge: 60_000 }),
+        );
+        void supabase.functions.invoke('notify-plan-now-nearby', {
+          body: { lat: pos.coords.latitude, lon: pos.coords.longitude },
+        });
+      } catch { /* géo refusée — pas de notif aux proches */ }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plan-now-session', user?.id] });

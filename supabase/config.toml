@@ -37,3 +37,5 @@ project_id = "vxrsqftlaguiwprcqlbw"
     verify_jwt = false
   [functions.send-user-email]
     verify_jwt = false
+  [functions.submit-beta-interest]
+    verify_jwt = false

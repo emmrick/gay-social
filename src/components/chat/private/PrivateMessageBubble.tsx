@@ -13,6 +13,7 @@ import SharedAlbumMessage from '../SharedAlbumMessage';
 import AlbumAccessRequestMessage from '../AlbumAccessRequestMessage';
 import CreditRequestMessage from '../CreditRequestMessage';
 import GiftMessage from '../GiftMessage';
+import BetaInterestMessage from '../BetaInterestMessage';
 import { cn } from '@/lib/utils';
 
 interface PrivateMessageBubbleProps {

@@ -231,6 +231,8 @@ const PrivateMessageBubble = ({
               />
             );
           })() : isRegularMedia ? (
+            (() => null)()
+          ) : isRegularMedia ? (
             <RegularMediaMessage
               mediaUrl={message.content!}
               mediaType={message.message_type as 'image' | 'video'}

@@ -48,12 +48,33 @@ Deno.serve(async (req) => {
     // 1) Load templates
     const { data: tpl } = await supabase
       .from('plan_now_auto_replies')
-      .select('looking_for, available_now, photo_exchange, enabled')
+      .select('looking_for, available_now, photo_exchange, enabled, custom_qa')
       .eq('user_id', body.recipient_id)
       .maybeSingle();
 
     if (!tpl || tpl.enabled === false) {
       return json({ skipped: 'no_templates_or_disabled' });
+    }
+
+    // 1.5) Try custom Q&A first (keyword match)
+    const customQa = Array.isArray((tpl as any).custom_qa) ? (tpl as any).custom_qa : [];
+    const lowered = body.content.toLowerCase();
+    for (const qa of customQa) {
+      const kws: string[] = Array.isArray(qa?.keywords) ? qa.keywords : [];
+      if (!qa?.answer?.trim() || kws.length === 0) continue;
+      if (kws.some((k) => k && lowered.includes(String(k).toLowerCase()))) {
+        const { error: insertErr } = await supabase.from('messages').insert({
+          sender_id: body.recipient_id,
+          recipient_id: body.sender_id,
+          content: String(qa.answer).trim(),
+          message_type: 'auto_reply',
+          is_private: true,
+          is_auto_reply: true,
+          reply_to_id: body.message_id,
+        } as any);
+        if (insertErr) console.error('insert custom auto-reply failed', insertErr);
+        return json({ ok: true, source: 'custom_qa', qa_id: qa.id });
+      }
     }
 
     // 2) Classify

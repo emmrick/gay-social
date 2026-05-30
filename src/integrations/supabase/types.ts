@@ -3115,29 +3115,41 @@ export type Database = {
       }
       plan_now_auto_replies: {
         Row: {
+          active_preset_id: string | null
           available_now: string | null
           created_at: string
+          custom_qa: Json
           enabled: boolean
           looking_for: string | null
+          media_tiers: Json
           photo_exchange: string | null
+          presets: Json
           updated_at: string
           user_id: string
         }
         Insert: {
+          active_preset_id?: string | null
           available_now?: string | null
           created_at?: string
+          custom_qa?: Json
           enabled?: boolean
           looking_for?: string | null
+          media_tiers?: Json
           photo_exchange?: string | null
+          presets?: Json
           updated_at?: string
           user_id: string
         }
         Update: {
+          active_preset_id?: string | null
           available_now?: string | null
           created_at?: string
+          custom_qa?: Json
           enabled?: boolean
           looking_for?: string | null
+          media_tiers?: Json
           photo_exchange?: string | null
+          presets?: Json
           updated_at?: string
           user_id?: string
         }

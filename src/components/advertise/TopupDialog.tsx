@@ -51,9 +51,11 @@ const TopupDialog = ({
       if (promo.max_uses && promo.times_used >= promo.max_uses) { setPromoError('Code épuisé'); return; }
 
       if (advertiserEmail) {
-        const { data: existing } = await supabase.from('advertiser_promo_redemptions' as any)
-          .select('id').eq('code_id', promo.id).eq('advertiser_email', advertiserEmail).maybeSingle();
-        if (existing) { setPromoError('Vous avez déjà utilisé ce code'); return; }
+        const { data: alreadyRedeemed } = await supabase.rpc('has_advertiser_redeemed_promo' as any, {
+          _code_id: promo.id,
+          _advertiser_email: advertiserEmail,
+        });
+        if (alreadyRedeemed) { setPromoError('Vous avez déjà utilisé ce code'); return; }
       }
 
       setPromoApplied({ bonus_cents: promo.bonus_cents || 0, bonus_percent: promo.bonus_percent || 0, code_id: promo.id });

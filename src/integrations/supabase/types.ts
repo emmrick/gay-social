@@ -5448,6 +5448,7 @@ export type Database = {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
       }
+      can_contact_user_age: { Args: { _target_user_id: string }; Returns: Json }
       can_earn_for_action: {
         Args: {
           _cooldown_minutes?: number
@@ -5494,6 +5495,17 @@ export type Database = {
       }
       consume_advertiser_magic_link: {
         Args: { _token: string }
+        Returns: string
+      }
+      create_user_notification: {
+        Args: {
+          _action_url?: string
+          _data?: Json
+          _message?: string
+          _title: string
+          _type: string
+          _user_id: string
+        }
         Returns: string
       }
       deduct_credits: {
@@ -5546,6 +5558,48 @@ export type Database = {
           placement: string
           unique_users: number
         }[]
+      }
+      get_advertiser_campaigns: {
+        Args: { _email: string }
+        Returns: {
+          advertiser_email: string | null
+          advertiser_name: string
+          always_active: boolean
+          budget_cents: number | null
+          clicks_count: number | null
+          cost_per_click_cents: number | null
+          cost_per_mille_cents: number | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string | null
+          geo_postal_codes: string[] | null
+          geo_targeting: string
+          id: string
+          image_url: string | null
+          image_urls: string[]
+          impressions_count: number | null
+          is_active: boolean | null
+          link_url: string | null
+          max_clicks: number | null
+          max_impressions: number | null
+          placement: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          spent_cents: number | null
+          starts_at: string | null
+          status: string
+          target_pages: string[] | null
+          title: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ads"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_advertiser_wallet: { Args: { _email: string }; Returns: Json }
       get_community_public_stats: {
@@ -5742,6 +5796,10 @@ export type Database = {
       }
       has_active_plan_now: { Args: { _user_id: string }; Returns: boolean }
       has_active_premium: { Args: { _user_id: string }; Returns: boolean }
+      has_advertiser_redeemed_promo: {
+        Args: { _advertiser_email: string; _code_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

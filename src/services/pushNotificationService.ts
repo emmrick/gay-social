@@ -42,12 +42,12 @@ const createNotificationAndPush = async (
   pushOptions?: Partial<SendPushOptions>
 ) => {
   // Create in-app notification
-  await supabase.from('notifications').insert({
-    user_id: userId,
-    type,
-    title,
-    message,
-    action_url: actionUrl,
+  await supabase.rpc('create_user_notification', {
+    _user_id: userId,
+    _type: type,
+    _title: title,
+    _message: message,
+    _action_url: actionUrl,
   });
 
   // Send push notification
@@ -261,12 +261,12 @@ export const notifyPrivateMessageInApp = async (
       : messagePreview
     : 'Nouveau message';
 
-  await supabase.from('notifications').insert({
-    user_id: recipientId,
-    type: 'private_message',
-    title: `💬 ${senderUsername}`,
-    message: preview,
-    action_url: `/profile/${senderId}`,
+  await supabase.rpc('create_user_notification', {
+    _user_id: recipientId,
+    _type: 'private_message',
+    _title: `💬 ${senderUsername}`,
+    _message: preview,
+    _action_url: `/profile/${senderId}`,
   });
 };
 

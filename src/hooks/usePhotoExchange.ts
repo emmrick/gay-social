@@ -131,12 +131,12 @@ export const usePhotoExchangeMutations = (conversationId: string | null | undefi
         .from('profiles').select('username').eq('user_id', user.id).maybeSingle();
       const username = profile?.username ?? 'Quelqu\'un';
       const actionUrl = `/chat/${recipientId}`;
-      await supabase.from('notifications').insert({
-        user_id: recipientId,
-        type: 'photo_exchange_request',
-        title: `📸 ${username} propose un échange de photos`,
-        message: 'Acceptez pour échanger une photo vérifiée par la modération.',
-        action_url: actionUrl,
+      await supabase.rpc('create_user_notification', {
+        _user_id: recipientId,
+        _type: 'photo_exchange_request',
+        _title: `📸 ${username} propose un échange de photos`,
+        _message: 'Acceptez pour échanger une photo vérifiée par la modération.',
+        _action_url: actionUrl,
       });
       try {
         await supabase.functions.invoke('send-push-notification', {
@@ -178,12 +178,12 @@ export const usePhotoExchangeMutations = (conversationId: string | null | undefi
         .from('profiles').select('username').eq('user_id', user.id).maybeSingle();
       const username = profile?.username ?? 'Quelqu\'un';
       const actionUrl = `/chat/${initiatorId}`;
-      await supabase.from('notifications').insert({
-        user_id: initiatorId,
-        type: 'photo_exchange_response',
-        title: accept ? `✅ ${username} a accepté` : `❌ ${username} a refusé`,
-        message: accept ? 'Vous pouvez maintenant envoyer votre photo.' : 'L\'échange a été refusé.',
-        action_url: actionUrl,
+      await supabase.rpc('create_user_notification', {
+        _user_id: initiatorId,
+        _type: 'photo_exchange_response',
+        _title: accept ? `✅ ${username} a accepté` : `❌ ${username} a refusé`,
+        _message: accept ? 'Vous pouvez maintenant envoyer votre photo.' : 'L\'échange a été refusé.',
+        _action_url: actionUrl,
       });
       try {
         await supabase.functions.invoke('send-push-notification', {

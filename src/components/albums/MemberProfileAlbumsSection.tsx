@@ -149,13 +149,12 @@ const MemberProfileAlbumsSection = ({ profileUserId, profileUsername, onStartCha
         .eq('user_id', user.id)
         .maybeSingle();
 
-      await supabase.from('notifications').insert({
-        user_id: profileUserId,
-        type: 'album_access_request',
-        title: '🔒 Demande d\'accès album',
-        message: `${requesterProfile?.username || 'Un utilisateur'} souhaite accéder à ${selectedAlbumIds.length > 1 ? 'vos albums' : 'votre album'} : ${albumListText}`,
-        action_url: '/',
-        is_read: false,
+      await supabase.rpc('create_user_notification', {
+        _user_id: profileUserId,
+        _type: 'album_access_request',
+        _title: '🔒 Demande d\'accès album',
+        _message: `${requesterProfile?.username || 'Un utilisateur'} souhaite accéder à ${selectedAlbumIds.length > 1 ? 'vos albums' : 'votre album'} : ${albumListText}`,
+        _action_url: '/',
       });
 
       toast.success('Demande envoyée !');

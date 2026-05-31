@@ -127,16 +127,15 @@ export const useCustomGroups = () => {
         const creatorName = creatorProfile?.username || 'Quelqu\'un';
 
         // Create in-app notifications for each invited member
-        const notifications = memberIds.map(memberId => ({
-          user_id: memberId,
-          type: 'group_invite',
-          title: '👥 Invitation au groupe',
-          message: `${creatorName} t'a ajouté au groupe "${name}"`,
-          action_url: '/?tab=messages',
-          is_read: false,
-        }));
-
-        await supabase.from('notifications').insert(notifications);
+        await Promise.allSettled(memberIds.map(memberId =>
+          supabase.rpc('create_user_notification', {
+            _user_id: memberId,
+            _type: 'group_invite',
+            _title: '👥 Invitation au groupe',
+            _message: `${creatorName} t'a ajouté au groupe "${name}"`,
+            _action_url: '/?tab=messages',
+          })
+        ));
 
         // Send push notifications
         const { sendPushNotification } = await import('@/services/pushNotificationService');

@@ -59,46 +59,11 @@ export const useCanContactUser = (targetUserId: string) => {
     queryKey: ['can-contact-user', user?.id, targetUserId],
     queryFn: async () => {
       if (!user || !targetUserId) return { allowed: true };
-
-      // Get target user's age preference
-      const { data: pref } = await supabase
-        .from('contact_age_preferences')
-        .select('*')
-        .eq('user_id', targetUserId)
-        .eq('is_active', true)
-        .maybeSingle();
-
-      if (!pref) return { allowed: true };
-
-      // Check if current user has an exception
-      const { data: exception } = await supabase
-        .from('contact_age_exceptions')
-        .select('id')
-        .eq('user_id', targetUserId)
-        .eq('allowed_user_id', user.id)
-        .maybeSingle();
-
-      if (exception) return { allowed: true };
-
-      // Get current user's age
-      const { data: myProfile } = await supabase
-        .from('profiles')
-        .select('age')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!myProfile?.age) return { allowed: true };
-
-      const myAge = myProfile.age;
-      if (myAge >= pref.min_age && myAge <= pref.max_age) {
-        return { allowed: true };
-      }
-
-      return {
-        allowed: false,
-        minAge: pref.min_age,
-        maxAge: pref.max_age,
-      };
+      const { data, error } = await supabase.rpc('can_contact_user_age', {
+        _target_user_id: targetUserId,
+      });
+      if (error || !data) return { allowed: true };
+      return data as { allowed: boolean; minAge?: number; maxAge?: number };
     },
     enabled: !!user && !!targetUserId,
     staleTime: 60000,

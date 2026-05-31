@@ -92,7 +92,6 @@ const Advertise = () => {
     queryFn: async () => {
       const { data } = await supabase.rpc('get_advertiser_campaigns' as any, { _email: activeEmail! });
       return (data || []) as any[];
-      return (data || []) as any[];
     },
     enabled: !!activeEmail,
   });

@@ -5448,6 +5448,7 @@ export type Database = {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
       }
+      can_contact_user_age: { Args: { _target_user_id: string }; Returns: Json }
       can_earn_for_action: {
         Args: {
           _cooldown_minutes?: number
@@ -5494,6 +5495,17 @@ export type Database = {
       }
       consume_advertiser_magic_link: {
         Args: { _token: string }
+        Returns: string
+      }
+      create_user_notification: {
+        Args: {
+          _action_url?: string
+          _data?: Json
+          _message?: string
+          _title: string
+          _type: string
+          _user_id: string
+        }
         Returns: string
       }
       deduct_credits: {
@@ -5742,6 +5754,10 @@ export type Database = {
       }
       has_active_plan_now: { Args: { _user_id: string }; Returns: boolean }
       has_active_premium: { Args: { _user_id: string }; Returns: boolean }
+      has_advertiser_redeemed_promo: {
+        Args: { _advertiser_email: string; _code_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

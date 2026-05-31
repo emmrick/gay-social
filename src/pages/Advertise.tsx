@@ -90,9 +90,8 @@ const Advertise = () => {
   const { data: campaigns } = useQuery({
     queryKey: ['advertiser-campaigns', activeEmail],
     queryFn: async () => {
-      const { data } = await supabase.from('ads')
-        .select('id, title, description, image_url, image_urls, link_url, advertiser_name, placement, impressions_count, clicks_count, budget_cents, spent_cents, geo_targeting, geo_postal_codes, status, is_active, created_at')
-        .eq('advertiser_email', activeEmail!).order('created_at', { ascending: false });
+      const { data } = await supabase.rpc('get_advertiser_campaigns' as any, { _email: activeEmail! });
+      return (data || []) as any[];
       return (data || []) as any[];
     },
     enabled: !!activeEmail,

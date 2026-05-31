@@ -5559,6 +5559,48 @@ export type Database = {
           unique_users: number
         }[]
       }
+      get_advertiser_campaigns: {
+        Args: { _email: string }
+        Returns: {
+          advertiser_email: string | null
+          advertiser_name: string
+          always_active: boolean
+          budget_cents: number | null
+          clicks_count: number | null
+          cost_per_click_cents: number | null
+          cost_per_mille_cents: number | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string | null
+          geo_postal_codes: string[] | null
+          geo_targeting: string
+          id: string
+          image_url: string | null
+          image_urls: string[]
+          impressions_count: number | null
+          is_active: boolean | null
+          link_url: string | null
+          max_clicks: number | null
+          max_impressions: number | null
+          placement: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          spent_cents: number | null
+          starts_at: string | null
+          status: string
+          target_pages: string[] | null
+          title: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ads"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_advertiser_wallet: { Args: { _email: string }; Returns: Json }
       get_community_public_stats: {
         Args: never

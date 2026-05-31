@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
+import { PROFILE_SAFE_COLUMNS } from '@/lib/profileColumns';
 
 type Profile = Tables<'profiles'>;
 
@@ -21,9 +22,9 @@ export const useProfilesByRegion = (region: string) => {
   return useQuery({
     queryKey: ['profiles', 'region', region],
     queryFn: async (): Promise<Profile[]> => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
+      const { data, error } = await (supabase
+        .from('profiles') as any)
+        .select(PROFILE_SAFE_COLUMNS)
         .eq('region', region)
         .order('is_online', { ascending: false })
         .order('last_seen', { ascending: false });
@@ -47,9 +48,9 @@ export const useProfile = (userId: string) => {
   return useQuery({
     queryKey: ['profile', userId],
     queryFn: async (): Promise<Profile | null> => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
+      const { data, error } = await (supabase
+        .from('profiles') as any)
+        .select(PROFILE_SAFE_COLUMNS)
         .eq('user_id', userId)
         .maybeSingle();
 

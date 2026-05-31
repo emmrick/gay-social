@@ -21,15 +21,11 @@ const ClientDossierSearch = ({ onOpenUserDossier }: ClientDossierSearchProps) =>
     if (!searchQuery.trim()) return;
     setSearching(true);
     try {
-      const q = searchQuery.trim();
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_id, username, first_name, last_name, avatar_url, age, region, phone_number, is_verified')
-        .or(`username.ilike.%${q}%,first_name.ilike.%${q}%,last_name.ilike.%${q}%,phone_number.ilike.%${q}%`)
-        .limit(20);
-      
+      const { data, error } = await supabase.rpc('admin_search_profiles', {
+        _query: searchQuery.trim(),
+      });
       if (error) throw error;
-      setResults(data || []);
+      setResults((data as any) || []);
     } catch (err) {
       console.error('Search error:', err);
     } finally {

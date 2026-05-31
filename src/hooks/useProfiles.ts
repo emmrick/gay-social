@@ -22,8 +22,8 @@ export const useProfilesByRegion = (region: string) => {
   return useQuery({
     queryKey: ['profiles', 'region', region],
     queryFn: async (): Promise<Profile[]> => {
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase
+        .from('profiles') as any)
         .select(PROFILE_SAFE_COLUMNS)
         .eq('region', region)
         .order('is_online', { ascending: false })
@@ -48,8 +48,8 @@ export const useProfile = (userId: string) => {
   return useQuery({
     queryKey: ['profile', userId],
     queryFn: async (): Promise<Profile | null> => {
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase
+        .from('profiles') as any)
         .select(PROFILE_SAFE_COLUMNS)
         .eq('user_id', userId)
         .maybeSingle();

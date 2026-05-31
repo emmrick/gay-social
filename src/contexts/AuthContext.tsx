@@ -39,9 +39,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useOnlineHeartbeat(user);
 
   const fetchProfile = async (userId: string) => {
+    const { PROFILE_SAFE_COLUMNS } = await import('@/lib/profileColumns');
     const [profileRes, privateRes] = await Promise.all([
       (supabase.from('profiles') as any)
-        .select('*')
+        .select(PROFILE_SAFE_COLUMNS)
         .eq('user_id', userId)
         .maybeSingle(),
       supabase.rpc('get_my_private_profile'),
@@ -57,8 +58,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     if (!data) return null;
 
-    // Merge private fields fetched via SECURITY DEFINER RPC (column-grants
-    // hide them on direct SELECT from the authenticated role).
     const privateRow = Array.isArray(privateRes.data) ? privateRes.data[0] : privateRes.data;
     return { ...data, ...(privateRow || {}) };
   };

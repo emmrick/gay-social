@@ -5434,6 +5434,57 @@ export type Database = {
         Returns: Json
       }
       add_verification_credits: { Args: { _user_id: string }; Returns: Json }
+      admin_get_full_profile: {
+        Args: { _user_id: string }
+        Returns: {
+          accepts_nsfw: boolean | null
+          age: number | null
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          body_type: string | null
+          couple_account_id: string | null
+          couple_role: string | null
+          created_at: string
+          endowment: string | null
+          ethnicity: string | null
+          first_name: string | null
+          first_verified_at: string | null
+          height: number | null
+          hide_last_seen: boolean | null
+          hide_online_status: boolean | null
+          hiv_status: string | null
+          id: string
+          is_online: boolean | null
+          is_premium: boolean | null
+          is_verified: boolean
+          last_name: string | null
+          last_seen: string | null
+          latitude: number | null
+          location_updated_at: string | null
+          longitude: number | null
+          looking_for: string[] | null
+          phone_number: string | null
+          position_detail: string | null
+          region: string
+          relationship_status: string | null
+          sexual_position: string | null
+          show_birthday: boolean | null
+          show_face: boolean | null
+          theme_preference: string | null
+          tribes: string[] | null
+          updated_at: string
+          user_id: string
+          username: string
+          weight: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       apply_advertiser_promo: {
         Args: {
           _advertiser_email: string
@@ -5653,6 +5704,17 @@ export type Database = {
       }
       get_location_hide_status: { Args: { _user_id: string }; Returns: Json }
       get_my_last_weekly_digest_sent_at: { Args: never; Returns: string }
+      get_my_private_profile: {
+        Args: never
+        Returns: {
+          first_name: string
+          last_name: string
+          latitude: number
+          location_updated_at: string
+          longitude: number
+          phone_number: string
+        }[]
+      }
       get_nearby_profiles: {
         Args: {
           limit_count?: number

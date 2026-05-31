@@ -5485,6 +5485,20 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      admin_search_profiles: {
+        Args: { _query: string }
+        Returns: {
+          age: number
+          avatar_url: string
+          first_name: string
+          is_verified: boolean
+          last_name: string
+          phone_number: string
+          region: string
+          user_id: string
+          username: string
+        }[]
+      }
       apply_advertiser_promo: {
         Args: {
           _advertiser_email: string

@@ -39,22 +39,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useOnlineHeartbeat(user);
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-    
+    const [profileRes, privateRes] = await Promise.all([
+      (supabase.from('profiles') as any)
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle(),
+      supabase.rpc('get_my_private_profile'),
+    ]);
+
+    const { data, error } = profileRes;
     if (error) {
-      // AbortError is a benign cancellation when the user navigates away
-      // before the request finishes — not worth logging or surfacing.
       const msg = error.message || '';
       if (!msg.includes('abort')) {
         console.warn('[AuthContext] fetchProfile error:', msg || JSON.stringify(error));
       }
       return null;
     }
-    return data;
+    if (!data) return null;
+
+    // Merge private fields fetched via SECURITY DEFINER RPC (column-grants
+    // hide them on direct SELECT from the authenticated role).
+    const privateRow = Array.isArray(privateRes.data) ? privateRes.data[0] : privateRes.data;
+    return { ...data, ...(privateRow || {}) };
   };
 
   useEffect(() => {

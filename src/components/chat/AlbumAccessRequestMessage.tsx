@@ -137,13 +137,12 @@ const AlbumAccessRequestMessage = ({
         .eq('user_id', user.id)
         .maybeSingle();
 
-      await supabase.from('notifications').insert({
-        user_id: requesterId,
-        type: 'album_access_granted',
-        title: '✅ Accès album accordé !',
-        message: `${ownerProfile?.username || 'Un utilisateur'} vous a donné accès à ${albumNames.length > 1 ? `${albumNames.length} albums` : `l'album "${albumNames[0]}"`} (${durationLabel})`,
-        action_url: '/',
-        is_read: false,
+      await supabase.rpc('create_user_notification', {
+        _user_id: requesterId,
+        _type: 'album_access_granted',
+        _title: '✅ Accès album accordé !',
+        _message: `${ownerProfile?.username || 'Un utilisateur'} vous a donné accès à ${albumNames.length > 1 ? `${albumNames.length} albums` : `l'album "${albumNames[0]}"`} (${durationLabel})`,
+        _action_url: '/',
       });
 
       queryClient.invalidateQueries({ queryKey: ['album-access-request-status'] });
@@ -182,13 +181,12 @@ const AlbumAccessRequestMessage = ({
         chat_room_id: null,
       });
 
-      await supabase.from('notifications').insert({
-        user_id: requesterId,
-        type: 'album_access_refused',
-        title: '❌ Demande d\'accès refusée',
-        message: `Votre demande d'accès album a été refusée.`,
-        action_url: '/',
-        is_read: false,
+      await supabase.rpc('create_user_notification', {
+        _user_id: requesterId,
+        _type: 'album_access_refused',
+        _title: '❌ Demande d\'accès refusée',
+        _message: `Votre demande d'accès album a été refusée.`,
+        _action_url: '/',
       });
 
       queryClient.invalidateQueries({ queryKey: ['album-access-request-status'] });

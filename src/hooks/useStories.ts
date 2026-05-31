@@ -181,14 +181,15 @@ export const useStories = () => {
               .eq('favorite_user_id', user.id);
 
             if (fans && fans.length > 0) {
-              const notifications = fans.map(f => ({
-                user_id: f.user_id,
-                type: 'new_story',
-                title: '📸 Nouvelle story',
-                message: `${username} a publié une nouvelle story`,
-                action_url: '/',
-              }));
-              await supabase.from('notifications').insert(notifications);
+              await Promise.allSettled(fans.map(f =>
+                supabase.rpc('create_user_notification', {
+                  _user_id: f.user_id,
+                  _type: 'new_story',
+                  _title: '📸 Nouvelle story',
+                  _message: `${username} a publié une nouvelle story`,
+                  _action_url: '/',
+                })
+              ));
             }
           } catch (err) {
             console.error('[stories] notification error:', err);

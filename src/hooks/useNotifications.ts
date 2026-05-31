@@ -396,12 +396,12 @@ export const useCreateNotification = () => {
       message?: string;
       actionUrl?: string;
     }) => {
-      const { error } = await supabase.from('notifications').insert({
-        user_id: userId,
-        type,
-        title,
-        message: message || null,
-        action_url: actionUrl || null,
+      const { error } = await supabase.rpc('create_user_notification', {
+        _user_id: userId,
+        _type: type,
+        _title: title,
+        _message: message || null,
+        _action_url: actionUrl || null,
       });
 
       if (error) throw error;

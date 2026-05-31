@@ -285,12 +285,12 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
                   for (const mentionedUser of mentionedProfiles) {
                     if (mentionedUser.user_id === user.id) continue;
 
-                    await supabase.from('notifications').insert({
-                      user_id: mentionedUser.user_id,
-                      type: 'group_mention',
-                      title: `💬 Mention dans ${roomName}`,
-                      message: `${senderName} t'a mentionné: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
-                      action_url: '/',
+                    await supabase.rpc('create_user_notification', {
+                      _user_id: mentionedUser.user_id,
+                      _type: 'group_mention',
+                      _title: `💬 Mention dans ${roomName}`,
+                      _message: `${senderName} t'a mentionné: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+                      _action_url: '/',
                     });
                   }
                 }

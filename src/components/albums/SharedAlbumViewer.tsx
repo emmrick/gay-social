@@ -263,12 +263,12 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
 
       const viewerName = viewerProfile?.username || 'Un utilisateur';
 
-      await supabase.from('notifications').insert({
-        user_id: albumOwner,
-        type: 'screenshot_attempt',
-        title: '🛡️ Tentative de capture détectée',
-        message: `${viewerName} a tenté de capturer votre album "${albumName}". Rassurez-vous, nous avons pris des mesures pour protéger votre contenu : l'écran a été masqué et l'utilisateur a été sanctionné.`,
-        action_url: '/',
+      await supabase.rpc('create_user_notification', {
+        _user_id: albumOwner,
+        _type: 'screenshot_attempt',
+        _title: '🛡️ Tentative de capture détectée',
+        _message: `${viewerName} a tenté de capturer votre album "${albumName}". Rassurez-vous, nous avons pris des mesures pour protéger votre contenu : l'écran a été masqué et l'utilisateur a été sanctionné.`,
+        _action_url: '/',
       });
     },
   });

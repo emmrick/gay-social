@@ -113,12 +113,12 @@ export const useUserFavorites = () => {
       }
 
       // Also create in-app notification
-      await supabase.from('notifications').insert({
-        user_id: favoriteUserId,
-        type: 'new_favorite',
-        title: '⭐ Nouveau favori !',
-        message: `${myProfile?.username || 'Quelqu\'un'} t'a ajouté en favori`,
-        action_url: `/profile/${user.id}`,
+      await supabase.rpc('create_user_notification', {
+        _user_id: favoriteUserId,
+        _type: 'new_favorite',
+        _title: '⭐ Nouveau favori !',
+        _message: `${myProfile?.username || 'Quelqu\'un'} t'a ajouté en favori`,
+        _action_url: `/profile/${user.id}`,
       });
 
       return data;

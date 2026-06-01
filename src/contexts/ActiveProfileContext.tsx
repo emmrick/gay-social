@@ -68,12 +68,10 @@ export const ActiveProfileProvider = ({ children }: { children: ReactNode }) => 
         : couple.owner_user_id;
 
       if (partnerId) {
-        const { data: partner } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', partnerId)
-          .maybeSingle();
-        setPartnerProfile(partner);
+        // Couple partners have legitimate access to each other's full profile
+        const { data: partnerRows } = await supabase.rpc('get_couple_partner_profile');
+        const partner = Array.isArray(partnerRows) ? partnerRows[0] : partnerRows;
+        setPartnerProfile(partner ?? null);
       }
     } else {
       setCoupleAccount(null);

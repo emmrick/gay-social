@@ -94,12 +94,8 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
   const { data: reportedProfile } = useQuery({
     queryKey: ['admin-reported-profile', report.reported_user_id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', report.reported_user_id)
-        .maybeSingle();
-      return data;
+      const { data } = await supabase.rpc('admin_get_full_profile', { _user_id: report.reported_user_id });
+      return Array.isArray(data) ? data[0] : data;
     },
     enabled: open,
   });

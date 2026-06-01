@@ -104,9 +104,11 @@ const useAllUsers = (search: string, filter: string) => {
   return useQuery({
     queryKey: ['admin-users', search, filter],
     queryFn: async (): Promise<UserProfile[]> => {
-      let query = supabase
-        .from('profiles')
-        .select('*')
+      // Use safe columns for the listing — full private data fetched via admin RPC on-demand
+      const { PROFILE_SAFE_COLUMNS } = await import('@/lib/profileColumns');
+      let query = (supabase
+        .from('profiles') as any)
+        .select(PROFILE_SAFE_COLUMNS)
         .order('created_at', { ascending: false });
 
       if (search.trim()) {
@@ -124,7 +126,7 @@ const useAllUsers = (search: string, filter: string) => {
 
       const { data, error } = await query.limit(100);
       if (error) throw error;
-      return data || [];
+      return (data as UserProfile[]) || [];
     },
   });
 };

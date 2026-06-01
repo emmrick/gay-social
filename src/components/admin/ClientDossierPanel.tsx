@@ -39,13 +39,11 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['client-dossier-profile', userId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      const { data, error } = await supabase.rpc('admin_get_full_profile', { _user_id: userId });
       if (error) throw error;
-      return data;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) throw new Error('Profile not found');
+      return row;
     },
     enabled: !!userId,
   });

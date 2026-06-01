@@ -77,9 +77,10 @@ const useGroupMembers = (roomId: string | undefined, regionCode: string) => {
 
       const userIds = members.map(m => m.user_id);
 
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('*')
+      const { PROFILE_SAFE_COLUMNS } = await import('@/lib/profileColumns');
+      const { data: profiles, error } = await (supabase
+        .from('profiles') as any)
+        .select(PROFILE_SAFE_COLUMNS)
         .in('user_id', userIds)
         .order('is_online', { ascending: false })
         .order('last_seen', { ascending: false });

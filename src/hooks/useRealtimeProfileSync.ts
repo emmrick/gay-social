@@ -80,8 +80,7 @@ export const useRealtimeProfileSync = () => {
             const now = Date.now();
             if (now - lastCountInvalidateRef.current > 30000) {
               lastCountInvalidateRef.current = now;
-              queryClient.invalidateQueries({ queryKey: ['online-member-counts'] });
-              queryClient.invalidateQueries({ queryKey: ['online-member-count'] });
+              queryClient.invalidateQueries({ queryKey: ['member-stats'] });
             }
           }
         }

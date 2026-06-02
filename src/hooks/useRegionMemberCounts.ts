@@ -1,5 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMemberStats } from './useMemberStats';
 
 interface RegionMemberCount {
   region: string;
@@ -7,39 +6,29 @@ interface RegionMemberCount {
   online: number;
 }
 
+/**
+ * Compteurs par région — dérivés du cache partagé `useMemberStats`,
+ * pas de requête supplémentaire.
+ */
 export const useRegionMemberCounts = () => {
-  return useQuery({
-    queryKey: ['region-member-counts'],
-    queryFn: async (): Promise<Record<string, RegionMemberCount>> => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('region, is_online');
-
-      if (error) throw error;
-
-      // Count members per region
-      const counts: Record<string, RegionMemberCount> = {};
-      data?.forEach((profile) => {
-        if (!counts[profile.region]) {
-          counts[profile.region] = { region: profile.region, total: 0, online: 0 };
-        }
-        counts[profile.region].total += 1;
-        if (profile.is_online === true) {
-          counts[profile.region].online += 1;
-        }
-      });
-
-      return counts;
-    },
-    refetchInterval: 60000,
-    staleTime: 30000,
-  });
+  const q = useMemberStats();
+  const counts: Record<string, RegionMemberCount> = {};
+  const perRegion = q.data?.per_region ?? {};
+  for (const region of Object.keys(perRegion)) {
+    counts[region] = {
+      region,
+      total: perRegion[region]?.total ?? 0,
+      online: perRegion[region]?.online ?? 0,
+    };
+  }
+  return {
+    ...q,
+    data: counts,
+  };
 };
 
-// Get count for a specific region
 export const useRegionMemberCount = (regionCode: string) => {
   const { data: counts, isLoading } = useRegionMemberCounts();
-  
   return {
     total: counts?.[regionCode]?.total || 0,
     online: counts?.[regionCode]?.online || 0,

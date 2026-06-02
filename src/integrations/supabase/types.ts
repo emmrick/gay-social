@@ -5768,6 +5768,7 @@ export type Database = {
         }
       }
       get_location_hide_status: { Args: { _user_id: string }; Returns: Json }
+      get_member_stats: { Args: never; Returns: Json }
       get_my_last_weekly_digest_sent_at: { Args: never; Returns: string }
       get_my_private_profile: {
         Args: never

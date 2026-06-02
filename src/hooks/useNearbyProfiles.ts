@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMemo } from 'react';
@@ -29,14 +29,29 @@ const fixStaleOnlineStatus = (profile: NearbyProfile): NearbyProfile => {
   return profile;
 };
 
+/**
+ * Hook unifié de chargement des profils proches.
+ *
+ * Stratégie anti-rechargements-simultanés :
+ *  - Une SEULE source quand la géoloc est dispo (RPC `get_nearby_profiles`,
+ *    qui filtre déjà vérifiés / bloqués / suspendus / hide-location).
+ *  - Un fallback liste-globale UNIQUEMENT tant que la géoloc n'est pas dispo
+ *    (désactivé dès qu'on a une lat/lon, plus de double fetch périodique).
+ *  - `placeholderData: keepPreviousData` → aucun spinner sur changement de
+ *    rayon / refetch en arrière-plan.
+ *  - `refetchInterval` décalé entre les deux queries pour ne jamais déclencher
+ *    deux requêtes profils dans la même tick.
+ */
 export const useNearbyProfiles = (
   latitude: number | null,
   longitude: number | null,
   maxDistance: number = 50000
 ) => {
   const { user } = useAuth();
+  const hasGeo = latitude != null && longitude != null;
 
-  // Query 1: Always fetch profiles immediately (no geolocation dependency)
+  // Fallback : liste globale, activée seulement TANT QUE la géoloc n'est pas prête.
+  // Dès que `hasGeo` devient vrai, cette query s'arrête (plus de refetch parallèle).
   const baseQuery = useQuery({
     queryKey: ['nearby-profiles-base', user?.id],
     queryFn: async (): Promise<NearbyProfile[]> => {
@@ -45,7 +60,7 @@ export const useNearbyProfiles = (
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, user_id, username, avatar_url, bio, age, is_online, last_seen, region, is_verified')
+        .select('id, user_id, username, avatar_url, bio, age, is_online, last_seen, region')
         .neq('user_id', user.id)
         .eq('is_verified', true)
         .order('is_online', { ascending: false })
@@ -59,9 +74,12 @@ export const useNearbyProfiles = (
 
       if (error) throw error;
 
-      let profiles = (data || []).map(p => fixStaleOnlineStatus({ ...p, distance_km: null }));
+      let profiles = (data || []).map((p) =>
+        fixStaleOnlineStatus({ ...p, distance_km: null } as NearbyProfile)
+      );
 
-      const missingAvatarIds = profiles.filter(p => !p.avatar_url).map(p => p.user_id);
+      // Avatars manquants → essai depuis profile_photos
+      const missingAvatarIds = profiles.filter((p) => !p.avatar_url).map((p) => p.user_id);
       if (missingAvatarIds.length > 0) {
         const { data: photos } = await supabase
           .from('profile_photos')
@@ -73,12 +91,9 @@ export const useNearbyProfiles = (
         if (photos && photos.length > 0) {
           const photoMap = new Map<string, string>();
           for (const photo of photos) {
-            if (!photoMap.has(photo.user_id)) {
-              photoMap.set(photo.user_id, photo.photo_url);
-            }
+            if (!photoMap.has(photo.user_id)) photoMap.set(photo.user_id, photo.photo_url);
           }
-
-          profiles = profiles.map(p =>
+          profiles = profiles.map((p) =>
             !p.avatar_url && photoMap.has(p.user_id)
               ? { ...p, avatar_url: photoMap.get(p.user_id)! }
               : p
@@ -86,39 +101,43 @@ export const useNearbyProfiles = (
         }
       }
 
-      profiles = profiles.filter(p => !!p.avatar_url);
+      profiles = profiles.filter((p) => !!p.avatar_url);
 
       if (profiles.length > 0) {
         const { data: blockedIds } = await supabase.rpc('filter_suspended_or_blocked_users', {
-          _user_ids: profiles.map(p => p.user_id),
+          _user_ids: profiles.map((p) => p.user_id),
         });
         const blockedSet = new Set<string>((blockedIds as string[] | null) ?? []);
-        profiles = profiles.filter(p => !blockedSet.has(p.user_id));
+        profiles = profiles.filter((p) => !blockedSet.has(p.user_id));
       }
 
       return profiles;
     },
-    enabled: !!user,
-    staleTime: 30000,
-    gcTime: 300000,
+    // Désactivé dès que la géoloc est dispo → plus de double fetch.
+    enabled: !!user && !hasGeo,
+    staleTime: 60_000,
+    gcTime: 300_000,
     refetchOnWindowFocus: false,
-    refetchInterval: 300000,
+    refetchOnMount: false,
+    // Pas de refetchInterval ici : la géoQuery prendra le relais.
+    placeholderData: keepPreviousData,
   });
 
-  // Query 2: When geolocation is available, fetch with distances (runs in parallel / replaces)
+  // Source principale dès qu'on a la géoloc. La RPC filtre déjà
+  // vérifiés / bloqués / suspendus / hide-location et exclut les profils sans
+  // photo → aucun post-traitement supplémentaire nécessaire côté client.
   const geoQuery = useQuery({
-    queryKey: ['nearby-profiles-geo', latitude, longitude, maxDistance],
+    queryKey: ['nearby-profiles-geo', user?.id, latitude, longitude, maxDistance],
     queryFn: async (): Promise<NearbyProfile[]> => {
-      if (latitude == null || longitude == null) return [];
+      if (!hasGeo) return [];
       const t0 = performance.now();
 
-      const { data, error } = await supabase
-        .rpc('get_nearby_profiles', {
-          user_lat: latitude,
-          user_lon: longitude,
-          max_distance_km: maxDistance,
-          limit_count: 200,
-        });
+      const { data, error } = await supabase.rpc('get_nearby_profiles', {
+        user_lat: latitude!,
+        user_lon: longitude!,
+        max_distance_km: maxDistance,
+        limit_count: 200,
+      });
 
       recordPerfMetric('home', 'nearby_geo_rpc', performance.now() - t0, {
         ok: !error,
@@ -128,60 +147,38 @@ export const useNearbyProfiles = (
 
       if (error) throw error;
 
-      // Filter to only verified users (using profiles.is_verified as source of truth)
-      const userIds = (data || []).map((p: any) => p.user_id);
-      const { data: verifiedProfiles } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .in('user_id', userIds)
-        .eq('is_verified', true);
-
-      const verifiedUserIds = new Set((verifiedProfiles || []).map(v => v.user_id));
-      const geoProfiles = (data || [])
-        .filter(p => verifiedUserIds.has(p.user_id) && !!p.avatar_url)
-        .map(fixStaleOnlineStatus)
-        .map((p: any) => ({ ...p, is_verified: true }));
-
-      if (geoProfiles.length === 0) return geoProfiles;
-      const { data: blockedIds } = await supabase.rpc('filter_suspended_or_blocked_users', {
-        _user_ids: geoProfiles.map(p => p.user_id),
-      });
-      const blockedSet = new Set<string>((blockedIds as string[] | null) ?? []);
-      return geoProfiles.filter(p => !blockedSet.has(p.user_id));
+      return (data || []).map((p: any) =>
+        fixStaleOnlineStatus({ ...p, is_verified: true } as NearbyProfile)
+      );
     },
-    enabled: !!user && latitude != null && longitude != null,
-    staleTime: 45000,
-    gcTime: 120000,
-    refetchInterval: 300000, // 5 minutes
+    enabled: !!user && hasGeo,
+    staleTime: 60_000,
+    gcTime: 300_000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    // Refetch périodique uniquement quand la géoQuery est la source active.
+    refetchInterval: 5 * 60_000,
+    placeholderData: keepPreviousData,
   });
 
-  // Merge: geo-sorted profiles first, then remaining base profiles not in geo results
-  const mergedProfiles = useMemo(() => {
-    const geoProfiles = geoQuery.data ?? [];
-    const baseProfiles = baseQuery.data ?? [];
-    if (geoProfiles.length === 0) return baseProfiles;
-    const geoUserIds = new Set(geoProfiles.map(p => p.user_id));
-    const remaining = baseProfiles.filter(p => !geoUserIds.has(p.user_id));
-    return [...geoProfiles, ...remaining];
-  }, [geoQuery.data, baseQuery.data]);
+  // Une seule source à la fois : géo si dispo, sinon fallback global.
+  const profiles = useMemo(() => {
+    if (hasGeo) return geoQuery.data ?? [];
+    return baseQuery.data ?? [];
+  }, [hasGeo, geoQuery.data, baseQuery.data]);
 
-  const hasGeoData = geoQuery.isSuccess && (geoQuery.data?.length ?? 0) > 0;
-  const profiles = mergedProfiles;
-  const isLoading = baseQuery.isLoading;
-  const isFetching = baseQuery.isFetching || geoQuery.isFetching;
+  const activeQuery = hasGeo ? geoQuery : baseQuery;
 
   return {
     data: profiles,
-    isLoading,
-    isFetching,
-    error: baseQuery.error || geoQuery.error,
+    isLoading: activeQuery.isLoading && profiles.length === 0,
+    isFetching: activeQuery.isFetching,
+    error: activeQuery.error,
     refetch: async () => {
-      await Promise.all([
-        baseQuery.refetch(),
-        latitude != null && longitude != null ? geoQuery.refetch() : Promise.resolve(),
-      ]);
+      if (hasGeo) await geoQuery.refetch();
+      else await baseQuery.refetch();
     },
-    hasGeoData,
+    hasGeoData: hasGeo && (geoQuery.data?.length ?? 0) > 0,
   };
 };
 

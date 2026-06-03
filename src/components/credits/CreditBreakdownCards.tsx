@@ -206,6 +206,16 @@ const CreditBreakdownCards = () => {
         );
       })}
     </div>
+    <Dialog open={showMonthlyInfo} onOpenChange={setShowMonthlyInfo}>
+      <DialogContent className="max-w-md p-0 overflow-hidden bg-transparent border-0 shadow-none">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Crédits gratuits du mois</DialogTitle>
+          <DialogDescription>Détails sur vos crédits offerts mensuels</DialogDescription>
+        </DialogHeader>
+        <MonthlyFreeCreditsCard />
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 

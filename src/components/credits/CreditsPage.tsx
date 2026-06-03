@@ -62,8 +62,6 @@ const CreditsPage = () => {
           });
         }} />
 
-        {/* Monthly free credits status */}
-        <MonthlyFreeCreditsCard />
 
         {/* Passive recharge promo banner */}
         {isPassivePromo && (

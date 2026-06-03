@@ -122,6 +122,16 @@ const CreditBreakdownCards = () => {
               <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", card.bgIcon)}>
                 <Icon className={cn("w-4.5 h-4.5", card.color)} />
               </div>
+              {card.label === 'Quotidien' && (
+                <button
+                  type="button"
+                  onClick={() => setShowMonthlyInfo(true)}
+                  aria-label="Détails des crédits gratuits du mois"
+                  className="w-6 h-6 rounded-full flex items-center justify-center bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
+                >
+                  <Info className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                </button>
+              )}
               {card.lockable && (
                 <div className="flex items-center gap-1">
                   {card.locked ? (

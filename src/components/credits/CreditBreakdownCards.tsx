@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Clock, Zap, Star, ShoppingBag, Lock, Unlock, Info, Flame } from 'lucide-react';
 import { useCredits } from '@/hooks/useCredits';
 import { useDynamicCreditCosts, DEFAULT_COSTS } from '@/hooks/useDynamicCreditCosts';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import PassiveCountdown from './PassiveCountdown';
+import MonthlyFreeCreditsCard from './MonthlyFreeCreditsCard';
 
 const CreditBreakdownCards = () => {
   const {

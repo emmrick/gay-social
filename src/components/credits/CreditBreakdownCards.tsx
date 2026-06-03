@@ -101,6 +101,7 @@ const CreditBreakdownCards = () => {
   ];
 
   return (
+    <>
     <div className="grid grid-cols-2 gap-3">
       {cards.map((card, i) => {
         const Icon = card.icon;

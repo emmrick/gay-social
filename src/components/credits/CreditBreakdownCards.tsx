@@ -1,13 +1,17 @@
+import { useState } from 'react';
 import { Clock, Zap, Star, ShoppingBag, Lock, Unlock, Info, Flame } from 'lucide-react';
 import { useCredits } from '@/hooks/useCredits';
 import { useDynamicCreditCosts, DEFAULT_COSTS } from '@/hooks/useDynamicCreditCosts';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import PassiveCountdown from './PassiveCountdown';
+import MonthlyFreeCreditsCard from './MonthlyFreeCreditsCard';
 
 const CreditBreakdownCards = () => {
+  const [showMonthlyInfo, setShowMonthlyInfo] = useState(false);
   const {
     dailyCredits, maxDailyCredits,
     passiveCredits, bonusCredits, purchasedCredits,
@@ -97,6 +101,7 @@ const CreditBreakdownCards = () => {
   ];
 
   return (
+    <>
     <div className="grid grid-cols-2 gap-3">
       {cards.map((card, i) => {
         const Icon = card.icon;
@@ -118,6 +123,16 @@ const CreditBreakdownCards = () => {
               <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", card.bgIcon)}>
                 <Icon className={cn("w-4.5 h-4.5", card.color)} />
               </div>
+              {card.label === 'Quotidien' && (
+                <button
+                  type="button"
+                  onClick={() => setShowMonthlyInfo(true)}
+                  aria-label="Détails des crédits gratuits du mois"
+                  className="w-6 h-6 rounded-full flex items-center justify-center bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
+                >
+                  <Info className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                </button>
+              )}
               {card.lockable && (
                 <div className="flex items-center gap-1">
                   {card.locked ? (
@@ -191,6 +206,16 @@ const CreditBreakdownCards = () => {
         );
       })}
     </div>
+    <Dialog open={showMonthlyInfo} onOpenChange={setShowMonthlyInfo}>
+      <DialogContent className="max-w-md p-0 overflow-hidden bg-transparent border-0 shadow-none">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Crédits gratuits du mois</DialogTitle>
+          <DialogDescription>Détails sur vos crédits offerts mensuels</DialogDescription>
+        </DialogHeader>
+        <MonthlyFreeCreditsCard />
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 

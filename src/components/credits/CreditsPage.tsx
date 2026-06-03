@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
 import { useDynamicCreditCosts, DEFAULT_COSTS } from '@/hooks/useDynamicCreditCosts';
 import CreditWalletHeader from './CreditWalletHeader';
-import MonthlyFreeCreditsCard from './MonthlyFreeCreditsCard';
 import { toast } from 'sonner';
 import CreditBreakdownCards from './CreditBreakdownCards';
 import CreditMissionsSection from './CreditMissionsSection';
@@ -63,8 +62,6 @@ const CreditsPage = () => {
           });
         }} />
 
-        {/* Monthly free credits status */}
-        <MonthlyFreeCreditsCard />
 
         {/* Passive recharge promo banner */}
         {isPassivePromo && (

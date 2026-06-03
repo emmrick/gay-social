@@ -11,6 +11,7 @@ import PassiveCountdown from './PassiveCountdown';
 import MonthlyFreeCreditsCard from './MonthlyFreeCreditsCard';
 
 const CreditBreakdownCards = () => {
+  const [showMonthlyInfo, setShowMonthlyInfo] = useState(false);
   const {
     dailyCredits, maxDailyCredits,
     passiveCredits, bonusCredits, purchasedCredits,

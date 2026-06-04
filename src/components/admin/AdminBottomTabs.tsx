@@ -128,10 +128,10 @@ const AdminBottomTabs = ({
   };
 
   const visibleMoreItems = MORE_ITEMS.filter(item => {
-    if (!item.adminOnly) return true;
     if (isAdmin) return true;
-    if (item.permissionKey && modPermissions?.[item.permissionKey]) return true;
-    return false;
+    if (item.permissionKey) return Boolean(modPermissions?.[item.permissionKey]);
+    if (item.adminOnly) return false;
+    return true;
   });
 
   const groupedMoreItems = visibleMoreItems.reduce((acc, item) => {

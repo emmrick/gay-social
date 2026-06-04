@@ -121,7 +121,7 @@ export const AdminActionCard = ({
       )}
 
       {visible.length === 0 ? (
-        <EmptyState title={emptyLabel ?? ''} />
+        <EmptyState icon={Lock} title={emptyLabel ?? ''} />
       ) : layout === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {visible.map((a) => {

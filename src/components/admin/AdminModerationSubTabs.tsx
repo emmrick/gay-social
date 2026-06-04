@@ -95,9 +95,11 @@ const AdminModerationSubTabs = ({
     if (!activeGroupTabs) return [];
     return activeGroupTabs.filter((t) => {
       if (isAdmin) return true;
+      if (t.permissionKey) return Boolean(modPermissions?.[t.permissionKey]);
       if (t.adminOnly) return false;
-      if (!t.permissionKey) return true;
-      return Boolean(modPermissions?.[t.permissionKey as keyof ModPermissions]);
+      return true;
+    });
+  }, [activeGroupTabs, isAdmin, modPermissions]);
     });
   }, [activeGroupTabs, isAdmin, modPermissions]);
 

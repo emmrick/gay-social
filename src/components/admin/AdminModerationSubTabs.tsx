@@ -100,8 +100,6 @@ const AdminModerationSubTabs = ({
       return true;
     });
   }, [activeGroupTabs, isAdmin, modPermissions]);
-    });
-  }, [activeGroupTabs, isAdmin, modPermissions]);
 
   if (!activeGroupTabs) return null;
   if (visible.length <= 1) return null;

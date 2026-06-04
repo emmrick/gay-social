@@ -9,3 +9,6 @@ export { AdminTabsBar, type AdminTab } from './AdminTabsBar';
 export { AdminTable, type AdminColumn } from './AdminTable';
 export { AdminPagination } from './AdminPagination';
 export { AdminBulkActionsBar } from './AdminBulkActionsBar';
+export { AdminActionCard, type AdminCardAction } from './AdminActionCard';
+export { PermissionGate } from './PermissionGate';
+export { useAdminPermissions, hasAccess, type PermissionGuard, type ModPermissions } from './permissions';

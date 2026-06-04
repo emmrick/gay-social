@@ -22,7 +22,7 @@
  * masquée pour les modérateurs sauf permission explicite via `permissionKey`.
  */
 import * as React from 'react';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AdminCard } from './AdminCard';
 import { EmptyState } from './EmptyState';

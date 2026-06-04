@@ -41,7 +41,7 @@ interface SubTab {
 
 const MOD_TABS: SubTab[] = [
   { id: 'pending-tasks', label: 'Missions', icon: ListChecks },
-  { id: 'support', label: 'Support', icon: Headphones, permissionKey: 'can_manage_support' as never },
+  { id: 'support', label: 'Support', icon: Headphones },
   { id: 'support-ratings', label: 'Avis', icon: Star, adminOnly: true },
   { id: 'reports', label: 'Signalements', icon: Filter, permissionKey: 'can_manage_reports' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, permissionKey: 'can_manage_content' },
@@ -49,7 +49,7 @@ const MOD_TABS: SubTab[] = [
   { id: 'ai-moderation', label: 'IA', icon: Bot, permissionKey: 'can_ai_moderation' },
   { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, permissionKey: 'can_screenshot_sanctions' },
   { id: 'suggestions', label: 'Idées', icon: Lightbulb, permissionKey: 'can_manage_content' },
-  { id: 'verification', label: 'Identité', icon: IdCard, adminOnly: true, permissionKey: 'can_verify_identity' },
+  { id: 'verification', label: 'Identité', icon: IdCard, permissionKey: 'can_verify_identity' },
 ];
 
 const USERS_TABS: SubTab[] = [
@@ -95,9 +95,9 @@ const AdminModerationSubTabs = ({
     if (!activeGroupTabs) return [];
     return activeGroupTabs.filter((t) => {
       if (isAdmin) return true;
+      if (t.permissionKey) return Boolean(modPermissions?.[t.permissionKey]);
       if (t.adminOnly) return false;
-      if (!t.permissionKey) return true;
-      return Boolean(modPermissions?.[t.permissionKey as keyof ModPermissions]);
+      return true;
     });
   }, [activeGroupTabs, isAdmin, modPermissions]);
 

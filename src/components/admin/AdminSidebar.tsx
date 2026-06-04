@@ -151,10 +151,10 @@ const AdminSidebar = ({
   }, [collapsed]);
 
   const visibleItems = navItems.filter((item) => {
-    if (!item.adminOnly) return true;
     if (isAdmin) return true;
-    if (item.permissionKey && modPermissions?.[item.permissionKey]) return true;
-    return false;
+    if (item.permissionKey) return Boolean(modPermissions?.[item.permissionKey]);
+    if (item.adminOnly) return false;
+    return true;
   });
 
   const getBadge = (id: AdminSection) => {

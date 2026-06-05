@@ -1,7 +1,7 @@
 import { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, CheckCircle2, Sparkles } from 'lucide-react';
+import { Heart, Crown, CheckCircle2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLivePresence } from '@/hooks/useLivePresence';
 import { useAvatarUrl, getSignedAvatarUrl } from '@/hooks/useAvatarUrl';

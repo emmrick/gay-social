@@ -1,12 +1,11 @@
 import { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Heart, Eye, Crown, CheckCircle2, Flame, Sparkles } from 'lucide-react';
+import { Heart, CheckCircle2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLivePresence } from '@/hooks/useLivePresence';
 import { useAvatarUrl, getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useInView } from '@/hooks/useInView';
-import { formatDistance } from '@/lib/formatDistance';
 import { useIsPlanNowActive } from '@/hooks/usePlanNowSession';
 import PlanNowBadge from '@/components/plan-now/PlanNowBadge';
 

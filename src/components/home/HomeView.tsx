@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { Star, SlidersHorizontal, Compass, Eye, Heart, Map as MapIcon, RefreshCw, Ruler, Check, Zap } from 'lucide-react';
+import { Star, SlidersHorizontal, Compass, Eye, Heart, RefreshCw, Ruler, Check, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -19,7 +19,6 @@ import FavoritesGrid from './FavoritesGrid';
 import AdOrInfoBanner from './AdOrInfoBanner';
 import VisitsTab from './VisitsTab';
 import ReactionsTab from './ReactionsTab';
-import MapTab from './MapTab';
 import PlanNowTab from './PlanNowTab';
 import SectionErrorBoundary from '@/components/SectionErrorBoundary';
 import type { RadiusValue } from './RadiusSelector';
@@ -29,7 +28,7 @@ interface HomeViewProps {
   onStartPrivateChat?: (userId: string) => void;
 }
 
-type HomeSection = 'accueil' | 'plan-now' | 'favorites' | 'visites' | 'reactions' | 'carte';
+type HomeSection = 'accueil' | 'plan-now' | 'favorites' | 'visites' | 'reactions';
 
 const RADIUS_STORAGE_KEY = 'gc_nearby_radius_km';
 const DEFAULT_RADIUS: RadiusValue = 10;
@@ -125,7 +124,7 @@ const HomeView = ({
           <div className="flex items-center gap-1.5">
             <TabsList className={cn(
               'flex-1 grid h-9 p-0.5 bg-card/80 backdrop-blur-xl border border-border/40 rounded-xl',
-              featureFlags.plan_now ? 'grid-cols-6' : 'grid-cols-5',
+              featureFlags.plan_now ? 'grid-cols-5' : 'grid-cols-4',
             )}>
               <TabsTrigger value="accueil" className={tabTriggerClass}>
                 <Compass className="w-3.5 h-3.5" />
@@ -158,10 +157,6 @@ const HomeView = ({
                     {reactionsCount > 99 ? '99+' : reactionsCount}
                   </span>
                 )}
-              </TabsTrigger>
-              <TabsTrigger value="carte" className={tabTriggerClass}>
-                <MapIcon className="w-3.5 h-3.5" />
-                <span className="hidden min-[400px]:inline">Carte</span>
               </TabsTrigger>
             </TabsList>
 
@@ -279,12 +274,6 @@ const HomeView = ({
 
           <TabsContent value="reactions" className="mt-2">
             <ReactionsTab onViewProfile={handleViewProfile} />
-          </TabsContent>
-
-          <TabsContent value="carte" className="mt-2">
-            <SectionErrorBoundary label="La carte n'a pas pu se charger">
-              <MapTab onViewProfile={handleViewProfile} />
-            </SectionErrorBoundary>
           </TabsContent>
         </Tabs>
       </div>

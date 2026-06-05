@@ -1,12 +1,11 @@
 import { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Heart, Eye, Crown, CheckCircle2, Flame, Sparkles } from 'lucide-react';
+import { Heart, Crown, CheckCircle2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLivePresence } from '@/hooks/useLivePresence';
 import { useAvatarUrl, getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useInView } from '@/hooks/useInView';
-import { formatDistance } from '@/lib/formatDistance';
 import { useIsPlanNowActive } from '@/hooks/usePlanNowSession';
 import PlanNowBadge from '@/components/plan-now/PlanNowBadge';
 
@@ -167,21 +166,6 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground text-[10px] font-bold shadow-sm">
                 <Crown className="w-3 h-3" />
                 Toi
-              </span>
-            )}
-            {!profile.isCurrentUser && profile.distance_km !== null && profile.distance_km > 0 && profile.distance_km < 0.1 && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[10px] font-bold shadow-sm animate-pulse">
-                <Flame className="w-2.5 h-2.5" />
-                Très proche
-              </span>
-            )}
-            {!profile.isCurrentUser && (profile.distance_km !== null || profile.region) && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md text-white text-[10px] font-medium max-w-[140px]">
-                <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
-                <span className="truncate">
-                  {formatDistance(profile.distance_km) ?? 'Distance inconnue'}
-                  {profile.distance_km !== null && profile.region && ` · ${profile.region}`}
-                </span>
               </span>
             )}
             {isNew && !profile.isCurrentUser && (

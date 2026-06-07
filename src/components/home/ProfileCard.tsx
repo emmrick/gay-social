@@ -180,22 +180,20 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
           {/* Always-on placeholder behind the img so we never flash white */}
           {InitialPlaceholder}
 
-          {shouldLoadAvatar && resolvedAvatar && !imgError && (
+          {shouldLoadAvatar && committedUrl && !imgError && (
             <img
               ref={imgRef}
-              src={resolvedAvatar}
+              src={committedUrl}
               alt={profile.username}
               loading={eager ? 'eager' : 'lazy'}
               fetchPriority={index < 4 ? 'high' : 'auto'}
               decoding="async"
-              onLoad={() => { setImgLoaded(true); setImgError(false); }}
+              onLoad={() => { markImageReady(committedUrl); setImgError(false); }}
               onError={() => { setImgError(true); }}
-              className={cn(
-                "absolute inset-0 w-full h-full object-cover transition-opacity duration-300",
-                imgLoaded ? "opacity-100" : "opacity-0"
-              )}
+              className="absolute inset-0 w-full h-full object-cover"
             />
           )}
+
         </div>
 
 

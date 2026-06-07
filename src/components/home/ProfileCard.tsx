@@ -50,13 +50,12 @@ const isNewUser = (createdAt?: string) => {
 const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCardProps) => {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [imgError, setImgError] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   // URL we last committed to <img src> — the one we trust to keep showing.
   const [committedUrl, setCommittedUrl] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
   const retryRef = useRef<number | null>(null);
+
   const live = useLivePresence(profile);
   const isOnline = live.showIndicator;
   const lastSeen = live.lastSeenText;

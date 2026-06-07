@@ -4,10 +4,17 @@ import { motion } from 'framer-motion';
 import { Heart, Crown, CheckCircle2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLivePresence } from '@/hooks/useLivePresence';
-import { useAvatarUrl, getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useInView } from '@/hooks/useInView';
 import { useIsPlanNowActive } from '@/hooks/usePlanNowSession';
 import PlanNowBadge from '@/components/plan-now/PlanNowBadge';
+import {
+  isImageReady,
+  markImageReady,
+  onImageReady,
+  preloadAvatar,
+} from '@/lib/imageCache';
+
 
 
 

@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Crown, CheckCircle2, Sparkles } from 'lucide-react';
@@ -8,6 +8,8 @@ import { useAvatarUrl, getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useInView } from '@/hooks/useInView';
 import { useIsPlanNowActive } from '@/hooks/usePlanNowSession';
 import PlanNowBadge from '@/components/plan-now/PlanNowBadge';
+
+
 
 
 interface ProfileCardProps {

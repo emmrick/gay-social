@@ -53,7 +53,10 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
-  const lastResolvedRef = useRef<string | null>(null);
+  // URL we last committed to <img src> — the one we trust to keep showing.
+  const [committedUrl, setCommittedUrl] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
+  const retryRef = useRef<number | null>(null);
   const live = useLivePresence(profile);
   const isOnline = live.showIndicator;
   const lastSeen = live.lastSeenText;
@@ -76,37 +79,56 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const shouldLoadAvatar = eager || nearViewport;
   const resolvedAvatar = useAvatarUrl(shouldPrefetch ? profile.avatar_url : null);
 
-  // Warm the browser HTTP cache as soon as we enter the prefetch window,
-  // even before we render the <img>. By the time the card scrolls into the
-  // render window, the image is already decoded and shows instantly.
+  // Preload + decode through the shared image cache (retry + backoff).
+  // Only commits the new URL to <img src> once it's actually decoded,
+  // so the existing visible image (or placeholder) never flashes.
   useEffect(() => {
     if (!shouldPrefetch || !profile.avatar_url) return;
     let cancelled = false;
-    void getSignedAvatarUrl(profile.avatar_url).then((url) => {
+    preloadAvatar(profile.avatar_url).then((url) => {
       if (cancelled || !url) return;
-      const img = new Image();
-      img.decoding = 'async';
-      img.src = url;
+      // Image is decoded and ready — commit synchronously, no fade-in needed.
+      setCommittedUrl((prev) => (prev === url ? prev : url));
+      setImgError(false);
     });
     return () => { cancelled = true; };
   }, [shouldPrefetch, profile.avatar_url]);
 
-  // Only reset loaded/error state when the resolved URL actually changes
-  // (avoids transient white flashes on re-renders that return the same URL).
+  // When the signed URL resolves and is already cached as "ready", commit it
+  // immediately. This is the path that gives us flash-free first paint when
+  // the user scrolls back to a card they already saw.
   useEffect(() => {
     if (!resolvedAvatar) return;
-    if (lastResolvedRef.current === resolvedAvatar) return;
-    lastResolvedRef.current = resolvedAvatar;
-    // If the browser already has the image decoded, skip the fade-in
-    // entirely instead of waiting for the onLoad event.
-    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
-      setImgLoaded(true);
+    if (isImageReady(resolvedAvatar)) {
+      setCommittedUrl(resolvedAvatar);
       setImgError(false);
-    } else {
-      setImgLoaded(false);
-      setImgError(false);
+      return;
     }
+    // Otherwise subscribe so the moment another consumer decodes the same
+    // URL, this card lights up too (no extra network round-trip).
+    const unsub = onImageReady(resolvedAvatar, () => {
+      setCommittedUrl(resolvedAvatar);
+      setImgError(false);
+    });
+    return unsub;
   }, [resolvedAvatar]);
+
+  // Auto-retry on error: schedule preloadAvatar again (it has its own backoff,
+  // but we also handle the case where the URL has expired and needs re-signing).
+  useEffect(() => {
+    if (!imgError || !profile.avatar_url) return;
+    if (retryRef.current) window.clearTimeout(retryRef.current);
+    retryRef.current = window.setTimeout(() => {
+      preloadAvatar(profile.avatar_url!).then((url) => {
+        if (!url) return;
+        setCommittedUrl(url);
+        setImgError(false);
+      });
+    }, 1500);
+    return () => {
+      if (retryRef.current) window.clearTimeout(retryRef.current);
+    };
+  }, [imgError, profile.avatar_url]);
 
   const handleClick = () => {
     navigate(`/profile/${profile.user_id}`);
@@ -119,6 +141,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
     if (navigator.vibrate) navigator.vibrate(30);
     setTimeout(() => setLiked(false), 1200);
   };
+
 
   // Initial-letter gradient placeholder reused for empty/loading/error states.
   const InitialPlaceholder = (

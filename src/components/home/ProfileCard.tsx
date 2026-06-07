@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Crown, CheckCircle2, Sparkles } from 'lucide-react';
@@ -8,6 +8,8 @@ import { useAvatarUrl, getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useInView } from '@/hooks/useInView';
 import { useIsPlanNowActive } from '@/hooks/usePlanNowSession';
 import PlanNowBadge from '@/components/plan-now/PlanNowBadge';
+
+
 
 
 interface ProfileCardProps {
@@ -43,6 +45,8 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const [liked, setLiked] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const lastResolvedRef = useRef<string | null>(null);
   const live = useLivePresence(profile);
   const isOnline = live.showIndicator;
   const lastSeen = live.lastSeenText;
@@ -80,13 +84,22 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
     return () => { cancelled = true; };
   }, [shouldPrefetch, profile.avatar_url]);
 
-  // Reset image state when the resolved URL changes (e.g. signed URL refresh)
-  // so a transient load error doesn't permanently hide the avatar.
+  // Only reset loaded/error state when the resolved URL actually changes
+  // (avoids transient white flashes on re-renders that return the same URL).
   useEffect(() => {
-    setImgLoaded(false);
-    setImgError(false);
+    if (!resolvedAvatar) return;
+    if (lastResolvedRef.current === resolvedAvatar) return;
+    lastResolvedRef.current = resolvedAvatar;
+    // If the browser already has the image decoded, skip the fade-in
+    // entirely instead of waiting for the onLoad event.
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setImgLoaded(true);
+      setImgError(false);
+    } else {
+      setImgLoaded(false);
+      setImgError(false);
+    }
   }, [resolvedAvatar]);
-
 
   const handleClick = () => {
     navigate(`/profile/${profile.user_id}`);
@@ -99,6 +112,18 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
     if (navigator.vibrate) navigator.vibrate(30);
     setTimeout(() => setLiked(false), 1200);
   };
+
+  // Initial-letter gradient placeholder reused for empty/loading/error states.
+  const InitialPlaceholder = (
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/15 to-primary/10 flex items-center justify-center">
+      <span
+        className="text-5xl font-black text-primary/50 select-none"
+        style={{ fontFamily: 'Syne, sans-serif' }}
+      >
+        {profile.username.charAt(0).toUpperCase()}
+      </span>
+    </div>
+  );
 
   return (
     <motion.div
@@ -123,36 +148,27 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
       >
         {/* Image */}
         <div className="absolute inset-0">
-          {!shouldLoadAvatar ? (
-            // Lightweight placeholder while card is far from viewport
-            <div className="absolute inset-0 bg-muted/60 animate-pulse" />
-          ) : resolvedAvatar && !imgError ? (
-            <>
-              {!imgLoaded && (
-                <div className="absolute inset-0 bg-muted animate-pulse" />
+          {/* Always-on placeholder behind the img so we never flash white */}
+          {InitialPlaceholder}
+
+          {shouldLoadAvatar && resolvedAvatar && !imgError && (
+            <img
+              ref={imgRef}
+              src={resolvedAvatar}
+              alt={profile.username}
+              loading={eager ? 'eager' : 'lazy'}
+              fetchPriority={index < 4 ? 'high' : 'auto'}
+              decoding="async"
+              onLoad={() => { setImgLoaded(true); setImgError(false); }}
+              onError={() => { setImgError(true); }}
+              className={cn(
+                "absolute inset-0 w-full h-full object-cover transition-opacity duration-300",
+                imgLoaded ? "opacity-100" : "opacity-0"
               )}
-              <img
-                src={resolvedAvatar}
-                alt={profile.username}
-                loading={eager ? 'eager' : 'lazy'}
-                fetchPriority={index < 4 ? 'high' : 'auto'}
-                decoding="async"
-                onLoad={() => setImgLoaded(true)}
-                onError={() => { setImgError(true); setImgLoaded(true); }}
-                className={cn(
-                  "w-full h-full object-cover transition-opacity duration-300",
-                  imgLoaded ? "opacity-100" : "opacity-0"
-                )}
-              />
-            </>
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
-              <span className="text-4xl font-black text-primary/40" style={{ fontFamily: 'Syne, sans-serif' }}>
-                {profile.username.charAt(0).toUpperCase()}
-              </span>
-            </div>
+            />
           )}
         </div>
+
 
 
         {/* Gradient overlays */}

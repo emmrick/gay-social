@@ -225,9 +225,18 @@ serve(async (req) => {
       }
 
       case "process-payment": {
-        // Called from webhook when a payment is successful
-        // This increments consecutive payments and applies rewards if eligible
-        // Note: This action should only be called from a verified Stripe webhook
+        // Called from webhook when a payment is successful.
+        // SECURITY: lock to internal service-role callers (e.g. Stripe webhook
+        // edge function or DB trigger). External clients must not invoke this.
+        const authHeader = req.headers.get("Authorization");
+        const token = authHeader?.replace("Bearer ", "");
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+        if (!token || !serviceKey || token !== serviceKey) {
+          return new Response(JSON.stringify({ processed: false, error: "Forbidden" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 403,
+          });
+        }
         const requestBody = await req.json();
         const paymentEmail = requestBody.email;
         if (!paymentEmail) throw new Error("Email required");

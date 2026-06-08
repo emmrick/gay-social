@@ -152,6 +152,27 @@ serve(async (req) => {
       );
     }
 
+    // Authorization: when called by a regular user (not service-role / staff),
+    // restrict push targets to either themselves OR a user they share a
+    // private conversation with. Prevents arbitrary notification spoofing.
+    if (!isServiceRoleCall && !callerIsStaff && callerUserId !== userId) {
+      const { data: rel } = await supabase
+        .from("messages")
+        .select("id")
+        .or(
+          `and(sender_id.eq.${callerUserId},recipient_id.eq.${userId}),and(sender_id.eq.${userId},recipient_id.eq.${callerUserId})`
+        )
+        .limit(1)
+        .maybeSingle();
+      if (!rel) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden: no relationship with target user" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+
     // Check user's notification preferences (skip for system notifications)
     if (notificationType && notificationType !== 'system') {
       const { data: prefs } = await supabase

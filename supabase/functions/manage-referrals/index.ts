@@ -130,19 +130,41 @@ serve(async (req) => {
 
       case "register-referral": {
         // Register a referral (called after signup with referral code)
+        // SECURITY: require authenticated caller and verify userId === caller.id
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader) {
+          return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 401,
+          });
+        }
+        const token = authHeader.replace("Bearer ", "");
+        const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+        if (userError || !userData?.user) {
+          return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 401,
+          });
+        }
         if (!referralCode || !userId) {
           return new Response(JSON.stringify({ success: false, message: "Données manquantes" }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,
           });
         }
-        
-        const { data: result, error } = await supabaseClient
-          .rpc('register_referral', { 
-            _referred_user_id: userId, 
-            _referral_code: referralCode.toUpperCase() 
+        if (userId !== userData.user.id) {
+          return new Response(JSON.stringify({ success: false, message: "Forbidden" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 403,
           });
-        
+        }
+
+        const { data: result, error } = await supabaseClient
+          .rpc('register_referral', {
+            _referred_user_id: userId,
+            _referral_code: referralCode.toUpperCase()
+          });
+
         if (error) {
           logStep("Error registering referral", { error });
           return new Response(JSON.stringify({ success: false, message: "Erreur lors de l'enregistrement" }), {
@@ -150,7 +172,7 @@ serve(async (req) => {
             status: 200,
           });
         }
-        
+
         logStep("Referral registered", { result });
         return new Response(JSON.stringify({ success: result }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -5,6 +5,7 @@
 // transactional email per recipient (one-to-one, opt-out aware).
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { requireServiceRole } from '../_shared/auth-guard.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

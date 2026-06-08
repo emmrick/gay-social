@@ -1,5 +1,7 @@
 // Edge function: fetch-link-preview
 // Récupère les métadonnées Open Graph d'une URL pour générer un aperçu de lien.
+import { requireUser, isPrivateOrLoopbackHost } from '../_shared/auth-guard.ts';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',

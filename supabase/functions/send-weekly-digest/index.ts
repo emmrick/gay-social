@@ -35,6 +35,11 @@ const formatWeekLabel = (start: Date, end: Date): string => {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
+  const denied = requireServiceRole(req)
+  if (denied) return new Response(denied.body, { status: denied.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+
+
+
   const startedAt = Date.now()
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 

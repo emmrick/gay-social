@@ -130,19 +130,41 @@ serve(async (req) => {
 
       case "register-referral": {
         // Register a referral (called after signup with referral code)
+        // SECURITY: require authenticated caller and verify userId === caller.id
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader) {
+          return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 401,
+          });
+        }
+        const token = authHeader.replace("Bearer ", "");
+        const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+        if (userError || !userData?.user) {
+          return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 401,
+          });
+        }
         if (!referralCode || !userId) {
           return new Response(JSON.stringify({ success: false, message: "Données manquantes" }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,
           });
         }
-        
-        const { data: result, error } = await supabaseClient
-          .rpc('register_referral', { 
-            _referred_user_id: userId, 
-            _referral_code: referralCode.toUpperCase() 
+        if (userId !== userData.user.id) {
+          return new Response(JSON.stringify({ success: false, message: "Forbidden" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 403,
           });
-        
+        }
+
+        const { data: result, error } = await supabaseClient
+          .rpc('register_referral', {
+            _referred_user_id: userId,
+            _referral_code: referralCode.toUpperCase()
+          });
+
         if (error) {
           logStep("Error registering referral", { error });
           return new Response(JSON.stringify({ success: false, message: "Erreur lors de l'enregistrement" }), {
@@ -150,7 +172,7 @@ serve(async (req) => {
             status: 200,
           });
         }
-        
+
         logStep("Referral registered", { result });
         return new Response(JSON.stringify({ success: result }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -203,9 +225,18 @@ serve(async (req) => {
       }
 
       case "process-payment": {
-        // Called from webhook when a payment is successful
-        // This increments consecutive payments and applies rewards if eligible
-        // Note: This action should only be called from a verified Stripe webhook
+        // Called from webhook when a payment is successful.
+        // SECURITY: lock to internal service-role callers (e.g. Stripe webhook
+        // edge function or DB trigger). External clients must not invoke this.
+        const authHeader = req.headers.get("Authorization");
+        const token = authHeader?.replace("Bearer ", "");
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+        if (!token || !serviceKey || token !== serviceKey) {
+          return new Response(JSON.stringify({ processed: false, error: "Forbidden" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 403,
+          });
+        }
         const requestBody = await req.json();
         const paymentEmail = requestBody.email;
         if (!paymentEmail) throw new Error("Email required");

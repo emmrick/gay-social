@@ -96,6 +96,8 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const isServiceRoleCall = token === SUPABASE_SERVICE_ROLE_KEY;
 
+    let callerUserId: string | null = null;
+    let callerIsStaff = false;
     if (!isServiceRoleCall) {
       const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
       const authClient = createClient(SUPABASE_URL, anonKey || SUPABASE_SERVICE_ROLE_KEY);
@@ -107,6 +109,14 @@ serve(async (req) => {
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      callerUserId = caller.id;
+      // Check staff role
+      const staffClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data: rolesData } = await staffClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", caller.id);
+      callerIsStaff = !!rolesData?.some((r: any) => r.role === "admin" || r.role === "moderator");
     }
 
     // Decode the base64url encoded keys
@@ -141,6 +151,27 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Authorization: when called by a regular user (not service-role / staff),
+    // restrict push targets to either themselves OR a user they share a
+    // private conversation with. Prevents arbitrary notification spoofing.
+    if (!isServiceRoleCall && !callerIsStaff && callerUserId !== userId) {
+      const { data: rel } = await supabase
+        .from("messages")
+        .select("id")
+        .or(
+          `and(sender_id.eq.${callerUserId},recipient_id.eq.${userId}),and(sender_id.eq.${userId},recipient_id.eq.${callerUserId})`
+        )
+        .limit(1)
+        .maybeSingle();
+      if (!rel) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden: no relationship with target user" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
 
     // Check user's notification preferences (skip for system notifications)
     if (notificationType && notificationType !== 'system') {

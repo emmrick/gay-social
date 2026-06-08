@@ -11,6 +11,7 @@
 //     `message_type = 'auto_reply'`.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { requireServiceRole } from '../_shared/auth-guard.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,6 +33,9 @@ const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  const denied = requireServiceRole(req);
+  if (denied) return new Response(denied.body, { status: denied.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   try {
     const body = (await req.json()) as Payload;

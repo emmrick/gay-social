@@ -36,6 +36,11 @@ const decode = (s?: string) =>
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  const auth = await requireUser(req);
+  if (auth instanceof Response) {
+    return new Response(auth.body, { status: auth.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
   try {
     const { url } = await req.json();
     if (!url || typeof url !== 'string') {
@@ -57,6 +62,13 @@ Deno.serve(async (req) => {
 
     if (!['http:', 'https:'].includes(target.protocol)) {
       return new Response(JSON.stringify({ error: 'Unsupported scheme' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (isPrivateOrLoopbackHost(target.hostname)) {
+      return new Response(JSON.stringify({ error: 'Blocked host' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

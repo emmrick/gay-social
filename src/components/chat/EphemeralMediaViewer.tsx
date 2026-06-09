@@ -80,11 +80,13 @@ const EphemeralMediaViewer = ({
 }: EphemeralMediaViewerProps) => {
   const resolvedAvatar = useAvatarUrl(senderAvatar);
   const isUnlimited = duration === 0;
+  const isImage = type === 'image';
   const [isViewing, setIsViewing] = useState(autoStart);
   const [timeLeft, setTimeLeft] = useState(isUnlimited ? -1 : duration);
   const [hasEnded, setHasEnded] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+  // Images: timer only flows while the peephole is being revealed → start paused.
+  const [isPaused, setIsPaused] = useState(isImage);
   const [isSaving, setIsSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
   const [showReplyHint, setShowReplyHint] = useState(false);

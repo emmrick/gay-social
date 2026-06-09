@@ -438,9 +438,9 @@ const EphemeralMediaViewer = ({
               ref={containerRef}
               className="absolute inset-0 bg-black flex items-center justify-center select-none"
               
-              onPointerDown={handlePointerDown}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
+              onPointerDown={isImage ? undefined : handlePointerDown}
+              onPointerUp={isImage ? undefined : handlePointerUp}
+              onPointerCancel={isImage ? undefined : handlePointerUp}
               style={{ 
                 userSelect: 'none', 
                 WebkitUserSelect: 'none',

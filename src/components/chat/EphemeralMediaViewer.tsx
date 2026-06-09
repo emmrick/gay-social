@@ -3,6 +3,7 @@ import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { X, Eye, EyeOff, AlertTriangle, Shield, Play, Download, Infinity as InfinityIcon, Check, Send, RotateCcw } from 'lucide-react';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import GaySocialWatermark from '@/components/security/GaySocialWatermark';
+import PeepholeReveal from '@/components/security/PeepholeReveal';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 

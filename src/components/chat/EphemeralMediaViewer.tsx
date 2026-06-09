@@ -111,7 +111,7 @@ const EphemeralMediaViewer = ({
       setTimeLeft(isUnlimited ? -1 : duration);
       setHasEnded(false);
       setIsClosing(false);
-      setIsPaused(false);
+      setIsPaused(isImage);
       setIsSaving(false);
       setHasSaved(false);
       setShowReplyHint(false);

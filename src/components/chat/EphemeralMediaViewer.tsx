@@ -526,16 +526,15 @@ const EphemeralMediaViewer = ({
                 style={{}}
               >
                 {type === 'image' ? (
-                  <div className="relative w-full h-full">
-                    <img 
-                      src={src} 
-                      alt="Ephemeral content" 
-                      className="w-full h-full object-contain"
-                      draggable={false}
-                      style={{ pointerEvents: 'none' }}
-                    />
-                    <GaySocialWatermark />
-                  </div>
+                  <PeepholeReveal
+                    src={src}
+                    alt="Ephemeral content"
+                    hintLabel={isUnlimited ? 'Maintenir pour révéler' : 'Maintenir et glisser pour révéler'}
+                    onRevealChange={(revealing) => {
+                      // Timer flows only while the peephole is active
+                      setIsPaused(!revealing);
+                    }}
+                  />
                 ) : (
                   <video 
                     ref={videoRef}

@@ -514,7 +514,7 @@ const EphemeralMediaViewer = ({
               
               {/* Media content - swipeable for reply */}
               <motion.div 
-                drag={onSwipeReply ? "y" : false}
+                drag={onSwipeReply && !isImage ? "y" : false}
                 dragConstraints={{ top: -200, bottom: 0 }}
                 dragElastic={0.3}
                 onDrag={handleDrag}

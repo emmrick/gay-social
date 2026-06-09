@@ -3,6 +3,7 @@ import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { X, Eye, EyeOff, AlertTriangle, Shield, Play, Download, Infinity as InfinityIcon, Check, Send, RotateCcw } from 'lucide-react';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import GaySocialWatermark from '@/components/security/GaySocialWatermark';
+import PeepholeReveal from '@/components/security/PeepholeReveal';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -79,11 +80,13 @@ const EphemeralMediaViewer = ({
 }: EphemeralMediaViewerProps) => {
   const resolvedAvatar = useAvatarUrl(senderAvatar);
   const isUnlimited = duration === 0;
+  const isImage = type === 'image';
   const [isViewing, setIsViewing] = useState(autoStart);
   const [timeLeft, setTimeLeft] = useState(isUnlimited ? -1 : duration);
   const [hasEnded, setHasEnded] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+  // Images: timer only flows while the peephole is being revealed → start paused.
+  const [isPaused, setIsPaused] = useState(isImage);
   const [isSaving, setIsSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
   const [showReplyHint, setShowReplyHint] = useState(false);
@@ -108,7 +111,7 @@ const EphemeralMediaViewer = ({
       setTimeLeft(isUnlimited ? -1 : duration);
       setHasEnded(false);
       setIsClosing(false);
-      setIsPaused(false);
+      setIsPaused(isImage);
       setIsSaving(false);
       setHasSaved(false);
       setShowReplyHint(false);
@@ -435,9 +438,9 @@ const EphemeralMediaViewer = ({
               ref={containerRef}
               className="absolute inset-0 bg-black flex items-center justify-center select-none"
               
-              onPointerDown={handlePointerDown}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
+              onPointerDown={isImage ? undefined : handlePointerDown}
+              onPointerUp={isImage ? undefined : handlePointerUp}
+              onPointerCancel={isImage ? undefined : handlePointerUp}
               style={{ 
                 userSelect: 'none', 
                 WebkitUserSelect: 'none',
@@ -511,7 +514,7 @@ const EphemeralMediaViewer = ({
               
               {/* Media content - swipeable for reply */}
               <motion.div 
-                drag={onSwipeReply ? "y" : false}
+                drag={onSwipeReply && !isImage ? "y" : false}
                 dragConstraints={{ top: -200, bottom: 0 }}
                 dragElastic={0.3}
                 onDrag={handleDrag}
@@ -523,16 +526,15 @@ const EphemeralMediaViewer = ({
                 style={{}}
               >
                 {type === 'image' ? (
-                  <div className="relative w-full h-full">
-                    <img 
-                      src={src} 
-                      alt="Ephemeral content" 
-                      className="w-full h-full object-contain"
-                      draggable={false}
-                      style={{ pointerEvents: 'none' }}
-                    />
-                    <GaySocialWatermark />
-                  </div>
+                  <PeepholeReveal
+                    src={src}
+                    alt="Ephemeral content"
+                    hintLabel={isUnlimited ? 'Maintenir pour révéler' : 'Maintenir et glisser pour révéler'}
+                    onRevealChange={(revealing) => {
+                      // Timer flows only while the peephole is active
+                      setIsPaused(!revealing);
+                    }}
+                  />
                 ) : (
                   <video 
                     ref={videoRef}

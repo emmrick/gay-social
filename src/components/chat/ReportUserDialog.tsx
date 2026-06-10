@@ -28,6 +28,7 @@ interface ReportUserDialogProps {
 const reportReasons: ReportReason[] = [
   'harassment',
   'inappropriate_content',
+  'profile_photo',
   'spam',
   'fake_profile',
   'underage',

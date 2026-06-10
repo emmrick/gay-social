@@ -39,10 +39,11 @@ const ProfilePhotoGuard = ({ children }: ProfilePhotoGuardProps) => {
   useEffect(() => {
     if (!user || !profile || photosLoading || autoFixRan.current) return;
     if (profile.avatar_url) return;
-    if (photos.length === 0) return;
+    const usable = photos.filter((p: any) => p.status !== 'rejected');
+    if (usable.length === 0) return;
 
     autoFixRan.current = true;
-    const primaryPhoto = photos.find(p => p.is_primary) || photos[0];
+    const primaryPhoto = usable.find(p => p.is_primary) || usable[0];
 
     supabase
       .from('profiles')

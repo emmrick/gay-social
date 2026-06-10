@@ -9,6 +9,7 @@ export type ReportReason =
   | 'spam'
   | 'fake_profile'
   | 'underage'
+  | 'profile_photo'
   | 'other';
 
 export interface CreateReportData {

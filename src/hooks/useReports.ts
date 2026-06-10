@@ -123,6 +123,7 @@ export const reportReasonLabels: Record<ReportReason, string> = {
   spam: 'Spam',
   fake_profile: 'Faux profil',
   underage: 'Utilisateur mineur',
+  profile_photo: 'Photo de profil inappropriée',
   other: 'Autre',
 };
 
@@ -132,5 +133,6 @@ export const reportReasonDescriptions: Record<ReportReason, string> = {
   spam: 'Messages répétitifs ou publicités',
   fake_profile: 'Usurpation d\'identité ou photos volées',
   underage: 'L\'utilisateur semble avoir moins de 18 ans',
+  profile_photo: 'La photo de profil est non conforme — elle sera immédiatement retirée et l\'utilisateur devra en remettre une.',
   other: 'Autre raison non listée',
 };

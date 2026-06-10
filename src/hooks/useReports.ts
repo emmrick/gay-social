@@ -69,22 +69,29 @@ export const useReports = () => {
     mutationFn: async ({ reportedUserId, reason, description }: CreateReportData) => {
       if (!user?.id) throw new Error('User not authenticated');
 
+      // Spécial : signalement d'une photo de profil → RPC dédiée qui retire
+      // la photo, notifie l'utilisateur signalé et crée une mission modération.
+      if (reason === 'profile_photo') {
+        const { data, error } = await supabase.rpc('report_profile_photo', {
+          _reported_user_id: reportedUserId,
+          _description: description?.trim() || null,
+        });
+        if (error) throw error;
+        return { id: data } as { id: string };
+      }
+
       const { data, error } = await supabase
         .from('reports')
         .insert({
           reporter_id: user.id,
           reported_user_id: reportedUserId,
-          reason,
+          reason: reason as Exclude<ReportReason, 'profile_photo'>,
           description: description?.trim() || null,
         })
         .select()
         .single();
 
       if (error) throw error;
-
-      // AI moderation disabled
-      // The report is created and will be handled manually by moderators
-
       return data;
     },
     onSuccess: (_, variables) => {

@@ -39,10 +39,11 @@ const ProfilePhotoGuard = ({ children }: ProfilePhotoGuardProps) => {
   useEffect(() => {
     if (!user || !profile || photosLoading || autoFixRan.current) return;
     if (profile.avatar_url) return;
-    if (photos.length === 0) return;
+    const usable = photos.filter((p: any) => p.status !== 'rejected');
+    if (usable.length === 0) return;
 
     autoFixRan.current = true;
-    const primaryPhoto = photos.find(p => p.is_primary) || photos[0];
+    const primaryPhoto = usable.find(p => p.is_primary) || usable[0];
 
     supabase
       .from('profiles')
@@ -80,9 +81,10 @@ const ProfilePhotoGuard = ({ children }: ProfilePhotoGuardProps) => {
     return <FullScreenLoader />;
   }
 
-  // Pas de photo et pas d'avatar — bloquer l'accès
-  const approvedPhotos = photos.filter((p: any) => p.status === 'approved' || !p.status);
-  const hasPhoto = approvedPhotos.length > 0 || !!profile.avatar_url;
+  // Pas de photo approuvée OU en attente → bloquer (avatar_url peut être obsolète après
+  // suppression/signalement, on se base uniquement sur la table profile_photos).
+  const usablePhotos = photos.filter((p: any) => p.status !== 'rejected');
+  const hasPhoto = usablePhotos.length > 0;
 
   if (!hasPhoto) {
     return <ProfilePhotoRequiredScreen />;

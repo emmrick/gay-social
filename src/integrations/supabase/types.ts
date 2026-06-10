@@ -6212,6 +6212,10 @@ export type Database = {
         Args: { _referral_code: string; _referred_user_id: string }
         Returns: boolean
       }
+      report_profile_photo: {
+        Args: { _description?: string; _reported_user_id: string }
+        Returns: string
+      }
       request_advertiser_magic_link: {
         Args: { _email: string }
         Returns: string

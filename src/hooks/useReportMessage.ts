@@ -26,7 +26,7 @@ export const useReportMessage = () => {
           reported_user_id: senderId,
           message_id: messageId,
           report_type: 'message',
-          reason,
+          reason: reason as Exclude<ReportReason, 'profile_photo'>,
           description: description?.trim() || null,
         })
         .select()

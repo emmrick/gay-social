@@ -107,7 +107,7 @@ const PlanNowActivationCard = () => {
             <li className="flex gap-2"><span className="text-amber-500">⚡</span><span>Badge "Plan Now" visible sur ton profil et tes cartes.</span></li>
             <li className="flex gap-2"><span className="text-amber-500">🚀</span><span>Tu apparais en priorité dans les profils proches.</span></li>
             <li className="flex gap-2"><span className="text-amber-500">🤖</span><span>Auto-réponses configurables aux questions fréquentes.</span></li>
-            <li className="flex gap-2"><span className="text-amber-500">🔒</span><span>Échange d'albums sécurisé entre profils Plan Now <em>(bientôt)</em>.</span></li>
+            <li className="flex gap-2"><span className="text-amber-500">🔒</span><span>Échange d'albums sécurisé entre profils Plan Now.</span></li>
           </ul>
 
           <Button

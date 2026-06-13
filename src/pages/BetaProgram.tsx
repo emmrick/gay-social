@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft, Beaker, Smartphone, HeartHandshake, Gift, Percent,
   CheckCircle2, AlertTriangle, Coins, ShieldCheck, Loader2, Mail,
+  CalendarDays, Globe, MonitorSmartphone,
 } from 'lucide-react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';

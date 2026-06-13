@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Shield, Eye, Lock, Zap, Sparkles, ArrowRight, MapPin, ChevronDown, Smartphone, CalendarDays } from 'lucide-react';
+import { Shield, Eye, Lock, Zap, Sparkles, ArrowRight, MapPin, ChevronDown, Smartphone } from 'lucide-react';
 import { useTotalMemberCount, useOnlineMemberCount } from '@/hooks/useTotalMemberCount';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';

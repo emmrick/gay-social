@@ -162,11 +162,13 @@ const BetaProgram = () => {
         <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-amber-500/10 p-5 space-y-4">
           <div className="flex items-center gap-2">
             <HeartHandshake className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-foreground">Soutenir le projet</h3>
+            <h3 className="font-bold text-foreground">Soutenir le projet & récompenses</h3>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Pour participer au programme de test, nous demandons un don compris entre
-            <strong className="text-foreground"> 15 € et 50 €</strong> afin de soutenir le développement
+            N'hésitez pas à proposer de faire un <strong className="text-foreground">DON</strong> pour accélérer le développement de l'application.
+            Vous serez <strong className="text-foreground">récompensé d'une grande valeur</strong> en retour&nbsp;!
+            Pour participer au programme de soutien, nous demandons un don compris entre
+            <strong className="text-foreground"> 15 € et 50 €</strong> afin de financer le développement
             et l'évolution de Gay Social.
           </p>
           <div className="grid sm:grid-cols-2 gap-3">

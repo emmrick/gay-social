@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Shield, Eye, Lock, Zap, Sparkles, ArrowRight, MapPin, ChevronDown } from 'lucide-react';
+import { Shield, Eye, Lock, Zap, Sparkles, ArrowRight, MapPin, ChevronDown, Smartphone } from 'lucide-react';
 import { useTotalMemberCount, useOnlineMemberCount } from '@/hooks/useTotalMemberCount';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -69,6 +69,32 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
       </div>
 
       <div className="container relative z-10 px-4 py-12 sm:py-20">
+        {/* App beta announcement banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="max-w-2xl mx-auto mb-8"
+        >
+          <button
+            onClick={() => navigate('/beta')}
+            className="w-full group flex items-center gap-3 rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10 backdrop-blur-sm px-5 py-3.5 text-left transition-all hover:border-primary/50 hover:shadow-lg"
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+              <Smartphone className="w-5 h-5 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground leading-tight">
+                L'application arrive sur le Google Play Store 🚀
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Bêta ouverte le <span className="text-primary font-medium">1er Juillet 2026</span> · Deux comptes indépendants (app ≠ web)
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+          </button>
+        </motion.div>
+
         <div className="max-w-4xl mx-auto text-center">
           {/* Live badge */}
           <motion.div

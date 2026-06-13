@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft, Beaker, Smartphone, HeartHandshake, Gift, Percent,
   CheckCircle2, AlertTriangle, Coins, ShieldCheck, Loader2, Mail,
+  CalendarDays, Globe, MonitorSmartphone,
 } from 'lucide-react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -59,8 +60,8 @@ const BetaProgram = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Rejoindre la bêta fermée de Gay Social"
-        description="Participez à la bêta fermée de Gay Social sur Android, soutenez le développement et débloquez 1000 crédits offerts et -50 % pendant 5 ans."
+        title="Bêta ouverte Gay Social – Google Play Store 1er Juillet 2026"
+        description="L'application Gay Social arrive en bêta ouverte sur le Google Play Store le 1er Juillet 2026. Soutenez le développement et débloquez des récompenses exclusives de grande valeur."
       />
 
       {/* Header */}
@@ -69,7 +70,7 @@ const BetaProgram = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Retour">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-lg font-bold gradient-text">Programme bêta</h1>
+          <h1 className="text-lg font-bold gradient-text">Application mobile</h1>
         </div>
       </header>
 
@@ -88,40 +89,72 @@ const BetaProgram = () => {
               <Beaker className="w-8 h-8 text-primary" />
             </div>
             <h2 className="text-3xl font-bold text-foreground mb-3">
-              Invitation à rejoindre la bêta fermée de Gay Social
+              Bêta ouverte sur le Google Play Store
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Souhaitez-vous rejoindre la version bêta de Gay Social, notre application officielle
-              actuellement disponible sur le Google Play Store&nbsp;?
+              Notre application officielle est en développement et sera disponible en
+              <strong className="text-foreground"> bêta ouverte sur le Google Play Store à partir du 1er Juillet 2026</strong>.
+              Rejoignez-nous dès le premier jour et soutenez un projet pensé pour la communauté.
             </p>
           </motion.div>
         </div>
       </section>
 
       <div className="container mx-auto px-4 pb-16 max-w-2xl space-y-6">
-        {/* Important Android */}
+        {/* Important Android + date */}
         <div className="rounded-2xl border border-yellow-500/40 bg-yellow-500/10 p-5">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
             <span className="font-bold text-yellow-700 dark:text-yellow-300">Important</span>
           </div>
           <p className="text-sm text-foreground/80 leading-relaxed">
-            L'application est pour le moment disponible <strong>uniquement sur Android</strong> via le Play Store.
-            Une version iOS n'est pas encore prévue actuellement, car notre développement se concentre
+            L'application sera disponible <strong>uniquement sur Android</strong> via le Google Play Store
+            à partir du <strong>1er Juillet 2026</strong>.
+            Une version iOS n'est pas encore prévue, car notre développement se concentre
             principalement sur l'écosystème Google.
           </p>
+        </div>
+
+        {/* Web vs Application */}
+        <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+          <div className="flex items-center gap-2">
+            <MonitorSmartphone className="w-5 h-5 text-primary" />
+            <h3 className="font-bold text-foreground">Application vs Site web</h3>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            <strong>Attention :</strong> la version application et la version de notre site internet sont
+            <strong className="text-foreground"> deux versions totalement différentes</strong>.
+          </p>
+          <ul className="space-y-2">
+            <li className="flex items-start gap-2 text-sm text-foreground/80">
+              <Globe className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <span>
+                <strong>Version web :</strong> une communauté en ligne accessible depuis tous les appareils
+                Android et Apple via notre site <em>gaysocial.fr</em>. C'est la plateforme que vous utilisez actuellement.
+              </span>
+            </li>
+            <li className="flex items-start gap-2 text-sm text-foreground/80">
+              <Smartphone className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <span>
+                <strong>Version application :</strong> une expérience mobile native dédiée. Vous
+                <strong className="text-foreground"> ne verrez pas les mêmes utilisateurs</strong> inscrits sur le site web :
+                il s'agit de <strong className="text-foreground">deux comptes totalement différents</strong> avec une base d'utilisateurs indépendante.
+              </span>
+            </li>
+          </ul>
         </div>
 
         {/* En quoi ça consiste */}
         <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <Smartphone className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-foreground">En quoi ça consiste&nbsp;?</h3>
+            <CalendarDays className="w-5 h-5 text-primary" />
+            <h3 className="font-bold text-foreground">Qu'est-ce que la bêta ouverte&nbsp;?</h3>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Cette version est actuellement en phase de test fermée sur invitation. Votre participation
-            nous aide à améliorer l'application, corriger les bugs et tester avec vous les futures
-            fonctionnalités que nous souhaitons mettre en place.
+            À partir du <strong className="text-foreground">1er Juillet 2026</strong>, l'application sera
+            accessible en bêta ouverte sur le Google Play Store. Cela signifie que tout le monde pourra
+            la télécharger, la tester et nous faire part de ses retours. Votre participation nous aide
+            à améliorer l'application, corriger les bugs et affiner les fonctionnalités avant le lancement officiel.
           </p>
         </div>
 
@@ -129,11 +162,13 @@ const BetaProgram = () => {
         <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-amber-500/10 p-5 space-y-4">
           <div className="flex items-center gap-2">
             <HeartHandshake className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-foreground">Soutenir le projet</h3>
+            <h3 className="font-bold text-foreground">Soutenir le projet & récompenses</h3>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Pour participer au programme de test, nous demandons un don compris entre
-            <strong className="text-foreground"> 15 € et 50 €</strong> afin de soutenir le développement
+            N'hésitez pas à proposer de faire un <strong className="text-foreground">DON</strong> pour accélérer le développement de l'application.
+            Vous serez <strong className="text-foreground">récompensé d'une grande valeur</strong> en retour&nbsp;!
+            Pour participer au programme de soutien, nous demandons un don compris entre
+            <strong className="text-foreground"> 15 € et 50 €</strong> afin de financer le développement
             et l'évolution de Gay Social.
           </p>
           <div className="grid sm:grid-cols-2 gap-3">

@@ -12,12 +12,12 @@ interface SEOHeadProps {
 }
 
 const BASE_URL = 'https://gaysocial.fr';
-const DEFAULT_OG_IMAGE = 'https://lovable.dev/opengraph-image-p98pqg.png';
+const DEFAULT_OG_IMAGE = `${BASE_URL}/logo.png`;
 const DEFAULT_KEYWORDS = 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, drague gay, annonce gay, homme gay, gay france, rencontre homosexuel, plan sexe gay, hookup gay, sexfriend gay, homme cherche homme, gay paris, gay lyon, gay marseille, gay toulouse, gay bordeaux, gay nantes, gay lille, gay strasbourg, gay montpellier, gay nice, rencontre gay gratuit, tchat gay gratuit, plan cul gay ce soir, plan cul gay gratuit, site homo, site homosexuel, rencontre gay proximité, rencontre gay près de moi, appli gay, application rencontre gay, grindr alternative, site comme grindr, gay social, gaysocial, plan discret gay, rencontre locale gay, mec cherche mec, bi curieux, bisexuel, lgbt france, communauté lgbt, gay friendly, gay dom tom, gay guadeloupe, gay martinique, gay réunion';
 
 const SEOHead = ({
-  title = 'Gay Social - Site de Rencontre Gay, Sexe Gay & Tchat Gay France',
-  description = 'Gay Social : le site gay n°1 pour les rencontres et le sexe entre hommes en France. Tchat gay gratuit, plan cul gay par département, échanges de photos et vidéos. Communauté gay vérifiée. +18 ans.',
+  title = 'Gay Social — Rencontre & Tchat Gay en France',
+  description = 'Gay Social : rencontre gay, tchat & plan cul gratuit par département. Profils vérifiés, photos et vidéos entre hommes. +18 ans.',
   canonical,
   ogImage = DEFAULT_OG_IMAGE,
   ogType = 'website',

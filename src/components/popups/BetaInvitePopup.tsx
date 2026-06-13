@@ -61,20 +61,23 @@ const BetaInvitePopup = () => {
           <div className="p-6 space-y-3">
             <div className="flex items-center justify-center gap-1.5">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold uppercase tracking-wide text-primary">Bêta fermée</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-primary">Bêta ouverte · 1er Juillet 2026</span>
             </div>
             <h3 className="text-lg font-bold text-foreground text-center leading-snug">
-              Rejoignez la bêta de Gay Social 📱
+              L'application Gay Social arrive sur le Play Store 📱
             </h3>
             <p className="text-sm text-muted-foreground text-center leading-relaxed">
-              Notre application officielle est en test fermé sur Android. Participez, soutenez le projet
-              et débloquez <span className="font-semibold text-foreground">1000 crédits offerts</span> + <span className="font-semibold text-foreground">-50 % pendant 5 ans</span>.
+              Notre application officielle sera en <strong className="text-foreground">bêta ouverte sur le Google Play Store à partir du 1er Juillet 2026</strong>.
+              Soutenez le développement et débloquez <span className="font-semibold text-foreground">1000 crédits offerts</span> + <span className="font-semibold text-foreground">-50 % pendant 5 ans</span>.
+            </p>
+            <p className="text-[11px] text-center text-muted-foreground/70 leading-relaxed">
+              Note : version application et site web sont deux plateformes indépendantes avec des comptes séparés.
             </p>
 
             <div className="flex flex-col gap-2 pt-1">
               <Button onClick={handleInterested} className="w-full gap-2">
                 <Beaker className="w-4 h-4" />
-                Je suis intéressé
+                En savoir plus
               </Button>
               <Button variant="ghost" size="sm" onClick={dismiss} className="text-xs text-muted-foreground">
                 Plus tard

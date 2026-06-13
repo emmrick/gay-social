@@ -1,0 +1,19 @@
+# Gay Social
+
+> Rencontre & tchat gay 18+ en France, organisés par département. Profils vérifiés, photos et vidéos éphémères, plans locaux.
+
+Gay Social est un réseau social gay français réservé aux majeurs (18+). L'app propose la rencontre par proximité géographique, des salons de tchat par département, l'échange de médias éphémères, un système de crédits, et la modération assistée par IA. Plateforme web (PWA) accessible depuis https://gaysocial.fr.
+
+## Pages
+
+- [Accueil](/): Présentation de Gay Social, fonctionnalités, inscription.
+- [Régions](/regions): Annuaire des 101 départements et collectivités d'outre-mer avec un salon de tchat dédié à chacun.
+- [Guide](/guide): Guide d'utilisation de l'application (création de profil, vérification, crédits, sécurité).
+- [Centre d'aide](/aide): FAQ et articles d'assistance sur le compte, la confidentialité, la modération, les crédits.
+- [Règles](/regles): Règles de la communauté et conditions d'usage.
+- [À propos](/about): Présentation de l'équipe et du projet Gay Social.
+- [Mentions légales](/legal): Mentions légales, RGPD, politique de confidentialité.
+
+## Optional
+
+- [Connexion](/auth): Page de connexion / inscription (formulaire, OAuth Google).

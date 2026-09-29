@@ -199,7 +199,7 @@ export const usePendingTasksHistory = () => {
       })) as ModerationTask[];
     },
     enabled: !!user?.id,
-    refetchInterval: 30000,
+    refetchInterval: 120000,
   });
 };
 
@@ -338,7 +338,7 @@ export const useActiveTask = () => {
       } as ModerationTask;
     },
     enabled: !!user?.id,
-    refetchInterval: 30000,
+    refetchInterval: 120000,
   });
 };
 

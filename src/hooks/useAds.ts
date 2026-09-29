@@ -152,7 +152,7 @@ export const useAds = (_placement?: string, limit = 10) => {
     },
     enabled: !isAdFree,
     staleTime: 30000,
-    refetchInterval: 120000,
+    refetchInterval: 600000,
   });
 
   // Shuffle ads deterministically based on seed + page path

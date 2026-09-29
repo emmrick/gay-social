@@ -110,7 +110,7 @@ export const useStories = () => {
       return groups;
     },
     enabled: !!user,
-    refetchInterval: 60000,
+    refetchInterval: 180000,
     staleTime: 30000,
   });
 

@@ -110,7 +110,7 @@ const ErrorLogsPanel = () => {
       if (error) throw error;
       return (data || []) as unknown as ErrorLog[];
     },
-    refetchInterval: 15000,
+    refetchInterval: 120000,
   });
 
   const groupedLogs = useMemo<GroupedError[]>(() => {

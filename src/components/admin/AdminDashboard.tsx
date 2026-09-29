@@ -102,7 +102,7 @@ const useFullDashboardStats = () => {
         recentActivity: r20.data || [],
       };
     },
-    refetchInterval: 30000,
+    refetchInterval: 120000,
   });
 };
 

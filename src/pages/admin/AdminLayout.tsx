@@ -135,7 +135,7 @@ const AdminLayout = () => {
       return count || 0;
     },
     staleTime: 10000,
-    refetchInterval: 30000,
+    refetchInterval: 120000,
   });
 
   const pendingReportsCount = useMemo(() => stats?.pending || 0, [stats?.pending]);

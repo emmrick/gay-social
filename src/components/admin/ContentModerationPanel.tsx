@@ -179,7 +179,7 @@ const useRecentConversations = (search: string) => {
       );
       return conversations;
     },
-    refetchInterval: 15000,
+    refetchInterval: 60000,
   });
 };
 
@@ -218,7 +218,7 @@ const useConversationMessages = (userA?: string, userB?: string) => {
       return ((data || []) as Message[]).map(m => ({ ...m, sender: profileMap.get(m.sender_id) }));
     },
     enabled: !!userA && !!userB,
-    refetchInterval: 10000,
+    refetchInterval: 60000,
   });
 };
 
@@ -434,7 +434,7 @@ const ContentModerationPanel = () => {
       return resolved;
     },
     staleTime: 10000,
-    refetchInterval: 15000,
+    refetchInterval: 60000,
   });
 
   // Auto-navigate to pending photos tab when a photo_review task is active

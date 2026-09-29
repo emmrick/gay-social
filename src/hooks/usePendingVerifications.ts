@@ -42,6 +42,6 @@ export const usePendingVerifications = () => {
       return count || 0;
     },
     staleTime: 30000,
-    refetchInterval: 60000,
+    refetchInterval: 300000,
   });
 };

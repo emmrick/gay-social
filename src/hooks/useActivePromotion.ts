@@ -31,7 +31,7 @@ export const useActivePromotion = () => {
       return list.length > 0 ? list[0] : null;
     },
     staleTime: 60_000,
-    refetchInterval: 60_000,
+    refetchInterval: 5 * 60_000,
   });
 
   // Realtime subscription

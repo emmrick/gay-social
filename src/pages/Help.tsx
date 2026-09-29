@@ -206,7 +206,7 @@ const Help = ({ embedded = false }: HelpProps) => {
       return data as unknown as SupportTicket;
     },
     enabled: !!selectedTicket?.id,
-    refetchInterval: (phase === 'waiting_agent' || phase === 'agent') ? 3000 : 10000,
+    refetchInterval: (phase === 'waiting_agent' || phase === 'agent') ? 8000 : 30000,
   });
 
   useEffect(() => {

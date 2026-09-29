@@ -88,7 +88,7 @@ const SecurityEventsPanel = () => {
       if (error) throw error;
       return (data || []) as SecurityEvent[];
     },
-    refetchInterval: 15000,
+    refetchInterval: 60000,
   });
 
   const { data: stats } = useQuery({
@@ -108,7 +108,7 @@ const SecurityEventsPanel = () => {
         total: arr.length,
       };
     },
-    refetchInterval: 15000,
+    refetchInterval: 60000,
   });
 
   const resolveMutation = useMutation({

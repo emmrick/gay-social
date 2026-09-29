@@ -157,7 +157,7 @@ export const useNearbyProfiles = (
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     // Refetch périodique uniquement quand la géoQuery est la source active.
-    refetchInterval: 5 * 60_000,
+    refetchInterval: 10 * 60_000,
     placeholderData: keepPreviousData,
   });
 

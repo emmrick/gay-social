@@ -43,7 +43,7 @@ const Community = () => {
       };
     },
     staleTime: 60000,
-    refetchInterval: 120000,
+    refetchInterval: 600000,
   });
 
   const fmt = (n?: number) => (n != null ? n.toLocaleString('fr-FR') : '…');

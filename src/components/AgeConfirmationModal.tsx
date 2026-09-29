@@ -46,7 +46,7 @@ export const AgeConfirmationModal = () => {
 
   return (
     <AlertDialog open={showModal} onOpenChange={() => {}}>
-      <AlertDialogContent className="left-[max(1rem,env(safe-area-inset-left,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] top-[max(1rem,env(safe-area-inset-top,0px))] bottom-[max(1rem,env(safe-area-inset-bottom,0px))] w-auto max-w-md translate-x-0 translate-y-0 place-self-center overflow-y-auto border-0 bg-transparent p-0 shadow-none sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:w-full sm:-translate-x-1/2 sm:-translate-y-1/2">
+      <AlertDialogContent className="left-[max(1rem,env(safe-area-inset-left,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] top-[max(1rem,env(safe-area-inset-top,0px))] bottom-[max(1rem,env(safe-area-inset-bottom,0px))] mx-auto w-auto max-w-md translate-x-0 translate-y-0 place-self-center overflow-y-auto border-0 bg-transparent p-0 shadow-none">
         <div className="relative w-full overflow-hidden rounded-2xl border border-border/50 bg-card shadow-2xl">
           {/* Gradient background effect */}
           <div className="absolute inset-0 opacity-30">

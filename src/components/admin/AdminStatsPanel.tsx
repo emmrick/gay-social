@@ -147,7 +147,7 @@ const useDetailedStats = () => {
         topRegions, signupChart, messageChart, verificationBreakdown,
       };
     },
-    refetchInterval: 60000,
+    refetchInterval: 300000,
   });
 };
 

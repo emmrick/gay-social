@@ -102,7 +102,7 @@ const CreditPurchaseRequestsPanel = () => {
       const profileMap = new Map(profiles?.map((p) => [p.user_id, p]));
       return data?.map((r) => ({ ...r, profile: profileMap.get(r.user_id) })) as PurchaseRequest[];
     },
-    refetchInterval: 30000,
+    refetchInterval: 120000,
   });
 
   const processMutation = useMutation({

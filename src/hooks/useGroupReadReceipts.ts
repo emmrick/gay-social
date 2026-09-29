@@ -74,7 +74,7 @@ export const useGroupReadReceipts = (chatRoomId: string | null) => {
     },
     enabled: !!chatRoomId,
     staleTime: 10000,
-    refetchInterval: 45000,
+    refetchInterval: 180000,
   });
 
   // Mark messages as read when viewing the chat

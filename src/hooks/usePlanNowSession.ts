@@ -43,7 +43,7 @@ export const usePlanNowSession = () => {
       return (data as unknown) as PlanNowSession | null;
     },
     enabled: !!user?.id,
-    refetchInterval: 60_000,
+    refetchInterval: 3 * 60_000,
   });
 
   // Auto-invalidate when expiration is reached
@@ -169,7 +169,7 @@ export const usePlanNowActiveUsers = () => {
       return new Set<string>((data as any[]).map((r) => r.user_id));
     },
     staleTime: 30_000,
-    refetchInterval: 60_000,
+    refetchInterval: 3 * 60_000,
   });
 
   useEffect(() => {

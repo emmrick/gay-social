@@ -21,7 +21,7 @@ export const useEstimatedWaitTime = (entityId: string | null): WaitTimeResult =>
       return data as any;
     },
     enabled: !!entityId,
-    refetchInterval: 30_000,
+    refetchInterval: 120_000,
     staleTime: 15_000,
   });
 

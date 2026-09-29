@@ -32,6 +32,6 @@ export const useMemberStats = () => {
       };
     },
     staleTime: 60_000,
-    refetchInterval: 60_000,
+    refetchInterval: 5 * 60_000,
   });
 };

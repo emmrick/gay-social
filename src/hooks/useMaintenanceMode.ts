@@ -15,7 +15,7 @@ export const useMaintenanceMode = () => {
       return data as { id: string; is_active: boolean; message: string | null; activated_at: string | null; estimated_end_at: string | null };
     },
     staleTime: 1000 * 30, // 30s
-    refetchInterval: 1000 * 60, // poll every minute
+    refetchInterval: 1000 * 60 * 5, // poll toutes les 5 min (économie)
   });
 };
 

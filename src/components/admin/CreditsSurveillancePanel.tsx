@@ -132,7 +132,7 @@ const CreditsSurveillancePanel = () => {
         avatar_url: profileMap.get(tx.user_id)?.avatar_url,
       })) as TransactionWithProfile[];
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 120000, // Refresh every 30 seconds
   });
 
   // Fetch real-time user balances
@@ -165,7 +165,7 @@ const CreditsSurveillancePanel = () => {
         last_activity: c.updated_at,
       })) as UserBalance[];
     },
-    refetchInterval: 30000,
+    refetchInterval: 120000,
   });
 
   // Detect anomalies

@@ -515,6 +515,6 @@ export const useTodayEarnings = () => {
       };
     },
     enabled: !!user?.id,
-    refetchInterval: 60000,
+    refetchInterval: 300000,
   });
 };

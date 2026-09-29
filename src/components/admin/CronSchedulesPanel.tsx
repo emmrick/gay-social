@@ -48,6 +48,31 @@ const CronSchedulesPanel = () => {
     staleTime: 60_000,
   });
 
+  const { data: lastRuns } = useQuery({
+    queryKey: ['cron-last-runs'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('cron_run_log')
+        .select('job_name,status,error_message,created_at')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      const map: Record<string, { status: string; error_message: string | null; created_at: string }> = {};
+      (data ?? []).forEach((r) => { if (!map[r.job_name]) map[r.job_name] = r; });
+      return map;
+    },
+    staleTime: 30_000,
+  });
+
+  const categoryOf = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes('digest') || n.includes('email')) return 'E-mails';
+    if (n.includes('sms')) return 'SMS';
+    if (n.includes('exchange') || n.includes('photo')) return 'Modération photo';
+    if (n.includes('suspension')) return 'Suspensions';
+    if (n.includes('cleanup') || n.includes('purge') || n.includes('expire')) return 'Nettoyage';
+    return 'Autre';
+  };
+
   const saveMutation = useMutation({
     mutationFn: async (payload: { id: string; schedule?: string; is_active?: boolean }) => {
       const { id, ...fields } = payload;
@@ -134,10 +159,29 @@ const CronSchedulesPanel = () => {
                     </Badge>
                   )}
                 </div>
-                {cfg.last_synced_at && (
-                  <span className="text-xs text-muted-foreground">
-                    Synchronisé {formatDistanceToNow(new Date(cfg.last_synced_at), { addSuffix: true, locale: fr })}
-                  </span>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <Badge variant="outline" className="text-[10px]">{categoryOf(cfg.job_name)}</Badge>
+                  {(() => {
+                    const r = lastRuns?.[cfg.job_name];
+                    if (!r) return <span>Aucune exécution enregistrée</span>;
+                    return (
+                      <span>
+                        Dernier résultat :{' '}
+                        <span className={r.status === 'error' ? 'text-destructive font-medium' : 'text-primary font-medium'}>
+                          {r.status === 'error' ? 'Erreur' : 'OK'}
+                        </span>{' '}
+                        {formatDistanceToNow(new Date(r.created_at), { addSuffix: true, locale: fr })}
+                      </span>
+                    );
+                  })()}
+                  {cfg.last_synced_at && (
+                    <span>· Synchronisé {formatDistanceToNow(new Date(cfg.last_synced_at), { addSuffix: true, locale: fr })}</span>
+                  )}
+                </div>
+                {lastRuns?.[cfg.job_name]?.error_message && (
+                  <p className="mt-1 truncate text-xs text-destructive" title={lastRuns[cfg.job_name].error_message ?? ''}>
+                    {lastRuns[cfg.job_name].error_message}
+                  </p>
                 )}
               </div>
 

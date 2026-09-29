@@ -40,9 +40,9 @@ const BottomNavBar = memo(({ unreadCount = 0 }: BottomNavBarProps) => {
       <nav
         className="pointer-events-auto px-3"
         style={{
-          paddingLeft: 'max(0.75rem, env(safe-area-inset-left, 0px))',
-          paddingRight: 'max(0.75rem, env(safe-area-inset-right, 0px))',
-          paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom, 0px))',
+          paddingLeft: 'max(0.75rem, var(--safe-area-left))',
+          paddingRight: 'max(0.75rem, var(--safe-area-right))',
+          paddingBottom: 'max(0.375rem, var(--safe-area-bottom))',
         }}
       >
         <div className="mx-auto max-w-md bg-card/95 border border-border/50 rounded-2xl shadow-2xl shadow-black/20 dark:shadow-black/40">

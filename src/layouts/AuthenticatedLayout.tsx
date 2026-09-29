@@ -146,14 +146,14 @@ const AuthenticatedLayout = () => {
 
   return (
     <div
-      className="app-shell h-dvh h-screen bg-background flex flex-col overflow-hidden relative"
+      className="app-shell bg-background flex flex-col overflow-hidden relative"
       style={{
         // Padding latéral SYMÉTRIQUE : on prend le max des deux insets pour
         // que l'app reste parfaitement centrée même quand l'appareil expose
         // une encoche / punch-hole d'un seul côté (cas fréquent sur Android,
         // pliables, et fenêtres en bulle Android 14+/17).
-        paddingLeft: 'max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))',
-        paddingRight: 'max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))',
+        paddingLeft: 'max(var(--safe-area-left), var(--safe-area-right))',
+        paddingRight: 'max(var(--safe-area-left), var(--safe-area-right))',
       }}
     >
       
@@ -174,7 +174,7 @@ const AuthenticatedLayout = () => {
           showBottomNav && "pb-20"
         )}
         style={{
-          paddingBottom: showBottomNav ? 'calc(82px + env(safe-area-inset-bottom, 0px))' : undefined,
+          paddingBottom: showBottomNav ? 'calc(82px + var(--safe-area-bottom))' : undefined,
         }}
       >
         <KeepAliveOutlet

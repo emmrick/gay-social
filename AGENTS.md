@@ -4,3 +4,4 @@
 - Écriture DB de présence limitée à 1 fois/15 min max par session (`useOnlineHeartbeat`) — économie de crédits cloud.
 - Les fréquences des tâches planifiées vivent dans `public.cron_schedule_config` (jamais codées en dur) — modifiables sans redéploiement.
 - Les `refetchInterval` côté client restent >= 60 s pour les écrans non critiques (>= 2 min en admin) — limite la consommation de requêtes.
+- Les écrans mobiles utilisent `--app-height` et les variables `--safe-area-*` centralisées — évite les décalages Safari sur les iPhone à encoche.

@@ -25,7 +25,7 @@ const ForcedSupportChat = () => {
       return (data || []) as any[];
     },
     enabled: !!user?.id,
-    refetchInterval: 5000,
+    refetchInterval: 15000,
   });
 
   // Get the support ticket for the sanction
@@ -44,7 +44,7 @@ const ForcedSupportChat = () => {
       return data as unknown as SupportTicket;
     },
     enabled: !!ticketId,
-    refetchInterval: 5000,
+    refetchInterval: 15000,
   });
 
   // If ticket is closed, infractions are resolved - don't show

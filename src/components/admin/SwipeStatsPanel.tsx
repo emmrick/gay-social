@@ -41,7 +41,7 @@ const SwipeStatsPanel = () => {
         totalCreditsSpent,
       };
     },
-    refetchInterval: 30000,
+    refetchInterval: 120000,
   });
 
   const { data: recentActions = [] } = useQuery({
@@ -65,7 +65,7 @@ const SwipeStatsPanel = () => {
         username: profiles?.find(p => p.user_id === action.user_id)?.username || 'Inconnu',
       }));
     },
-    refetchInterval: 30000,
+    refetchInterval: 120000,
   });
 
   if (isLoading) {

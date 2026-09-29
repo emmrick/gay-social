@@ -67,7 +67,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
         .single();
       return data as unknown as SupportTicket;
     },
-    refetchInterval: 3000,
+    refetchInterval: 8000,
   });
   const ticket = liveTicketData || initialTicket;
 

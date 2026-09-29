@@ -78,7 +78,7 @@ const ScreenshotSanctionsPanel = () => {
         pending_tasks: taskCountMap[v.user_id] || 0,
       })) as ScreenshotViolation[];
     },
-    refetchInterval: 30000,
+    refetchInterval: 120000,
   });
 
   const liftSanction = useMutation({

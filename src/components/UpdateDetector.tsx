@@ -4,7 +4,7 @@ import { RefreshCw, Sparkles, AlertTriangle, Rocket } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 
-const CHECK_INTERVAL = 30_000; // 30s
+const CHECK_INTERVAL = 5 * 60_000; // 5 min (économie de requêtes)
 const VERSION_URL = '/version.json';
 const STORAGE_KEY = 'gc_app_version';
 const TARGET_KEY = 'gc_app_version_target';
